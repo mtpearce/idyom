@@ -54,8 +54,8 @@
           (t nil))))
 
 (define-basic-viewpoint phrase (events) 
-  (let ((after  (make-instance 'amuse-mtp:mtp-after-segmenter))
-        (before (make-instance 'amuse-mtp:mtp-before-segmenter))
+  (let ((after  (amuse-segmentation:ground-truth-segmenter-after (car events)))
+        (before (amuse-segmentation:ground-truth-segmenter-before (car events)))
         (last-element (last-element events)))
     (cond ((= 1 (amuse-segmentation:boundary-strength after last-element nil))
            1)
