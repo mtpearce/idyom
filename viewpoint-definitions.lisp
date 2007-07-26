@@ -64,7 +64,7 @@
           (t 0))))
 
 (define-basic-viewpoint mpitch (events) 
-  (+ (amuse:meredith-morphetic-pitch-number 
+  (+ (amuse:diatonic-pitch-mp
       (last-element events))
      12))
 
