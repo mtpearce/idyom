@@ -38,7 +38,7 @@
 (define-basic-viewpoint barlength (events)
   (let* ((last-element (last-element events))
          (timesig (car (amuse:get-applicable-time-signatures last-element nil)))
-         (timebase (* (amuse:crotchet last-element) 4)))
+         (timebase (* (amuse:duration (amuse:crotchet last-element)) 4)))
     (/ (* (amuse:beat-units-per-bar timesig) timebase)
        (amuse:beat-units timesig))))
 
