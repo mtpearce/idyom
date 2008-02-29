@@ -1,5 +1,21 @@
 (in-package :ppm)
 
+(defun get-alphabet-hash-table (sequence &key (seed (make-hash-table)))
+ (sequence::dosequence (item sequence seed)
+   do (cond
+        ((typep item 'sequence)
+         (setf seed (get-alphabet-hash-table item :seed seed)))
+        ((not (gethash item seed))
+         (setf (gethash item seed) T)))))
+
+(defun get-alphabet (sequence)
+ (let ((alphabet))
+   (maphash #'(lambda (key val)
+                (declare (ignore val))
+                (push key alphabet))
+            (get-alphabet-hash-table sequence))
+   alphabet))
+
 (defun test-model (order)
   (ngram-frequencies 
    (build-model '((a b r a c a d a b r a)) '(a b c d r)) 
