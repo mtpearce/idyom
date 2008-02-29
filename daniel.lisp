@@ -36,7 +36,8 @@
 (defun list-children (model node) (ppm::list-children model node))
 (defun label (model node) 
   (ppm::instantiate-label model (ppm::get-label model node)))
-(defun label-length (model node) 
+#+nil (defun length-of-label (model node)
+  ;; Silly name, but clashes with struct accessor otherwise
   (ppm::get-length model (ppm::get-label model node)))
 (defun frequency (model node) (ppm::get-count model node))
 
