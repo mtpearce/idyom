@@ -29,3 +29,20 @@ symbol if they are lists else nil."
                (typeset (merge-typesets links)))
           (make-instance 'linked :links links :typeset typeset)))))
 
+(defun initialise-basic-viewpoints (dataset)
+  "Initialises the alphabets of the basic types specified in
+*basic-types* to those elements which appear in <dataset>."
+  (dolist (attribute *basic-types*)
+    (set-alphabet-from-dataset (get-viewpoint attribute) dataset)))
+
+(defun get-basic-viewpoints (attributes dataset)
+  (initialise-basic-viewpoints dataset)
+  (get-viewpoints attributes))
+
+(defun attribute-equal (a1 a2) 
+  (cond ((and (symbolp a1) (symbolp a2))
+         (string= (symbol-name a1) (symbol-name a2)))
+        ((and (consp a1) (consp a2))
+         (every #'(lambda (x y) (string= (symbol-name x) (symbol-name y)))
+                a1 a2))
+        (t nil)))
