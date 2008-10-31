@@ -2,6 +2,11 @@
 
 (defconstant +undefined+ '@ "The undefined symbol.")
 
+(defvar *basic-types* nil)
+
+(defun register-basic-type (type) 
+  (pushnew type *basic-types*))
+
 (defun undefined-p (&rest viewpoint-elements)
   "Returns true if any of the supplied viewpoint elements are eql to
 the +undefined+ symbol if they are atoms or contain the +undefined+
@@ -28,16 +33,6 @@ symbol if they are lists else nil."
         (let* ((links (mapcar #'get-viewpoint (flatten attribute)))
                (typeset (merge-typesets links)))
           (make-instance 'linked :links links :typeset typeset)))))
-
-(defun initialise-basic-viewpoints (dataset)
-  "Initialises the alphabets of the basic types specified in
-*basic-types* to those elements which appear in <dataset>."
-  (dolist (attribute *basic-types*)
-    (set-alphabet-from-dataset (get-viewpoint attribute) dataset)))
-
-(defun get-basic-viewpoints (attributes dataset)
-  (initialise-basic-viewpoints dataset)
-  (get-viewpoints attributes))
 
 (defun attribute-equal (a1 a2) 
   (cond ((and (symbolp a1) (symbolp a2))

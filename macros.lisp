@@ -1,10 +1,5 @@
 (cl:in-package #:viewpoints)
 
-(defvar *basic-types* nil)
-
-(defun register-basic-type (type) 
-  (pushnew type *basic-types*))
-
 ;;; Viewpoint Definitions
 
 (defmacro define-viewpoint ((name superclass typeset) 

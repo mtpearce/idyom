@@ -31,10 +31,6 @@ returns the supplied object."))
 (defgeneric in-typeset-p (basic-viewpoint viewpoint))
 (defgeneric viewpoint-element-equal (basic viewpoint element1 element2))
 (defgeneric (setf viewpoint-alphabet) (alphabet viewpoint))
-
-(defgeneric set-alphabet-from-dataset (viewpoint dataset))
-(defgeneric set-alphabet-from-context (viewpoint events unconstrained))
-(defgeneric alphabet->events (viewpoint events))
 (defgeneric basic-sequence (viewpoint viewpoint element-list event-list))
 (defgeneric basic-element (viewpoint viewpoint element event-list))
 
