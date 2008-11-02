@@ -1,0 +1,30 @@
+INTRODUCTION 
+
+
+
+DIRECTORY STRUCTURE 
+
+The layout of the code is as follows: 
+
+idyom.asd: the system definition 
+utils/: general-purpose utilities 
+amuse/: an interface to amuse music data interface
+ppm/: the ppm* and multiple-viewpoint system modelling framework 
+apps/: top-level applications for users 
+data/: directory used internally for storing data 
+
+REQUIREMENTS 
+
+SBCL              http://www.sbcl.org 
+AMUSE             rvw.doc.gold.ac.uk:/isms/group/muthic/darcs/amuse/  
+AMUSE-MTP         ditto 
+AMUSE-VIEWPOINTS  rvw.doc.gold.ac.uk:/isms/group/muthic/darcs/amuse-viewpoints/  
+PSGRAPH           http://www.cliki.net/psgraph
+
+FUNCTIONS 
+
+
+
+EXAMPLE SESSION
+
+
