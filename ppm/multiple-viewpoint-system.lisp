@@ -3,7 +3,7 @@
 ;;;; File:       multiple-viewpoint-system.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-27 18:54:17 marcusp>                           
-;;;; Time-stamp: <2008-10-07 10:11:11 marcusp>                           
+;;;; Time-stamp: <2008-11-03 18:51:38 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -512,9 +512,9 @@ given a sequence of events <sequence>."
       (format t "~&~A (~A) = ~&~A~%" (viewpoint-name derived-viewpoint) 
               (prediction-element derived-prediction-set) derived-distribution))
     ;;(format t "~&~A: ~A~%" basic-viewpoint basic-alphabet)
-    ;;(format t "~&Viewpoint: ~A; element: ~A~%" 
-    ;;       (viewpoint-type derived-viewpoint)
-    ;;       (prediction-element derived-prediction-set))
+;;     (format t "~&Viewpoint: ~A; element: ~A~%" 
+;;            (viewpoint-type derived-viewpoint)
+;;            (prediction-element derived-prediction-set))
     (if (viewpoints:inverse-viewpoint-function-defined-p derived-viewpoint)
         (dolist (ep derived-distribution) 
           (let* ((e (nth 0 ep))
@@ -522,9 +522,10 @@ given a sequence of events <sequence>."
                  (basic-elements 
                   (viewpoints:basic-element derived-viewpoint basic-viewpoint 
                                             e events))
-                 (p (unless (undefined-p e) (/ p (length basic-elements)))))
-            ;;(format t "~&e = ~A; old-p = ~A; l = ~A; p = ~A~%" 
-            ;;        e (nth 1 ep) (length basic-elements) p)
+                 (p (unless (or (null basic-elements) (undefined-p e)) 
+                      (/ p (length basic-elements)))))
+            ;(format t "~&e = ~A; old-p = ~A; l = ~A; p = ~A~%" 
+            ;        e (nth 1 ep) (length basic-elements) p)
             (dolist (be basic-elements) 
               (if (gethash be basic-distribution)
                   (incf (gethash be basic-distribution) p)

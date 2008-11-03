@@ -3,7 +3,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2008-10-31 11:59:47 marcusp>                           
+;;;; Time-stamp: <2008-11-03 17:39:32 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -125,10 +125,12 @@ dataset-id)."
 
 
 ;;;===========================================================================
-;;; The experiments of Conklin (1990) and Conklin and Witten (1995)
+;;; Conklin (1990), Conklin and Witten (1995), and Pearce (2005)
 ;;;===========================================================================
 
 (defun conklin90 (&optional (dataset 2) (resampling-indices '(0)))
+  (format 
+   t "~&Simulation of the pitch-based features of Conklin (1990, Experiment 8, p. 115).~%")
   (let ((viewpoints '(cpint
                       (cpint ioi)
                       (cpintfiph contour)
@@ -140,6 +142,8 @@ dataset-id)."
      1)))
 
 (defun conkwit95 (&optional (dataset 2) (resampling-indices '(1)))
+  (format 
+   t "~&Simulation of the experiments of Conklin & Witten (1995, Table 4).~%")
   (let ((systems '((cpitch)
                    (cpint)
                    ((cpint ioi))
@@ -155,9 +159,28 @@ dataset-id)."
               (dataset-prediction dataset '(cpitch) system 
                                   :resampling-indices resampling-indices)
               1)))
-        (format t "~&Model ~A; Mean Information Content ~,2F ~%" system-id 
+        (format t "~&System ~A; Mean Information Content: ~,2F ~%" system-id 
                 mean-ic)
         (incf system-id)))))
+
+(defun pearce05 (&optional (dataset-id 1))
+  (format t "~&Simulation of the experiments of Pearce (2005, Table 9.1, p. 191 and Table 9.8, p. 206).~%")
+  (let ((systems '((A (cpitch))
+                   (B (cpintfip (cpintfref dur-ratio) thrfiph))
+                   (C (thrfiph cpintfip (cpint dur-ratio) (cpintfref dur) 
+                       thrtactus (cpintfref fib) (cpitch dur) 
+                       (cpintfref cpintfip) (cpint dur)))
+                   (D (cpintfiph (cpintfref dur) (cpint inscale) 
+                       (cpint dur-ratio) (cpintfref liph) thrfiph 
+                       (cpitch dur) (cpintfref cpintfip) 
+                       (cpintfref mode) (cpint dur))))))
+    (dolist (system systems)
+      (let ((mean-ic 
+             (output-information-content 
+              (dataset-prediction dataset-id '(cpitch) (cadr system) :k 10)
+              1)))
+        (format t "~&System ~A; Mean Information Content: ~,2F ~%" (car system) 
+                mean-ic)))))
 
 
 ;;;===========================================================================

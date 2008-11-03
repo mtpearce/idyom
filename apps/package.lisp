@@ -3,7 +3,7 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                           
-;;;; Time-stamp: <2008-10-06 10:21:54 marcusp>                           
+;;;; Time-stamp: <2008-11-03 17:36:39 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -20,7 +20,7 @@
            "BUILD-EP-CACHE" "SELECT-VIEWPOINTS-FOR-GENERATION" 
            "GET-RESAMPLING-SETS" "GET-TRAINING-SET" "GET-TEST-SET" 
            "GET-LONG-TERM-MODELS"
-           "CONKLIN90" "CONKWIT95" 
+           "CONKLIN90" "CONKWIT95" "PEARCE05"
            "TEST-COMBINATIONS")
   (:documentation "Prediction of datasets using cross-validation."))
 
