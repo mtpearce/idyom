@@ -53,6 +53,16 @@
            0)
           (t nil))))
 
+(define-basic-viewpoint bioi (events)
+  (let* ((last-element (last-element events))
+         (penultimate-element (penultimate-element events)))
+    (cond ((and last-element penultimate-element)
+           (- (amuse:timepoint last-element)
+              (amuse:timepoint penultimate-element)))
+          ((and last-element (null penultimate-element))
+           0)
+          (t nil))))
+
 (define-basic-viewpoint phrase (events) 
   (let ((after  (amuse-segmentation:ground-truth-segmenter-after (car events)))
         (before (amuse-segmentation:ground-truth-segmenter-before (car events)))
