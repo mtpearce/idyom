@@ -3,7 +3,7 @@
 ;;;; File:       amuse-interface.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2008-09-30 17:25:38 marcusp>
-;;;; Time-stamp: <2008-10-31 15:40:28 marcusp>
+;;;; Time-stamp: <2008-11-03 12:39:45 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -25,21 +25,22 @@
 (defmethod get-attribute ((e amuse-mtp:mtp-event) attribute)
   "Returns the value for slot <attribute> in event object <e>."
   (let* ((accessor-name 
-          (concatenate 'string "EVENT-" (string-upcase (symbol-name attribute))))
+          (concatenate 'string "%MTP-" (string-upcase (symbol-name attribute))))
          (accessor-symbol (find-symbol accessor-name (find-package :amuse-mtp))))
     (funcall accessor-symbol e)))
 
 (defgeneric set-attribute (event attribute value))
 (defmethod set-attribute ((e amuse-mtp:mtp-event) attribute value)
-  (let* ((attribute (case attribute
-                      (:onset :time)
-                      (onset :time)
-                      (:dur :interval)
-                      (dur :interval)
-                      (t attribute)))
-         (accessor-name (string-upcase (symbol-name attribute)))
-         (accessor-symbol (find-symbol accessor-name (find-package :amuse-mtp))))
-    (setf (slot-value e accessor-symbol) value)))
+  (let* ((attribute 
+          (case attribute
+            (:onset 'amuse::time)
+            (viewpoints::onset 'amuse::time)
+            (:dur 'amuse::interval)
+            (viewpoints::dur 'amuse::interval)
+            (t 
+             (find-symbol (string-upcase (symbol-name attribute)) 
+                          (find-package :amuse-mtp))))))
+    (setf (slot-value e attribute) value)))
 
 #.(clsql:locally-enable-sql-reader-syntax)
 (defun get-alphabet (attribute &rest dataset-ids)
