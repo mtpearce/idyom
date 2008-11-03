@@ -74,14 +74,22 @@
           (t 0))))
 
 (define-basic-viewpoint mpitch (events) 
-  (+ (amuse:diatonic-pitch-mp
-      (last-element events))
-     12))
+  (let ((result nil))
+    (handler-case 
+        (setf result 
+              (+ (amuse:diatonic-pitch-mp
+                  (last-element events))
+                 12))
+      (error () (setf result viewpoints:+undefined+)))
+    result))
 
 (define-basic-viewpoint accidental (events)
-  (amuse:diatonic-pitch-accidental 
-   (amuse:diatonic-pitch 
-    (last-element events))))
+  (let ((result nil))
+    (handler-case 
+        (setf result (amuse:diatonic-pitch-accidental 
+                      (amuse:diatonic-pitch (last-element events))))
+      (error () (setf result viewpoints:+undefined+)))
+    result))
 
 ;; TODO: (define-basic-viewpoint dyn)
 ;; TODO: (define-basic-viewpoint voice) 
