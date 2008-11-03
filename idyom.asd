@@ -3,7 +3,7 @@
 ;;;; File:       IDyOM.asd
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-05-04 21:29:04 marcusp>
-;;;; Time-stamp: <2008-11-03 12:06:36 marcusp>
+;;;; Time-stamp: <2008-11-03 14:45:48 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -12,7 +12,7 @@
 (in-package #:idyom-system)
 
 (defsystem idyom
-  :depends-on (psgraph amuse amuse-viewpoints amuse-mtp)
+  :depends-on (amuse amuse-viewpoints amuse-mtp ppm-star)
   :serial t
   :components
   (;; General utilities  
@@ -35,7 +35,7 @@
              (:file "params") 
              (:file "generics")
              (:file "prediction-sets")		
-             (:file "ppm-star")
+             ;;(:file "ppm-star")
              (:file "multiple-viewpoint-system")))
    ;; Applications 
    (:module apps 

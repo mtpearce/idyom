@@ -3,7 +3,7 @@
 ;;;; File:       viewpoint-extensions.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2008-10-31 13:08:09 marcusp>
-;;;; Time-stamp: <2008-10-31 13:32:54 marcusp>
+;;;; Time-stamp: <2008-11-03 14:44:42 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints) 
@@ -100,7 +100,7 @@ values of the final event in <events>."
          (onset-alphabet (onset-alphabet previous-events)))
     (mapcar #'(lambda (viewpoint-element)
                 (let ((e (md:copy-event event)))
-                  (md:set-attribute e :time viewpoint-element)
+                  (md:set-attribute e 'amuse::time viewpoint-element)
                   e))
             onset-alphabet)))
  
@@ -109,8 +109,7 @@ values of the final event in <events>."
   (let ((bioi-alphabet (viewpoint-alphabet (get-viewpoint 'bioi))))
     (if (null previous-events) bioi-alphabet
         (let* ((last-event (car (reverse previous-events)))
-               (onset (+ (md:get-attribute last-event :time)
-                         (md:get-attribute last-event :interval))))
+               (onset (get-attribute last-event 'amuse::time)))
           (mapcar #'(lambda (a) (+ onset a)) bioi-alphabet)))))
 
 (defmethod alphabet->events ((d derived) events)

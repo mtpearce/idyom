@@ -3,7 +3,7 @@
 ;;;; File:       amuse-interface.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2008-09-30 17:25:38 marcusp>
-;;;; Time-stamp: <2008-11-03 12:39:45 marcusp>
+;;;; Time-stamp: <2008-11-03 15:35:10 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -24,19 +24,21 @@
 (defgeneric get-attribute (event attribute))
 (defmethod get-attribute ((e amuse-mtp:mtp-event) attribute)
   "Returns the value for slot <attribute> in event object <e>."
-  (let* ((accessor-name 
-          (concatenate 'string "%MTP-" (string-upcase (symbol-name attribute))))
-         (accessor-symbol (find-symbol accessor-name (find-package :amuse-mtp))))
-    (funcall accessor-symbol e)))
+  (let* ((attribute 
+          (case attribute
+            ((:onset viewpoints::onset) 'amuse::time)
+            ((:dur viewpoints::dur) 'amuse::interval)
+            (t 
+             (find-symbol (string-upcase (symbol-name attribute)) 
+                          (find-package :amuse-mtp))))))
+    (slot-value e attribute)))
 
 (defgeneric set-attribute (event attribute value))
 (defmethod set-attribute ((e amuse-mtp:mtp-event) attribute value)
   (let* ((attribute 
           (case attribute
-            (:onset 'amuse::time)
-            (viewpoints::onset 'amuse::time)
-            (:dur 'amuse::interval)
-            (viewpoints::dur 'amuse::interval)
+            ((:onset viewpoints::onset) 'amuse::time)
+            ((:dur viewpoints::dur) 'amuse::interval)
             (t 
              (find-symbol (string-upcase (symbol-name attribute)) 
                           (find-package :amuse-mtp))))))
@@ -86,37 +88,3 @@
 (defun count-compositions (dataset-id)
   (length (amuse-mtp:get-dataset 
            (amuse-mtp:make-mtp-dataset-identifier dataset-id))))
-
-;; (defun get-timebase (dataset-id)
-;;   (* 4 (amuse:crotchet 
-;;         (amuse-mtp:get-dataset 
-;;          (amuse-mtp:get-dataset-identifier dataset-id)))))
-
-;; (defun get-midc (dataset-id))
-
-;; (defvar *db-file* nil) 
-;; (defmethod make-load-form ((e event) &optional environment)
-;; (defun connect-to-database (&optional (db-file *db-file*))
-;; (defmethod import-data ((type (eql :lisp)) filename description id)
-;; (defmethod export-data ((d dataset) (type (eql :lisp)) filename)
-;; (defun insert-dataset (data id)
-;; (defmethod insert-composition ((d dataset) composition id)
-;; (defmethod insert-event ((composition composition) event id)
-;; (defun delete-dataset (dataset-id)
-;; (defun initialise-database (&optional (db *default-database*))
-
-;(defgeneric get-id (object))
-;(defun get-dataset (dataset-id)
-;(defun get-event (dataset-id composition-id event-id))
-;(defun get-description (dataset-id &optional composition-id)
-;(defun get-compositions (dataset-id)
-;(defun get-composition (dataset-id composition-id)
-;(defun get-event-attribute (attribute dataset-id composition-id event-id)
-;(defmethod composition-description ((e event))
-;(defmacro do-events ((event dataset-id composition-id) &body body)
-;(defmacro do-compositions ((composition dataset-id) &body body)
-;(defun get-next-free-id (&optional dataset-id composition-id)
-;(defun count-events (dataset-id &optional (composition-id nil))
-;(defun describe-dataset (dataset-id &key (attributes nil)
-;(defun describe-database (&key (attributes nil)
-;(defun get-sequence (attribute dataset-id composition-id event-id length)

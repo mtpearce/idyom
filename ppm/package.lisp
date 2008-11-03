@@ -3,22 +3,10 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                           
-;;;; Time-stamp: <2008-11-03 12:06:10 marcusp>                           
+;;;; Time-stamp: <2008-11-03 14:24:39 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
-
-(defpackage #:ppm-star
-  (:use #:cl #:psgraph #:utils)
-  (:nicknames #:ppm)
-  (:export "PPM" "*ROOT*" "MAKE-PPM" "REINITIALISE-PPM" "SET-PPM-PARAMETERS"
-           "SET-ALPHABET" "INCREMENT-SEQUENCE-FRONT" "INCREMENT-EVENT-FRONT"
-           "MODEL-DATASET" "MODEL-SEQUENCE" "PPM-MODEL-EVENT"
-           "MODEL-SENTINEL-EVENT" "INITIALISE-VIRTUAL-NODES"
-           "WRITE-MODEL-TO-POSTSCRIPT" "WRITE-MODEL-TO-FILE"
-           "READ-MODEL-FROM-FILE" "GET-MODEL")
-  (:documentation "Prediction by Partial Match modelling including
-methods for model initialisation, construction and prediction."))
 
 (defpackage :prediction-sets
   (:use #:cl #:utils #:viewpoints)
