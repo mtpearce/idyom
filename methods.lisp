@@ -45,6 +45,7 @@
 
 (defmethod viewpoint-links ((v viewpoint)) v)
 (defmethod viewpoint-links ((l linked)) (%viewpoint-links l))
+(defmethod viewpoint-links ((th threaded)) th)
 
 (defmethod basic-p ((v viewpoint)) (typep v 'basic))
 (defmethod derived-p ((v viewpoint)) (typep v 'derived))

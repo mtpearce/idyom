@@ -28,7 +28,7 @@ symbol if they are lists else nil."
            (remove-duplicates 
             (reduce #'append links :key #'viewpoint-typeset))))
     (if (atom attribute)
-        (make-instance
+        (make-instance 
          (find-symbol (symbol-name attribute) (find-package :viewpoints)))
         (let* ((links (mapcar #'get-viewpoint (flatten attribute)))
                (typeset (merge-typesets links)))

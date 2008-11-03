@@ -38,7 +38,7 @@ of more than one basic or derived attribute whose elements are
 elements of the cartesian product of the alphabets of the constituent
 viewpoints."))
 
-(defclass threaded (linked)
+(defclass threaded (derived)
   ()
   (:documentation "A threaded viewpoint represents an attribute whose
 values are only defined at designated points in a sequence."))

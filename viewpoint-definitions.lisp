@@ -455,10 +455,10 @@
                   (e2 (last-element events)))
               (if (or (null e1) (null e2)) +undefined+
                   (let ((fib1 (fib (list e1)))
-              (fib2 (fib (list e2))))
+                        (fib2 (fib (list e2))))
                     (if (or (zerop fib1) (zerop fib2))
                         +undefined+
-                        (list (cpint (list e1 e2)) (ioi (list e1 e2)))))))
+                        (cpint (list e1 e2))))))
   :function* (let ((e (strip-until-true (get-viewpoint 'fib) 
                                         (butlast events))))
                (list (+ element (cpitch e)))))
@@ -473,7 +473,7 @@
                         (fiph2 (fiph (list e2))))
                     (if (or (zerop fiph1) (zerop fiph2))
                         +undefined+
-                        (list (cpint (list e1 e2)) (ioi (list e1 e2)))))))
+                        (cpint (list e1 e2))))))
   :function* (let ((e (strip-until-true (get-viewpoint 'fiph) 
                                         (butlast events))))
                (list (+ element (cpitch e)))))
@@ -488,7 +488,7 @@
                         (liph2 (liph (list e2))))
                     (if (or (zerop liph1) (zerop liph2))
                         +undefined+
-                        (list (cpint (list e1 e2)) (ioi (list e1 e2)))))))
+                        (cpint (list e1 e2))))))
   :function* (let ((e (strip-until-true (get-viewpoint 'liph) 
                                         (butlast events))))
                (list (+ element (cpitch e)))))
@@ -515,7 +515,7 @@
                         (crotchet2 (crotchet events)))
                     (if (or (zerop crotchet1) (zerop crotchet2))
                         +undefined+
-                        (list (cpint (list e1 e2)) (ioi (list e1 e2)))))))
+                        (cpint (list e1 e2))))))
   ;; TODO: function*
   )
 
@@ -530,7 +530,7 @@
                         (tactus2 (tactus events)))
                     (if (or (zerop tactus1) (zerop tactus2))
                         +undefined+
-                        (list (cpint (list e1 e2)) (ioi (list e1 e2)))))))
+                        (cpint (list e1 e2))))))
   :function* (let ((e (strip-until-true (get-viewpoint 'tactus) 
                                         (butlast events))))
                (list (+ element (cpitch e)))))
