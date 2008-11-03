@@ -1,0 +1,8 @@
+PPM* Statistical Model
+
+See example usage in ppm-ui.lisp: 
+
+(defun test-model (order)
+  (ngram-frequencies 
+   (build-model '((a b r a c a d a b r a)) '(a b c d r)) 
+   order))

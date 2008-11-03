@@ -8,7 +8,7 @@
         ((not (gethash item seed))
          (setf (gethash item seed) T)))))
 
-(defun get-alphabet (sequence)
+(defun get-ppm-alphabet (sequence)
  (let ((alphabet))
    (maphash #'(lambda (key val)
                 (declare (ignore val))
