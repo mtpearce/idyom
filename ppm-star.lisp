@@ -3,7 +3,7 @@
 ;;;; File:       ppm-star.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2008-01-25 15:30:22 marcusp>                           
+;;;; Time-stamp: <2008-11-03 14:21:44 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -21,7 +21,7 @@
 ;;;;   (defun test-model (sequences alphabet &key (ps t))
 ;;;;     (let ((model (ppm:make-ppm alphabet :escape :c :mixtures t
 ;;;;                                :update-exclusion nil :order-bound nil)))
-;;;;       (prog1 (ppm:model-dataset model sequences :construct? t :predict t)
+;;;;       (prog1 (ppm:model-dataset model sequences :construct? t :predict? t)
 ;;;;         (when ps (ppm:write-model-to-postscript model)))))
 ;;;; 
 ;;;;   (test-model '((a b r a c a d a b r a)) '(a b c d r))
@@ -84,24 +84,21 @@
 (defun normalise-distribution (distribution)
   "Normalises <distribution> such that it sums to one."
   (if (sums-to-one-p distribution) distribution
-      (let* ((sum (the double-float (sum-distribution distribution)))
-             (scaling-factor (if (zerop sum) 1.0d0 (/ 1.0d0 sum))))
-        (declare (type double-float scaling-factor))
+      (let* ((sum (sum-distribution distribution))
+             (scaling-factor (if (zerop sum) 1.0 (/ 1.0 sum))))
         (mapcar #'(lambda (ep) 
                     (let ((e (nth 0 ep)) (p (nth 1 ep)))
-                      (declare (type double-float p))
                       (list e (* p scaling-factor))))
                 distribution))))
 
 (defun sum-distribution (distribution)
   "Returns the sum of <distribution> a set of probabilities distributed
    over an alphabet."
-  (declare (values double-float))
-  (the double-float (apply #'+ (distribution-probabilities distribution))))
+  (apply #'+ (distribution-probabilities distribution)))
 
 (defun sums-to-one-p (distribution)
   "Returns true if <distribution> sums to one otherwise nil."
-  (< 0.999d0 (sum-distribution distribution) 1.0d0))
+  (< 0.999 (sum-distribution distribution) 1.0))
         
 ;;;===========================================================================
 ;;; Data Structures
@@ -536,8 +533,8 @@
                    (reverse prediction-set))
                  (let ((symbol (car sequence)))
                    (multiple-value-bind (next-location event-distribution)
-                       (model-event m symbol :location location 
-                                    :construct? construct? :predict? predict?)
+                       (ppm-model-event m symbol :location location 
+                                        :construct? construct? :predict? predict?)
                      (increment-event-front m)
                      (model-seq (cdr sequence) next-location
                                 (cons (list symbol event-distribution)
@@ -549,7 +546,7 @@
   (add-event-to-model-dataset m *sentinel*) 
   (ukkstep m nil location *sentinel* t))
 
-(defmethod model-event ((m ppm) symbol &key location construct? predict?)
+(defmethod ppm-model-event ((m ppm) symbol &key location construct? predict?)
   "Models an event <symbol> appear at location <location> in the ppm
    model <m>. If <construct?> is non-nil the event is added to the model
    and if <predict?> is non-nil a distribution over (ppm-alphabet m)
@@ -863,7 +860,7 @@
    probabilities assigned to <symbol> by all the states in a chain of
    suffix links from <location>."
   (let* ((initial-distribution 
-          (mapcar #'(lambda (a) (list a 0.0d0)) (ppm-alphabet m)))
+          (mapcar #'(lambda (a) (list a 0.0)) (ppm-alphabet m)))
          (up-ex (if (null selected?) (ppm-update-exclusion m)))
          (mixture 
           (compute-mixture m initial-distribution location '() :up-ex up-ex)))
@@ -871,7 +868,7 @@
 
 (defmethod compute-mixture ((m ppm) distribution location excluded
                             &key (up-ex (ppm-update-exclusion m))
-                            (escape 1.0d0))
+                            (escape 1.0))
   "Returns the estimated probability of <symbol> appearing at <location>
    in the suffix tree of model <m>. <excluded> is a list of symbols that
    have been predicted at higher orders and are thus excluded from the
@@ -881,13 +878,13 @@
       (let* ((transition-counts (transition-counts m location up-ex))
              (child-count (child-count m transition-counts))
              (node-count (node-count m transition-counts excluded))
-             (weight (the double-float (weight m node-count child-count)))
+             (weight (weight m node-count child-count))
              (next-distribution
               (next-distribution m distribution transition-counts
                                  node-count excluded weight escape))
              (next-location (get-next-location m location))
              (next-excluded transition-counts)
-             (next-escape (* (the double-float escape) (- 1.0d0 weight))))
+             (next-escape (* escape (- 1.0 weight))))
         (compute-mixture m next-distribution next-location next-excluded
                          :escape next-escape))))
 
@@ -903,14 +900,12 @@
                              weight escape)
   "Updates the probability for <pair> a list containing a symbol and a
 probability."
-  (declare (type integer node-count) (type double-float weight escape))
   (let* ((symbol (nth 0 pair))
          (old-probability (nth 1 pair))
          (trans-count 
-          (the integer (transition-count m symbol transition-counts)))
-         (probability (if (zerop node-count) 0.0d0
-                          (* weight (float (/ trans-count node-count) 0.0d0)))))
-    (declare (type double-float probability old-probability))
+          (transition-count m symbol transition-counts))
+         (probability (if (zerop node-count) 0.0
+                          (* weight (float (/ trans-count node-count) 0.0)))))
     (if (null (ppm-mixtures m))
         (cond ((excluded? symbol excluded) pair)
               ((and (> trans-count 0) (> node-count 0))
@@ -925,11 +920,10 @@ probability."
 (defmethod weight ((m ppm) node-count child-count)
   "Returns the weighting to give to a node s where count node-count (s)
    = <node-count> and child-count(s) = <child-count>."
-  (declare (type integer node-count child-count) (values double-float))
   (let ((denominator (+ node-count (if (eql (ppm-escape m) :a) 1
                                        (/ child-count (ppm-d m))))))
-    (if (zerop denominator) 0.0d0 
-        (float (/ node-count denominator) 0.0d0))))
+    (if (zerop denominator) 0.0 
+        (float (/ node-count denominator) 0.0))))
 
 (defmethod transition-counts ((m ppm) location up-ex)
   "Returns a list of the form (symbol frequency-count) for the transitions
@@ -950,7 +944,6 @@ probability."
 form (symbol frequency count), i.e., the total number of symbols that
 have occurred with non-zero frequency. If the escape method is X only
 those symbols that have occurred exactly once are counted."
-  (declare (type list transition-counts))
   (case (ppm-escape m)
     (:x (+ (count-if #'(lambda (x) (= (nth 1 x) 1)) transition-counts) 1))
     (otherwise (length transition-counts))))
@@ -973,30 +966,26 @@ those symbols that have occurred exactly once are counted."
 (defmethod order-minus1-distribution ((m ppm) distribution excluded escape
                                       up-ex)
   "Returns the order -1 distribution." 
-  (declare (type double-float escape))
   (mapcar #'(lambda (pair)
               (let ((symbol (nth 0 pair))
                     (p (nth 1 pair)))
-                (declare (type double-float p))
                 (if (and (null (ppm-mixtures m)) (excluded? symbol excluded)
-                         (> p 0.0d0))
+                         (> p 0.0))
                     pair
                     (list symbol
                           (+ p 
                              (* escape 
-                                (the double-float 
-                                  (order-minus1-probability m up-ex))))))))
+                                (order-minus1-probability m up-ex)))))))
           distribution))
 
 (defmethod order-minus1-probability ((m ppm) up-ex)
   "Returns the order -1 probability corresponding to a uniform distribution
    over the alphabet."
-  (declare (values double-float))
   ;(print (list (alphabet-size m) (transition-counts m *root* up-ex)))
-  (/ 1.0d0 ;(float (alphabet-size m) 0.0d0)))
-     (float (- (+ 1.0d0 (alphabet-size m))
-               (length (the list (transition-counts m *root* up-ex))))
-            0.0d0)))
+  (/ 1.0 ;(float (alphabet-size m) 0.0)))
+     (float (- (+ 1.0 (alphabet-size m))
+               (length (transition-counts m *root* up-ex)))
+            0.0)))
            
 
 ;;;===========================================================================
