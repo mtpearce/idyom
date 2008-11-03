@@ -3,7 +3,7 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                           
-;;;; Time-stamp: <2008-10-31 17:14:20 marcusp>                           
+;;;; Time-stamp: <2008-11-03 11:46:30 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -15,16 +15,15 @@
 (defpackage #:mtp-admin
   (:use #:common-lisp #:clsql)
   (:export "MTP-EVENT" "MTP-COMPOSITION" "MTP-DATASET"
-           "DATASET-COMPOSITION" "COMPOSITION-EVENTS" 
            "CONNECT-TO-DATABASE" "INITIALISE-DATABASE"
            "IMPORT-DATA" "EXPORT-DATA" "INSERT-DATASET" "DELETE-DATASET" 
+           "DESCRIBE-DATASET" "DESCRIBE-DATABASE" 
+           "DATASET-COMPOSITION" "COMPOSITION-EVENTS" 
            "GET-ID" "GET-DATASET" "GET-COMPOSITION" "GET-EVENT" 
            "COPY-EVENT" "GET-DESCRIPTION"
-           "GET-COMPOSITIONS" "GET-EVENT-SEQUENCE" "GET-EVENT-ATTRIBUTE"
-           "GET-ATTRIBUTE" "GET-EVENT-SEQUENCES"
-           "SET-ATTRIBUTE" "GET-TIMEBASE" "GET-MIDC" "GET-NEXT-FREE-ID"
-           "COUNT-COMPOSITIONS" "COUNT-EVENTS" "GET-DOMAIN" 
-           "DESCRIBE-DATASET" "DESCRIBE-DATABASE" 
+           "GET-COMPOSITIONS" "GET-EVENT-ATTRIBUTE"
+           "GET-ATTRIBUTE" "SET-ATTRIBUTE" "GET-TIMEBASE" "GET-MIDC" 
+           "GET-NEXT-FREE-ID" "COUNT-COMPOSITIONS" "COUNT-EVENTS" "GET-DOMAIN" 
            "GET-MAX-EVENT-COUNT")
   (:documentation "Interface to an SQL database of music objects."))
 

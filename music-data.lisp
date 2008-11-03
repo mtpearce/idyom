@@ -3,7 +3,7 @@
 ;;;; File:       music-data.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2008-10-31 17:26:32 marcusp>                           
+;;;; Time-stamp: <2008-11-03 11:53:34 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -322,7 +322,7 @@ no. in which the event occurs." ))
    composition-id as <composition> and inserts it into the event table of
    the default database."
   (let ((event-object 
-         (make-instance 'event
+         (make-instance 'mtp-event
                         :dataset-id (dataset-id composition)
                         :composition-id (composition-id composition)
                         :event-id id
@@ -367,9 +367,9 @@ no. in which the event occurs." ))
   "Drops the dataset, composition and event tables from <db> and recreates
    fresh tables in their place." 
   (ignore-errors
-    (drop-view-from-class 'mtp-dataset :database db)
-    (drop-view-from-class 'mtp-composition :database db)
-    (drop-view-from-class 'mtp-event :database db))
+    (drop-table 'mtp-dataset :database db)
+    (drop-table 'mtp-composition :database db)
+    (drop-table 'mtp-event :database db))
   (create-view-from-class 'mtp-dataset :database db)
   (create-view-from-class 'mtp-composition :database db)
   (create-view-from-class 'mtp-event :database db))
@@ -405,7 +405,6 @@ no. in which the event occurs." ))
 (defun get-compositions (dataset-id)
   "Returns alist of composition objects whose dataset-id is <dataset-id>." 
   (dataset-compositions (get-dataset dataset-id)))
-
  
 (defun get-composition (dataset-id composition-id)
   "Returns the composition whose dataset-id is <dataset-id> and whose
@@ -433,38 +432,38 @@ no. in which the event occurs." ))
    whose composition-id is <composition-id>." 
   (composition-events (get-composition dataset-id composition-id)))
 
-;; (defun get-event-attribute (attribute dataset-id composition-id event-id)
-;;   "Returns the attribute value denoted by <attribute> of the event
-;;    with key values <dataset-id>, <composition-id> and <event-id>." 
-;;   (let ((event (get-event dataset-id composition-id event-id)))
-;;     (get-attribute event attribute)))
+(defun get-event-attribute (attribute dataset-id composition-id event-id)
+  "Returns the attribute value denoted by <attribute> of the event
+   with key values <dataset-id>, <composition-id> and <event-id>." 
+  (let ((event (get-event dataset-id composition-id event-id)))
+    (get-attribute event attribute)))
 
-;; (defmethod composition-description ((e event))
-;;   (composition-description 
-;;    (get-composition (dataset-id e) (composition-id e))))
+(defmethod composition-description ((e mtp-event))
+  (composition-description 
+   (get-composition (dataset-id e) (composition-id e))))
 
-;; (defgeneric get-id (object) 
-;;   (:method ((d dataset)) (list (dataset-id d)))
-;;   (:method ((m composition)) (list (dataset-id m) (composition-id m)))
-;;   (:method ((e event)) (list (dataset-id e) (composition-id e) (event-id e)))
-;;   (:documentation "Selector function returning the identifier keys of
-;; a dataset, composition or event object <object>. For events a list of
-;; dataset-id, composition-id and event-id is returned; for compositions
-;; a list of dataset-id and composition-id is returned; and for datasets,
-;; a list containing the dataset-id is returned."))
+(defgeneric get-id (object) 
+  (:method ((d mtp-dataset)) (list (dataset-id d)))
+  (:method ((m mtp-composition)) (list (dataset-id m) (composition-id m)))
+  (:method ((e mtp-event)) (list (dataset-id e) (composition-id e) (event-id e)))
+  (:documentation "Selector function returning the identifier keys of
+a dataset, composition or event object <object>. For events a list of
+dataset-id, composition-id and event-id is returned; for compositions
+a list of dataset-id and composition-id is returned; and for datasets,
+a list containing the dataset-id is returned."))
 
-(defmethod set-attribute ((e mtp-event) attribute value)
-  "Sets the value for slot <attribute> in event object <e>."
-  (let* ((accessor-name (string-upcase (symbol-name attribute)))
-         (accessor-symbol (find-symbol accessor-name (find-package :md))))
-    (setf (slot-value e accessor-symbol) value)))
+;; (defmethod set-attribute ((e mtp-event) attribute value)
+;;   "Sets the value for slot <attribute> in event object <e>."
+;;   (let* ((accessor-name (string-upcase (symbol-name attribute)))
+;;          (accessor-symbol (find-symbol accessor-name (find-package :md))))
+;;     (setf (slot-value e accessor-symbol) value)))
 
-(defmethod get-attribute ((e mtp-event) attribute)
-  "Returns the value for slot <attribute> in event object <e>."
-  (let* ((accessor-name 
-          (concatenate 'string "EVENT-" (string-upcase (symbol-name attribute))))
-         (accessor-symbol (find-symbol accessor-name (find-package :md))))
-    (funcall accessor-symbol e)))
+;; (defmethod get-attribute ((e mtp-event) attribute)
+;;   "Returns the value for slot <attribute> in event object <e>."
+;;   (let* ((accessor-name 
+;;           (concatenate 'string "EVENT-" (string-upcase (symbol-name attribute))))
+;;          (accessor-symbol (find-symbol accessor-name (find-package :md))))
+;;     (funcall accessor-symbol e)))
 
 (defmethod copy-event ((l list))
   (make-instance 'mtp-event))
@@ -489,42 +488,6 @@ no. in which the event occurs." ))
                  :dyn (event-dyn e)
                  :tempo (event-tempo e)
                  :voice (event-voice e)))
-
-
-;; ;;; Getting event sequences from the database
-;; ;;;---------------------------------------
-
-;; (defun get-event-sequences (&rest dataset-ids)
-;;   "Returns a list of lists of event objects corresponding to the
-;; events in each composition in <dataset-id>."
-;;   (let ((compositions '()))
-;;     (dolist (dataset-id dataset-ids (nreverse compositions))
-;;       (dolist (c (dataset-compositions (get-dataset dataset-id)))
-;;         (let ((composition '()))
-;;           (dolist (e (composition-events c))
-;;             (push e composition))
-;;           (push (nreverse composition) compositions))))))
-
-
-;; (defmacro do-events ((event dataset-id composition-id) &body body)
-;;   `(clsql:do-query ((,event) 
-;;                     [select 'md:event :order-by [event-id]
-;;                      :where [and [= [slot-value 'event 'dataset-id] 
-;;                                     ,dataset-id]
-;;                                  [= [slot-value 'event 'composition-id]
-;;                                     ,composition-id]]]
-;;                     :result-types nil)
-;;     ,@body))
-
-
-
-;; (defmacro do-compositions ((composition dataset-id) &body body)
-;;   `(clsql:do-query ((,composition) 
-;;                     [select 'md:composition :order-by [composition-id]
-;;                      :where [= [slot-value 'composition 'dataset-id] ,dataset-id]]
-;;                     :result-types nil)
-;;     ,@body))
-
 
 ;; Utility functions
 ;;===================
@@ -635,18 +598,18 @@ per composition, as well as the domains of each event attribute."
         (clsql:select [dataset-id] :from 'mtp_dataset :order-by [dataset-id]
                       :flatp t :field-names nil)))
 
-;; (defun get-sequence (attribute dataset-id composition-id event-id length)
-;;   "Returns a list of the values of <attribute> for the events with
-;; composition-id <composition-id>, dataset-id <dataset-id> and event-ids
-;; from <event-id> to (+ <event-id> <length>)."
-;;   (let ((event-id-2 (+ event-id length)))
-;;     (clsql:select attribute :from 'event :order-by [event-id]
-;;                   :where [and [= [slot-value 'event 'dataset-id] dataset-id]
-;;                               [= [slot-value 'event 'composition-id]
-;;                                  composition-id]
-;;                               [>= [slot-value 'event 'event-id] event-id]
-;;                               [< [slot-value 'event 'event-id] event-id-2]]
-;;                   :field-names nil :flatp t)))
+(defun get-sequence (attribute dataset-id composition-id event-id length)
+  "Returns a list of the values of <attribute> for the events with
+composition-id <composition-id>, dataset-id <dataset-id> and event-ids
+from <event-id> to (+ <event-id> <length>)."
+  (let ((event-id-2 (+ event-id length)))
+    (clsql:select attribute :from 'mtp-event :order-by [event-id]
+                  :where [and [= [slot-value 'mtp-event 'dataset-id] dataset-id]
+                              [= [slot-value 'mtp-event 'composition-id]
+                                 composition-id]
+                              [>= [slot-value 'mtp-event 'event-id] event-id]
+                              [< [slot-value 'mtp-event 'event-id] event-id-2]]
+                  :field-names nil :flatp t)))
 
 #.(clsql:restore-sql-reader-syntax-state)
 
