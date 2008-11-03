@@ -3,7 +3,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2008-11-03 17:39:32 marcusp>                           
+;;;; Time-stamp: <2008-11-03 20:09:20 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -16,9 +16,9 @@
 (cl:in-package #:resampling)
 
 (defparameter *model-dir* 
-  (utils:string-append apps:*root-dir* "lisp/data/models/"))
+  (utils:string-append apps:*root-dir* "data/models/"))
 (defparameter *resampling-dir*
-  (utils:string-append apps:*root-dir* "lisp/data/resampling/"))
+  (utils:string-append apps:*root-dir* "data/resampling/"))
 
 ;;;===========================================================================
 ;;; Dataset Prediction 
