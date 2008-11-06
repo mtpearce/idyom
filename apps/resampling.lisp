@@ -3,7 +3,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2008-11-03 20:09:20 marcusp>                           
+;;;; Time-stamp: <2008-11-06 13:53:48 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -164,7 +164,7 @@ dataset-id)."
         (incf system-id)))))
 
 (defun pearce05 (&optional (dataset-id 1))
-  (format t "~&Simulation of the experiments of Pearce (2005, Table 9.1, p. 191 and Table 9.8, p. 206).~%")
+  (format t "~&Simulation of the experiments of Pearce (2005, Table 9.1/9.8, p. 191/206).~%")
   (let ((systems '((A (cpitch))
                    (B (cpintfip (cpintfref dur-ratio) thrfiph))
                    (C (thrfiph cpintfip (cpint dur-ratio) (cpintfref dur) 
