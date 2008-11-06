@@ -18,10 +18,19 @@
          nil))))
 
 (define-basic-viewpoint mode (events)
-  (amuse:key-signature-mode 
-   (car (amuse:get-applicable-key-signatures 
-         (last-element events)
-         nil))))
+  ;; NB: By default, amuse returns midi mode indicators: i.e., 0 =
+  ;; major; 1 = minor. The viewpoints code has a more general
+  ;; representation that is intended to cover the church modes as
+  ;; well: 0 = major; 9 = minor reflecting the fact that the minor
+  ;; mode corresponds to rotation of the pitch class set corresponding
+  ;; to its relative major scale by 9 semitones (see Balzano, 1982). 
+  (let ((midi-mode (amuse:key-signature-mode 
+                    (car (amuse:get-applicable-key-signatures 
+                          (last-element events)
+                          nil)))))
+    (case midi-mode 
+      (0 0)
+      (1 9))))
   
 (define-basic-viewpoint tempo (events)
   (amuse:bpm 
@@ -54,6 +63,7 @@
           (t nil))))
 
 (define-basic-viewpoint bioi (events)
+  ;; BIOI = Basic IOI (IOI as a basic feature) 
   (let* ((last-element (last-element events))
          (penultimate-element (penultimate-element events)))
     (cond ((and last-element penultimate-element)
