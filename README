@@ -1,30 +1,34 @@
-INTRODUCTION 
+REQUIREMENTS 
 
-
+SBCL              http://www.sbcl.org 
+AMUSE             rvw.doc.gold.ac.uk:/isms/group/muthic/darcs/amuse/  
+AMUSE-MTP         rvw.doc.gold.ac.uk:/isms/group/muthic/darcs/amuse/  
+AMUSE-VIEWPOINTS  rvw.doc.gold.ac.uk:/isms/group/muthic/darcs/amuse-viewpoints/  
+PPM-STAR          rvw.doc.gold.ac.uk:/isms/group/muthic/darcs/ppm-star/
 
 DIRECTORY STRUCTURE 
 
 The layout of the code is as follows: 
 
-idyom.asd: the system definition 
-utils/: general-purpose utilities 
-amuse/: an interface to amuse music data interface
-ppm/: the ppm* and multiple-viewpoint system modelling framework 
-apps/: top-level applications for users 
-data/: directory used internally for storing data 
-
-REQUIREMENTS 
-
-SBCL              http://www.sbcl.org 
-AMUSE             rvw.doc.gold.ac.uk:/isms/group/muthic/darcs/amuse/  
-AMUSE-MTP         ditto 
-AMUSE-VIEWPOINTS  rvw.doc.gold.ac.uk:/isms/group/muthic/darcs/amuse-viewpoints/  
-PSGRAPH           http://www.cliki.net/psgraph
+* idyom.asd: the system definition 
+* utils/: general-purpose utilities 
+* amuse/: an interface to amuse music data interface
+** amuse-interface.lisp: look here to make this less dependent on amuse-mtp
+** viewpoint-extensions.lisp: extensions to the viewpoint framework useful for modelling
+* ppm/: the multiple-viewpoint system modelling framework
+** params.lisp: user-level parameters to the statistical modelling 
+** multiple-viewpoint-system.lisp: modelling with multiple-viewpoints 
+** prediction-sets.lisp: representing and combining distributions, computing entropy and information content
+* apps/: top-level applications for users 
+** resampling.lisp: the main user interface - estimating information content by cross-validation
+** viewpoint-selection.lisp: on tin does it says the what   
+* data/: directory used internally for storing data 
+** cache/: for storing cache files
+** models/: for storing model files
+** resampling/: for storing resampling sets
 
 FUNCTIONS 
 
-
-
-EXAMPLE SESSION
-
+resampling:dataset-prediction 
+resampling:output-information-content
 

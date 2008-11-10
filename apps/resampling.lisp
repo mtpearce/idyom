@@ -3,7 +3,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2008-11-06 13:53:48 marcusp>                           
+;;;; Time-stamp: <2008-11-10 17:21:44 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -156,7 +156,7 @@ dataset-id)."
     (dolist (system systems)
       (let ((mean-ic 
              (output-information-content 
-              (dataset-prediction dataset '(cpitch) system 
+              (dataset-prediction dataset '(cpitch) system
                                   :resampling-indices resampling-indices)
               1)))
         (format t "~&System ~A; Mean Information Content: ~,2F ~%" system-id 
