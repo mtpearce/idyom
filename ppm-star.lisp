@@ -3,7 +3,7 @@
 ;;;; File:       ppm-star.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2008-11-03 14:21:44 marcusp>                           
+;;;; Time-stamp: <2008-11-10 16:23:21 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -987,103 +987,3 @@ those symbols that have occurred exactly once are counted."
                (length (transition-counts m *root* up-ex)))
             0.0)))
            
-
-;;;===========================================================================
-;;; I/O routines for ppm models  
-;;;===========================================================================
-
-;; (defun get-model (filename alphabet dataset &key (order-bound nil)
-;;                            (mixtures t) (escape :c) (update-exclusion nil))
-;;   "Returns a PPM model initialised with the supplied parameters. If
-;;    <filename> exists the model is read from the designated file otherwise
-;;    it is constructed from the database and written to <filename>." 
-;;   (unless (file-exists filename)
-;;     (let ((model (make-ppm alphabet)))
-;;       (model-dataset model dataset :construct? t :predict? nil)
-;;       (write-model-to-file model filename)
-;;       (format t "~&Written PPM* model to ~A.~%" filename)))
-;;   (read-model-from-file filename :order-bound order-bound :mixtures mixtures
-;;                         :escape escape :update-exclusion update-exclusion))
-
-;; (defun read-model-from-file (filename &key (order-bound nil)
-;;                                       (mixtures t) (escape :c)
-;;                                       (update-exclusion nil))
-;;   "Returns the suffix tree stored in <filename>."
-;;   (let* ((model (read-object-from-file filename :ppm))
-;;          (leaves (alist->hash-table (nth 1 (assoc 'leaves model))))
-;;          (branches (alist->hash-table (nth 1 (assoc 'branches model))))
-;;          (dataset (alist->dataset (nth 1 (assoc 'dataset model))))
-;;          (alphabet (nth 1 (assoc 'alphabet model))))
-;;     (make-ppm alphabet :leaves leaves :branches branches :dataset dataset
-;;               :order-bound order-bound :mixtures mixtures :escape escape
-;;               :update-exclusion update-exclusion)))
-              
-
-;; (defmethod write-model-to-file ((m ppm) filename)
-;;   "Writes the suffix tree of <m> to <filename>."
-;;   (let* ((leaves (hash-table->alist (ppm-leaves m)))
-;;          (branches (hash-table->alist (ppm-branches m)))
-;;          (dataset (dataset->alist m))
-;;          (alphabet (ppm-alphabet m))
-;;          (model (list (list 'leaves leaves)
-;;                       (list 'branches branches)
-;;                       (list 'dataset dataset)
-;;                       (list 'alphabet alphabet))))
-;;     (write-object-to-file model filename :ppm)))
-
-;; (defmethod dataset->alist ((m ppm))
-;;   "Returns (ppm-dataset <m>) in the form of an alist."
-;;   (mapcar #'(lambda (item)
-;;               (list (car item)
-;;                     (hash-table->alist (nth 1 item))))
-;;           (hash-table->alist (ppm-dataset m))))
-
-;; (defun alist->dataset (alist)
-;;   "Returns a hash-table corresponding to <alist> which is suitable for
-;;    storing the dataset of a PPM model."
-;;   (alist->hash-table (mapcar #'(lambda (item)
-;;                                  (list (car item)
-;;                                        (alist->hash-table (nth 1 item))))
-;;                              alist)))
-
-;; (defmethod write-model-to-postscript ((m ppm) &key (filename "stree.ps"))
-;;                                       ;(depth nil))
-;;   "Prints the suffix tree of <m> to a postscript file <path>."
-;;   (labels ((get-node-count (node)
-;;              (list (string-append "Count0: "
-;;                                   (format nil "~D" (get-count m node)))
-;;                    (string-append "Count1: "
-;;                                   (format nil "~D" (get-count m node t)))))
-;;            (list-node-children (node)
-;;              ;(when (or (null depth) 
-;;              ;          (and (branch-record-p (get-record m node))
-;;              ;               (<= (branch-record-depth (get-record m node)) 
-;;              ;                   depth)))
-;;                (list-children m node));)
-
-;;            (list->string (list)
-;;              (reduce #'(lambda (&optional s1 s2) (string-append s1 s2))
-;;                      (mapcar #'(lambda (symbol)
-;;                                  (format nil "~A " (if (symbolp symbol)
-;;                                                        (symbol-name symbol)
-;;                                                        symbol)))
-;;                              list)))
-;;            (label->string (node)
-;;              (let ((label (instantiate-label m (get-label m node))))
-;;                (cons (list->string label) (get-node-count node)))))
-;;     (let ((psgraph:*fontsize* 14)
-;;           (psgraph:*second-fontsize* 12)
-;;           (psgraph:*boxradius* 10) 
-;;           (psgraph:*boxedge* 10)
-;;           (psgraph:*boxgray* "0")
-;;           (psgraph:*edgegray* "0")
-;;           (psgraph:*extra-x-spacing* 90)
-;;           (psgraph:*extra-y-spacing* 20))
-;;       (with-open-file (*standard-output* filename :direction :output
-;;                                          :if-exists :supersede)
-;;         (psgraph:psgraph *standard-output* *root*
-;;                           #'list-node-children
-;;                           #'label->string 
-;;                           t nil #'eq nil)))))
-
-

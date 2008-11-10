@@ -1,5 +1,6 @@
 (asdf:defsystem ppm-star
   :name "ppm-star"
+  :depends-on ("psgraph")
   :components 
   ((:file "package")
    (:file "generics" :depends-on ("package"))

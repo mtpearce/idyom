@@ -1,5 +1,5 @@
 (cl:defpackage #:ppm-star
-  (:use #:cl) ;; #:psgraph #:utils)
+  (:use #:cl #:psgraph)
   (:nicknames #:ppm)
   (:export "PPM" "*ROOT*" "MAKE-PPM" "REINITIALISE-PPM" "SET-PPM-PARAMETERS"
            "SET-ALPHABET" "INCREMENT-SEQUENCE-FRONT" "INCREMENT-EVENT-FRONT"

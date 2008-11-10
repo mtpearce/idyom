@@ -1,5 +1,45 @@
 (cl:in-package :ppm)
 
+(defmethod write-model-to-postscript ((m ppm) filename)
+                                      ;(depth nil))
+  "Prints the suffix tree of <m> to a postscript file <path>."
+  (labels ((get-node-count (node)
+             (list (string-append "Count0: "
+                                  (format nil "~D" (get-count m node)))
+                   (string-append "Count1: "
+                                  (format nil "~D" (get-count m node t)))))
+           (list-node-children (node)
+             ;(when (or (null depth) 
+             ;          (and (branch-record-p (get-record m node))
+             ;               (<= (branch-record-depth (get-record m node)) 
+             ;                   depth)))
+               (list-children m node));)
+
+           (list->string (list)
+             (reduce #'(lambda (&optional s1 s2) (string-append s1 s2))
+                     (mapcar #'(lambda (symbol)
+                                 (format nil "~A " (if (symbolp symbol)
+                                                       (symbol-name symbol)
+                                                       symbol)))
+                             list)))
+           (label->string (node)
+             (let ((label (instantiate-label m (get-label m node))))
+               (cons (list->string label) (get-node-count node)))))
+    (let ((psgraph:*fontsize* 14)
+          (psgraph:*second-fontsize* 12)
+          (psgraph:*boxradius* 10) 
+          (psgraph:*boxedge* 10)
+          (psgraph:*boxgray* "0")
+          (psgraph:*edgegray* "0")
+          (psgraph:*extra-x-spacing* 90)
+          (psgraph:*extra-y-spacing* 20))
+      (with-open-file (*standard-output* filename :direction :output
+                                         :if-exists :supersede)
+        (psgraph:psgraph *standard-output* *root*
+                          #'list-node-children
+                          #'label->string 
+                          t nil #'eq nil)))))
+
 (defun get-model (filename alphabet dataset &key (order-bound nil)
                            (mixtures t) (escape :c) (update-exclusion nil))
   "Returns a PPM model initialised with the supplied parameters. If
