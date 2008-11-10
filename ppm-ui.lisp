@@ -16,10 +16,8 @@
             (get-alphabet-hash-table sequence))
    alphabet))
 
-(defun test-model (order)
-  (ngram-frequencies 
-   (build-model '((a b r a c a d a b r a)) '(a b c d r)) 
-   order))
+(defun test-model (sequences alphabet order)
+  (ngram-frequencies (build-model sequences alphabet) order))
 
 (defun build-model (sequences alphabet) 
   (let ((model (ppm:make-ppm alphabet :escape :c :mixtures t 
@@ -40,7 +38,9 @@
                      (mapc #'(lambda (c) (g-n-f c new-prefix))
                            (list-children model node)))))))
       (g-n-f (root-node) nil))
-  results))
+    (remove-if #'(lambda (x) 
+                   (find ppm-star::*sentinel* (car x)))
+               results)))
 
 (defun generate-labels (model node prefix)
   (let ((label (label model node))
