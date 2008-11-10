@@ -3,7 +3,7 @@
 ;;;; File:       music-data.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2008-11-03 11:53:34 marcusp>                           
+;;;; Time-stamp: <2008-11-10 15:15:45 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -452,18 +452,18 @@ dataset-id, composition-id and event-id is returned; for compositions
 a list of dataset-id and composition-id is returned; and for datasets,
 a list containing the dataset-id is returned."))
 
-;; (defmethod set-attribute ((e mtp-event) attribute value)
-;;   "Sets the value for slot <attribute> in event object <e>."
-;;   (let* ((accessor-name (string-upcase (symbol-name attribute)))
-;;          (accessor-symbol (find-symbol accessor-name (find-package :md))))
-;;     (setf (slot-value e accessor-symbol) value)))
+(defmethod set-attribute ((e mtp-event) attribute value)
+  "Sets the value for slot <attribute> in event object <e>."
+  (let* ((accessor-name (string-upcase (symbol-name attribute)))
+         (accessor-symbol (find-symbol accessor-name (find-package :mtp-admin))))
+    (setf (slot-value e accessor-symbol) value)))
 
-;; (defmethod get-attribute ((e mtp-event) attribute)
-;;   "Returns the value for slot <attribute> in event object <e>."
-;;   (let* ((accessor-name 
-;;           (concatenate 'string "EVENT-" (string-upcase (symbol-name attribute))))
-;;          (accessor-symbol (find-symbol accessor-name (find-package :md))))
-;;     (funcall accessor-symbol e)))
+(defmethod get-attribute ((e mtp-event) attribute)
+  "Returns the value for slot <attribute> in event object <e>."
+  (let* ((accessor-name 
+          (concatenate 'string "EVENT-" (string-upcase (symbol-name attribute))))
+         (accessor-symbol (find-symbol accessor-name (find-package :mtp-admin))))
+    (funcall accessor-symbol e)))
 
 (defmethod copy-event ((l list))
   (make-instance 'mtp-event))

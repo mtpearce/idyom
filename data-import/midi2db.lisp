@@ -3,7 +3,7 @@
 ;;;; File:       midi2db.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2007-03-21 09:47:26 marcusp>
-;;;; Time-stamp: <2008-10-31 15:59:50 marcusp>
+;;;; Time-stamp: <2008-11-10 15:05:28 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:midi2db) 
@@ -114,7 +114,10 @@
   (find (midi:message-key note-on-message)
         track 
         :start 1 
-        :key #'midi:message-key 
+        :key #'(lambda (x) (typecase x
+                             ((or note-on-message note-off-message)
+                              (midi:message-key x))
+                             (t -50000)))
         :test #'=))
 
 (defun usecs-per-quarter-note->bpm (usecs-per-quarter-note)
