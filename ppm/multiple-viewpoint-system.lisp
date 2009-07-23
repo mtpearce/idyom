@@ -3,7 +3,7 @@
 ;;;; File:       multiple-viewpoint-system.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-27 18:54:17 marcusp>                           
-;;;; Time-stamp: <2008-11-03 18:51:38 marcusp>                           
+;;;; Time-stamp: <2009-07-22 13:43:22 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -87,7 +87,7 @@
   (hash-table-p *ep-cache*))
 
 (defun ep-cache-key (m v e)
-  (list m v (md::dataset-id e) (md::composition-id e) (md::event-id e)))
+  (list m v (amuse-mtp::dataset-id e) (amuse-mtp::composition-id e) (amuse-mtp::event-id e)))
 
 (defun cache-ep (distribution m v e)
   (when (ep-cache-enabled-p)
@@ -207,7 +207,7 @@ See also VIEWPOINTS:SET-ALPHABET-FROM-CONTEXT."
            (mvs-basic m)))
 
 (defmethod sequence-prediction-sets ((m mvs) events event-prediction-sets)
-  (let ((index (md::composition-id (car events))))
+  (let ((index (amuse-mtp::composition-id (car events))))
     (apply #'mapcar
            (cons #'(lambda (&rest e)
                      (make-sequence-prediction :viewpoint (car e)

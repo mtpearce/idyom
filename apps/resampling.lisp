@@ -3,7 +3,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2008-11-10 17:21:44 marcusp>                           
+;;;; Time-stamp: <2009-07-23 09:46:26 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -49,7 +49,7 @@
                                  (utils:generate-integers 0 (1- k))
                                  resampling-indices)))
     (dolist (resampling-set resampling-sets sequence-predictions)
-      ;;(format t "~&~0,0@TResampling set ~A~%" resampling-id)
+      ;; (format t "~&~0,0@TResampling set ~A: ~A~%" resampling-id resampling-set)
       (when (member resampling-id resampling-indices)
         (let* ((training-set (get-training-set dataset resampling-set))
                (training-set 
