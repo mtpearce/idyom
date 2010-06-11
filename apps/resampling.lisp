@@ -3,7 +3,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2009-07-23 09:46:26 marcusp>                           
+;;;; Time-stamp: <2010-06-09 17:03:53 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -122,6 +122,55 @@ dataset-id)."
   (cadr (prediction-sets:event-prediction event-prediction)))
 
 (defun mean (numbers) (/ (apply #'+ numbers) (length numbers)))
+
+
+;;;===========================================================================
+;;; Formatted output of information content etc.
+;;;===========================================================================
+
+(defun format-information-content (resampling-predictions file dataset-id detail)
+  (with-open-file (o file :direction :output :if-exists :supersede)
+    (case detail 
+      (1 (format t "~&Not implemented.~%"))
+      (2 (format-information-content-detail=2 o resampling-predictions dataset-id))
+      (3 (format-information-content-detail=3 o resampling-predictions dataset-id)))))
+
+(defun format-information-content-detail=2 (stream resampling-predictions dataset-id)
+  (multiple-value-bind (overall-mean composition-means)
+      (resampling:output-information-content resampling-predictions 2)
+    (format stream "~&melody.id melody.name mean.information.content~%")
+    (do* ((ic composition-means (cdr ic))
+          (cid 1 (1+ cid)))
+         ((null ic) overall-mean)
+      (let ((d (mtp-admin:get-description dataset-id (1- cid))))
+        (format stream "~&~A ~A ~A~%" cid d (car ic))))))
+
+(defun format-information-content-detail=3 (stream resampling-predictions dataset-id) 
+  (format stream "~&melody.id note.id melody.name keysig mode pitch probability information.content entropy~%")
+  (let ((melody-index 1)
+        (data (prediction-sets:prediction-set (caar resampling-predictions))))
+    (dolist (sp data)
+      (let* ((melody-id (prediction-sets:prediction-index sp))
+             (event (mtp-admin:get-event dataset-id melody-id 0))
+             (keysig (mtp-admin:get-attribute event :keysig))
+             (mode (mtp-admin:get-attribute event :mode))
+             (name (mtp-admin:get-description dataset-id melody-id))
+             (event-predictions (prediction-sets:prediction-set sp))
+             (event-index 1))
+        (format t "~&~3A ~3A ~5A~%" melody-index melody-id name)
+        (dolist (ep event-predictions)
+          (let* ((pitch (prediction-sets:prediction-element ep))
+                 (distribution (prediction-sets:prediction-set ep))
+                 (probability (float (cadr (assoc pitch distribution)) 0.0))
+                 (information-content (- (log probability 2)))
+                 (entropy (float (prediction-sets::shannon-entropy distribution) 0.0)))
+            (format stream "~&~A ~A ~A ~A ~A ~A ~A ~A ~A~%" 
+                    (1+ melody-id) event-index name keysig mode pitch 
+                    probability
+                    (utils:round-to-nearest-decimal-place information-content 3)
+                    (utils:round-to-nearest-decimal-place entropy 3)))
+          (incf event-index)))
+      (incf melody-index))))
 
 
 ;;;===========================================================================

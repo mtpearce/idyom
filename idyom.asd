@@ -1,9 +1,8 @@
-;;;; -*- Mod: LISP; Syntax: ANSI-Common-Lisp; Base: 10 -*-
 ;;;; ======================================================================
 ;;;; File:       IDyOM.asd
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-05-04 21:29:04 marcusp>
-;;;; Time-stamp: <2008-11-03 20:46:44 marcusp>
+;;;; Time-stamp: <2010-06-11 11:38:30 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
