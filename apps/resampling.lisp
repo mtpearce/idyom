@@ -3,7 +3,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2010-06-09 17:03:53 marcusp>                           
+;;;; Time-stamp: <2010-06-28 16:07:50 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -146,30 +146,35 @@ dataset-id)."
         (format stream "~&~A ~A ~A~%" cid d (car ic))))))
 
 (defun format-information-content-detail=3 (stream resampling-predictions dataset-id) 
-  (format stream "~&melody.id note.id melody.name keysig mode pitch probability information.content entropy~%")
+  (format stream "~&melody.id note.id melody.name onset duration deltast pitch keysig mode probability information.content entropy~%")
   (let ((melody-index 1)
         (data (prediction-sets:prediction-set (caar resampling-predictions))))
     (dolist (sp data)
       (let* ((melody-id (prediction-sets:prediction-index sp))
-             (event (mtp-admin:get-event dataset-id melody-id 0))
-             (keysig (mtp-admin:get-attribute event :keysig))
-             (mode (mtp-admin:get-attribute event :mode))
              (name (mtp-admin:get-description dataset-id melody-id))
              (event-predictions (prediction-sets:prediction-set sp))
-             (event-index 1))
+             (event-id 0))
         (format t "~&~3A ~3A ~5A~%" melody-index melody-id name)
         (dolist (ep event-predictions)
-          (let* ((pitch (prediction-sets:prediction-element ep))
+          (let* ((event (mtp-admin:get-event dataset-id melody-id event-id))
+                 (onset (mtp-admin:get-attribute event :onset))
+                 (dur (mtp-admin:get-attribute event :dur))
+                 (deltast (mtp-admin:get-attribute event :deltast))
+                 (pitch (mtp-admin:get-attribute event :cpitch))
+                 (keysig (mtp-admin:get-attribute event :keysig))
+                 (mode (mtp-admin:get-attribute event :mode))
+                 (element (prediction-sets:prediction-element ep))
                  (distribution (prediction-sets:prediction-set ep))
-                 (probability (float (cadr (assoc pitch distribution)) 0.0))
+                 (probability (float (cadr (assoc element distribution)) 0.0))
                  (information-content (- (log probability 2)))
                  (entropy (float (prediction-sets::shannon-entropy distribution) 0.0)))
-            (format stream "~&~A ~A ~A ~A ~A ~A ~A ~A ~A~%" 
-                    (1+ melody-id) event-index name keysig mode pitch 
+            (format stream "~&~A ~A ~A ~A ~A ~A ~A ~A ~A ~A ~A ~A~%" 
+                    (1+ melody-id) (1+ event-id) name 
+                    onset dur deltast pitch keysig mode
                     probability
                     (utils:round-to-nearest-decimal-place information-content 3)
                     (utils:round-to-nearest-decimal-place entropy 3)))
-          (incf event-index)))
+          (incf event-id)))
       (incf melody-index))))
 
 
