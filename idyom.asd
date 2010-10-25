@@ -2,7 +2,7 @@
 ;;;; File:       IDyOM.asd
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-05-04 21:29:04 marcusp>
-;;;; Time-stamp: <2010-06-11 11:38:30 marcusp>
+;;;; Time-stamp: <2010-10-22 11:31:52 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -11,7 +11,7 @@
 (in-package #:idyom-system)
 
 (defsystem idyom
-  :depends-on (amuse amuse-viewpoints amuse-mtp ppm-star)
+  :depends-on (amuse amuse-viewpoints amuse-mtp ppm-star mtp-admin)
   :serial t
   :components
   (;; General utilities  

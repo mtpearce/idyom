@@ -3,7 +3,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2010-06-28 16:07:50 marcusp>                           
+;;;; Time-stamp: <2010-08-16 15:37:00 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -144,6 +144,75 @@ dataset-id)."
          ((null ic) overall-mean)
       (let ((d (mtp-admin:get-description dataset-id (1- cid))))
         (format stream "~&~A ~A ~A~%" cid d (car ic))))))
+
+;; (defun format-information-content-detail=34 (stream resampling-predictions dataset-id) 
+;;   (format stream "~&melody.id note.id melody.name onset duration deltast pitch keysig mode probability information.content entropy~%")
+;;   (let ((information-contents (multiple-value-bind (a b c) (output-information-content resampling-predictions 3) (declare (ignore a b) c)))
+;;         (results (make-hash-table)) 
+;;         (keys))
+;;     ;; FOR EACH: resampling set prediction 
+;;     (dolist (rsp dataset-predictions)
+;;       ;; FOR EACH: feature prediction 
+;;       (dolist (fp rsp)
+;;         (let ((feature 
+;;                (viewpoints:viewpoint-type 
+;;                 (prediction-sets:prediction-viewpoint fp))))
+;;           ;; FOR EACH: song prediction 
+;;           (dolist (sp (prediction-sets:prediction-set fp))
+;;             (let ((song-id (prediction-sets:prediction-index sp))
+;;                   (fsp nil))
+;;               ;; FOR EACH: event 
+;;               (dolist (ep (prediction-sets:prediction-set sp))
+;;                 (let ((probability (probability ep)))
+;;                   (push probability fsp)))
+;;               (let ((fr (gethash feature results)))
+;;                 (setf (gethash feature results)
+;;                       (cons (list song-id (nreverse fsp)) fr))))))))
+;;     (let ((information-contents))
+;;       ;; For each song
+;;       (dolist (key (sort keys #'<))
+;;         (let* (;; get the probabilities for each feature 
+;;                (sp (mapcar #'(lambda (x) 
+;;                                (cadr (assoc key (cadr x))))
+;;                            (utils:hash-table->alist results)))
+;;                ;; multiply them together 
+;;                (spm (apply #'mapcar #'* sp))
+;;                ;; compute the information content 
+;;                (sic (mapcar #'(lambda (x) (- (log x 2))) spm)))
+;;           (push sic information-contents)))
+;;       (nreverse information-contents))))
+;;   (let ((melody-index 1)
+;;         (data (prediction-sets:prediction-set (caar resampling-predictions))))
+;;     (dolist (sp data)
+;;       (let* ((melody-id (prediction-sets:prediction-index sp))
+;;              (name (mtp-admin:get-description dataset-id melody-id))
+;;              (event-predictions (prediction-sets:prediction-set sp))
+;;              (event-id 0))
+;;         (format t "~&~3A ~3A ~5A~%" melody-index melody-id name)
+;;         (dolist (ep event-predictions)
+;;           (let* ((event (mtp-admin:get-event dataset-id melody-id event-id))
+;;                  (onset (mtp-admin:get-attribute event :onset))
+;;                  (dur (mtp-admin:get-attribute event :dur))
+;;                  (deltast (mtp-admin:get-attribute event :deltast))
+;;                  (pitch (mtp-admin:get-attribute event :cpitch))
+;;                  (keysig (mtp-admin:get-attribute event :keysig))
+;;                  (mode (mtp-admin:get-attribute event :mode))
+;;                  (element (prediction-sets:prediction-element ep))
+;;                  (distribution (prediction-sets:prediction-set ep))
+;;                  (probability (float (cadr (assoc element distribution)) 0.0))
+;;                  (information-content (- (log probability 2)))
+;;                  (entropy (float (prediction-sets::shannon-entropy distribution) 0.0)))
+;;             (format stream "~&~A ~A ~A ~A ~A ~A ~A ~A ~A ~A ~A ~A~%" 
+;;                     (1+ melody-id) (1+ event-id) name 
+;;                     onset dur deltast pitch keysig mode
+;;                     probability
+;;                     (utils:round-to-nearest-decimal-place information-content 3)
+;;                     (utils:round-to-nearest-decimal-place entropy 3)))
+;;           (incf event-id)))
+;;       (incf melody-index))))
+
+
+
 
 (defun format-information-content-detail=3 (stream resampling-predictions dataset-id) 
   (format stream "~&melody.id note.id melody.name onset duration deltast pitch keysig mode probability information.content entropy~%")
