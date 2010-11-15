@@ -3,7 +3,7 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                           
-;;;; Time-stamp: <2008-11-03 11:46:30 marcusp>                           
+;;;; Time-stamp: <2010-02-25 12:21:07 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -25,6 +25,7 @@
            "GET-ATTRIBUTE" "SET-ATTRIBUTE" "GET-TIMEBASE" "GET-MIDC" 
            "GET-NEXT-FREE-ID" "COUNT-COMPOSITIONS" "COUNT-EVENTS" "GET-DOMAIN" 
            "GET-MAX-EVENT-COUNT")
+  ;;(:import-from #:amuse-mtp "MTP-DATASET" "MTP-COMPOSITION" "MTP-EVENT")
   (:documentation "Interface to an SQL database of music objects."))
 
 ;;; ======================================================================

@@ -3,7 +3,7 @@
 ;;;; File:       mtp-admin.asd
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2008-10-31 15:44:34 marcusp>
-;;;; Time-stamp: <2008-10-31 16:52:32 marcusp>
+;;;; Time-stamp: <2010-02-25 11:53:37 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -12,7 +12,7 @@
 (in-package #:mtp-admin-system)
 
 (defsystem mtp-admin
-  :depends-on (clsql cl-ppcre midi)
+  :depends-on (clsql cl-ppcre midi amuse-mtp)
   :serial t
   :components
   (;; General administrative utilities  

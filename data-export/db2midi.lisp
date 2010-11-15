@@ -3,7 +3,7 @@
 ;;;; File:       db2midi.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2005-06-09 11:01:51 marcusp>
-;;;; Time-stamp: <2008-10-31 17:12:26 marcusp>
+;;;; Time-stamp: <2010-06-07 12:21:48 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:db2midi)
@@ -35,11 +35,32 @@
 (defun bpm->usecs (bpm)
   (floor (* 1000000 (/ 60 bpm))))
 
-(defun events->midi (events file)
+(defun event-lists->midi (event-lists file &key (format 1) (program *default-program*))
+  (let* ((tempo (mtp-admin:get-attribute (car (car event-lists)) :tempo))
+         (tempo-msg (make-instance 'midi:tempo-message :time 0
+                                   :status #xff
+                                   :tempo (bpm->usecs 
+                                           (if tempo tempo *default-tempo*))))
+         (tracks (mapcar #'(lambda (x) 
+                             (let* ((channel (mtp-admin:get-attribute (car x) :voice))
+                                    (channel-msg (make-instance 'midi:program-change-message :time 0 
+                                                                :status (+ #xc0 channel) 
+                                                                :program program)))
+                               (incf program)
+                               (cons channel-msg (cons tempo-msg (mapcan #'event->midi x))))) 
+                         event-lists))
+         (midifile (make-instance 'midi:midifile
+                                  :format format
+                                  :division (* (/ *timebase* 4)
+                                               *tick-multiplier*)
+                                  :tracks tracks)))
+    (midi:write-midi-file midifile file)))
+
+(defun events->midi (events file &key (format 1) (program *default-program*))
   (let* ((channel (mtp-admin:get-attribute (car events) :voice))
          (channel-msg (make-instance 'midi:program-change-message :time 0 
                                      :status (+ #xc0 channel) 
-                                     :program *default-program*))
+                                     :program program))
          (tempo (mtp-admin:get-attribute (car events) :tempo))
          (tempo-msg (make-instance 'midi:tempo-message :time 0
                                    :status #xff
@@ -47,7 +68,7 @@
                                            (if tempo tempo *default-tempo*))))
          (track (mapcan #'event->midi events))
          (midifile (make-instance 'midi:midifile
-                                  :format 1
+                                  :format format
                                   :division (* (/ *timebase* 4)
                                                *tick-multiplier*)
                                   :tracks (list 

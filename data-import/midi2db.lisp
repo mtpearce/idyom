@@ -3,7 +3,7 @@
 ;;;; File:       midi2db.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2007-03-21 09:47:26 marcusp>
-;;;; Time-stamp: <2008-11-10 15:05:28 marcusp>
+;;;; Time-stamp: <2010-04-14 13:47:26 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:midi2db) 
@@ -22,8 +22,8 @@
 
 (defun get-data (path)
   (if (pathname-name path)
-      (cons (pathname-name path)
-            (convert-midi-file (midi:read-midi-file path)))
+      (list (cons (pathname-name path)
+                  (convert-midi-file (midi:read-midi-file path))))
       (mapcar #'(lambda (f) 
                   (cons (pathname-name f)
                         (convert-midi-file (midi:read-midi-file f))))
