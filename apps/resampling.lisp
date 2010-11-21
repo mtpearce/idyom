@@ -3,7 +3,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2010-08-16 15:37:00 marcusp>                           
+;;;; Time-stamp: <2010-11-21 17:05:05 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -211,12 +211,9 @@ dataset-id)."
 ;;           (incf event-id)))
 ;;       (incf melody-index))))
 
-
-
-
 (defun format-information-content-detail=3 (stream resampling-predictions dataset-id) 
-  (format stream "~&melody.id note.id melody.name onset duration deltast pitch keysig mode probability information.content entropy~%")
   (let ((melody-index 1)
+        (print-header t)
         (data (prediction-sets:prediction-set (caar resampling-predictions))))
     (dolist (sp data)
       (let* ((melody-id (prediction-sets:prediction-index sp))
@@ -237,12 +234,17 @@ dataset-id)."
                  (probability (float (cadr (assoc element distribution)) 0.0))
                  (information-content (- (log probability 2)))
                  (entropy (float (prediction-sets::shannon-entropy distribution) 0.0)))
-            (format stream "~&~A ~A ~A ~A ~A ~A ~A ~A ~A ~A ~A ~A~%" 
+            (when print-header
+              (format stream "~&melody.id note.id melody.name onset duration deltast pitch keysig mode probability information.content entropy ~{~A ~} ~%" 
+                      (mapcar (lambda (x) (car x)) distribution))
+              (setf print-header nil))
+            (format stream "~&~A ~A ~A ~A ~A ~A ~A ~A ~A ~A ~A ~A ~{~A ~}~%" 
                     (1+ melody-id) (1+ event-id) name 
                     onset dur deltast pitch keysig mode
                     probability
                     (utils:round-to-nearest-decimal-place information-content 3)
-                    (utils:round-to-nearest-decimal-place entropy 3)))
+                    (utils:round-to-nearest-decimal-place entropy 3)
+                    (mapcar (lambda (x) (float (cadr x) 0.0) distribution)))                    
           (incf event-id)))
       (incf melody-index))))
 
