@@ -3,7 +3,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2008-03-18 14:01:27 marcusp>
+;;;; Time-stamp: <2010-11-22 11:32:40 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -33,6 +33,13 @@
 (defun nth-root (number n)
   "Returns the <n>th root of <number>."
   (expt number (/ 1 n)))
+
+(defun powerset(l)
+  "Returns the power set of list <l>."
+  (if (null l)
+      '(nil)
+      (let ((ps (powerset (cdr l))))
+        (append ps (mapcar #'(lambda (x) (cons (car l) x)) ps)))))
 
 
 ;;;===========================================================================
