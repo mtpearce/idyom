@@ -3,7 +3,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2010-11-21 17:05:05 marcusp>                           
+;;;; Time-stamp: <2010-11-22 12:24:11 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -245,8 +245,8 @@ dataset-id)."
                     (utils:round-to-nearest-decimal-place information-content 3)
                     (utils:round-to-nearest-decimal-place entropy 3)
                     (mapcar (lambda (x) (float (cadr x) 0.0) distribution)))                    
-          (incf event-id)))
-      (incf melody-index))))
+            (incf event-id)))
+      (incf melody-index)))))
 
 
 ;;;===========================================================================
