@@ -101,6 +101,13 @@
       (error () (setf result viewpoints:+undefined+)))
     result))
 
+(define-basic-viewpoint dyn (events)
+  ;; TODO: we need an amuse interface to dynamics to make this general
+  (let ((dyn (amuse-mtp::%mtp-dyn (car (last events)))))
+    (if dyn
+        dyn
+        viewpoints:+undefined+)))
+
 ;; TODO: (define-basic-viewpoint dyn)
 ;; TODO: (define-basic-viewpoint voice) 
 
