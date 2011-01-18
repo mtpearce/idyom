@@ -108,7 +108,6 @@
         dyn
         viewpoints:+undefined+)))
 
-;; TODO: (define-basic-viewpoint dyn)
 ;; TODO: (define-basic-viewpoint voice) 
 
 ;;; Derived Viewpoints 
