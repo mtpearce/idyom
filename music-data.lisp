@@ -3,7 +3,7 @@
 ;;;; File:       music-data.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2010-02-25 12:32:11 marcusp>                           
+;;;; Time-stamp: <2011-01-27 12:16:15 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -585,7 +585,7 @@ per composition, as well as the domains of each event attribute."
     (let ((attributes
            (if (null attributes)
                '(cpitch mpitch accidental dur deltast bioi keysig mode barlength
-                 pulses phrase dyn tempo voice)
+                 pulses phrase dyn tempo voice bioi ornament)
                (if (atom attributes) (list attributes) attributes))))
       (print-description dataset-id)
       (print-separator)
