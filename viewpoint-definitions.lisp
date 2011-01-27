@@ -105,8 +105,13 @@
   ;; TODO: we need an amuse interface to dynamics to make this general
   (let ((dyn (amuse-mtp::%mtp-dyn (car (last events)))))
     (if dyn
-        dyn
+        dyn        
         viewpoints:+undefined+)))
+
+(define-basic-viewpoint ornament (events)
+  ;; TODO: we need an amuse interface to ornaments to make this general
+  (let ((x (amuse-mtp::%mtp-ornament (car (last events)))))
+    (if x x viewpoints:+undefined+)))
 
 ;; TODO: (define-basic-viewpoint voice) 
 
