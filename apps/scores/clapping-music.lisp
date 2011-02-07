@@ -2,8 +2,9 @@
 ;;;; File:       clapping.lisp
 ;;;; Author:     marcusp <m.pearce@gold.ac.uk>
 ;;;; Created:    <2010-03-09 16:11:48 marcusp>
-;;;; Time-stamp: <2010-10-22 11:26:31 marcusp>
+;;;; Time-stamp: <2011-02-07 12:58:48 marcusp>
 ;;;; ======================================================================
+
 (cl:defpackage #:clapping
   (:use #:cl)
   (:export #:clapping #:predict-clapping #:select-clapping 
@@ -156,83 +157,3 @@
        (resampling:dataset-prediction dataset-id '(dyn bioi) '(dyn bioi) :models :stm :k 1))
     (declare (ignore a b))
     c))
-
-;; (defun compute-path (models training-ids order attributes) 
-;;   (format nil "~A~A~A~(~A~)-~{~A~^_~}~A~(~A~)-~{~(~A~)~^_~}.dat" 
-;;           apps:*root-dir* 
-;;           "R/clapping/data/"
-;;           "clapping-"
-;;           models
-;;           (if (eql models :stm) (list "nil") training-ids)
-;;           (if (null training-ids) "" "-")
-;;           order
-;;           (collapse-attribute-list attributes)))
-
-;; (defun collapse-attribute-list (attributes)
-;;   (mapcar #'(lambda (x) 
-;;               (if (consp x)
-;;                   (format nil "~{~(~A~)~^+~}" x)
-;;                   (format nil "~(~A~)" x)))
-;;           attributes))
-
-;; (defun output-data (predictions path reference-cpitch pitch-classes)
-;;   (let* ((entropies (car (prediction-sets:shannon-entropies predictions)))
-;;          (codelengths (car (prediction-sets:codelengths predictions)))
-;;          (probabilities 
-;;           (mapcar #'cadr 
-;;                   (car (prediction-sets:event-predictions predictions))))
-;;          (partnum (partnum-column))
-;;          (fignum (fignum-column))
-;;          (repnum (repnum-column)) ; repetitions in alpha process 
-;;          (eventnum (eventnum-column))
-;;          (pitches (pitch-column reference-cpitch pitch-classes)))
-;;     (with-open-file (o path :direction :output :if-exists :supersede)
-;;       (format o "~&part figure alpha event pitch probability entropy codelength~%")
-;;       (mapc #'(lambda (p f r ev pit pr e c)
-;;                 (format o "~&~A ~A ~A ~A ~A ~,2F ~,2F ~,2F~%" 
-;;                         p f r ev pit pr e c))
-;;             partnum fignum repnum eventnum pitches probabilities entropies 
-;;             codelengths)))
-;;   path)
-                
-;; (defun partnum-column ()
-;;   (let ((partnums '()))
-;;     (dotimes (i (count-figures) (nreverse partnums))
-;;       (let* ((fignum (1+ i))
-;;              (partnum (get-part fignum)))
-;;         (dotimes (j (get-repetition fignum))
-;;           (dotimes (k (figure-length fignum))
-;;             (push partnum partnums)))))))
-
-;; (defun fignum-column ()
-;;   (let ((fignums '()))
-;;     (dotimes (i (count-figures) (nreverse fignums))
-;;       (let ((fignum (1+ i)))
-;;         (dotimes (j (get-repetition fignum))
-;;           (dotimes (k (figure-length fignum))
-;;             (push fignum fignums)))))))
-
-;; (defun repnum-column ()
-;;   (let ((repnums '()))
-;;     (dotimes (i (count-figures) (nreverse repnums))
-;;       (let ((fignum (1+ i)))
-;;         (dotimes (j (get-repetition fignum))
-;;           (let ((repnum (1+ j)))
-;;             (dotimes (k (figure-length fignum))
-;;               (push repnum repnums))))))))
-      
-;; (defun eventnum-column ()
-;;   (let ((eventnums '()))
-;;     (dotimes (i (count-figures) (nreverse eventnums))
-;;       (let ((fignum (1+ i)))
-;;         (dotimes (j (get-repetition fignum))
-;;           (dotimes (k (figure-length fignum))
-;;             (push (1+ k) eventnums)))))))
-
-;; (defun pitch-column (reference pitch-classes)
-;;   (let ((pitches '()))
-;;     (dotimes (i (count-figures) (nreverse pitches))
-;;       (let ((fignum (1+ i)))
-;;         (dotimes (j (get-repetition fignum))
-;;           (dolist (n (get-figure fignum))
-;;             (push (clapping-cpitch n reference pitch-classes) pitches)))))))
