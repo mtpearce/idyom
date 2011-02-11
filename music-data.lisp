@@ -3,7 +3,7 @@
 ;;;; File:       music-data.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2011-01-27 12:16:15 marcusp>                           
+;;;; Time-stamp: <2011-02-11 12:18:23 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -73,6 +73,10 @@ with the composition table based on dataset-id in both tables."))
     :column dataset_id
     :reader dataset-id 
     :type integer)
+   (timebase
+    :type integer
+    :initarg :timebase
+    :reader composition-timebase)
    (description
     :type string
     :initarg :description
@@ -414,7 +418,6 @@ no. in which the event occurs." ))
                                     dataset-id]
                                  [= [slot-value 'mtp-composition 'composition-id]
                                     composition-id]])))
-
 
 (defun get-event (dataset-id composition-id event-id)
   "Returns the event whose dataset-id is <dataset-id>, whose composition-id

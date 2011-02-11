@@ -3,7 +3,7 @@
 ;;;; File:       db2midi.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2005-06-09 11:01:51 marcusp>
-;;;; Time-stamp: <2010-06-07 12:21:48 marcusp>
+;;;; Time-stamp: <2011-02-11 13:56:34 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:db2midi)
@@ -25,6 +25,7 @@
 (defmethod export-data ((c mtp-admin:mtp-composition) (type (eql :mid)) path)
   (let* ((title (mtp-admin::composition-description c))
          (file (concatenate 'string path "/" title ".mid")))
+    (setf *timebase* (mtp-admin::composition-timebase c))
     (events->midi (mtp-admin::composition-events c) file)))
 
 (defmethod export-data ((event-list list) (type (eql :mid)) path)
@@ -51,8 +52,7 @@
                          event-lists))
          (midifile (make-instance 'midi:midifile
                                   :format format
-                                  :division (* (/ *timebase* 4)
-                                               *tick-multiplier*)
+                                  :division (* (/ *timebase* 4) *tick-multiplier*)
                                   :tracks tracks)))
     (midi:write-midi-file midifile file)))
 
@@ -69,12 +69,12 @@
          (track (mapcan #'event->midi events))
          (midifile (make-instance 'midi:midifile
                                   :format format
-                                  :division (* (/ *timebase* 4)
-                                               *tick-multiplier*)
+                                  :division (* (/ *timebase* 4) *tick-multiplier*)
                                   :tracks (list 
-                                           (cons tempo-msg 
+                                           (cons tempo-msg
                                                  (cons channel-msg track))))))
-    (midi:write-midi-file midifile file)))
+    (midi:write-midi-file midifile file)
+    midifile))
 
 (defun event->midi (event)
   (let* ((non-onset (mtp-admin:get-attribute event :onset))

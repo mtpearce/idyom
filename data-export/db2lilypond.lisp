@@ -3,7 +3,7 @@
 ;;;; File:       db2lilypond.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2005-06-07 10:13:24 marcusp>
-;;;; Time-stamp: <2008-10-31 17:10:54 marcusp>
+;;;; Time-stamp: <2011-02-11 16:21:28 marcusp>
 ;;;; ======================================================================
 ;;;; 
 ;;;; TODO 
@@ -64,6 +64,7 @@
 (defmethod export-data ((c mtp-admin:mtp-composition) (type (eql :ly)) path)
   (let* ((title (mtp-admin::composition-description c))
          (file (concatenate 'string path "/" title ".ly")))
+    (setf *timebase* (mtp-admin::composition-timebase c))
     (with-open-file (s file :direction :output :if-exists :supersede 
                        :if-does-not-exist :create)
       (write-composition s (mtp-admin::composition-events c) title))))
@@ -231,7 +232,13 @@
              (16/7 (list "4 ~ " "8."))
              ;; dotted quaver ~ quaver 
              (16/5 (list "8. ~ " "8"))
-             (t (list (format nil "Unrecognized duration: ~A" dur)))))))
+             ;; staccato quaver (from density 21.5 and VI/Hindemith)
+             (96/7 (list "8\\staccato"))
+             ;; staccato semiquaver (from density 21.5 and VI/Hindemith)
+             (96/5 (list "16\\staccato"))
+             (t 
+              (progn (format t "~&Unrecognized duration: ~A (crotchet = ~A).~%" dur *timebase*)
+                     (list (format nil "Unrecognized duration: ~A" dur))))))))
 
 (defun standard-duration-p (dur)
   (cond ((= dur 1) 
