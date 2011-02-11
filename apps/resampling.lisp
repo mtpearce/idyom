@@ -3,7 +3,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2010-11-22 12:24:11 marcusp>                           
+;;;; Time-stamp: <2011-02-11 12:10:39 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -220,7 +220,7 @@ dataset-id)."
              (name (mtp-admin:get-description dataset-id melody-id))
              (event-predictions (prediction-sets:prediction-set sp))
              (event-id 0))
-        (format t "~&~3A ~3A ~5A~%" melody-index melody-id name)
+        ;;(format t "~&~3A ~3A ~5A~%" melody-index melody-id name)
         (dolist (ep event-predictions)
           (let* ((event (mtp-admin:get-event dataset-id melody-id event-id))
                  (onset (mtp-admin:get-attribute event :onset))
@@ -241,10 +241,10 @@ dataset-id)."
             (format stream "~&~A ~A ~A ~A ~A ~A ~A ~A ~A ~A ~A ~A ~{~A ~}~%" 
                     (1+ melody-id) (1+ event-id) name 
                     onset dur deltast pitch keysig mode
-                    probability
+                    (float probability 0.0f0)
                     (utils:round-to-nearest-decimal-place information-content 3)
                     (utils:round-to-nearest-decimal-place entropy 3)
-                    (mapcar (lambda (x) (float (cadr x) 0.0) distribution)))                    
+                    (mapcar (lambda (x) (float (cadr x) 0.0f0)) distribution))                    
             (incf event-id)))
       (incf melody-index)))))
 
