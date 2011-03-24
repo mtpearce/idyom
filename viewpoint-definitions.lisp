@@ -113,7 +113,21 @@
   (let ((x (amuse-mtp::%mtp-ornament (car (last events)))))
     (if x x viewpoints:+undefined+)))
 
-;; TODO: (define-basic-viewpoint voice) 
+(define-basic-viewpoint voice (events)
+  ;; TODO: we need an amuse interface to voicing to make this general
+  (let ((x (amuse-mtp::%mtp-voice (car (last events)))))
+    (if x x viewpoints:+undefined+)))
+
+(define-basic-viewpoint comma (events)
+  ;; TODO: we need an amuse interface to commas to make this general
+  (let ((x (amuse-mtp::%mtp-comma (car (last events)))))
+    (if x x viewpoints:+undefined+)))
+
+(define-basic-viewpoint articulation (events)
+  ;; TODO: we need an amuse interface to articulations to make this general
+  (let ((x (amuse-mtp::%mtp-articulation (car (last events)))))
+    (if x x viewpoints:+undefined+)))
+
 
 ;;; Derived Viewpoints 
 
