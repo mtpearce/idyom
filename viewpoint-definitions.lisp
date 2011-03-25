@@ -208,6 +208,31 @@
                (list (+ (onset penultimate-element) 
                         (* element (ioi penultimate-element))))))
                     
+;; bioi
+
+(define-viewpoint (bioi-ratio derived (bioi))
+    (events element) 
+  :function (multiple-value-bind (e1 e2)
+                (values-list (last events 2))
+              (if (or (null e1) (null e2)) +undefined+
+                  (let ((ioi1 (bioi (list e1)))
+                        (ioi2 (bioi (list e2))))
+                    (if (undefined-p ioi1 ioi2) +undefined+
+                        (/ ioi2 ioi1)))))
+  :function* (let ((penultimate-element (list (penultimate-element events))))
+               (list (* element (bioi penultimate-element))))))
+
+(define-viewpoint (bioi-contour derived (bioi))
+    (events element) 
+  :function (let ((bioi-ratio (bioi-ratio events)))
+              (cond ((undefined-p bioi-ratio) +undefined+)
+                    (t (signum bioi-ratio))))
+  :function* (let ((bioi (bioi (list (penultimate-element events)))))
+               (remove-if #'(lambda (a) (case element
+                                          (-1 (>= a bioi))
+                                          (0  (not (= a bioi)))
+                                          (1  (<= a bioi))))
+                          (viewpoint-alphabet (get-viewpoint 'bioi)))))
 
 ;; dur
 
