@@ -220,7 +220,7 @@
                     (if (undefined-p ioi1 ioi2) +undefined+
                         (/ ioi2 ioi1)))))
   :function* (let ((penultimate-element (list (penultimate-element events))))
-               (list (* element (bioi penultimate-element))))))
+               (list (* element (bioi penultimate-element)))))
 
 (define-viewpoint (bioi-contour derived (bioi))
     (events element) 

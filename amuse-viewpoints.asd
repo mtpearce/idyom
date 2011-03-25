@@ -1,6 +1,6 @@
 (asdf:defsystem amuse-viewpoints
     :name "amuse-viewpoints"
-    :depends-on ("amuse")
+    :depends-on ("amuse" "amuse-mtp")
     :serial t
     :components ((:file "package")
                  (:file "utils")
