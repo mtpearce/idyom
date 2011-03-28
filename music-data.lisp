@@ -3,7 +3,7 @@
 ;;;; File:       music-data.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2011-02-11 12:18:23 marcusp>                           
+;;;; Time-stamp: <2011-03-24 18:43:23 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -190,6 +190,21 @@ each table."))
     :initarg :dyn
     :initform nil
     :reader event-dyn)
+   (ornament
+    :type integer
+    :initarg :ornament
+    :initform nil
+    :reader event-ornament)
+   (comma
+    :type integer
+    :initarg :comma
+    :initform nil
+    :reader event-comma)
+   (articulation
+    :type integer
+    :initarg :articulation
+    :initform nil
+    :reader event-articulation)
    (voice
     :type integer
     :initarg :voice
@@ -229,15 +244,17 @@ no. in which the event occurs." ))
     :phrase         ',(event-phrase e)
     :tempo          ',(event-tempo e)
     :dyn            ',(event-dyn e)
+    :ornament       ',(event-ornament e)
+    :articulation   ',(event-articulation e)
+    :comma          ',(event-comma e)
     :voice          ',(event-voice e)))
-    
     
 ;; General database management functions
 ;;=======================================
 
 (defun connect-to-database ()
-  (clsql:connect '("vaughan-williams.doc.gold.ac.uk" "amuse" "LispMidi" "clsql")
-                 :if-exists :old :database-type :mysql))
+  ;;(clsql:connect '("/home/marcusp/research/projects/idyom2/database.sqlite") :if-exists :old :database-type :sqlite3))
+  (clsql:connect '("vaughan-williams.doc.gold.ac.uk" "amuse" "LispMidi" "clsql") :if-exists :old :database-type :mysql))
 
 ;; Inserting and deleting datasets 
 ;;================================
@@ -265,7 +282,9 @@ no. in which the event occurs." ))
                       (list :pulses (event-pulses e))
                       (list :phrase (event-phrase e))
                       (list :voice (event-voice e))
-                      (list :tempo (event-tempo e))
+                      (list :ornament (event-ornament e))
+                      (list :comma (event-comma e))
+                      (list :articulation (event-articulation e))
                       (list :dyn (event-dyn e)))
                 composition))
         (push (nreverse composition) dataset)))
@@ -344,6 +363,9 @@ no. in which the event occurs." ))
                         :phrase     (cadr (assoc :phrase event))
                         :dyn        (cadr (assoc :dyn event))
                         :tempo      (cadr (assoc :tempo event))
+                        :ornament      (cadr (assoc :ornament event))
+                        :comma      (cadr (assoc :comma event))
+                        :articulation      (cadr (assoc :articulation event))
                         :voice      (cadr (assoc :voice event)))))
     (clsql:update-records-from-instance event-object)))
 
@@ -501,6 +523,9 @@ a list containing the dataset-id is returned."))
                  :phrase (event-phrase e)
                  :dyn (event-dyn e)
                  :tempo (event-tempo e)
+                 :ornament (event-ornament e)
+                 :comma (event-comma e)
+                 :articulation (event-articulation e)
                  :voice (event-voice e)))
 
 ;; Utility functions
@@ -588,7 +613,7 @@ per composition, as well as the domains of each event attribute."
     (let ((attributes
            (if (null attributes)
                '(cpitch mpitch accidental dur deltast bioi keysig mode barlength
-                 pulses phrase dyn tempo voice bioi ornament)
+                 pulses phrase dyn tempo voice bioi ornament articulation comma)
                (if (atom attributes) (list attributes) attributes))))
       (print-description dataset-id)
       (print-separator)

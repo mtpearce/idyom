@@ -3,7 +3,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2008-10-31 16:47:05 marcusp>                           
+;;;; Time-stamp: <2011-03-28 09:48:12 marcusp>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -85,6 +85,7 @@
             ("^\\*>[^ \\[]+" ignore-token)          ;ignore section labels 
             ("^\\*[+ ^ v x -]" ignore-token)        ;ignore spine path tokens
             ("^\\*MM[0-9]" tempo)                   ;process tempo token
+            ("^\\*MM\\[" tempo)                     ;process tempo token
             ("^=1[^ 0-9]*$" first-barline)          ;adjust onsets at 1st barline
             ("^=" ignore-token)                     ;ignore barlines 
             ("^[^ ! = . *].*[r]" musical-rest)      ;process rests 
@@ -657,7 +658,9 @@
 (defun tempo (tempo-token &optional environment)
   "Process a tempo token."
   (declare (ignore environment))
-  (parse-integer (cl-ppcre:scan-to-strings "[0-9]+" tempo-token)))
+  (if (cl-ppcre:scan-to-strings "^\\*MM\\[" tempo-token) ; verbal tempo indication
+      nil
+      (parse-integer (cl-ppcre:scan-to-strings "[0-9]+" tempo-token))))
 
 (defun musical-rest (musical-rest environment)
   "Extracts and converts the duration of a rest event."
