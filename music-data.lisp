@@ -3,7 +3,7 @@
 ;;;; File:       music-data.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2011-03-24 18:43:23 marcusp>                           
+;;;; Time-stamp: <2011-03-28 10:22:32 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -332,6 +332,7 @@ no. in which the event occurs." ))
          (count (length events))
          (composition-object (make-instance 'mtp-composition
                                             :dataset-id (dataset-id d)
+                                            :timebase (dataset-timebase d)
                                             :composition-id id
                                             :description description)))
     (setf (slot-value composition-object 'dataset-id) (dataset-id d))
