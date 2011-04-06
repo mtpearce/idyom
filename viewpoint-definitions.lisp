@@ -255,7 +255,7 @@
     (events element) 
   :function (let ((keysig (keysig events))
                   (mode (mode events)))
-              (declare (type (integer -7 7) keysig) (type (integer 0 11) mode))
+              ;(declare (type (integer -7 7) keysig) (type (integer 0 11) mode))
               (if (undefined-p keysig mode) +undefined+
                   (cond ((> keysig 0)
                          (mod (+ (* keysig 7) mode) 12))
