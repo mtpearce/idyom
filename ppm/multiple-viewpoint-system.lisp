@@ -3,7 +3,7 @@
 ;;;; File:       multiple-viewpoint-system.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-27 18:54:17 marcusp>                           
-;;;; Time-stamp: <2009-07-22 13:43:22 marcusp>                           
+;;;; Time-stamp: <2011-04-06 18:22:36 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -386,6 +386,7 @@ multiple viewpoint system <m>."
             (setf (aref ltm-locations i) ltm-next-location)
             ;(format t "~&ltm-distribution = ~&~A~%" ltm-distribution)
             (push (make-event-prediction :viewpoint viewpoint
+                                         :event (car (last events))
                                          :element event
                                          :set ltm-distribution)
                   ltm-prediction-sets))
@@ -403,6 +404,7 @@ multiple viewpoint system <m>."
                                                   (eq *models* :both+))))
             (setf (aref stm-locations i) stm-next-location)
             (push (make-event-prediction :viewpoint viewpoint
+                                         :event (car (last events))
                                          :element event
                                          :set stm-distribution)
                   stm-prediction-sets)))))
@@ -430,21 +432,19 @@ multiple viewpoint system <m>."
                                      events :stm)))))
 
 (defun combine-viewpoint-distributions (dists) 
-  (combine-distributions dists *viewpoint-combination* *viewpoint-bias*))
+  (combine-distributions dists *viewpoint-combination* *viewpoint-bias* :viewpoint))
 
 (defun combine-ltm-stm-distributions (dists) 
-  (combine-distributions dists *ltm-stm-combination* *ltm-stm-bias*))
+  (combine-distributions dists *ltm-stm-combination* *ltm-stm-bias* :ltm-stm))
 
 (defun combine-ltm-stm-predictions (ltm-predictions stm-predictions)
   ;; (format t "~&LTM-STM~%")
-  ;; (setq cl-user::tick :ltm-stm)
   (mapcar #'(lambda (l s) (combine-ltm-stm-distributions (list l s)))
           ltm-predictions stm-predictions))
 
 (defun combine-viewpoint-predictions (basic-viewpoints prediction-sets 
                                       events model)
   ;; (format t "~&VIEWPOINTS: ~A~%" model)
-  ;; (setq cl-user::tick model)
   (flet ((basic-prediction-set (prediction-sets basic-viewpoint)
            (find-if #'(lambda (p) (viewpoints:viewpoint-equal p basic-viewpoint))
                     prediction-sets :key #'prediction-viewpoint))
@@ -476,9 +476,11 @@ multiple viewpoint system <m>."
               ;; ? 
               ;; 3. uniform distrubution over basic alphabet; 
               (push 
-               (prediction-sets:flat-distribution 
-                basic-viewpoint 
-                (viewpoint-element basic-viewpoint events))
+               (make-event-prediction
+                :viewpoint basic-viewpoint
+                :event (car (last events))
+                :element (viewpoint-element basic-viewpoint events)
+                :set (prediction-sets:flat-distribution (viewpoints:viewpoint-alphabet basic-viewpoint)))
                distributions)
               (progn 
                 (dolist (derived-prediction-set derived-prediction-sets)
@@ -551,6 +553,7 @@ given a sequence of events <sequence>."
                 viewpoint-element distribution))
       (make-event-prediction
        :viewpoint basic-viewpoint
+       :event (car (last events))
        :element viewpoint-element
        :set distribution))))
 

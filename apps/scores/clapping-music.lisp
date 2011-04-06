@@ -2,7 +2,7 @@
 ;;;; File:       clapping.lisp
 ;;;; Author:     marcusp <m.pearce@gold.ac.uk>
 ;;;; Created:    <2010-03-09 16:11:48 marcusp>
-;;;; Time-stamp: <2011-02-07 12:58:48 marcusp>
+;;;; Time-stamp: <2011-03-01 14:43:44 marcusp>
 ;;;; ======================================================================
 
 (cl:defpackage #:clapping
@@ -23,7 +23,7 @@
 (defvar *repeat-2* 12)
 (defvar *dataset-id* 101)
 
-(defvar *tempo* 160) ; 160 - 184
+(defvar *tempo* 184) ; 160 - 184
 (defvar *pitch* 37) ; rimshot 
 (defvar *dynamics* '(0 55 70 95 120)) ; midi dynamics
 

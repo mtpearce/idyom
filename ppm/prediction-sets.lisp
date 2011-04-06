@@ -3,7 +3,7 @@
 ;;;; File:       prediction-sets.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-18 18:54:17 marcusp>                           
-;;;; Time-stamp: <2008-10-07 10:10:40 marcusp>                           
+;;;; Time-stamp: <2011-04-06 18:22:43 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -34,6 +34,8 @@
 (defclass event-prediction ()
   ((viewpoint :accessor prediction-viewpoint :initarg :viewpoint
               :type (or null viewpoint))
+   (event     :accessor prediction-event :initarg :event)
+   (weights   :accessor prediction-weights :initarg :weights)
    (element   :accessor prediction-element :initarg :element)
    (set       :accessor prediction-set :initarg :set :type list)))
 
@@ -44,9 +46,9 @@
   (make-instance 'sequence-prediction :viewpoint viewpoint :index index
                  :set set))
 
-(defun make-event-prediction (&key viewpoint element set)
+(defun make-event-prediction (&key viewpoint element set event weights)
   (make-instance 'event-prediction :viewpoint viewpoint :element element
-                 :set set))
+                 :set set :event event :weights weights))
 
 
 ;;;========================================================================
@@ -175,13 +177,9 @@
         (find-if #'not-in-range distribution :key #'(lambda (p) (nth 1 p)))
       t)))
 
-(defun flat-distribution (viewpoint element)
-  (let* ((alphabet (viewpoint-alphabet viewpoint))
-         (p (/ 1.0 (float (length alphabet) 0.0))))
-    (make-event-prediction :viewpoint viewpoint
-                           :element element
-                           :set (mapcar #'(lambda (x) (list x p)) alphabet))))
-
+(defun flat-distribution (alphabet)
+  (let ((p (/ 1.0 (float (length alphabet) 0.0))))
+    (mapcar #'(lambda (x) (list x p)) alphabet)))
 
 
 ;;;========================================================================
@@ -190,19 +188,34 @@
 
 (defun combine-distributions (event-predictions &optional 
                               (function #'geometric-combination)
-                              (bias 0))
-  "Combines a list of distributions using the combination function
-   <function> with a bias value of <bias>."
-  (let ((f (find-symbol (symbol-name function) 
-                        (find-package :prediction-sets)))
+                              (bias 0)
+                              type)
+  "Combines a list of distributionse using the combination function
+   <function> with a bias value of <bias>. Type is a symbol reflecting
+   the type of combination: STM-LTM and VIEWPOINT are meaningful
+   values."
+  (let ((f (find-symbol (symbol-name function) (find-package :prediction-sets)))
         (distributions (mapcar #'prediction-set event-predictions))
         (element (prediction-element (car event-predictions)))
         (viewpoint (prediction-viewpoint (car event-predictions))))
-    (make-event-prediction
-     :viewpoint viewpoint
-     :element   element
-     :set       (funcall f distributions bias))))
+    (multiple-value-bind (set weights)
+        (funcall f distributions bias)
+      (when (eq type :ltm-stm) (print-weights weights))
+      (make-event-prediction
+       :viewpoint viewpoint
+       :element   element
+       :event     (prediction-event (car event-predictions))
+       :weights   (normalise-weights weights)
+       :set       set))))
   
+(defun print-weights (weights)
+  (format t "~&~{~,3F ~}~%" (normalise-weights weights)))
+
+(defun normalise-weights (weights)
+  (let* ((sum (reduce #'+ weights))
+         (scaling-factor (if (zerop sum) 1.0 (/ 1.0 sum))))
+    (mapcar #'(lambda (w) (* w scaling-factor)) weights)))
+
 (defun arithmetic-combination (distributions &optional (bias 0))
   "Combines the probability distributions <distribution-1> and
    <distribution-2> over the same ordered alphabet and in the form ((e_1
@@ -229,8 +242,9 @@
            (weights (weights relative-entropies bias))
            (weighted-distributions
             (weight-distributions distributions weights)))
-      (normalise-distribution
-       (combine-distributions weighted-distributions)))))
+      (values (normalise-distribution
+               (combine-distributions weighted-distributions))
+              weights))))
 
 (defun geometric-combination (distributions &optional (bias 0))
   "Combines the probability distributions <distribution-1> and
@@ -259,18 +273,9 @@
            (weights (weights relative-entropies bias))
            (weighted-distributions
             (weight-distributions distributions weights)))
-      ;;(when (eql cl-user::tick :ltm-stm) 
-      ;;  (print-weights weights))
-      (normalise-distribution
-       (combine-distributions weighted-distributions)))))
-
-(defun print-weights (weights)
-  (let* ((sum (reduce #'+ weights))
-         (scaling-factor (if (zerop sum) 1.0 (/ 1.0 sum))))
-    (format t "~&~{~,3F ~}~%"
-            (mapcar #'(lambda (w) 
-                        (* w scaling-factor))
-                    weights))))
+      (values (normalise-distribution
+               (combine-distributions weighted-distributions))
+              weights))))
 
 (defun bayesian-combination (distributions &optional bias)
   "Combines a set of probability distributions by multiplying the
