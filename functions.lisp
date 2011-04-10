@@ -5,7 +5,7 @@
 (defvar *basic-types* nil)
 
 (defun register-basic-type (type) 
-  (pushnew type *basic-types*))
+  (pushnew (intern (symbol-name type) :keyword) *basic-types*))
 
 (defun undefined-p (&rest viewpoint-elements)
   "Returns true if any of the supplied viewpoint elements are eql to
