@@ -3,7 +3,7 @@
 ;;;; File:       multiple-viewpoint-system.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-27 18:54:17 marcusp>                           
-;;;; Time-stamp: <2011-04-06 18:22:36 marcusp>                           
+;;;; Time-stamp: <2011-04-10 17:59:15 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -189,16 +189,16 @@ See also VIEWPOINTS:SET-ALPHABET-FROM-CONTEXT."
            ;; viewpoints derived from basic viewpoints in MVS 
            (1 (mvs-basic m)) 
            ;; all basic viewpoints (and their derived viewpoints) 
-           (2 (mapcar #'viewpoints:get-viewpoint viewpoints::*basic-types*))
+           (2 (mapcar #'viewpoints:get-viewpoint viewpoints:*basic-types*))
            ;; specified list           
            (t unconstrained))))
     (unless (or (viewpoints:basic-p viewpoint) (undefined-p event))
       (viewpoints:set-alphabet-from-context viewpoint events unconstrained))
-    ;;(format t "~&Viewpoint: ~A; Event: ~A; Alphabet length: ~A~%" 
-    ;;        (viewpoint-type viewpoint) event 
-    ;;        (length (viewpoint-alphabet viewpoint)))
-;;     (format t "~&~A: ~A" (viewpoint-name viewpoint) 
-;;             (viewpoint-alphabet viewpoint))
+    ;(format t "~&Viewpoint: ~A; Event: ~A; Alphabet length: ~A~%" 
+    ;        (viewpoint-type viewpoint) event 
+    ;        (length (viewpoint-alphabet viewpoint)))
+    ;(format t "~&~A: ~A" (viewpoint-name viewpoint) 
+    ;        (viewpoint-alphabet viewpoint))
     (set-alphabet ltm (viewpoint-alphabet viewpoint))
     (set-alphabet stm (viewpoint-alphabet viewpoint))))
   

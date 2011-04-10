@@ -3,7 +3,7 @@
 ;;;; File:       prediction-sets.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-18 18:54:17 marcusp>                           
-;;;; Time-stamp: <2011-04-06 18:22:43 marcusp>                           
+;;;; Time-stamp: <2011-04-10 12:44:12 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -194,17 +194,20 @@
    <function> with a bias value of <bias>. Type is a symbol reflecting
    the type of combination: STM-LTM and VIEWPOINT are meaningful
    values."
+  (declare (ignore type))
   (let ((f (find-symbol (symbol-name function) (find-package :prediction-sets)))
         (distributions (mapcar #'prediction-set event-predictions))
         (element (prediction-element (car event-predictions)))
         (viewpoint (prediction-viewpoint (car event-predictions))))
     (multiple-value-bind (set weights)
         (funcall f distributions bias)
-      (when (eq type :ltm-stm) (print-weights weights))
+      ;; (when (eq type :ltm-stm) (print-weights weights))
       (make-event-prediction
        :viewpoint viewpoint
        :element   element
        :event     (prediction-event (car event-predictions))
+       ;; NB: This will be LTM-STM weights as long as ltm-stm 
+       ;; combination is done after viewpoint combination.
        :weights   (normalise-weights weights)
        :set       set))))
   

@@ -3,7 +3,7 @@
 ;;;; File:       viewpoint-extensions.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2008-10-31 13:08:09 marcusp>
-;;;; Time-stamp: <2008-11-03 19:07:15 marcusp>
+;;;; Time-stamp: <2011-04-10 17:55:42 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints) 
@@ -54,6 +54,7 @@ of sequences created by concatenating the alphabet of basic viewpoint
 of basic viewpoints being predicted which assume their full alphabets,
 otherwise the basic alphabets are determined on the basis of the
 values of the final event in <events>."
+  ;;(print unconstrained)
   (flet ((get-alphabets (attributes context)
            (let ((alphabets '()))
              (when (consp unconstrained)
@@ -73,14 +74,19 @@ values of the final event in <events>."
            (derived-alphabet 
             (apply #'utils:cartesian-product 
                    (get-alphabets attributes context))))
+      ;;(print (list attributes derived-alphabet))
       (dolist (d derived-alphabet)
+        ;;(print (list d attributes))
         (mapc #'(lambda (element attribute) 
                   (md:set-attribute e attribute element))
               d attributes)
+        ;;(print (list "cpitch" (md:get-attribute e :cpitch) "bioi" (md:get-attribute e :bioi)))
+        ;;(print (list "event" (type-of e)))
         (let ((ve (viewpoint-element v (append context (list e)))))
+          ;;(print (list "viewpoint-element" v (append context (list e)) "=>" ve))
           (unless (or (undefined-p ve) (member ve alphabet :test #'equal))
             (push ve alphabet))))
-      ;(format t "~&type = ~A; alphabet = ~A~%" (viewpoint-type v) alphabet)
+      ;;(format t "~&type = ~A; alphabet = ~A~%" (viewpoint-type v) alphabet)
       (setf (viewpoint-alphabet v) (nreverse alphabet)))))
           
 (defmethod alphabet->events ((b basic) events)

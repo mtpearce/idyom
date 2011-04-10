@@ -3,7 +3,7 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                           
-;;;; Time-stamp: <2008-11-03 14:24:39 marcusp>                           
+;;;; Time-stamp: <2011-04-10 10:53:12 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -12,12 +12,12 @@
   (:use #:cl #:utils #:viewpoints)
   (:export "DATASET-PREDICTION" "COMPOSITION-PREDICTION" "EVENT-PREDICTION"
            "PREDICTION-VIEWPOINT" "PREDICTION-SET" "PREDICTION-ELEMENT"
-           "PREDICTION-INDEX" "MAKE-EVENT-PREDICTION"
-           "MAKE-DATASET-PREDICTION" "MAKE-SEQUENCE-PREDICTION"
+           "PREDICTION-INDEX" "PREDICTION-WEIGHTS" "PREDICTION-EVENT"
+           "MAKE-EVENT-PREDICTION" "MAKE-DATASET-PREDICTION" "MAKE-SEQUENCE-PREDICTION"
            "COMBINE-DISTRIBUTIONS" "ARITHMETIC-COMBINATION"
            "GEOMETRIC-COMBINATION" "RANKED-COMBINATION" "BAYESIAN-COMBINATION"
            "AVERAGE-CODELENGTHS" "AVERAGE-CODELENGTH" "CODELENGTHS"
-           "SHANNON-ENTROPIES" "EVENT-PREDICTIONS"
+           "SHANNON-ENTROPY" "SHANNON-ENTROPIES" "EVENT-PREDICTIONS"
            "SEQUENCE-PROBABILITY" "NORMALISE-DISTRIBUTION" "FLAT-DISTRIBUTION")
   (:documentation "Entropy based performance metrics, function for
 combining probability distributions and other utilities for use with

@@ -3,7 +3,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2010-11-22 11:32:40 marcusp>
+;;;; Time-stamp: <2011-04-10 11:13:13 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -150,6 +150,11 @@
           alist)
     hashtable))
 
+(defun hash-table->sorted-alist (ht sort-fn &optional &key (by :keys))
+  (let ((sorted-entries nil))
+    (maphash #'(lambda (k v) (push (cons k v) sorted-entries) (remhash k ht)) ht)
+    (let ((sort-key (if (eql by :keys) #'car #'cdr)))
+      (sort sorted-entries sort-fn :key sort-key))))
 
 ;;;===========================================================================
 ;;; File I/O 

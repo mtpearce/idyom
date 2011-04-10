@@ -3,7 +3,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2011-02-11 12:10:39 marcusp>                           
+;;;; Time-stamp: <2011-04-10 23:56:53 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -133,7 +133,7 @@ dataset-id)."
     (case detail 
       (1 (format t "~&Not implemented.~%"))
       (2 (format-information-content-detail=2 o resampling-predictions dataset-id))
-      (3 (format-information-content-detail=3 o resampling-predictions dataset-id)))))
+      (3 (format-information-content-detail=34 o resampling-predictions dataset-id)))))
 
 (defun format-information-content-detail=2 (stream resampling-predictions dataset-id)
   (multiple-value-bind (overall-mean composition-means)
@@ -145,71 +145,76 @@ dataset-id)."
       (let ((d (mtp-admin:get-description dataset-id (1- cid))))
         (format stream "~&~A ~A ~A~%" cid d (car ic))))))
 
-;; (defun format-information-content-detail=34 (stream resampling-predictions dataset-id) 
-;;   (format stream "~&melody.id note.id melody.name onset duration deltast pitch keysig mode probability information.content entropy~%")
-;;   (let ((information-contents (multiple-value-bind (a b c) (output-information-content resampling-predictions 3) (declare (ignore a b) c)))
-;;         (results (make-hash-table)) 
-;;         (keys))
-;;     ;; FOR EACH: resampling set prediction 
-;;     (dolist (rsp dataset-predictions)
-;;       ;; FOR EACH: feature prediction 
-;;       (dolist (fp rsp)
-;;         (let ((feature 
-;;                (viewpoints:viewpoint-type 
-;;                 (prediction-sets:prediction-viewpoint fp))))
-;;           ;; FOR EACH: song prediction 
-;;           (dolist (sp (prediction-sets:prediction-set fp))
-;;             (let ((song-id (prediction-sets:prediction-index sp))
-;;                   (fsp nil))
-;;               ;; FOR EACH: event 
-;;               (dolist (ep (prediction-sets:prediction-set sp))
-;;                 (let ((probability (probability ep)))
-;;                   (push probability fsp)))
-;;               (let ((fr (gethash feature results)))
-;;                 (setf (gethash feature results)
-;;                       (cons (list song-id (nreverse fsp)) fr))))))))
-;;     (let ((information-contents))
-;;       ;; For each song
-;;       (dolist (key (sort keys #'<))
-;;         (let* (;; get the probabilities for each feature 
-;;                (sp (mapcar #'(lambda (x) 
-;;                                (cadr (assoc key (cadr x))))
-;;                            (utils:hash-table->alist results)))
-;;                ;; multiply them together 
-;;                (spm (apply #'mapcar #'* sp))
-;;                ;; compute the information content 
-;;                (sic (mapcar #'(lambda (x) (- (log x 2))) spm)))
-;;           (push sic information-contents)))
-;;       (nreverse information-contents))))
-;;   (let ((melody-index 1)
-;;         (data (prediction-sets:prediction-set (caar resampling-predictions))))
-;;     (dolist (sp data)
-;;       (let* ((melody-id (prediction-sets:prediction-index sp))
-;;              (name (mtp-admin:get-description dataset-id melody-id))
-;;              (event-predictions (prediction-sets:prediction-set sp))
-;;              (event-id 0))
-;;         (format t "~&~3A ~3A ~5A~%" melody-index melody-id name)
-;;         (dolist (ep event-predictions)
-;;           (let* ((event (mtp-admin:get-event dataset-id melody-id event-id))
-;;                  (onset (mtp-admin:get-attribute event :onset))
-;;                  (dur (mtp-admin:get-attribute event :dur))
-;;                  (deltast (mtp-admin:get-attribute event :deltast))
-;;                  (pitch (mtp-admin:get-attribute event :cpitch))
-;;                  (keysig (mtp-admin:get-attribute event :keysig))
-;;                  (mode (mtp-admin:get-attribute event :mode))
-;;                  (element (prediction-sets:prediction-element ep))
-;;                  (distribution (prediction-sets:prediction-set ep))
-;;                  (probability (float (cadr (assoc element distribution)) 0.0))
-;;                  (information-content (- (log probability 2)))
-;;                  (entropy (float (prediction-sets::shannon-entropy distribution) 0.0)))
-;;             (format stream "~&~A ~A ~A ~A ~A ~A ~A ~A ~A ~A ~A ~A~%" 
-;;                     (1+ melody-id) (1+ event-id) name 
-;;                     onset dur deltast pitch keysig mode
-;;                     probability
-;;                     (utils:round-to-nearest-decimal-place information-content 3)
-;;                     (utils:round-to-nearest-decimal-place entropy 3)))
-;;           (incf event-id)))
-;;       (incf melody-index))))
+(defun format-information-content-detail=34 (stream resampling-predictions dataset-id) 
+  (let ((results (make-hash-table :test #'equal))
+        (features))
+    (flet ((create-key (feature attribute) (intern (concatenate 'string (symbol-name feature) "." (format nil "~A" attribute)) :keyword))
+           (sort-function (x y) (let ((x1 (car x)) (x2 (cadr x)) (y1 (car y)) (y2 (cadr y))) (if (= x1 y1) (< x2 y2) (< x1 y1)))))
+      ;; FOR EACH: resampling set prediction 
+      (dolist (rsp resampling-predictions)
+        ;; FOR EACH: feature prediction 
+        (dolist (fp rsp)
+          (let ((feature (viewpoints:viewpoint-type (prediction-sets:prediction-viewpoint fp))))
+            (pushnew feature features)
+            ;; FOR EACH: song prediction 
+            (dolist (sp (prediction-sets:prediction-set fp))
+              (let ((composition-id (prediction-sets:prediction-index sp)))
+                ;; FOR EACH: event 
+                (dolist (ep (prediction-sets:prediction-set sp))
+                  (let* ((event (prediction-sets:prediction-event ep))
+                         (event-id (mtp-admin:get-attribute event 'event-id))
+                         (probability (float (probability ep) 0.0))
+                         (distribution (prediction-sets:prediction-set ep))
+                         (weights (prediction-sets:prediction-weights ep))
+                         (existing-results (gethash (list composition-id event-id) results))
+                         (event-results (if existing-results existing-results (make-hash-table))))
+                    ;; Store event information
+                    (unless existing-results
+                      (setf (gethash 'dataset.id event-results) (1+ dataset-id))
+                      (setf (gethash 'melody.id event-results) (1+ composition-id))
+                      (setf (gethash 'note.id event-results) (1+ event-id))
+                      (setf (gethash 'melody.name event-results) (mtp-admin:get-description dataset-id composition-id))
+                      (dolist (attribute viewpoints:*basic-types*)
+                        (setf (gethash attribute event-results) (mtp-admin:get-attribute event attribute))))
+                    ;; Store feature prediction
+                    (setf (gethash (create-key feature 'weight.ltm) event-results) (car weights))
+                    (setf (gethash (create-key feature 'weight.stm) event-results) (cadr weights))
+                    (setf (gethash (create-key feature 'probability) event-results) probability)
+                    (setf (gethash (create-key feature 'information.content) event-results) (- (log probability 2)))
+                    (setf (gethash (create-key feature 'entropy) event-results) (float (prediction-sets:shannon-entropy distribution) 0.0))
+                    (setf (gethash (create-key feature 'distribution) event-results) distribution)
+                    (dolist (p distribution)
+                      (setf (gethash (create-key feature (car p)) event-results) (cadr p)))
+                    (setf (gethash (list composition-id event-id) results) event-results))))))))
+      ;; Combine probabilities from different features
+      (maphash #'(lambda (k v)
+                   (let* ((event-results v)
+                          (probability-keys (mapcar #'(lambda (f) (create-key f 'probability)) features))
+                          (probabilities (mapcar #'(lambda (x) (gethash x v)) probability-keys))
+                          (probability (apply #'* probabilities))
+                          (distribution-keys (mapcar #'(lambda (f) (create-key f 'distribution)) features))
+                          (distributions (mapcar #'(lambda (x) (gethash x v)) distribution-keys))
+                          (distribution (mapcar #'(lambda (x) (let ((elements (mapcar #'first x))
+                                                                    (probabilities (mapcar #'second x)))
+                                                                (list elements (apply #'* probabilities))))
+                                                (apply #'utils:cartesian-product distributions))))
+                     (print distribution)
+                     (setf (gethash 'probability event-results) probability)
+                     (setf (gethash 'information.content event-results) (- (log probability 2)))
+                     (setf (gethash 'entropy event-results) (prediction-sets:shannon-entropy distribution))
+                     ;; TODO elements of distribution
+                     (mapc #'(lambda (key) (remhash key event-results)) distribution-keys)
+                     (setf (gethash k results) event-results)))
+               results)
+      ;; Sort values and print
+      (let ((sorted-results (utils:hash-table->sorted-alist results #'sort-function))
+            (print-header t))
+        (dolist (entry sorted-results)
+          (when print-header
+            (maphash #'(lambda (k v) (declare (ignore v)) (format stream "~A " (string-downcase (symbol-name k)))) (cdr entry))
+            (setf print-header nil))
+          (format stream "~&")
+          (maphash #'(lambda (k v) (declare (ignore k)) (format stream "~A " v)) (cdr entry)))))))
 
 (defun format-information-content-detail=3 (stream resampling-predictions dataset-id) 
   (let ((melody-index 1)
@@ -233,7 +238,7 @@ dataset-id)."
                  (distribution (prediction-sets:prediction-set ep))
                  (probability (float (cadr (assoc element distribution)) 0.0))
                  (information-content (- (log probability 2)))
-                 (entropy (float (prediction-sets::shannon-entropy distribution) 0.0)))
+                 (entropy (float (prediction-sets:shannon-entropy distribution) 0.0)))
             (when print-header
               (format stream "~&melody.id note.id melody.name onset duration deltast pitch keysig mode probability information.content entropy ~{~A ~} ~%" 
                       (mapcar (lambda (x) (car x)) distribution))
