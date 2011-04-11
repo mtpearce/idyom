@@ -3,7 +3,7 @@
 ;;;; File:       amuse-interface.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2008-09-30 17:25:38 marcusp>
-;;;; Time-stamp: <2011-02-11 16:46:41 marcusp>
+;;;; Time-stamp: <2011-04-11 17:06:04 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -83,6 +83,9 @@
                  :phrase (amuse-mtp::%mtp-phrase e)
                  :dyn (amuse-mtp::%mtp-dyn e)
                  :tempo (amuse-mtp::%mtp-tempo e)
+                 :ornament (amuse-mtp::%mtp-ornament e)
+                 :comma (amuse-mtp::%mtp-articulation e)
+                 :articulation (amuse-mtp::%mtp-articulation e)
                  :voice (amuse-mtp::%mtp-voice e)))
 
 (defun count-compositions (dataset-id)
