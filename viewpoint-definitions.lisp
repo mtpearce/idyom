@@ -213,7 +213,7 @@
   :function* (let ((penultimate-element (list (penultimate-element events))))
                (list (+ (onset penultimate-element) 
                         (* element (ioi penultimate-element))))))
-                    
+
 ;; bioi
 
 (define-viewpoint (bioi-ratio derived (bioi))
@@ -223,7 +223,7 @@
               (if (or (null e1) (null e2)) +undefined+
                   (let ((ioi1 (bioi (list e1)))
                         (ioi2 (bioi (list e2))))
-                    (if (undefined-p ioi1 ioi2) +undefined+
+                    (if (or (zerop ioi1) (undefined-p ioi1 ioi2)) +undefined+
                         (/ ioi2 ioi1)))))
   :function* (let ((penultimate-element (list (penultimate-element events))))
                (list (* element (bioi penultimate-element)))))
@@ -231,8 +231,8 @@
 (define-viewpoint (bioi-contour derived (bioi))
     (events element) 
   :function (let ((bioi-ratio (bioi-ratio events)))
-              (cond ((undefined-p bioi-ratio) +undefined+)
-                    (t (signum bioi-ratio))))
+              (if (undefined-p bioi-ratio) +undefined+
+                  (signum bioi-ratio)))
   :function* (let ((bioi (bioi (list (penultimate-element events)))))
                (remove-if #'(lambda (a) (case element
                                           (-1 (>= a bioi))
