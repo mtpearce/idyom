@@ -3,7 +3,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2011-04-10 23:56:53 marcusp>                           
+;;;; Time-stamp: <2011-04-11 11:18:52 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -133,7 +133,7 @@ dataset-id)."
     (case detail 
       (1 (format t "~&Not implemented.~%"))
       (2 (format-information-content-detail=2 o resampling-predictions dataset-id))
-      (3 (format-information-content-detail=34 o resampling-predictions dataset-id)))))
+      (3 (format-information-content-detail=3 o resampling-predictions dataset-id)))))
 
 (defun format-information-content-detail=2 (stream resampling-predictions dataset-id)
   (multiple-value-bind (overall-mean composition-means)
@@ -145,7 +145,7 @@ dataset-id)."
       (let ((d (mtp-admin:get-description dataset-id (1- cid))))
         (format stream "~&~A ~A ~A~%" cid d (car ic))))))
 
-(defun format-information-content-detail=34 (stream resampling-predictions dataset-id) 
+(defun format-information-content-detail=3 (stream resampling-predictions dataset-id) 
   (let ((results (make-hash-table :test #'equal))
         (features))
     (flet ((create-key (feature attribute) (intern (concatenate 'string (symbol-name feature) "." (format nil "~A" attribute)) :keyword))
@@ -216,7 +216,7 @@ dataset-id)."
           (format stream "~&")
           (maphash #'(lambda (k v) (declare (ignore k)) (format stream "~A " v)) (cdr entry)))))))
 
-(defun format-information-content-detail=3 (stream resampling-predictions dataset-id) 
+(defun format-information-content-detail=old3-not-to-be-used-anymore (stream resampling-predictions dataset-id) 
   (let ((melody-index 1)
         (print-header t)
         (data (prediction-sets:prediction-set (caar resampling-predictions))))
