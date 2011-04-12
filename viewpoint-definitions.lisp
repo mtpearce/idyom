@@ -232,7 +232,7 @@
     (events element) 
   :function (let ((bioi-ratio (bioi-ratio events)))
               (if (undefined-p bioi-ratio) +undefined+
-                  (signum bioi-ratio)))
+                  (signum (- bioi-ratio 1))))
   :function* (let ((bioi (bioi (list (penultimate-element events)))))
                (remove-if #'(lambda (a) (case element
                                           (-1 (>= a bioi))
