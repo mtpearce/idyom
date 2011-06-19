@@ -3,7 +3,7 @@
 ;;;; File:       music-data.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2011-03-28 10:22:32 marcusp>                           
+;;;; Time-stamp: <2011-05-27 11:46:19 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -253,8 +253,8 @@ no. in which the event occurs." ))
 ;;=======================================
 
 (defun connect-to-database ()
-  ;;(clsql:connect '("/home/marcusp/research/projects/idyom2/database.sqlite") :if-exists :old :database-type :sqlite3))
-  (clsql:connect '("vaughan-williams.doc.gold.ac.uk" "amuse" "LispMidi" "clsql") :if-exists :old :database-type :mysql))
+  (clsql:connect '("/home/marcusp/research/projects/idyom2/lisp/database.sqlite") :if-exists :old :database-type :sqlite3))
+  ;;(clsql:connect '("vaughan-williams.doc.gold.ac.uk" "amuse" "LispMidi" "clsql") :if-exists :old :database-type :mysql))
 
 ;; Inserting and deleting datasets 
 ;;================================
@@ -602,7 +602,7 @@ per composition, as well as the domains of each event attribute."
            (format output-stream "~2% ~A" (get-description dataset-id)))
          (print-alphabet (attribute dataset-id)
            (let ((alphabet (get-alphabet attribute dataset-id)))
-             (format output-stream "~% ~A (~A):~1,16T ~A"
+             (format output-stream "~% ~A (~A):~1,18T ~A"
                      attribute (length alphabet) alphabet)))
          (print-timebase-and-midc (dataset-id) 
            (format output-stream "~% ~10A ~A  |  ~10A ~A" "Timebase: "
@@ -614,7 +614,7 @@ per composition, as well as the domains of each event attribute."
     (let ((attributes
            (if (null attributes)
                '(cpitch mpitch accidental dur deltast bioi keysig mode barlength
-                 pulses phrase dyn tempo voice bioi ornament articulation comma)
+                 pulses phrase dyn tempo voice ornament articulation comma)
                (if (atom attributes) (list attributes) attributes))))
       (print-description dataset-id)
       (print-separator)
