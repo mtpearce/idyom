@@ -3,7 +3,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2011-04-11 11:18:52 marcusp>                           
+;;;; Time-stamp: <2011-04-12 16:38:21 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -133,7 +133,8 @@ dataset-id)."
     (case detail 
       (1 (format t "~&Not implemented.~%"))
       (2 (format-information-content-detail=2 o resampling-predictions dataset-id))
-      (3 (format-information-content-detail=3 o resampling-predictions dataset-id)))))
+      (3 (format-information-content-detail=3 o resampling-predictions dataset-id))
+      (4 (format-information-content-detail=4 o resampling-predictions dataset-id)))))
 
 (defun format-information-content-detail=2 (stream resampling-predictions dataset-id)
   (multiple-value-bind (overall-mean composition-means)
@@ -198,7 +199,6 @@ dataset-id)."
                                                                     (probabilities (mapcar #'second x)))
                                                                 (list elements (apply #'* probabilities))))
                                                 (apply #'utils:cartesian-product distributions))))
-                     (print distribution)
                      (setf (gethash 'probability event-results) probability)
                      (setf (gethash 'information.content event-results) (- (log probability 2)))
                      (setf (gethash 'entropy event-results) (prediction-sets:shannon-entropy distribution))
@@ -216,7 +216,8 @@ dataset-id)."
           (format stream "~&")
           (maphash #'(lambda (k v) (declare (ignore k)) (format stream "~A " v)) (cdr entry)))))))
 
-(defun format-information-content-detail=old3-not-to-be-used-anymore (stream resampling-predictions dataset-id) 
+(defun format-information-content-detail=4 (stream resampling-predictions dataset-id) 
+  "Old version 3, not to be used anymore. Here only for comparing with old output."
   (let ((melody-index 1)
         (print-header t)
         (data (prediction-sets:prediction-set (caar resampling-predictions))))
