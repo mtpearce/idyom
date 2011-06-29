@@ -3,7 +3,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2011-04-12 16:38:21 marcusp>                           
+;;;; Time-stamp: <2011-06-29 15:10:00 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -26,7 +26,15 @@
     
 (defun dataset-prediction (dataset-id basic-attributes attributes
                            &key pretraining-ids (k 10) (models :both+)
-                           resampling-indices)
+                           resampling-indices
+                           (ltm-order-bound mvs::*ltm-order-bound*)
+                           (ltm-mixtures mvs::*ltm-mixtures*)
+                           (ltm-update-exclusion mvs::*ltm-update-exclusion*)
+                           (ltm-escape mvs::*ltm-escape*)
+                           (stm-order-bound mvs::*stm-order-bound*)
+                           (stm-mixtures mvs::*stm-mixtures*)
+                           (stm-update-exclusion mvs::*stm-update-exclusion*)
+                           (stm-escape mvs::*stm-escape*))
   "Top-level Call -- returns the average cross-entropy of a model with the
    supplied parameters on <testing-sequence> where the long-term model has
    been trained on <training-sequence> and both <testing-sequence> and
@@ -34,20 +42,32 @@
    only a long-term model is used, else if it is 'stm only a short-term
    model is used and otherwise both models are used and their predictions
    combined."
-  (let* ((mvs::*models* models)
+  (let* (;; model parameters
+         (mvs::*models* models)
+         (mvs::*ltm-order-bound* ltm-order-bound)
+         (mvs::*ltm-mixtures* ltm-mixtures)
+         (mvs::*ltm-update-exclusion* ltm-update-exclusion)
+         (mvs::*ltm-escape* ltm-escape)
+         (mvs::*stm-order-bound* stm-order-bound)
+         (mvs::*stm-mixtures* stm-mixtures)
+         (mvs::*stm-update-exclusion* stm-update-exclusion)
+         (mvs::*stm-escape* stm-escape)
+         ;; data
          (dataset (get-event-sequences dataset-id))
-         (viewpoints (get-viewpoints attributes))
          (pretraining-set (apply #'get-event-sequences pretraining-ids))
+         ;; viewpoints
+         (viewpoints (get-viewpoints attributes))
          (basic-viewpoints 
-          (viewpoints:get-basic-viewpoints basic-attributes 
-                                           (append dataset pretraining-set)))
+          (viewpoints:get-basic-viewpoints basic-attributes (append dataset pretraining-set)))
+         ;; resampling sets
          (k (if (eq k :full) (length dataset) k))
          (resampling-sets (get-resampling-sets dataset-id :k k))
          (resampling-id 0)
-         (sequence-predictions)
          (resampling-indices (if (null resampling-indices) 
                                  (utils:generate-integers 0 (1- k))
-                                 resampling-indices)))
+                                 resampling-indices))
+         ;; the result
+         (sequence-predictions))
     (dolist (resampling-set resampling-sets sequence-predictions)
       ;; (format t "~&~0,0@TResampling set ~A: ~A~%" resampling-id resampling-set)
       (when (member resampling-id resampling-indices)
