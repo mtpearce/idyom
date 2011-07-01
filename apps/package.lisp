@@ -3,7 +3,7 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                           
-;;;; Time-stamp: <2010-04-16 12:29:24 marcusp>                           
+;;;; Time-stamp: <2011-06-30 17:33:31 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -30,18 +30,18 @@
            "LOAD-VS-CACHE" "STORE-VS-CACHE" "INITIALISE-VS-CACHE")
   (:documentation "Selection of viewpoints."))
 
+(defpackage #:generation 
+  (:use #:cl #:utils #:md #:viewpoints #:ppm #:mvs #:prediction-sets 
+        #:resampling)
+  (:export "DATASET-GENERATION" "GENERATE-CHORALES")
+  (:documentation "Generation of melodic compositions."))
+
 ;; (defpackage #:expectancy
 ;;   (:use #:cl #:utils #:md #:viewpoints #:mvs #:prediction-sets #:resampling)
 ;;   (:export "SELECT-CUDLUN95" "CUDLUN95" "SELECT-SCHELL96" "SCHELL96"
 ;;            "SELECT-MANZETAL92" "SELECT-MANZETAL92-ENTROPY" "MANZETAL92")
 ;;   (:documentation "Modelling perceptual data with multiple viewpoint systems."))
-  
-;; (defpackage #:generation 
-;;   (:use #:cl #:utils #:md #:viewpoints #:ppm #:mvs #:prediction-sets 
-;;         #:resampling)
-;;   (:export "DATASET-GENERATION" "GENERATE-CHORALES")
-;;   (:documentation "Generation of melodic compositions."))
-
+;;
 ;; (defpackage #:grouping 
 ;;   (:use #:cl)
 ;;   (:export "DATASET-SEGMENTATION")
