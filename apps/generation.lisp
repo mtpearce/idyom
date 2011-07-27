@@ -3,7 +3,7 @@
 ;;;; File:       generation.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-08-21 18:54:17 marcusp>                           
-;;;; Time-stamp: <2011-06-30 17:55:51 marcusp>                           
+;;;; Time-stamp: <2011-07-27 15:23:19 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -223,9 +223,9 @@
             (otherwise (metropolis-sampling mvs (car test-set) iterations)))))
     ;(write-prediction-cache-to-file dataset-id attributes)
     ;(print (viewpoints:viewpoint-sequence (viewpoints:get-viewpoint 'cpitch) sequence))
-    (mtp-admin:export-data sequence :ps "/tmp")
+    ;(mtp-admin:export-data sequence :ps "/tmp")
     (mtp-admin:export-data sequence :mid "/tmp")
-    ))
+    sequence))
 
 (defun get-pretraining-set (dataset-ids)
   (let* ((d1 (when (member 2 dataset-ids :test #'=)
@@ -242,7 +242,7 @@
     46 47 48 50 52 54 56 57 58 60 65 69 72 81 93 97))
 
 (defun get-context-length (sequence)
-  (1+ (position-if #'(lambda (e) (= (mtp-admin::event-phrase e) -1)) sequence)))
+  (1+ (position-if #'(lambda (e) (= (mtp-admin::get-attribute e 'phrase) -1)) sequence)))
   
 (defun generate-resampling-set (dataset base-id)
   (let* ((high-id (1- (length dataset)))
@@ -541,7 +541,8 @@
 ;; ======================================================================== 
 
 (defmethod random-walk ((m mvs) sequence context-length)
-  (let* ((event-count (length sequence))
+  (let* ((sequence (coerce sequence 'list))
+         (event-count (length sequence))
          (viewpoint-count (mvs:count-viewpoints m))
          (new-sequence '())
          (ltm-locations
@@ -606,7 +607,7 @@
   (let ((predictions (select-from-distributions predictions)))
     (dolist (p predictions event)
       (setf 
-       (slot-value event (find-symbol (symbol-name (car p)) (find-package :md)))
+       (slot-value event (find-symbol (symbol-name (car p)) (find-package :amuse-mtp)))
        (nth 2 p)))))
 
 (defun select-from-distributions (predictions)
