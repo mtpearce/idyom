@@ -3,7 +3,7 @@
 ;;;; File:       two-pages.lisp
 ;;;; Author:     marcusp <m.pearce@gold.ac.uk>
 ;;;; Created:    <2006-06-06 16:11:48 marcusp>
-;;;; Time-stamp: <2007-01-12 13:28:18 marcusp>
+;;;; Time-stamp: <2011-07-05 11:40:05 marcusp>
 ;;;; ======================================================================
 
 #||
@@ -182,7 +182,7 @@ LTM Datasets: nil
 
 (defun two-pages-event (event-id pitchnum duration 
                         reference-cpitch reference-mpitch pitch-classes)
-  (make-instance 'md:event
+  (make-instance 'mtp-admin::mtp-event
                  :dataset-id     *dataset-id* 
                  :composition-id 1
                  :event-id       event-id
@@ -261,7 +261,7 @@ pitch number corresponding to the N+1th of these pitches."
          (mvs::*ltm-order-bound* order)
          (mvs::*stm-order-bound* order)
          (mvs (mvs:make-mvs (list cpitch-viewpoint) viewpoints ltms)))
-    (viewpoints:initialise-basic-viewpoints (list two-pages))
+    (viewpoints::initialise-basic-viewpoints (list two-pages))
     (let ((predictions (car (mvs:model-dataset mvs (list two-pages) 
                                                :construct? t :predict? t))))
       (when path 
