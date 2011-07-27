@@ -3,7 +3,7 @@
 ;;;; File:       db2midi.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2005-06-09 11:01:51 marcusp>
-;;;; Time-stamp: <2011-02-11 13:56:34 marcusp>
+;;;; Time-stamp: <2011-07-27 15:23:53 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:db2midi)
@@ -29,7 +29,9 @@
     (events->midi (mtp-admin::composition-events c) file)))
 
 (defmethod export-data ((event-list list) (type (eql :mid)) path)
-  (let* ((title (mtp-admin::composition-description (car event-list)))
+  (let* ((first-event (car event-list))
+         (title (mtp-admin:get-description (slot-value first-event 'amuse-mtp::dataset-id) 
+                                           (slot-value first-event 'amuse-mtp::composition-id)))
          (file (concatenate 'string path "/" title ".mid")))
     (events->midi event-list file)))
 
