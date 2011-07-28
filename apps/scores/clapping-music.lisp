@@ -2,8 +2,31 @@
 ;;;; File:       clapping.lisp
 ;;;; Author:     marcusp <m.pearce@gold.ac.uk>
 ;;;; Created:    <2010-03-09 16:11:48 marcusp>
-;;;; Time-stamp: <2011-03-01 14:43:44 marcusp>
+;;;; Time-stamp: <2011-07-28 12:22:32 marcusp>
 ;;;; ======================================================================
+
+;; Audio power: ((RMS / max)*127):
+;; 
+;; 63.4311 p1           
+;; 55.1230 p1 downbeat  
+;; 78.8062 p2           
+;; 95.7326 both         
+;; 127     both downbeat
+;; 
+;; (clapping:clapping->midi "/home/marcusp/tmp/ClappingMusic_RMSPower.mid" 1 1 :dynamics '(63 55 79 96 127))
+
+;; with log transform
+;; 
+;; (defun normalise (x) (let ((max (apply #'max x))) (mapcar #'(lambda (y) (/ y max)) x)))
+;; (mapcar #'(lambda (x) (* x 127)) (normalise (mapcar #'(lambda (x) (log (1+ (/ x 127)))) *velocity*)))
+;; 
+;; 74.22395   p1            
+;; 66.05074   p1 downbeat  
+;; 88.450165  p2           
+;; 102.93149  both         
+;; 127.0      both downbeat
+;; 
+;; (clapping:clapping->midi "/home/marcusp/tmp/ClappingMusic_LogRMSPower.mid" 1 1 :dynamics '(74 66 88 103 127))
 
 (cl:defpackage #:clapping
   (:use #:cl)
@@ -25,7 +48,7 @@
 
 (defvar *tempo* 184) ; 160 - 184
 (defvar *pitch* 37) ; rimshot 
-(defvar *dynamics* '(0 55 70 95 120)) ; midi dynamics
+(defvar *dynamics* '(0 55 70 55 95 120)) ; midi dynamics
 
 
 ;;; generate midi
@@ -61,10 +84,11 @@
   ;; DYNAMICS: 
   ;; 
   ;; 0 - no clap
-  ;; 1 - 1 clapper
-  ;; 2 - 1 clapper accented
-  ;; 3 - 2 clappers
-  ;; 4 - 2 clappers accented
+  ;; 1 - 1 clapper1
+  ;; 2 - 1 clapper1 accented
+  ;; 3 - 1 clapper2
+  ;; 4 - 2 clappers
+  ;; 5 - 2 clappers accented
   ;;
   (let ((clap1-events)
         (clap2-events)
@@ -83,17 +107,23 @@
                    (b2 (nth k bar2))
                    (b3 (cond ((and (zerop b1) (zerop b2))
                               0)
-                             ((and (= 1 b1) (= 1 b2))
+                             ((zerop b2)
+                              1)
+                             ((zerop b1)
                               3)
-                             (t 1))))
+                             ((and (= 1 b1) (= 1 b2))
+                              4)
+                             (t (progn
+                                  (format t "~&Unrecognised claps: b1 = ~A; b2 = ~A~%" b1 b2)
+                                  -1)))))
               ;; accents
               (when (and (> accents 0) (> b3 0)
                          (or 
                           ;; accent on downbeat of clapper 1
                           (and (= accents 1) (zerop (mod k *k*)))
                           ;; accent on (rotated) downbeat of clapper 2
-                          (and (= accents 2) (= (mod (- *k* k) *k*) (mod i (1- *repeat-1*)))))
-                         (incf b3)))
+                          (and (= accents 2) (= (mod (- *k* k) *k*) (mod i (1- *repeat-1*))))))
+                (incf b3))
               ;; print out
               ;;(format t "~&~A ~A ~A: ~A: ~A ~A ~A~%" (1+ i) (1+ j) (1+ k) onset b1 b2 b3)
               ;;(progn 
