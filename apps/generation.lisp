@@ -3,7 +3,7 @@
 ;;;; File:       generation.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-08-21 18:54:17 marcusp>                           
-;;;; Time-stamp: <2011-07-27 15:23:19 marcusp>                           
+;;;; Time-stamp: <2011-07-27 15:37:26 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -191,13 +191,14 @@
 ;; ========================================================================
 
 (defun dataset-generation (dataset-id basic-attributes attributes base-id
-                                      &key
-                                      (method :metropolis)
-                                      (context-length nil)
-                                      (iterations 100) 
-                                      pretraining-ids
-                                      description)
-  (declare (ignorable description))
+                           &key
+                           (method :metropolis)
+                           (context-length nil)
+                           (iterations 100) 
+                           pretraining-ids
+                           description 
+                           (output-file-path "/tmp"))
+  (declare (ignorable description output-file-path))
   (initialise-prediction-cache dataset-id attributes)
   (let* ((dataset (get-event-sequences dataset-id))
          (pretraining-set (get-pretraining-set pretraining-ids))
@@ -224,7 +225,7 @@
     ;(write-prediction-cache-to-file dataset-id attributes)
     ;(print (viewpoints:viewpoint-sequence (viewpoints:get-viewpoint 'cpitch) sequence))
     ;(mtp-admin:export-data sequence :ps "/tmp")
-    (mtp-admin:export-data sequence :mid "/tmp")
+    (mtp-admin:export-data sequence :mid output-file-path)
     sequence))
 
 (defun get-pretraining-set (dataset-ids)
