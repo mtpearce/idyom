@@ -3,7 +3,7 @@
 ;;;; File:       generation.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-08-21 18:54:17 marcusp>                           
-;;;; Time-stamp: <2011-07-27 15:37:26 marcusp>                           
+;;;; Time-stamp: <2011-08-01 13:33:57 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -413,11 +413,12 @@
 
 ;; ========================================================================
 ;; METROPOLIS SAMPLING
-; ======================================================================== 
+;; ======================================================================== 
 
 (defmethod metropolis-sampling ((m mvs) sequence iterations)
   ;(initialise-prediction-cache) 
-  (let* ((pitch-sequence (mapcar #'(lambda (x) (get-attribute x 'cpitch))
+  (let* ((sequence (coerce sequence 'list))
+         (pitch-sequence (mapcar #'(lambda (x) (get-attribute x 'cpitch))
                                  sequence))
          (l (length sequence))
          (cpitch (viewpoints:get-viewpoint 'cpitch))
@@ -492,7 +493,8 @@
 ;; ======================================================================== 
 
 (defmethod gibbs-sampling ((m mvs) sequence iterations)
-  (let* ((pitch-sequence (mapcar #'(lambda (x) (get-attribute x 'cpitch))
+  (let* ((sequence (coerce sequence 'list))
+         (pitch-sequence (mapcar #'(lambda (x) (get-attribute x 'cpitch))
                                  sequence))
          (l (length sequence))
          (cpitch (viewpoints:get-viewpoint 'cpitch))
