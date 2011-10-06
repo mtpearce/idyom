@@ -3,7 +3,7 @@
 ;;;; File:       tobias2db.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2007-04-19 11:15:57 marcusp>
-;;;; Time-stamp: <2008-10-31 16:49:01 marcusp>
+;;;; Time-stamp: <2011-10-06 14:46:10 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:tobias2db) 
@@ -32,7 +32,7 @@
                  (setf split-input 
                        (split-string input (format nil "~C" #\Space))))
                 (t (error "Unrecognised delimiter token.")))
-          (push (mapcar #'parse-integer split-input) pitch-sequences))))
+          (push (mapcar #'parse-integer (remove "" split-input :test #'string=)) pitch-sequences))))
     (convert-pitch-sequences (nreverse pitch-sequences))))
 
 (defun split-string (string separator)
