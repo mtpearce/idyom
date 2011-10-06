@@ -3,7 +3,7 @@
 ;;;; File:       prediction-sets.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-18 18:54:17 marcusp>                           
-;;;; Time-stamp: <2011-04-10 12:44:12 marcusp>                           
+;;;; Time-stamp: <2011-08-26 12:58:42 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -50,7 +50,6 @@
   (make-instance 'event-prediction :viewpoint viewpoint :element element
                  :set set :event event :weights weights))
 
-
 ;;;========================================================================
 ;;; Entropies for dataset and sequence prediction sets
 ;;;========================================================================
@@ -94,6 +93,23 @@
   (let ((predictions (mapcar #'event-prediction (prediction-set s))))
     (reduce #'* predictions :key #'(lambda (x) (nth 1 x)))))
 
+;;; for combining predictions of different basic viewpoints to create
+;;; an overall event prediction
+
+(defgeneric multiply-predictions (x y))
+
+(defmethod multiply-predictions ((d1 dataset-prediction) (d2 dataset-prediction))
+  (mapcar #'multiply-predictions (prediction-set d1) (prediction-set d2)))
+
+(defmethod multiply-predictions ((s1 sequence-prediction) (s2 sequence-prediction))
+  (mapcar #'multiply-predictions (prediction-set s1) (prediction-set s2)))
+
+(defmethod multiply-predictions ((e1 event-prediction) (e2 event-prediction))
+  (let ((p1 (cadr (event-prediction e1)))
+        (p2 (cadr (event-prediction e2))))
+    (cond ((null p1) p2)
+          ((null p2) p1)
+          (t (* p1 p2)))))
   
 ;;;========================================================================
 ;;; Functions for distributions 

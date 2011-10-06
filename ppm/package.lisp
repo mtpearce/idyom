@@ -3,7 +3,7 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                           
-;;;; Time-stamp: <2011-04-10 10:53:12 marcusp>                           
+;;;; Time-stamp: <2011-08-26 12:06:30 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -14,7 +14,7 @@
            "PREDICTION-VIEWPOINT" "PREDICTION-SET" "PREDICTION-ELEMENT"
            "PREDICTION-INDEX" "PREDICTION-WEIGHTS" "PREDICTION-EVENT"
            "MAKE-EVENT-PREDICTION" "MAKE-DATASET-PREDICTION" "MAKE-SEQUENCE-PREDICTION"
-           "COMBINE-DISTRIBUTIONS" "ARITHMETIC-COMBINATION"
+           "MULTIPLY-PREDICTIONS" "COMBINE-DISTRIBUTIONS" "ARITHMETIC-COMBINATION"
            "GEOMETRIC-COMBINATION" "RANKED-COMBINATION" "BAYESIAN-COMBINATION"
            "AVERAGE-CODELENGTHS" "AVERAGE-CODELENGTH" "CODELENGTHS"
            "SHANNON-ENTROPY" "SHANNON-ENTROPIES" "EVENT-PREDICTIONS"
