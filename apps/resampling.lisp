@@ -3,7 +3,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2011-06-29 15:10:00 marcusp>                           
+;;;; Time-stamp: <2011-08-25 11:53:59 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -507,7 +507,7 @@ for <viewpoint> in <dataset-id>."
    list containing <n> elements drawn at random from
    from <list> without replacement; and the second  is <list> with
    those elements removed."
-  (cond ((= n 0) (values result (append list new-list)))
+  (cond ((= n 0) (values (reverse result) (reverse (append list new-list))))
         ((< (random 1.0) (/ n (length list)))
          (random-select (cdr list) (- n 1) (cons (car list) result) new-list))
         (t (random-select (cdr list) n result (cons (car list) new-list)))))
