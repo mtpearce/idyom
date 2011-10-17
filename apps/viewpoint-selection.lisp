@@ -3,10 +3,106 @@
 ;;;; File:       viewpoint-selection.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-10-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2005-11-27 16:55:43 marcusp>                           
+;;;; Time-stamp: <2011-10-17 15:50:02 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoint-selection)
+
+;;;========================================================================
+;;; Top-level functions
+;;;========================================================================
+
+(defun dataset-viewpoint-selection (dataset-id basic-attributes attributes
+                                    &key pretraining-ids (k 10) (models :both+) resampling-indices
+                                    dp ; decimal-places of interest
+                                    (ltm-order-bound mvs::*ltm-order-bound*)
+                                    (ltm-mixtures mvs::*ltm-mixtures*)
+                                    (ltm-update-exclusion mvs::*ltm-update-exclusion*)
+                                    (ltm-escape mvs::*ltm-escape*)
+                                    (stm-order-bound mvs::*stm-order-bound*)
+                                    (stm-mixtures mvs::*stm-mixtures*)
+                                    (stm-update-exclusion mvs::*stm-update-exclusion*)
+                                    (stm-escape mvs::*stm-escape*))
+  (let ((cache-filename (dataset-modelling-filename dataset-id basic-attributes
+                                                    nil ; we don't mind which derived viewpoints are used
+                                                    :extension ".cache"
+                                                    :pretraining-ids pretraining-ids
+                                                    :resampling-indices resampling-indices
+                                                    :k k
+                                                    :models models
+                                                    :ltm-order-bound ltm-order-bound
+                                                    :ltm-mixtures ltm-mixtures
+                                                    :ltm-update-exclusion ltm-update-exclusion
+                                                    :ltm-escape ltm-escape
+                                                    :stm-order-bound stm-order-bound
+                                                    :stm-mixtures stm-mixtures
+                                                    :stm-update-exclusion stm-update-exclusion
+                                                    :stm-escape stm-escape)))
+    (viewpoint-selection:initialise-vs-cache)
+    (viewpoint-selection:load-vs-cache cache-filename :cl-user)
+    (viewpoint-selection:run-hill-climber 
+     attributes
+     nil
+     #'(lambda (derived-attributes)
+         (prog1
+             (when (verify-viewpoint-system basic-attributes derived-attributes)
+               (resampling:output-information-content  
+                (resampling:dataset-prediction dataset-id basic-attributes derived-attributes                                              
+                                               :pretraining-ids pretraining-ids
+                                               :resampling-indices resampling-indices
+                                               :k k
+                                               :models models
+                                               :ltm-order-bound ltm-order-bound
+                                               :ltm-mixtures ltm-mixtures
+                                               :ltm-update-exclusion ltm-update-exclusion
+                                               :ltm-escape ltm-escape
+                                               :stm-order-bound stm-order-bound
+                                               :stm-mixtures stm-mixtures
+                                               :stm-update-exclusion stm-update-exclusion
+                                               :stm-escape stm-escape)
+                1))
+           (viewpoint-selection:store-vs-cache cache-filename :cl-user)))
+     :desc 
+     3)
+    (viewpoint-selection:store-vs-cache cache-filename :cl-user)))
+
+(defun dataset-modelling-filename (dataset-id basic-attributes attributes
+                                   &key (extension "")
+                                   pretraining-ids (k 10) (models :both+)
+                                   resampling-indices
+                                   (ltm-order-bound mvs::*ltm-order-bound*)
+                                   (ltm-mixtures mvs::*ltm-mixtures*)
+                                   (ltm-update-exclusion mvs::*ltm-update-exclusion*)
+                                   (ltm-escape mvs::*ltm-escape*)
+                                   (stm-order-bound mvs::*stm-order-bound*)
+                                   (stm-mixtures mvs::*stm-mixtures*)
+                                   (stm-update-exclusion mvs::*stm-update-exclusion*)
+                                   (stm-escape mvs::*stm-escape*))
+  (flet ((format-list (list)
+           (when list
+             (let ((flist (format nil "~{~A_~}" list)))
+               (subseq flist 0 (1- (length flist)))))))
+    (let ((string (format nil "~(~{~A-~}~)" 
+                          (list dataset-id 
+                                (format-list basic-attributes)
+                                (format-list attributes)
+                                (format-list pretraining-ids)
+                                (format-list resampling-indices)
+                                k models
+                                ltm-order-bound ltm-mixtures ltm-update-exclusion ltm-escape
+                                stm-order-bound stm-mixtures stm-update-exclusion stm-escape))))
+      (concatenate 'string (subseq string 0 (1- (length string))) extension))))
+    
+(defun verify-viewpoint-system (basic-viewpoints viewpoints)
+  (let* ((typesets (reduce #'append (mapcar #'(lambda (v) (viewpoints:viewpoint-typeset (viewpoints:get-viewpoint v))) viewpoints)))
+         (matches (mapcar #'(lambda (basic-viewpoint)
+                              (let ((basic-viewpoint (viewpoints:get-viewpoint basic-viewpoint)))
+                                (find basic-viewpoint typesets 
+                                      :key #'(lambda (x) (viewpoints:get-viewpoint x))
+                                      :test #'viewpoints:viewpoint-equal)))
+                          basic-viewpoints)))
+    (if (position nil matches) nil t)))
+
 
 ;;;========================================================================
 ;;; Caching of record weights 
@@ -60,10 +156,10 @@
     (and (null (set-difference state1 state2 :test #'equal))
          (null (set-difference state2 state1 :test #'equal)))))
 
-(defun better-than-asc-0 (r1 r2) 
-  (better-than-asc r1 r2 :accessor #'car))
+(defun better-than-asc-0 (r1 r2 &key dp) 
+  (better-than-asc r1 r2 :accessor #'car :dp dp))
 
-(defun better-than-asc (r1 r2 &key (accessor #'identity))
+(defun better-than-asc (r1 r2 &key (accessor #'identity) dp)
   (let ((w1 (unless (null r1) (funcall accessor (record-weight r1))))
         (w2 (unless (null r2) (funcall accessor (record-weight r2)))))
     (cond ((and (null w1) (null w2))
@@ -72,12 +168,12 @@
            '())
           ((null w2)
            t)
-          (t (> w1 w2)))))
+          (t (> (utils:round-to-nearest-decimal-place w1 dp) (utils:round-to-nearest-decimal-place w2 dp))))))
 
-(defun better-than-desc-1 (r1 r2) 
-  (better-than-desc r1 r2 :accessor #'cadr))
+(defun better-than-desc-1 (r1 r2 &key dp) 
+  (better-than-desc r1 r2 :accessor #'cadr :dp dp))
 
-(defun better-than-desc (r1 r2 &key (accessor #'identity))
+(defun better-than-desc (r1 r2 &key (accessor #'identity) dp)
   (let ((w1 (unless (null r1) (funcall accessor (record-weight r1))))
         (w2 (unless (null r2) (funcall accessor (record-weight r2)))))
     (cond ((and (null w1) (null w2))
@@ -86,21 +182,21 @@
            '())
           ((null w2)
            t)
-          (t (< w1 w2)))))
+          (t (< (utils:round-to-nearest-decimal-place w1 dp) (utils:round-to-nearest-decimal-place w2 dp))))))
 
 ;;;========================================================================
 ;;; Best first search 
 ;;;========================================================================
  
-(defun run-best-first (features start-state eval-function better-than)
+(defun run-best-first (features start-state eval-function better-than dp)
   (print-header) 
   (let* ((eval-function (caching-eval-function eval-function))
          (start-weight (unless (null start-state) 
                          (funcall eval-function start-state)))
          (start-record (make-record :state start-state :weight start-weight))
          (better-than (if (eql better-than :asc) 
-                          #'better-than-asc
-                          #'better-than-desc))
+                          #'(lambda (x y) (better-than-asc x y :dp dp))
+                          #'(lambda (x y) (better-than-desc x y :dp dp))))
          (unused 
           (sort (descendents start-record eval-function features better-than)
                 better-than)))
@@ -160,7 +256,7 @@
 ;;; Forward and Backward selection hill climbing
 ;;;========================================================================
 
-(defun run-hill-climber (features start-state eval-function better-than)
+(defun run-hill-climber (features start-state eval-function better-than dp)
   (print-header) 
   (let* ((eval-function (caching-eval-function eval-function))
          (start-weight (unless (null start-state) 
@@ -171,8 +267,8 @@
                                         :test #'viewpoints:attribute-equal))
                             features))
          (better-than (case better-than 
-                        (:asc #'better-than-asc)
-                        (:desc #'better-than-desc)
+                        (:asc #'(lambda (x y) (better-than-asc x y :dp dp)))
+                        (:desc #'(lambda (x y) (better-than-desc x y :dp dp)))
                         (:asc-0 #'better-than-asc-0)
                         (:desc-1 #'better-than-desc-1))))
     (prog1 (hill-climber start-record unused eval-function better-than)
@@ -223,14 +319,14 @@
 
 (defun print-header ()
   (print-double-separator)
-  (format t "~%   System ~1,55T Score")
+  (format t "~&   System ~1,73T    Score")
   (print-separator))
 
 (defun print-separator ()
-  (format t "~% ~A" (make-sequence 'string 77 :initial-element #\-)))
+  (format t "~& ~A" (make-sequence 'string 77 :initial-element #\-)))
 
 (defun print-double-separator ()
-  (format t "~% ~A" (make-sequence 'string 77 :initial-element #\=)))
+  (format t "~& ~A" (make-sequence 'string 77 :initial-element #\=)))
 
 (defun print-record (record)
-  (format t "~%   ~A ~1,55T ~A" (record-state record) (record-weight record)))
+  (format t "~&   ~A ~1,73T    ~A" (record-state record) (record-weight record)))

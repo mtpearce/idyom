@@ -3,7 +3,7 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                           
-;;;; Time-stamp: <2011-06-30 17:33:31 marcusp>                           
+;;;; Time-stamp: <2011-10-17 15:50:43 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -27,7 +27,8 @@
 (defpackage #:viewpoint-selection
   (:use #:cl #:utils)
   (:export "RUN-BEST-FIRST" "RUN-HILL-CLIMBER" 
-           "LOAD-VS-CACHE" "STORE-VS-CACHE" "INITIALISE-VS-CACHE")
+           "LOAD-VS-CACHE" "STORE-VS-CACHE" "INITIALISE-VS-CACHE"
+           "DATASET-VIEWPOINT-SELECTION")
   (:documentation "Selection of viewpoints."))
 
 (defpackage #:generation 
