@@ -3,7 +3,7 @@
 ;;;; File:       viewpoint-selection.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-10-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2011-10-18 10:21:20 marcusp>                           
+;;;; Time-stamp: <2011-10-18 11:49:07 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoint-selection)
@@ -298,10 +298,10 @@
   (print-separator))
 
 (defun print-separator ()
-  (format t "~& ~A" (make-sequence 'string 77 :initial-element #\-)))
+  (format t "~& ~A" (make-sequence 'string 87 :initial-element #\-)))
 
 (defun print-double-separator ()
-  (format t "~& ~A" (make-sequence 'string 77 :initial-element #\=)))
+  (format t "~& ~A" (make-sequence 'string 87 :initial-element #\=)))
 
 (defun print-record (record)
   (format t "~&   ~A ~1,73T    ~A" (record-state record) (record-weight record)))
