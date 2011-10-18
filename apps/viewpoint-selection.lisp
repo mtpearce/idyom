@@ -3,7 +3,7 @@
 ;;;; File:       viewpoint-selection.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-10-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2011-10-18 10:07:39 marcusp>                           
+;;;; Time-stamp: <2011-10-18 10:21:20 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoint-selection)
@@ -23,21 +23,21 @@
                                     (stm-mixtures mvs::*stm-mixtures*)
                                     (stm-update-exclusion mvs::*stm-update-exclusion*)
                                     (stm-escape mvs::*stm-escape*))
-  (let ((cache-filename (dataset-modelling-filename dataset-id basic-attributes
-                                                    nil ; we don't mind which derived viewpoints are used
-                                                    :extension ".cache"
-                                                    :pretraining-ids pretraining-ids
-                                                    :resampling-indices resampling-indices
-                                                    :k k
-                                                    :models models
-                                                    :ltm-order-bound ltm-order-bound
-                                                    :ltm-mixtures ltm-mixtures
-                                                    :ltm-update-exclusion ltm-update-exclusion
-                                                    :ltm-escape ltm-escape
-                                                    :stm-order-bound stm-order-bound
-                                                    :stm-mixtures stm-mixtures
-                                                    :stm-update-exclusion stm-update-exclusion
-                                                    :stm-escape stm-escape)))
+  (let ((cache-filename (apps:dataset-modelling-filename dataset-id basic-attributes
+                                                         nil ; we don't mind which derived viewpoints are used
+                                                         :extension ".cache"
+                                                         :pretraining-ids pretraining-ids
+                                                         :resampling-indices resampling-indices
+                                                         :k k
+                                                         :models models
+                                                         :ltm-order-bound ltm-order-bound
+                                                         :ltm-mixtures ltm-mixtures
+                                                         :ltm-update-exclusion ltm-update-exclusion
+                                                         :ltm-escape ltm-escape
+                                                         :stm-order-bound stm-order-bound
+                                                         :stm-mixtures stm-mixtures
+                                                         :stm-update-exclusion stm-update-exclusion
+                                                         :stm-escape stm-escape)))
     (viewpoint-selection:initialise-vs-cache)
     (viewpoint-selection:load-vs-cache cache-filename :cl-user)
     (viewpoint-selection:run-hill-climber 
@@ -65,33 +65,6 @@
      :desc 
      dp)
     (viewpoint-selection:store-vs-cache cache-filename :cl-user)))
-
-(defun dataset-modelling-filename (dataset-id basic-attributes attributes
-                                   &key (extension "")
-                                   pretraining-ids (k 10) (models :both+)
-                                   resampling-indices
-                                   (ltm-order-bound mvs::*ltm-order-bound*)
-                                   (ltm-mixtures mvs::*ltm-mixtures*)
-                                   (ltm-update-exclusion mvs::*ltm-update-exclusion*)
-                                   (ltm-escape mvs::*ltm-escape*)
-                                   (stm-order-bound mvs::*stm-order-bound*)
-                                   (stm-mixtures mvs::*stm-mixtures*)
-                                   (stm-update-exclusion mvs::*stm-update-exclusion*)
-                                   (stm-escape mvs::*stm-escape*))
-  (flet ((format-list (list)
-           (when list
-             (let ((flist (format nil "~{~A_~}" list)))
-               (subseq flist 0 (1- (length flist)))))))
-    (let ((string (format nil "~(~{~A-~}~)" 
-                          (list dataset-id 
-                                (format-list basic-attributes)
-                                (format-list attributes)
-                                (format-list pretraining-ids)
-                                (format-list resampling-indices)
-                                k models
-                                ltm-order-bound ltm-mixtures ltm-update-exclusion ltm-escape
-                                stm-order-bound stm-mixtures stm-update-exclusion stm-escape))))
-      (concatenate 'string (subseq string 0 (1- (length string))) extension))))
     
 (defun verify-viewpoint-system (basic-viewpoints viewpoints)
   (let* ((typesets (reduce #'append (mapcar #'(lambda (v) (viewpoints:viewpoint-typeset (viewpoints:get-viewpoint v))) viewpoints)))

@@ -3,14 +3,14 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                           
-;;;; Time-stamp: <2011-10-17 15:50:43 marcusp>                           
+;;;; Time-stamp: <2011-10-18 10:22:13 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
 
 (defpackage #:apps
   (:use #:cl #:utils #:md #:mvs)
-  (:export "*ROOT-DIR*" "POPULATE-DATABASE")
+  (:export "*ROOT-DIR*" "POPULATE-DATABASE" "DATASET-MODELLING-FILENAME")
   (:documentation "Miscellaneous variables & utils for applications."))
 
 (defpackage #:resampling 
