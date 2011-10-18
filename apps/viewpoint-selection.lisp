@@ -3,7 +3,7 @@
 ;;;; File:       viewpoint-selection.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-10-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2011-10-17 15:50:02 marcusp>                           
+;;;; Time-stamp: <2011-10-18 10:07:39 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoint-selection)
@@ -63,7 +63,7 @@
                 1))
            (viewpoint-selection:store-vs-cache cache-filename :cl-user)))
      :desc 
-     3)
+     dp)
     (viewpoint-selection:store-vs-cache cache-filename :cl-user)))
 
 (defun dataset-modelling-filename (dataset-id basic-attributes attributes
@@ -168,7 +168,7 @@
            '())
           ((null w2)
            t)
-          (t (> (utils:round-to-nearest-decimal-place w1 dp) (utils:round-to-nearest-decimal-place w2 dp))))))
+          (t (> (round-off w1 dp) (round-off w2 dp))))))
 
 (defun better-than-desc-1 (r1 r2 &key dp) 
   (better-than-desc r1 r2 :accessor #'cadr :dp dp))
@@ -182,7 +182,9 @@
            '())
           ((null w2)
            t)
-          (t (< (utils:round-to-nearest-decimal-place w1 dp) (utils:round-to-nearest-decimal-place w2 dp))))))
+          (t (< (round-off w1 dp) (round-off w2 dp))))))
+
+(defun round-off (x dp) (if dp (utils:round-to-nearest-decimal-place x dp) x))
 
 ;;;========================================================================
 ;;; Best first search 
