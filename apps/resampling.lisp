@@ -3,7 +3,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2011-10-18 10:30:48 marcusp>                           
+;;;; Time-stamp: <2011-10-18 10:41:24 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -66,9 +66,24 @@
          (resampling-indices (if (null resampling-indices) 
                                  (utils:generate-integers 0 (1- k))
                                  resampling-indices))
+         ;; an output filename
+         (filename (apps:dataset-modelling-filename dataset-id basic-attributes attributes
+                                                    :extension ".dat"
+                                                    :pretraining-ids pretraining-ids
+                                                    :resampling-indices resampling-indices
+                                                    :k k
+                                                    :models models
+                                                    :ltm-order-bound ltm-order-bound
+                                                    :ltm-mixtures ltm-mixtures
+                                                    :ltm-update-exclusion ltm-update-exclusion
+                                                    :ltm-escape ltm-escape
+                                                    :stm-order-bound stm-order-bound
+                                                    :stm-mixtures stm-mixtures
+                                                    :stm-update-exclusion stm-update-exclusion
+                                                    :stm-escape stm-escape))
          ;; the result
          (sequence-predictions))
-    (dolist (resampling-set resampling-sets sequence-predictions)
+    (dolist (resampling-set resampling-sets (values sequence-predictions filename))
       ;; (format t "~&~0,0@TResampling set ~A: ~A~%" resampling-id resampling-set)
       (when (member resampling-id resampling-indices)
         (let* ((training-set (get-training-set dataset resampling-set))
@@ -332,28 +347,6 @@ dataset-id)."
               1)))
         (format t "~&System ~A; Mean Information Content: ~,2F ~%" (car system) 
                 mean-ic)))))
-
-
-;;;===========================================================================
-;;; Viewpoint Selection 
-;;;===========================================================================
-
-(defun select-viewpoints (dataset-id basic-attributes attributes
-                          &key pretraining-ids (k 10) (models :both+)
-                          resampling-indices start-state cache-file)
-  (when cache-file (viewpoint-selection:load-vs-cache cache-file :cl-user))
-  (viewpoint-selection:run-hill-climber
-   attributes 
-   start-state
-   #'(lambda (x) 
-       (output-information-content 
-        (dataset-prediction dataset-id basic-attributes x 
-                            :pretraining-ids pretraining-ids :k k 
-                            :models models 
-                            :resampling-indices resampling-indices)
-        1))
-   :desc)
-  (when cache-file (viewpoint-selection:store-vs-cache cache-file :cl-user)))
 
   
 ;;;===========================================================================
