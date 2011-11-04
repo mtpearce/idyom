@@ -3,7 +3,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2011-10-18 10:41:24 marcusp>                           
+;;;; Time-stamp: <2011-10-24 12:12:37 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 

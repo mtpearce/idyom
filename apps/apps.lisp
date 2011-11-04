@@ -3,7 +3,7 @@
 ;;;; File:       apps.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2005-11-27 16:27:35 marcusp>
-;;;; Time-stamp: <2011-10-18 10:56:30 marcusp>
+;;;; Time-stamp: <2011-11-04 15:55:18 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:apps) 
@@ -33,16 +33,20 @@
                                    (stm-mixtures mvs::*stm-mixtures*)
                                    (stm-update-exclusion mvs::*stm-update-exclusion*)
                                    (stm-escape mvs::*stm-escape*))
-  (flet ((format-list (list)
-           (when list
-             (let ((flist (format nil "~{~A_~}" list)))
-               (subseq flist 0 (1- (length flist)))))))
+  (labels ((format-list (list token)
+             (when list
+               (let ((flist (format nil (format nil "~~{~~A~A~~}" token) (flatten-links list))))
+                 (subseq flist 0 (1- (length flist))))))
+           (flatten-links (list)
+             (mapcar #'(lambda (x) (if (atom x) x (format-list x "*"))) list)))
+                             
+    
     (let ((string (format nil "~(~{~A-~}~)" 
                           (list dataset-id 
-                                (format-list basic-attributes)
-                                (format-list attributes)
-                                (format-list pretraining-ids)
-                                (format-list resampling-indices)
+                                (format-list basic-attributes "_")
+                                (format-list attributes "_")
+                                (format-list pretraining-ids "_")
+                                (format-list resampling-indices "_")
                                 k models
                                 ltm-order-bound ltm-mixtures ltm-update-exclusion ltm-escape
                                 stm-order-bound stm-mixtures stm-update-exclusion stm-escape))))
