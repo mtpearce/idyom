@@ -3,7 +3,7 @@
 ;;;; File:       apps.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2005-11-27 16:27:35 marcusp>
-;;;; Time-stamp: <2011-11-04 15:55:18 marcusp>
+;;;; Time-stamp: <2011-11-07 15:25:50 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:apps) 
@@ -38,7 +38,7 @@
                (let ((flist (format nil (format nil "~~{~~A~A~~}" token) (flatten-links list))))
                  (subseq flist 0 (1- (length flist))))))
            (flatten-links (list)
-             (mapcar #'(lambda (x) (if (atom x) x (format-list x "*"))) list)))
+             (mapcar #'(lambda (x) (if (atom x) x (format-list x "%"))) list)))
                              
     
     (let ((string (format nil "~(~{~A-~}~)" 
