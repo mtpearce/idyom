@@ -1,9 +1,9 @@
-;;;; -*- Mode: LISP; Syntax: ANSI-Common-Lisp; Base: 10 -*-             
+;;;; -*- Mode: LISP; Syntax: ANSI-Common-Lisp; Base: 0 -*-             
 ;;;; ======================================================================
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2011-10-24 12:12:37 marcusp>                           
+;;;; Time-stamp: <2012-01-25 14:13:05 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -206,7 +206,7 @@ dataset-id)."
                          (event-results (if existing-results existing-results (make-hash-table))))
                     ;; Store event information
                     (unless existing-results
-                      (setf (gethash 'dataset.id event-results) (1+ dataset-id))
+                      (setf (gethash 'dataset.id event-results) dataset-id)
                       (setf (gethash 'melody.id event-results) (1+ composition-id))
                       (setf (gethash 'note.id event-results) (1+ event-id))
                       (setf (gethash 'melody.name event-results) (mtp-admin:get-description dataset-id composition-id))
