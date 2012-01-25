@@ -3,7 +3,7 @@
 ;;;; File:       viewpoint-selection.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-10-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2011-10-18 11:49:07 marcusp>                           
+;;;; Time-stamp: <2012-01-25 12:29:43 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoint-selection)
@@ -14,7 +14,6 @@
 
 (defun dataset-viewpoint-selection (dataset-id basic-attributes attributes
                                     &key pretraining-ids (k 10) (models :both+) resampling-indices
-                                    dp ; decimal-places of interest
                                     (ltm-order-bound mvs::*ltm-order-bound*)
                                     (ltm-mixtures mvs::*ltm-mixtures*)
                                     (ltm-update-exclusion mvs::*ltm-update-exclusion*)
@@ -22,7 +21,11 @@
                                     (stm-order-bound mvs::*stm-order-bound*)
                                     (stm-mixtures mvs::*stm-mixtures*)
                                     (stm-update-exclusion mvs::*stm-update-exclusion*)
-                                    (stm-escape mvs::*stm-escape*))
+                                    (stm-escape mvs::*stm-escape*)
+                                    ;; parameters for viewpoint selection
+                                    dp ; decimal-places of interest
+                                    method ; search method: best-first or hill-climber
+                                    )
   (let ((cache-filename (apps:dataset-modelling-filename dataset-id basic-attributes
                                                          nil ; we don't mind which derived viewpoints are used
                                                          :extension ".cache"
@@ -40,31 +43,37 @@
                                                          :stm-escape stm-escape)))
     (viewpoint-selection:initialise-vs-cache)
     (viewpoint-selection:load-vs-cache cache-filename :cl-user)
-    (viewpoint-selection:run-hill-climber 
-     attributes
-     nil
-     #'(lambda (derived-attributes)
-         (prog1
-             (when (verify-viewpoint-system basic-attributes derived-attributes)
-               (resampling:output-information-content  
-                (resampling:dataset-prediction dataset-id basic-attributes derived-attributes                                              
-                                               :pretraining-ids pretraining-ids
-                                               :resampling-indices resampling-indices
-                                               :k k
-                                               :models models
-                                               :ltm-order-bound ltm-order-bound
-                                               :ltm-mixtures ltm-mixtures
-                                               :ltm-update-exclusion ltm-update-exclusion
-                                               :ltm-escape ltm-escape
-                                               :stm-order-bound stm-order-bound
-                                               :stm-mixtures stm-mixtures
-                                               :stm-update-exclusion stm-update-exclusion
-                                               :stm-escape stm-escape)
-                1))
-           (viewpoint-selection:store-vs-cache cache-filename :cl-user)))
-     :desc 
-     dp)
-    (viewpoint-selection:store-vs-cache cache-filename :cl-user)))
+    (let* ((eval-function 
+            #'(lambda (derived-attributes)
+                (prog1
+                    (when (verify-viewpoint-system basic-attributes derived-attributes)
+                      (resampling:output-information-content  
+                       (resampling:dataset-prediction dataset-id basic-attributes derived-attributes                                              
+                                                      :pretraining-ids pretraining-ids
+                                                      :resampling-indices resampling-indices
+                                                      :k k
+                                                      :models models
+                                                      :ltm-order-bound ltm-order-bound
+                                                      :ltm-mixtures ltm-mixtures
+                                                      :ltm-update-exclusion ltm-update-exclusion
+                                                      :ltm-escape ltm-escape
+                                                      :stm-order-bound stm-order-bound
+                                                      :stm-mixtures stm-mixtures
+                                                      :stm-update-exclusion stm-update-exclusion
+                                                      :stm-escape stm-escape)
+                       1))
+                  (viewpoint-selection:store-vs-cache cache-filename :cl-user))))
+           (selected-state
+            (case method
+              (:hill-climber
+               (viewpoint-selection:run-hill-climber attributes nil eval-function :desc dp))
+              (:best-first
+               (viewpoint-selection:run-best-first attributes nil eval-function :desc dp))
+              (t 
+               (format t "~&Unknown search method supplied to dataset-viewpoint-selection. Use :hill-climber or :best-first.~%")))))
+      (viewpoint-selection:store-vs-cache cache-filename :cl-user)
+      (format t "~&The selected viewpoint system with a mean IC of ~A is ~A~%" (record-weight selected-state) (record-state selected-state))
+      (record-state selected-state))))
     
 (defun verify-viewpoint-system (basic-viewpoints viewpoints)
   (let* ((typesets (reduce #'append (mapcar #'(lambda (v) (viewpoints:viewpoint-typeset (viewpoints:get-viewpoint v))) viewpoints)))
