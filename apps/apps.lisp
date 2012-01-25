@@ -3,7 +3,7 @@
 ;;;; File:       apps.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2005-11-27 16:27:35 marcusp>
-;;;; Time-stamp: <2011-11-07 15:25:50 marcusp>
+;;;; Time-stamp: <2012-01-25 13:21:26 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:apps) 
@@ -39,15 +39,14 @@
                  (subseq flist 0 (1- (length flist))))))
            (flatten-links (list)
              (mapcar #'(lambda (x) (if (atom x) x (format-list x "%"))) list)))
-                             
-    
-    (let ((string (format nil "~(~{~A-~}~)" 
-                          (list dataset-id 
-                                (format-list basic-attributes "_")
-                                (format-list attributes "_")
-                                (format-list pretraining-ids "_")
-                                (format-list resampling-indices "_")
-                                k models
-                                ltm-order-bound ltm-mixtures ltm-update-exclusion ltm-escape
-                                stm-order-bound stm-mixtures stm-update-exclusion stm-escape))))
+    (let* ((resampling-indices (if (= (length resampling-indices) k) nil resampling-indices))
+           (string (format nil "~(~{~A-~}~)" 
+                           (list dataset-id 
+                                 (format-list basic-attributes "_")
+                                 (format-list attributes "_")
+                                 (format-list pretraining-ids "_")
+                                 (format-list resampling-indices "_")
+                                 k models
+                                 ltm-order-bound ltm-mixtures ltm-update-exclusion ltm-escape
+                                 stm-order-bound stm-mixtures stm-update-exclusion stm-escape))))
       (concatenate 'string (subseq string 0 (1- (length string))) extension))))
