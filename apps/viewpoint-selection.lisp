@@ -3,7 +3,7 @@
 ;;;; File:       viewpoint-selection.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-10-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2012-01-25 12:29:43 marcusp>                           
+;;;; Time-stamp: <2012-01-25 13:35:58 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoint-selection)
@@ -24,7 +24,7 @@
                                     (stm-escape mvs::*stm-escape*)
                                     ;; parameters for viewpoint selection
                                     dp ; decimal-places of interest
-                                    method ; search method: best-first or hill-climber
+                                    (method :hill-climber) ; search method: best-first or hill-climber
                                     )
   (let ((cache-filename (apps:dataset-modelling-filename dataset-id basic-attributes
                                                          nil ; we don't mind which derived viewpoints are used
