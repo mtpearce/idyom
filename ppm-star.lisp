@@ -1,9 +1,9 @@
-;;;; -*- Mode: LISP; Syntax: ANSI-Common-Lisp; Base: 10 -*-             
+;;;; -*- Mggode: LISP; Syntax: ANSI-Common-Lisp; Base: 10 -*-             
 ;;;; ======================================================================
 ;;;; File:       ppm-star.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2008-11-10 16:23:21 marcusp>                           
+;;;; Time-stamp: <2011-08-22 18:09:56 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -396,7 +396,11 @@
 (defmethod list-children ((m ppm) node)
   "Returns a list of the children of <node>."
   (labels ((add-next-brother (child result)
-             (if (null child) (reverse result)
+             (if (null child) 
+                 (let ((result (reverse result)))
+                   
+                   ;;(print (mapcar #'(lambda (x) (list (get-symbol m (label-left (get-label m x))))) result))
+                   result)
                  (add-next-brother (get-brother m child) (cons child result)))))
     (let ((child (when (branch-p node) (branch-record-child (get-record m node)))))
       (add-next-brother child '()))))
@@ -544,7 +548,8 @@
 
 (defmethod model-sentinel-event ((m ppm) location)
   (add-event-to-model-dataset m *sentinel*) 
-  (ukkstep m nil location *sentinel* t))
+  (ukkstep m nil location *sentinel* t)
+  (increment-event-front m))
 
 (defmethod ppm-model-event ((m ppm) symbol &key location construct? predict?)
   "Models an event <symbol> appear at location <location> in the ppm
@@ -568,6 +573,7 @@
 (defmethod ukkstep ((m ppm) node location symbol construct?)
   "Updates the suffix link of node and inserts the relevant suffixes of
    the current prefix of the current sequence in the dataset into <m>."
+  ;;(when (sentinel-p symbol) (print (list m node location symbol construct?)))
   (cond ((occurs? m location symbol)
          (when construct? (update-slink m node location :occurs? t))
          (canonise m location (make-label :left (ppm-front m) :length 1)))
@@ -932,6 +938,7 @@ probability."
       (let ((tc '()))
         (dolist (child (list-children m location) (reverse tc))
           (let ((sym (get-symbol m (label-left (get-label m child)))))
+            ;;(print (list child sym))
             (when (member sym (ppm-alphabet m) :test #'eequal)
               (push (list sym (get-count m child up-ex)) tc)))))
       (let ((sym (get-symbol m (label-left (location-rest location)))))
@@ -981,7 +988,7 @@ those symbols that have occurred exactly once are counted."
 (defmethod order-minus1-probability ((m ppm) up-ex)
   "Returns the order -1 probability corresponding to a uniform distribution
    over the alphabet."
-  ;(print (list (alphabet-size m) (transition-counts m *root* up-ex)))
+  ;;(print (list (alphabet-size m) (transition-counts m *root* up-ex)))
   (/ 1.0 ;(float (alphabet-size m) 0.0)))
      (float (- (+ 1.0 (alphabet-size m))
                (length (transition-counts m *root* up-ex)))
