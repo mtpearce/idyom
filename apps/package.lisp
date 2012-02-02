@@ -13,6 +13,11 @@
   (:export "*ROOT-DIR*" "POPULATE-DATABASE" "DATASET-MODELLING-FILENAME")
   (:documentation "Miscellaneous variables & utils for applications."))
 
+(defpackage #:main
+  (:use #:cl)
+  (:export "IDYOM")
+  (:documentation "Main access to IDyOM functionality."))
+
 (defpackage #:resampling 
   (:use #:cl #:utils #:md #:viewpoints #:ppm #:mvs #:prediction-sets)
   (:export "DATASET-PREDICTION" "OUTPUT-INFORMATION-CONTENT" "FORMAT-INFORMATION-CONTENT"
