@@ -43,4 +43,5 @@
              (:file "apps")
              (:file "resampling")
              (:file "viewpoint-selection")
+             (:file "main")
              (:file "generation")))))
