@@ -13,7 +13,7 @@
   (:export "*ROOT-DIR*" "POPULATE-DATABASE" "DATASET-MODELLING-FILENAME")
   (:documentation "Miscellaneous variables & utils for applications."))
 
-(defpackage #:main
+(defpackage #:idyom
   (:use #:cl)
   (:export "IDYOM")
   (:documentation "Main access to IDyOM functionality."))

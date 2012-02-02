@@ -15,7 +15,7 @@
 ;; 5. record viewpoint weights in output files
 ;; 6. extend to more than one dataset
 
-(cl:in-package #:idyom-main)
+(cl:in-package #:idyom)
 
 (defvar *cpitch-viewpoints* '(;; Chromatic pitch
                               :cpitch       ; chromatic pitch (midi pitch number)
