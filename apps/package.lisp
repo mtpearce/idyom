@@ -36,17 +36,3 @@
         #:resampling)
   (:export "DATASET-GENERATION" "GENERATE-CHORALES")
   (:documentation "Generation of melodic compositions."))
-
-;; (defpackage #:expectancy
-;;   (:use #:cl #:utils #:md #:viewpoints #:mvs #:prediction-sets #:resampling)
-;;   (:export "SELECT-CUDLUN95" "CUDLUN95" "SELECT-SCHELL96" "SCHELL96"
-;;            "SELECT-MANZETAL92" "SELECT-MANZETAL92-ENTROPY" "MANZETAL92")
-;;   (:documentation "Modelling perceptual data with multiple viewpoint systems."))
-;;
-;; (defpackage #:grouping 
-;;   (:use #:cl)
-;;   (:export "DATASET-SEGMENTATION")
-;;   (:documentation "Inductive approach to melody segmentation."))
-
-
-
