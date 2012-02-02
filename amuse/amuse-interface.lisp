@@ -3,7 +3,7 @@
 ;;;; File:       amuse-interface.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2008-09-30 17:25:38 marcusp>
-;;;; Time-stamp: <2012-02-02 17:55:01 marcusp>
+;;;; Time-stamp: <2012-02-02 18:22:39 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -64,15 +64,16 @@
 (defun composition-id (event) (amuse-mtp::composition-id event))
 (defun event-id (event) (amuse-mtp::event-id event))
 
+;;; These should be moved to amuse-mtp in due course
 (defgeneric amuse::copy-event (x))
 (defmethod amuse::copy-event ((e amuse-mtp:mtp-event))
   (music-data::copy-event e))
 
-(defgeneric amuse::composition-id e)
+(defgeneric amuse::composition-id (e))
 (defmethod amuse::composition-id ((e amuse-mtp:mtp-event))
   (amuse-mtp:composition-id e))
 
-(defgeneric amuse::event-id e)
+(defgeneric amuse::event-id (e))
 (defmethod amuse::event-id ((e amuse-mtp:mtp-event))
   (amuse-mtp:event-id e))
 
