@@ -254,7 +254,6 @@ no. in which the event occurs." ))
 
 (defun connect-to-database ()
   (clsql:connect '("/home/marcusp/research/projects/idyom2/lisp/database.sqlite") :if-exists :old :database-type :sqlite3))
-  ;;(clsql:connect '("vaughan-williams.doc.gold.ac.uk" "amuse" "LispMidi" "clsql") :if-exists :old :database-type :mysql))
 
 ;; Inserting and deleting datasets 
 ;;================================
