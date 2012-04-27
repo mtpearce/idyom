@@ -3,7 +3,7 @@
 ;;;; File:       midi2db.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2007-03-21 09:47:26 marcusp>
-;;;; Time-stamp: <2010-04-14 13:47:26 marcusp>
+;;;; Time-stamp: <2012-04-27 10:20:04 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:midi2db) 
@@ -108,6 +108,9 @@
         (list :pulses pulses)
         (list :phrase phrase)
         (list :voice voice)
+        (list :articulation 0)
+        (list :comma 0)
+        (list :ornament 0)
         (list :dyn dyn)))
 
 (defun find-matching-note-off (note-on-message track)
