@@ -65,11 +65,11 @@
 (defun event-id (event) (amuse-mtp::event-id event))
 
 ;;; These should be moved to amuse-mtp in due course
-(defmethod amuse::composition-id ((e amuse-mtp:mtp-event))
-  (amuse-mtp::composition-id e))
+;(defmethod amuse::composition-id ((e amuse-mtp:mtp-event))
+;  (amuse-mtp::composition-id e))
 
-(defmethod amuse::event-id ((e amuse-mtp:mtp-event))
-  (amuse-mtp::event-id e))
+;(defmethod amuse::event-id ((e amuse-mtp:mtp-event))
+;  (amuse-mtp::event-id e))
 
 (defmethod copy-event ((e amuse-mtp:mtp-event))
   (make-instance 'amuse-mtp:mtp-event
