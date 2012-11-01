@@ -263,11 +263,12 @@
                   (mode (mode events)))
               ;(declare (type (integer -7 7) keysig) (type (integer 0 11) mode))
               (if (undefined-p keysig mode) +undefined+
-                  (cond ((> keysig 0)
+                  (cond ((and (numberp keysig) (> keysig 0))
                          (mod (+ (* keysig 7) mode) 12))
-                        ((< keysig 0)
+                        ((and (numberp keysig) (< keysig 0))
                          (mod (+ (* (- keysig) 5) mode) 12))
-                        (t mode))))
+                        ((numberp mode) mode)
+			(t +undefined+)))) 
   :function* (viewpoint-alphabet (get-viewpoint 'keysig)))
 
 
