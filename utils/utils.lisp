@@ -3,7 +3,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2011-04-10 11:13:13 marcusp>
+;;;; Time-stamp: <2012-05-29 17:17:52 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -169,7 +169,7 @@
       (with-standard-io-syntax
           (let ((*package* (find-package package)))
             (funcall fun object s))))
-    (gzip filename)))
+    #-win32 (gzip filename)))
       
 (defun read-object-from-file (filename &optional (package :cl-user))
   (let ((gzipped-filename (add-file-suffix filename ".gz")))
