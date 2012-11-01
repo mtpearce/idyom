@@ -3,7 +3,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2012-01-25 14:13:05 marcusp>                           
+;;;; Time-stamp: <2012-06-19 19:22:57 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -203,7 +203,8 @@ dataset-id)."
                          (distribution (prediction-sets:prediction-set ep))
                          (weights (prediction-sets:prediction-weights ep))
                          (existing-results (gethash (list composition-id event-id) results))
-                         (event-results (if existing-results existing-results (make-hash-table))))
+                         (event-results (if existing-results existing-results (make-hash-table)))
+                         (timebase (mtp-admin:get-timebase dataset-id composition-id)))
                     ;; Store event information
                     (unless existing-results
                       (setf (gethash 'dataset.id event-results) dataset-id)
@@ -211,7 +212,10 @@ dataset-id)."
                       (setf (gethash 'note.id event-results) (1+ event-id))
                       (setf (gethash 'melody.name event-results) (mtp-admin:get-description dataset-id composition-id))
                       (dolist (attribute viewpoints:*basic-types*)
-                        (setf (gethash attribute event-results) (mtp-admin:get-attribute event attribute))))
+                        (let ((value (mtp-admin:get-attribute event attribute)))
+                          (when (member attribute '(:dur :bioi :deltast :onset) :test #'eq)
+                            (setf value (* value (/ timebase 96))))
+                          (setf (gethash attribute event-results) value))))
                     ;; Store feature prediction
                     (setf (gethash (create-key feature 'weight.ltm) event-results) (car weights))
                     (setf (gethash (create-key feature 'weight.stm) event-results) (cadr weights))
