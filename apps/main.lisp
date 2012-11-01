@@ -3,7 +3,7 @@
 ;;;; File:       viewpoint-selection.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2010-11-01 15:19:57 marcusp>
-;;;; Time-stamp: <2012-01-26 11:28:25 marcusp>
+;;;; Time-stamp: <2012-07-02 17:05:13 marcusp>
 ;;;; ======================================================================
 
 ;; TODO
@@ -55,7 +55,7 @@
               (stm-update-exclusion mvs::*stm-update-exclusion*)
               (stm-escape mvs::*stm-escape*)
               ;; output parameters
-              (detail 1)
+              (detail 3)
               (output-path nil)
               ;; viewpoint selection parameters
               (dp nil)
