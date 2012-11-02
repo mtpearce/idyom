@@ -35,6 +35,9 @@
                               ;:inscale      ; boolean: whether or not the note is in the scale
                               ))
 
+; [Jeremy] A subset of cpitch-viewpoints
+(defvar *reduced-viewpoints* '(:cpitch :cpitch-class :cpint :cpint-size :contour :newcontour))
+
 (defvar *bioi-viewpoints* '(
                             :bioi           ; inter-onset interval
                             :bioi-ratio     ; ratio between consecutive inter-onset intervals
@@ -103,7 +106,7 @@
       ;; single basic viewpoint
       (let ((derived-viewpoints
              (case (car basic-viewpoints)
-               (:cpitch *cpitch-viewpoints*)
+               (:cpitch *reduced-viewpoints*) ; was (:cpitch *cpitch-viewpoints*)
                (:bioi *bioi-viewpoints*)
                ;; TODO: extend to other basic viewpoints
                (t (format t "~&No derived viewpoints available for ~A.~%" (car basic-viewpoints))))))
