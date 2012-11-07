@@ -41,3 +41,16 @@ symbol if they are lists else nil."
          (every #'(lambda (x y) (string= (symbol-name x) (symbol-name y)))
                 a1 a2))
         (t nil)))
+
+
+; List defined viewpoints
+
+(defun all-viewpoints () 
+  (append (all-basic-viewpoints) (all-derived-viewpoints)))
+	  
+(defun all-basic-viewpoints ()
+  (closer-mop:class-direct-subclasses (find-class 'viewpoints::basic)))
+
+(defun all-derived-viewpoints ()
+  (closer-mop:class-direct-subclasses (find-class 'viewpoints::derived)))
+
