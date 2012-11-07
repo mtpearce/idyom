@@ -112,7 +112,7 @@ values of the final event in <events>."
  
 (defun onset-alphabet (previous-events)
   ;; Based on BIOI alphabet 
-  (let ((bioi-alphabet (viewpoint-alphabet (get-viewpoint 'bioi))))
+  (let ((bioi-alphabet (remove (viewpoint-alphabet (get-viewpoint 'bioi)) nil)))
     (if (null previous-events) bioi-alphabet
         (let* ((last-event (car (reverse previous-events)))
                (onset (md:get-attribute last-event 'amuse::time)))
