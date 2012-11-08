@@ -8,6 +8,18 @@
 (define-basic-viewpoint cpitch (events)
   (amuse:midi-pitch-number (last-element events)))
 
+(define-basic-viewpoint cpitch-adj (events)
+  (let ((adj (amuse-mtp::%mtp-cpitch-adj (car (last events)))))
+    (if adj
+        adj        
+        viewpoints:+undefined+)))
+
+(define-basic-viewpoint cents (events)
+  (let ((adj (amuse-mtp::%mtp-cents (car (last events)))))
+    (if adj
+        adj        
+        viewpoints:+undefined+)))
+
 (define-basic-viewpoint dur (events)
   (amuse:duration (last-element events)))
 
@@ -312,6 +324,20 @@
 
 ;; Chromatic Pitch 
 
+; Attempt to define cents as a derived viewpoint. Now redefined as a
+; basic viewpoint, as we need to predict it.
+;
+;; (define-viewpoint (cents derived (cpitch cpitch-adj))
+;;     (events element)
+;;   :function (let ((cpitch (cpitch events))
+;; 		  (adj (cpitch-adj events)))
+;; 	      (if (and (numberp cpitch)
+;; 		       (numberp adj))
+;; 		  (+ (* cpitch 100) adj)
+;; 		  +undefined+))
+;;   ;; TODO: function*
+;;   )
+
 (define-viewpoint (cpint derived (cpitch))
     (events element) 
   :function (multiple-value-bind (e1 e2)
@@ -323,6 +349,18 @@
                         (- cpitch2 cpitch1)))))
   :function* (list (+ element (cpitch (list (penultimate-element events))))))
 
+
+(define-viewpoint (cent-int derived (cents))
+    (events element) 
+  :function (multiple-value-bind (e1 e2)
+                (values-list (last events 2))
+              (if (or (null e1) (null e2)) +undefined+
+                  (let ((pitch1 (cents (list e1)))
+                        (pitch2 (cents (list e2))))
+                    (if (undefined-p pitch1 pitch2) +undefined+
+                        (- pitch2 pitch1)))))
+  :function* (list (+ element (cents (list (penultimate-element events))))))
+
 (define-viewpoint (cpint-size derived (cpitch))
     (events element) 
   :function (let ((cpint (cpint events)))
@@ -333,6 +371,18 @@
                                   (or (= (+ pitch element) a)
                                       (= (- pitch element) a)))
                               (viewpoint-alphabet (get-viewpoint 'cpitch)))))
+
+(define-viewpoint (cent-int-size derived (cents))
+    (events element) 
+  :function (let ((pitch-int (cent-int events)))
+              (cond ((undefined-p pitch-int) +undefined+)
+                    (t (abs pitch-int))))
+  :function* (let ((pitch (cents (list (penultimate-element events)))))
+               (remove-if-not #'(lambda (a) 
+                                  (or (= (+ pitch element) a)
+                                      (= (- pitch element) a)))
+                              (viewpoint-alphabet (get-viewpoint 'cents)))))
+
 
 (define-viewpoint (contour derived (cpitch))
     (events element) 
