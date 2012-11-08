@@ -31,6 +31,10 @@
                (concatenate 'string (directory-namestring path)
                             "*" "." *default-midifile-extension*)))))
 
+; Convert MIDI into database events
+;
+; Note: this interprets any initial pitch bend messages as adjustments to the
+; pitch of the entire note.  Any other bends are ignored.
 (defun convert-midi-file (midifile)
   (let* ((ppqn (midi:midifile-division midifile))
          (data '())
@@ -43,17 +47,27 @@
          (phrase 0)
          (previous-note-off-time nil)
          (previous-note-on-time nil))
+    ; Iterate over MIDI tracks
     (dolist (track (midi:midifile-tracks midifile) (nreverse data))
-      (let ((sorted-track (sort track #'< :key #'midi:message-time)))
+      (let ((sorted-track (sort track #'< :key #'midi:message-time))
+	    (bend-time 0)
+	    (bend-value 0))
+	; Iterate over MIDI messages
         (do* ((st sorted-track (cdr st))
               (message (car st) (car st)))
              ((null st))
           (typecase message
+	    ; Pitch-bend message
+	    (midi:pitch-bend-message 
+	     (setf bend-time (midi:message-time message))
+	     (setf bend-value (midi:message-value message)))
+	    ; Time signature message
             (midi:time-signature-message
              (let ((nn (midi:message-numerator message))
                    (dd (midi:message-denominator message)))
                (setf pulses nn 
                      barlength (* nn (* *timebase* (expt 2 (- dd)))))))
+	    ; Key signature message
             (midi:key-signature-message
              (let ((mi (midi:message-mi message))
                    (sf (midi:message-sf message)))
@@ -62,11 +76,16 @@
              ;; microseconds per quarter note -> BPM 
              (let ((tt (midi:message-tempo message)))
                (setf tempo (usecs-per-quarter-note->bpm tt))))
+	    ; Note on message
             (midi:note-on-message
              (let ((velocity (midi:message-velocity message)))
                (unless (= velocity 0) 
                  (let* ((cpitch (midi:message-key message))
                         (time (midi:message-time message))
+			; Determine pitch adjustment (if we have one for this note)
+			(cpitch-adj (if (equal time bend-time) (pitch-bend-to-cents bend-value) 0))
+			(cents (+ (* cpitch 100) cpitch-adj))
+			;
                         (onset (midi-time->time time ppqn))
                         (midi-offset-time
                          (midi:message-time (find-matching-note-off message st)))
@@ -86,22 +105,31 @@
 ;;                            midi-deltast velocity)
                    (setf previous-note-off-time midi-offset-time
                          previous-note-on-time time)
-                   (push (make-event-alist onset dur deltast bioi cpitch keysig 
+                   (push (make-event-alist onset dur deltast bioi cpitch 
+					   cpitch-adj cents keysig 
                                            mode barlength pulses phrase tracknum 
                                            velocity)
                          data)))))
+	    ; Ignore other message types
             (midi:note-off-message)
             (midi:sequence/track-name-message)
             (midi:program-change-message))))
       (incf tracknum))))
-  
-(defun make-event-alist (onset dur deltast bioi cpitch keysig mode barlength 
+
+; Convert pitch adjustment encoded as MIDI pitch bend value to cents
+(defun pitch-bend-to-cents (bend)
+  (let* ((bend-cents (/ (- bend 8192) 40.96)))
+    (car (multiple-value-list (round bend-cents)))))
+
+(defun make-event-alist (onset dur deltast bioi cpitch cpitch-adj cents keysig mode barlength 
                          pulses phrase voice dyn)
   (list (list :onset (round onset))
         (list :dur (round dur))
         (list :deltast (round deltast))
         (list :bioi (round bioi))
         (list :cpitch cpitch)
+	(list :cpitch-adj cpitch-adj)
+	(list :cents cents)
         (list :keysig keysig)
         (list :mode mode)
         (list :barlength barlength)
