@@ -3,7 +3,7 @@
 ;;;; File:       music-data.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2011-05-27 11:46:19 marcusp>                           
+;;;; Time-stamp: <2012-06-19 19:12:38 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -427,10 +427,11 @@ no. in which the event occurs." ))
                                         dataset-id]
                      :flatp t)))
 
-
-(defun get-timebase (dataset-id)
+(defun get-timebase (dataset-id &optional composition-id)
   "Returns the timebase of the dataset whose id is <dataset-id>." 
-  (dataset-timebase (get-dataset dataset-id)))
+  (if (null composition-id)
+      (dataset-timebase (get-dataset dataset-id))
+      (composition-timebase (get-composition dataset-id composition-id))))
 
 (defun get-midc (dataset-id)
   "Returns the middle-c mapping of the dataset whose id is <dataset-id>." 
