@@ -20,6 +20,7 @@
 (defvar *cpitch-viewpoints* '(;; Chromatic pitch
                               :cpitch       ; chromatic pitch (midi pitch number)
                               :cpitch-class ; octave equivalent pitch class (chroma)
+			      :cents
                               :tessitura    ; 3 values: whether a note is between 66 (G#4) and 74 (D5), above, or below this range
                               ;; Pitch interval
                               :cpint        ; pitch interval in semitones 
@@ -35,8 +36,9 @@
                               ;:inscale      ; boolean: whether or not the note is in the scale
                               ))
 
-; [Jeremy] A subset of cpitch-viewpoints
-(defvar *reduced-viewpoints* '(:cpitch :cpitch-class :cpint :cpint-size :contour :newcontour))
+(defvar *reduced-cpitch-viewpoints* '(:cpitch :cpitch-class :cpint :cpint-size :contour :newcontour))
+(defvar *cents-viewpoints* '(:cents :cent-int :cent-int-size :cpitch :cpitch-adj :cpitch-class :cpint :cpint-size :contour :newcontour))
+(defvar *cents-viewpoints2* '(:cpitch :cpitch-adj :cpitch-class :cpint :cpint-size :contour :newcontour :cents :cent-int :cent-int-size))
 
 (defvar *bioi-viewpoints* '(
                             :bioi           ; inter-onset interval
@@ -106,10 +108,12 @@
       ;; single basic viewpoint
       (let ((derived-viewpoints
              (case (car basic-viewpoints)
-               (:cpitch *reduced-viewpoints*) ; was (:cpitch *cpitch-viewpoints*)
+               (:cpitch *cpitch-viewpoints*) ; was (:cpitch *cpitch-viewpoints*)
+               (:cents *cents-viewpoints*) 
                (:bioi *bioi-viewpoints*)
                ;; TODO: extend to other basic viewpoints
                (t (format t "~&No derived viewpoints available for ~A.~%" (car basic-viewpoints))))))
+	(format t "Generating candidate viewpoints from: ~A~%" derived-viewpoints)
         (reverse 
          (append derived-viewpoints 
                  (sort (remove-if #'(lambda (x) (or (null x) (< (length x) 2) 
