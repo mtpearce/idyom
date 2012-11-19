@@ -63,12 +63,15 @@
               (detail 3)
               (output-path nil)
               ;; viewpoint selection parameters
+	      (basis (case (car attributes)
+		       (:bioi *bioi-viewpoints*)
+		       (t *cpitch-viewpoints*)))
               (dp nil)
               (max-links 2))
   (when (eq attributes :select)
     (format t "~&Selecting viewpoints for the ~A model on dataset ~A predicting viewpoints ~A.~%" 
             models dataset-id basic-attributes)
-    (let* ((attributes-universe (generate-viewpoint-systems basic-attributes max-links))
+    (let* ((attributes-universe (generate-viewpoint-systems basic-attributes basis max-links))
            (selected (viewpoint-selection:dataset-viewpoint-selection
                       dataset-id basic-attributes attributes-universe
                       :dp dp
@@ -103,23 +106,16 @@
       (resampling:format-information-content predictions (concatenate 'string output-path "/" filename) dataset-id detail))
     (resampling:output-information-content predictions detail)))
 
-(defun generate-viewpoint-systems (basic-viewpoints max-links)
+(defun generate-viewpoint-systems (basic-viewpoints basis-vps max-links)
   (if (= (length basic-viewpoints) 1)
       ;; single basic viewpoint
-      (let ((derived-viewpoints
-             (case (car basic-viewpoints)
-               (:cpitch *cpitch-viewpoints*) ; was (:cpitch *cpitch-viewpoints*)
-               (:cents *cents-viewpoints*) 
-               (:bioi *bioi-viewpoints*)
-               ;; TODO: extend to other basic viewpoints
-               (t (format t "~&No derived viewpoints available for ~A.~%" (car basic-viewpoints))))))
-	(format t "Generating candidate viewpoints from: ~A~%" derived-viewpoints)
-        (reverse 
-         (append derived-viewpoints 
-                 (sort (remove-if #'(lambda (x) (or (null x) (< (length x) 2) 
-                                                    (> (length x) max-links)))
-                                  (utils:powerset derived-viewpoints))
-                       #'(lambda (x y) (< (length x) (length y)))))))
+      (progn (format t "Generating candidate viewpoints from: ~A~%" basis-vps)
+	     (reverse 
+	      (append basis-vps
+		      (sort (remove-if #'(lambda (x) (or (null x) (< (length x) 2) 
+							 (> (length x) max-links)))
+				       (utils:powerset basis-vps))
+			    #'(lambda (x y) (< (length x) (length y)))))))
       ;; TODO: more than 1 basic viewpoint
       (format t "~&Unable to handle more than 1 basic-viewpoint at present.~%")))
 
