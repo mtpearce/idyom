@@ -16,26 +16,32 @@
 (defmethod import-data ((type (eql :mid)) path description id)
   (mtp-admin:insert-dataset (midi2db path description) id))
 
-(defun midi2db (path description) 
-  (let ((data (get-data path)))
+(defmethod import-data ((type (eql :mid-raw)) path description id)
+  (mtp-admin:insert-dataset (midi2db path description NIL) id))
+
+(defun midi2db (path description &optional (cents t)) 
+  (let ((data (get-data path cents)))
     (append (list description *timebase* (car *middle-c*)) data)))
 
-(defun get-data (path)
+(defun get-data (path &optional (cents t))
   (if (pathname-name path)
       (list (cons (pathname-name path)
-                  (convert-midi-file (midi:read-midi-file path))))
+                  (convert-midi-file (midi:read-midi-file path) :cents cents)))
       (mapcar #'(lambda (f) 
                   (cons (pathname-name f)
-                        (convert-midi-file (midi:read-midi-file f))))
+                        (convert-midi-file (midi:read-midi-file f) :cents cents)))
               (directory 
                (concatenate 'string (directory-namestring path)
                             "*" "." *default-midifile-extension*)))))
 
 ; Convert MIDI into database events
 ;
-; Note: this interprets any initial pitch bend messages as adjustments to the
-; pitch of the entire note.  Any other bends are ignored.
-(defun convert-midi-file (midifile)
+; MIDI pitch values are multipled by 100 ("cents above C-1"), unless :cents is false.
+;
+; If :bend is true, this interprets any initial pitch bend messages as
+; adjustments to the pitch of the entire note.  Any other bends are
+; ignored.
+(defun convert-midi-file (midifile &key (cents t) (bend t))
   (let* ((ppqn (midi:midifile-division midifile))
          (data '())
          (tracknum 0)
@@ -45,6 +51,7 @@
          (keysig nil)   
          (mode nil)
          (phrase 0)
+	 (true-pitch t)
          (previous-note-off-time nil)
          (previous-note-on-time nil))
     ; Iterate over MIDI tracks
@@ -80,12 +87,18 @@
             (midi:note-on-message
              (let ((velocity (midi:message-velocity message)))
                (unless (= velocity 0) 
-                 (let* ((cpitch (midi:message-key message))
-                        (time (midi:message-time message))
-			; Determine pitch adjustment (if we have one for this note)
-			(cpitch-adj (if (equal time bend-time) (pitch-bend-to-cents bend-value) 0))
-			(cents (+ (* cpitch 100) cpitch-adj))
-			;
+                 (let* ((time (midi:message-time message))
+			(midi-pitch (midi:message-key message))
+			;; Note pitch
+			; Pitch adjustment (if we have one for this note)
+			(pitch-adjust (if (and bend (equal time bend-time))
+					  (pitch-bend-to-cents bend-value)
+					  0))
+			; True pitch in cents
+			(cent-pitch (+ (* midi-pitch 100) pitch-adjust))
+			; Use either true pitch or MIDI value
+			(cpitch (if cents cent-pitch midi-pitch))
+			;;; Note time
                         (onset (midi-time->time time ppqn))
                         (midi-offset-time
                          (midi:message-time (find-matching-note-off message st)))
@@ -105,8 +118,9 @@
 ;;                            midi-deltast velocity)
                    (setf previous-note-off-time midi-offset-time
                          previous-note-on-time time)
-                   (push (make-event-alist onset dur deltast bioi cpitch 
-					   cpitch-adj cents keysig 
+		   (setf true-pitch (and true-pitch (or cents (eq pitch-adjust 0))))
+		   (push (make-event-alist onset dur deltast bioi cpitch 
+					   pitch-adjust cent-pitch keysig 
                                            mode barlength pulses phrase tracknum 
                                            velocity)
                          data)))))
@@ -114,7 +128,11 @@
             (midi:note-off-message)
             (midi:sequence/track-name-message)
             (midi:program-change-message))))
-      (incf tracknum))))
+      ; Next track
+      (incf tracknum) 
+      ; Warn if not true pitch
+      (unless true-pitch (format t "WARNING: MIDI import not using true pitch as encoded in pitch bend.")))))
+
 
 ; Convert pitch adjustment encoded as MIDI pitch bend value to cents
 (defun pitch-bend-to-cents (bend)
