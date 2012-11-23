@@ -46,7 +46,7 @@
                  (subseq flist 0 (1- (length flist))))))
            (flatten-links (list)
              (mapcar #'(lambda (x) (if (atom x) x (format-list x "%"))) list)))
-    (let* ((resampling-indices (if (= (length resampling-indices) k) nil resampling-indices))
+    (let* ((resampling-indices (if (and (numberp k) (= (length resampling-indices) k)) nil resampling-indices))
            (string (format nil "~(~{~A-~}~)" 
                            (list dataset-id 
                                  (format-list basic-attributes "_")
