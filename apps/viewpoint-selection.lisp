@@ -47,8 +47,9 @@
             #'(lambda (derived-attributes)
                 (prog1
                     (when (verify-viewpoint-system basic-attributes derived-attributes)
-                      (resampling:output-information-content  
-                       (resampling:dataset-prediction dataset-id basic-attributes derived-attributes                                              
+		      (format t "~&Evaluating ~a ..." derived-attributes)
+                      (let* ((ic (resampling:output-information-content  
+				  (resampling:dataset-prediction dataset-id basic-attributes derived-attributes                                              
                                                       :pretraining-ids pretraining-ids
                                                       :resampling-indices resampling-indices
                                                       :k k
@@ -61,7 +62,9 @@
                                                       :stm-mixtures stm-mixtures
                                                       :stm-update-exclusion stm-update-exclusion
                                                       :stm-escape stm-escape)
-                       1))
+				  1)))
+			(progn (format t "~&Cross-entropy for ~a is ~a" derived-attributes ic)
+			       ic)))
                   (viewpoint-selection:store-vs-cache cache-filename :cl-user))))
            (selected-state
             (case method
@@ -241,7 +244,7 @@
 ;;;========================================================================
 
 (defun run-hill-climber (features start-state eval-function better-than dp)
-  (print-header) 
+  ;(print-header) 
   (let* ((eval-function (caching-eval-function eval-function))
          (start-weight (unless (null start-state) 
                          (funcall eval-function start-state)))
@@ -270,7 +273,7 @@
                (let ((weight (funcall eval-function state)))
                  (push (make-record :state state :weight weight) records)))
              (sort records better-than))))
-    (print-record current-record)
+    (print-record2 current-record)
     (if (null unused-features) current-record
         (let* ((b-children
                 (descendents (backward-states current-record) eval-function))
@@ -314,3 +317,6 @@
 
 (defun print-record (record)
   (format t "~&   ~A ~1,73T    ~A" (record-state record) (record-weight record)))
+
+(defun print-record2 (record)
+  (format t "~&~%Selected system ~A, mean IC = ~A~%" (record-state record) (record-weight record)))

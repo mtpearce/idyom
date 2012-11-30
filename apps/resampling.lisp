@@ -85,6 +85,7 @@
          (sequence-predictions))
     (dolist (resampling-set resampling-sets (values sequence-predictions filename))
       ;; (format t "~&~0,0@TResampling set ~A: ~A~%" resampling-id resampling-set)
+      (format t "~&Resampling ~A" resampling-id)
       (when (member resampling-id resampling-indices)
         (let* ((training-set (get-training-set dataset resampling-set))
                (training-set 
