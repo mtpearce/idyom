@@ -3,7 +3,7 @@
 ;;;; File:       apps.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2005-11-27 16:27:35 marcusp>
-;;;; Time-stamp: <2012-01-25 13:21:26 marcusp>
+;;;; Time-stamp: <2012-12-09 20:22:08 jeremy>
 ;;;; ======================================================================
 
 (cl:in-package #:apps) 
@@ -31,15 +31,7 @@
 (defun dataset-modelling-filename (dataset-id basic-attributes attributes
                                    &key (extension "")
                                    pretraining-ids (k 10) (models :both+)
-                                   resampling-indices
-                                   (ltm-order-bound mvs::*ltm-order-bound*)
-                                   (ltm-mixtures mvs::*ltm-mixtures*)
-                                   (ltm-update-exclusion mvs::*ltm-update-exclusion*)
-                                   (ltm-escape mvs::*ltm-escape*)
-                                   (stm-order-bound mvs::*stm-order-bound*)
-                                   (stm-mixtures mvs::*stm-mixtures*)
-                                   (stm-update-exclusion mvs::*stm-update-exclusion*)
-                                   (stm-escape mvs::*stm-escape*))
+                                   resampling-indices)
   (labels ((format-list (list token)
              (when list
                (let ((flist (format nil (format nil "~~{~~A~A~~}" token) (flatten-links list))))
@@ -53,7 +45,5 @@
                                  (format-list attributes "_")
                                  (format-list pretraining-ids "_")
                                  (format-list resampling-indices "_")
-                                 k models
-                                 ltm-order-bound ltm-mixtures ltm-update-exclusion ltm-escape
-                                 stm-order-bound stm-mixtures stm-update-exclusion stm-escape))))
+                                 k models))))
       (concatenate 'string (subseq string 0 (1- (length string))) extension))))

@@ -3,7 +3,7 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                           
-;;;; Time-stamp: <2011-10-18 10:22:13 marcusp>                           
+;;;; Time-stamp: <2012-12-07 23:25:58 jeremy>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -20,7 +20,7 @@
 
 (defpackage #:resampling 
   (:use #:cl #:utils #:md #:viewpoints #:ppm #:mvs #:prediction-sets)
-  (:export "DATASET-PREDICTION" "OUTPUT-INFORMATION-CONTENT" "FORMAT-INFORMATION-CONTENT"
+  (:export "IDYOM-RESAMPLE" "OUTPUT-INFORMATION-CONTENT" "FORMAT-INFORMATION-CONTENT"
            "INFORMATION-CONTENT-PROFILES" "CACHED-DATASET-PREDICTION" 
            "BUILD-EP-CACHE" "SELECT-VIEWPOINTS-FOR-GENERATION" 
            "GET-RESAMPLING-SETS" "GET-TRAINING-SET" "GET-TEST-SET" 

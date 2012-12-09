@@ -3,7 +3,7 @@
 ;;;; File:       params.lisp
 ;;;; Author:     Marcus  Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-06-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2008-06-19 09:54:37 marcusp>                           
+;;;; Time-stamp: <2012-12-09 20:13:49 jeremy>                           
 ;;;; ======================================================================
 
 (cl:in-package #:mvs)
@@ -19,6 +19,13 @@
 (defparameter *stm-escape* :x) ;:a, :b, :c, :d, :x
 (defparameter *stm-order-bound* nil)
 (defparameter *stm-update-exclusion* t)
+
+;;; Define a set of parameters for a memory store, e.g. an STM or LTM.
+(defun memory-store-params (order-bound mixtures update-exclusion escape)
+  `(:order-bound ,order-bound :mixtures ,mixtures :update-exclusion ,update-exclusion :escape ,escape))
+;;; Default store specs
+(defparameter *ltm-params* (memory-store-params mvs::*ltm-order-bound* mvs::*ltm-mixtures* mvs::*ltm-update-exclusion* mvs::*ltm-escape*))
+(defparameter *stm-params* (memory-store-params mvs::*stm-order-bound* mvs::*stm-mixtures* mvs::*stm-update-exclusion* mvs::*stm-escape*))
 
 (defparameter *marginalise-using-current-event* 2
   "A list of basic viewpoints which assume their full alphabets in

@@ -3,7 +3,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2012-06-19 19:22:57 marcusp>                           
+;;;; Time-stamp: <2012-12-09 20:49:46 jeremy>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -24,63 +24,47 @@
 ;;; Dataset Prediction 
 ;;;===========================================================================
     
-(defun dataset-prediction (dataset-id basic-attributes attributes
-                           &key pretraining-ids (k 10) (models :both+)
-                           resampling-indices
-                           (ltm-order-bound mvs::*ltm-order-bound*)
-                           (ltm-mixtures mvs::*ltm-mixtures*)
-                           (ltm-update-exclusion mvs::*ltm-update-exclusion*)
-                           (ltm-escape mvs::*ltm-escape*)
-                           (stm-order-bound mvs::*stm-order-bound*)
-                           (stm-mixtures mvs::*stm-mixtures*)
-                           (stm-update-exclusion mvs::*stm-update-exclusion*)
-                           (stm-escape mvs::*stm-escape*))
-  "Top-level Call -- returns the average cross-entropy of a model with the
+(defun idyom-resample (dataset-id target-viewpoints source-viewpoints
+                           &key pretraining-ids (k 10) resampling-indices
+			   (models :both+) (ltmo mvs::*ltm-params*) (stmo mvs::*stm-params*))
+  "IDyOM top level: returns the average cross-entropy of a model with the
    supplied parameters on <testing-sequence> where the long-term model has
    been trained on <training-sequence> and both <testing-sequence> and
    <training-sequence> are composed from <alphabet>. If <models> is 'ltm
    only a long-term model is used, else if it is 'stm only a short-term
    model is used and otherwise both models are used and their predictions
    combined."
-  (let* (;; model parameters
+  (let* (;; Set LTM and STM parameters
          (mvs::*models* models)
-         (mvs::*ltm-order-bound* ltm-order-bound)
-         (mvs::*ltm-mixtures* ltm-mixtures)
-         (mvs::*ltm-update-exclusion* ltm-update-exclusion)
-         (mvs::*ltm-escape* ltm-escape)
-         (mvs::*stm-order-bound* stm-order-bound)
-         (mvs::*stm-mixtures* stm-mixtures)
-         (mvs::*stm-update-exclusion* stm-update-exclusion)
-         (mvs::*stm-escape* stm-escape)
+         (mvs::*ltm-order-bound* (getf ltmo :order-bound))
+         (mvs::*ltm-mixtures* (getf ltmo :mixtures))
+         (mvs::*ltm-update-exclusion* (getf ltmo :update-exclusion))
+         (mvs::*ltm-escape* (getf ltmo :escape))
+         (mvs::*stm-order-bound* (getf stmo :order-bound))
+         (mvs::*stm-mixtures* (getf stmo :mixtures))
+         (mvs::*stm-update-exclusion* (getf stmo :update-exclusion))
+         (mvs::*stm-escape* (getf stmo :escape))
          ;; data
          (dataset (get-event-sequences dataset-id))
          (pretraining-set (apply #'get-event-sequences pretraining-ids))
          ;; viewpoints
-         (viewpoints (get-viewpoints attributes))
-         (basic-viewpoints 
-          (viewpoints:get-basic-viewpoints basic-attributes (append dataset pretraining-set)))
+         (sources (get-viewpoints source-viewpoints))
+         (targets
+          (viewpoints:get-basic-viewpoints target-viewpoints (append dataset pretraining-set)))
          ;; resampling sets
          (k (if (eq k :full) (length dataset) k))
          (resampling-sets (get-resampling-sets dataset-id :k k))
          (resampling-id 0)
+	 ;; If no resampling sets specified, then use all sets
          (resampling-indices (if (null resampling-indices) 
                                  (utils:generate-integers 0 (1- k))
                                  resampling-indices))
          ;; an output filename
-         (filename (apps:dataset-modelling-filename dataset-id basic-attributes attributes
+         (filename (apps:dataset-modelling-filename dataset-id target-viewpoints source-viewpoints
                                                     :extension ".dat"
                                                     :pretraining-ids pretraining-ids
-                                                    :resampling-indices resampling-indices
-                                                    :k k
-                                                    :models models
-                                                    :ltm-order-bound ltm-order-bound
-                                                    :ltm-mixtures ltm-mixtures
-                                                    :ltm-update-exclusion ltm-update-exclusion
-                                                    :ltm-escape ltm-escape
-                                                    :stm-order-bound stm-order-bound
-                                                    :stm-mixtures stm-mixtures
-                                                    :stm-update-exclusion stm-update-exclusion
-                                                    :stm-escape stm-escape))
+                                                    :k k :resampling-indices resampling-indices
+                                                    :models models))
          ;; the result
          (sequence-predictions))
     (dolist (resampling-set resampling-sets (values sequence-predictions filename))
@@ -88,24 +72,25 @@
       (format t "~&Resampling ~A" resampling-id)
       (when (member resampling-id resampling-indices)
         (let* ((training-set (get-training-set dataset resampling-set))
-               (training-set 
-                (monodies-to-lists (append pretraining-set training-set)))
-               (test-set 
-                (monodies-to-lists (get-test-set dataset resampling-set)))
-               (ltms (get-long-term-models viewpoints training-set
+               (training-set (monodies-to-lists (append pretraining-set training-set)))
+               (test-set (monodies-to-lists (get-test-set dataset resampling-set)))
+               (ltms (get-long-term-models sources training-set
                                            pretraining-ids dataset-id
                                            resampling-id k))
-               (mvs (make-mvs basic-viewpoints viewpoints ltms))
+               (mvs (make-mvs targets sources ltms))
                (predictions 
                 (mvs:model-dataset mvs test-set :construct? t :predict? t)))
           (push predictions sequence-predictions)))
       (incf resampling-id))))
 
+
+
+
 (defun monodies-to-lists (monodies) (mapcar #'monody-to-list monodies))
 (defun monody-to-list (monody) (coerce monody 'list))
 
 (defun output-information-content (resampling-predictions &optional (detail 3))
-  "Processes the output of DATASET-PREDICTION. <detail> is an integer
+  "Processes the output of IDYOM-RESAMPLE. <detail> is an integer
 specifying the desired level of detail."
   (let* ((event-ics (information-content-profiles resampling-predictions))
          (melody-ics (mapcar #'mean event-ics))
@@ -116,7 +101,7 @@ specifying the desired level of detail."
       (3 (values overall-ics melody-ics event-ics)))))
     
 (defun information-content-profiles (dataset-predictions) 
-  "Processes the output of DATASET-PREDICTION, multiplying
+  "Processes the output of DATASET-RESAMPLE, multiplying
 probabilities for different attributes and returning a list of lists
 the information content for each event in each melody (sorted by
 dataset-id)."
@@ -308,7 +293,7 @@ dataset-id)."
                       (cpintfref cpintfip)
                       (cpintfib barlength))))
     (output-information-content 
-     (dataset-prediction dataset '(cpitch) viewpoints
+     (idyom-resample dataset '(cpitch) viewpoints
                          :resampling-indices resampling-indices)
      1)))
 
@@ -327,7 +312,7 @@ dataset-id)."
     (dolist (system systems)
       (let ((mean-ic 
              (output-information-content 
-              (dataset-prediction dataset '(cpitch) system
+              (idyom-resample dataset '(cpitch) system
                                   :resampling-indices resampling-indices)
               1)))
         (format t "~&System ~A; Mean Information Content: ~,2F ~%" system-id 
@@ -348,7 +333,7 @@ dataset-id)."
     (dolist (system systems)
       (let ((mean-ic 
              (output-information-content 
-              (dataset-prediction dataset-id '(cpitch) (cadr system) :k 10)
+              (idyom-resample dataset-id '(cpitch) (cadr system) :k 10)
               1)))
         (format t "~&System ~A; Mean Information Content: ~,2F ~%" (car system) 
                 mean-ic)))))

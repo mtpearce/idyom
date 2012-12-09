@@ -3,7 +3,7 @@
 ;;;; File:       viewpoint-selection.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-10-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2012-01-25 13:35:58 marcusp>                           
+;;;; Time-stamp: <2012-12-07 23:22:28 jeremy>                           
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoint-selection)
@@ -49,7 +49,7 @@
                     (when (verify-viewpoint-system basic-attributes derived-attributes)
 		      (format t "~&Evaluating ~a ..." derived-attributes)
                       (let* ((ic (resampling:output-information-content  
-				  (resampling:dataset-prediction dataset-id basic-attributes derived-attributes                                              
+				  (resampling:idyom-resample dataset-id basic-attributes derived-attributes                                              
                                                       :pretraining-ids pretraining-ids
                                                       :resampling-indices resampling-indices
                                                       :k k

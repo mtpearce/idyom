@@ -3,7 +3,7 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                           
-;;;; Time-stamp: <2011-08-26 12:06:30 marcusp>                           
+;;;; Time-stamp: <2012-12-09 20:36:12 jeremy>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -36,6 +36,7 @@ distributions."))
            "COMBINE-LTM-STM-DISTRIBUTIONS" "COMBINE-VIEWPOINT-DISTRIBUTIONS" 
            "STORE-EP-CACHE" "LOAD-EP-CACHE" "INITIALISE-EP-CACHE" 
            "DISABLE-EP-CACHE" "CACHE-EP" "CACHED-EP" "*EP-CACHE-DIR*"
+	   "MEMORY-STORE-PARAMS"
            "*MARGINALISE-USING-CURRENT-EVENT*")
   (:documentation "A multiple viewpoint system."))
 

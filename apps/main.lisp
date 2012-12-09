@@ -1,19 +1,10 @@
 ;;;; -*- Mode: LISP; Syntax: ANSI-Common-Lisp; Base: 10 -*-
 ;;;; ======================================================================
-;;;; File:       viewpoint-selection.lisp
+;;;; File:       main.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2010-11-01 15:19:57 marcusp>
-;;;; Time-stamp: <2012-07-02 17:05:13 marcusp>
+;;;; Time-stamp: <2012-12-09 20:19:12 jeremy>
 ;;;; ======================================================================
-
-;; TODO
-;; ----
-;; 1. extend to other basic viewpoints
-;; 2. extend to multiple basic viewpoints
-;; 3. allow lists of options in arguments
-;; 4. allow construction of new viewpoint frameworks
-;; 5. record viewpoint weights in output files
-;; 6. extend to more than one dataset
 
 (cl:in-package #:idyom)
 
@@ -37,78 +28,65 @@
                               ))
 
 (defvar *reduced-cpitch-viewpoints* '(:cpitch :cpitch-class :cpint :cpint-size :contour :newcontour))
-(defvar *cents-viewpoints* '(:cents :cent-int :cent-int-size :cpitch :cpitch-adj :cpitch-class :cpint :cpint-size :contour :newcontour))
-(defvar *cents-viewpoints2* '(:cpitch :cpitch-adj :cpitch-class :cpint :cpint-size :contour :newcontour :cents :cent-int :cent-int-size))
 
-(defvar *bioi-viewpoints* '(
-                            :bioi           ; inter-onset interval
+(defvar *bioi-viewpoints* '(:bioi           ; inter-onset interval
                             :bioi-ratio     ; ratio between consecutive inter-onset intervals
                             :bioi-contour   ; contour between consecutive inter-onset intervals
                             ))
 
-(defun idyom (dataset-id basic-attributes attributes
+
+;;; 
+;;;
+(defun idyom (dataset-id target-viewpoints source-viewpoints
               &key 
-              ;; dataset-prediction parameters
-              pretraining-ids (k 10) (models :both+)
-              resampling-indices
-              (ltm-order-bound mvs::*ltm-order-bound*)
-              (ltm-mixtures mvs::*ltm-mixtures*)
-              (ltm-update-exclusion mvs::*ltm-update-exclusion*)
-              (ltm-escape mvs::*ltm-escape*)
-              (stm-order-bound mvs::*stm-order-bound*)
-              (stm-mixtures mvs::*stm-mixtures*)
-              (stm-update-exclusion mvs::*stm-update-exclusion*)
-              (stm-escape mvs::*stm-escape*)
-              ;; output parameters
-              (detail 3)
-              (output-path nil)
-              ;; viewpoint selection parameters
-	      (basis (case (car attributes)
+	      ;; Dataset IDs for LTM pretraining
+              pretraining-ids 
+	      ;; Resampling
+	      (k 10) ; Number of cross-validation folds (:full = LOO CV)
+              resampling-indices ; Evaluate only certain resampling subsets
+	      ;; Model options
+	      (models :both+)
+	      (ltmo mvs::*ltm-params*) (stmo mvs::*stm-params*)
+              ;; Viewpoint selection 
+	      (basis (case (car target-viewpoints)
 		       (:bioi *bioi-viewpoints*)
 		       (t *cpitch-viewpoints*)))
-              (dp nil)
-              (max-links 2))
-  (when (eq attributes :select)
+              (dp nil) (max-links 2)
+              ;; Output 
+              (detail 3) (output-path nil))
+  "IDyOM top level: computes information profiles for basic
+   target-viewpoints over a dataset (dataset-id), using a set of
+   source-viewpoints, which can be specified or selected
+   automatically.  The LTM is optionally pretrained on multiple
+   datasets (pretraining-ids) and/or other members of the target
+   dataset using k-fold cross validation (AKA resampling)."
+  ;; Select source viewpoints, if requested
+  (when (eq source-viewpoints :select)
     (format t "~&Selecting viewpoints for the ~A model on dataset ~A predicting viewpoints ~A.~%" 
-            models dataset-id basic-attributes)
-    (let* ((attributes-universe (generate-viewpoint-systems basic-attributes basis max-links))
-           (selected (viewpoint-selection:dataset-viewpoint-selection
-                      dataset-id basic-attributes attributes-universe
-                      :dp dp
-                      :pretraining-ids pretraining-ids
-                      :resampling-indices resampling-indices
-                      :k k
-                      :models models
-                      :ltm-order-bound ltm-order-bound
-                      :ltm-mixtures ltm-mixtures
-                      :ltm-update-exclusion ltm-update-exclusion
-                      :ltm-escape ltm-escape
-                      :stm-order-bound stm-order-bound
-                      :stm-mixtures stm-mixtures
-                      :stm-update-exclusion stm-update-exclusion
-                      :stm-escape stm-escape)))
-      (setf attributes selected)))
+            models dataset-id target-viewpoints)
+    (let* (; Generate candidate viewpoint systems
+	   (viewpoint-systems (generate-viewpoint-systems target-viewpoints basis max-links))
+           ; Select viewpoint system
+	   (selected (viewpoint-selection:dataset-viewpoint-selection
+                      dataset-id target-viewpoints viewpoint-systems
+                      :dp dp :pretraining-ids pretraining-ids
+                      :k k :resampling-indices resampling-indices
+                      :models models :ltmo ltmo :stmo stmo)))
+      (setf source-viewpoints selected)))
+  ;; Derive target viewpoint IC profile from source viewpoints
   (multiple-value-bind (predictions filename)
-      (resampling:dataset-prediction dataset-id basic-attributes attributes
+      (resampling:idyom-resample dataset-id target-viewpoints source-viewpoints
                                      :pretraining-ids pretraining-ids
-                                     :resampling-indices resampling-indices
-                                     :k k
-                                     :models models
-                                     :ltm-order-bound ltm-order-bound
-                                     :ltm-mixtures ltm-mixtures
-                                     :ltm-update-exclusion ltm-update-exclusion
-                                     :ltm-escape ltm-escape
-                                     :stm-order-bound stm-order-bound
-                                     :stm-mixtures stm-mixtures
-                                     :stm-update-exclusion stm-update-exclusion
-                                     :stm-escape stm-escape)
+				     :k k :resampling-indices resampling-indices
+                                     :models models :ltmo ltmo :stmo stmo)
     (when output-path
       (resampling:format-information-content predictions (concatenate 'string output-path "/" filename) dataset-id detail))
     (resampling:output-information-content predictions detail)))
 
+
 (defun generate-viewpoint-systems (basic-viewpoints basis-vps max-links)
   (if (= (length basic-viewpoints) 1)
-      ;; single basic viewpoint
+      ;; Single basic viewpoint
       (progn (format t "Generating candidate viewpoints from: ~A~%" basis-vps)
 	     (reverse 
 	      (append basis-vps
@@ -118,6 +96,8 @@
 			    #'(lambda (x y) (< (length x) (length y)))))))
       ;; TODO: more than 1 basic viewpoint
       (format t "~&Unable to handle more than 1 basic-viewpoint at present.~%")))
+
+
 
 ;;; 170: unmeasured prelude
 ;;; 30: 120 hymns
