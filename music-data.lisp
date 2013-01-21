@@ -3,7 +3,7 @@
 ;;;; File:       music-data.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2012-06-19 19:12:38 marcusp>                           
+;;;; Time-stamp: <2013-01-21 10:51:55 jeremy>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -130,16 +130,6 @@ each table."))
     :initarg :cpitch
     :initform 60 
     :reader event-cpitch)
-   (cpitch-adj
-    :type integer
-    :initarg :cpitch-adj
-    :initform 0
-    :reader event-adjust)
-   (cents
-    :type integer
-    :initarg :cents
-    :initform 6000
-    :reader event-cents)
    (mpitch 
     :type integer
     :initarg :mpitch
@@ -244,8 +234,6 @@ no. in which the event occurs." ))
     :deltast        ',(event-deltast e)
     :bioi           ',(event-bioi e)
     :cpitch         ',(event-cpitch e)
-    :cpitch-adj     ',(event-adjust e)
-    :cents          ',(event-cents e)
     :mpitch         ',(event-mpitch e)
     :accidental     ',(event-accidental e)
     :dur            ',(event-dur e)
@@ -285,8 +273,6 @@ no. in which the event occurs." ))
                       (list :bioi (event-bioi e))
                       (list :dur (event-dur e))
                       (list :cpitch (event-cpitch e))
-                      (list :cpitch-adj (event-adjust e))
-                      (list :cents (event-cents e))
                       (list :mpitch (event-mpitch e))
                       (list :accidental (event-accidental e))
                       (list :keysig (event-keysig e))
@@ -367,8 +353,6 @@ no. in which the event occurs." ))
                         :deltast    (cadr (assoc :deltast event))
                         :bioi       (cadr (assoc :bioi event))
                         :cpitch     (cadr (assoc :cpitch event))
-			:cpitch-adj (cadr (assoc :cpitch-adj event))
-			:cents      (cadr (assoc :cents event))
                         :mpitch     (cadr (assoc :mpitch event))
                         :accidental (cadr (assoc :accidental event))
                         :dur        (cadr (assoc :dur event))
@@ -530,8 +514,6 @@ a list containing the dataset-id is returned."))
                  :deltast (event-deltast e)
                  :bioi (event-bioi e)
                  :cpitch (event-cpitch e)
-		 :cpitch-adj (event-adjust e)
-		 :cents (event-cents e)
                  :mpitch (event-mpitch e)
                  :dur (event-dur e)
                  :keysig (event-keysig e)
@@ -632,7 +614,7 @@ per composition, as well as the domains of each event attribute."
                    (make-sequence 'string columns :initial-element #\-))))
     (let ((attributes
            (if (null attributes)
-               '(cpitch cpitch-adj cents mpitch accidental dur deltast bioi keysig mode barlength
+               '(cpitch mpitch accidental dur deltast bioi keysig mode barlength
                  pulses phrase dyn tempo voice ornament articulation comma)
                (if (atom attributes) (list attributes) attributes))))
       (print-description dataset-id)
