@@ -3,7 +3,7 @@
 ;;;; File:       viewpoint-selection.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-10-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2012-12-07 23:22:28 jeremy>                           
+;;;; Time-stamp: <2013-01-22 16:16:13 jeremy>                           
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoint-selection)
@@ -13,34 +13,17 @@
 ;;;========================================================================
 
 (defun dataset-viewpoint-selection (dataset-id basic-attributes attributes
-                                    &key pretraining-ids (k 10) (models :both+) resampling-indices
-                                    (ltm-order-bound mvs::*ltm-order-bound*)
-                                    (ltm-mixtures mvs::*ltm-mixtures*)
-                                    (ltm-update-exclusion mvs::*ltm-update-exclusion*)
-                                    (ltm-escape mvs::*ltm-escape*)
-                                    (stm-order-bound mvs::*stm-order-bound*)
-                                    (stm-mixtures mvs::*stm-mixtures*)
-                                    (stm-update-exclusion mvs::*stm-update-exclusion*)
-                                    (stm-escape mvs::*stm-escape*)
-                                    ;; parameters for viewpoint selection
-                                    dp ; decimal-places of interest
-                                    (method :hill-climber) ; search method: best-first or hill-climber
-                                    )
+                                    &key pretraining-ids (k 10) resampling-indices (models :both+) 
+				    (ltmo mvs::*ltm-params*) (stmo mvs::*stm-params*)
+				    (dp nil) ; decimal-places of interest
+				    (method :hill-climber)) ; search method: best-first or hill-climber
   (let ((cache-filename (apps:dataset-modelling-filename dataset-id basic-attributes
                                                          nil ; we don't mind which derived viewpoints are used
                                                          :extension ".cache"
                                                          :pretraining-ids pretraining-ids
                                                          :resampling-indices resampling-indices
                                                          :k k
-                                                         :models models
-                                                         :ltm-order-bound ltm-order-bound
-                                                         :ltm-mixtures ltm-mixtures
-                                                         :ltm-update-exclusion ltm-update-exclusion
-                                                         :ltm-escape ltm-escape
-                                                         :stm-order-bound stm-order-bound
-                                                         :stm-mixtures stm-mixtures
-                                                         :stm-update-exclusion stm-update-exclusion
-                                                         :stm-escape stm-escape)))
+                                                         :models models)))
     (viewpoint-selection:initialise-vs-cache)
     (viewpoint-selection:load-vs-cache cache-filename :cl-user)
     (let* ((eval-function 
@@ -54,14 +37,7 @@
                                                       :resampling-indices resampling-indices
                                                       :k k
                                                       :models models
-                                                      :ltm-order-bound ltm-order-bound
-                                                      :ltm-mixtures ltm-mixtures
-                                                      :ltm-update-exclusion ltm-update-exclusion
-                                                      :ltm-escape ltm-escape
-                                                      :stm-order-bound stm-order-bound
-                                                      :stm-mixtures stm-mixtures
-                                                      :stm-update-exclusion stm-update-exclusion
-                                                      :stm-escape stm-escape)
+						      :ltmo ltmo :stmo stmo)
 				  1)))
 			(progn (format t "~&Cross-entropy for ~a is ~a" derived-attributes ic)
 			       ic)))

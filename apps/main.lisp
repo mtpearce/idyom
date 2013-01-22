@@ -3,7 +3,7 @@
 ;;;; File:       main.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2010-11-01 15:19:57 marcusp>
-;;;; Time-stamp: <2012-12-09 20:19:12 jeremy>
+;;;; Time-stamp: <2013-01-22 16:04:35 jeremy>
 ;;;; ======================================================================
 
 (cl:in-package #:idyom)
@@ -95,7 +95,7 @@
 				       (utils:powerset basis-vps))
 			    #'(lambda (x y) (< (length x) (length y)))))))
       ;; TODO: more than 1 basic viewpoint
-      (format t "~&Unable to handle more than 1 basic-viewpoint at present.~%")))
+      (format t "~&Viewpoint selection unable to handle more than one basic viewpoint at present.~%")))
 
 
 
