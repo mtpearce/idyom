@@ -3,7 +3,7 @@
 ;;;; File:       midi2db.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2007-03-21 09:47:26 marcusp>
-;;;; Time-stamp: <2012-12-12 17:38:44 jeremy>
+;;;; Time-stamp: <2013-01-24 13:10:12 jeremy>
 ;;;; ======================================================================
 
 (cl:in-package #:midi2db) 
@@ -35,19 +35,21 @@
 ;; JG - useful for debugging MIDI import code
 (defun print-midi-messages (midifile)
   "Display messages for the given MIDI file"
-  (dolist (track (midi:midifile-tracks midifile))
+  (let* ((ppqn (midi:midifile-division midifile)))
+    (format t "PPQN: ~A~%" ppqn)
+    (dolist (track (midi:midifile-tracks midifile))
     (dolist (msg track)
       (typecase msg
-	(midi:time-signature-message (format t "Time sig.~%"))
+	(midi:time-signature-message (format t "Time sig. ~A / ~A ~%" (midi:message-numerator msg) (midi:message-denominator msg)))
 	(midi:key-signature-message (format t "Key~%"))
-	(midi:tempo-message (format t "Tempo~%"))
+	(midi:tempo-message (format t "Tempo ~A~%" (midi:message-tempo msg)))
 	(midi:sequence/track-name-message (format t "~A Name~%" (midi:message-time msg)))
 	(midi:program-change-message (format t "Program change~%"))
 	(midi:note-on-message (format t "~A Note on, pitch ~A [velocity ~A]~%" (midi:message-time msg) (midi:message-key msg) (midi:message-velocity msg)))
 	(midi:note-off-message (format t "      ~A Note off~%" (midi:message-time msg)))
 	(midi:pitch-bend-message (format t "      ~A Pitch bend ~A~%" (midi:message-time msg) (midi:message-value msg)))
 	(midi:smpte-offset-message (format t "SMPTE message~%"))
-	(t (format t "UNKNOWN MESSAGE~%"))))))
+	(t (format t "UNKNOWN MESSAGE~%")))))))
 
 	 
 (defun midi-to-list (midifile)
@@ -99,11 +101,9 @@
 		   (sf (midi:message-sf message)))
 	       (setf (getf props :keysig) sf
 		     (getf props :mode) (if (zerop mi) 0 9))))
-	    ;; Tempo
+	    ;; Tempo (in microseconds per quarter note)
 	    (midi:tempo-message
-	     (let* ((tt (midi:message-tempo message))
-		    (uspqn (usecs-per-quarter-note->bpm tt)))
-               (setf (getf props :tempo) uspqn)))            
+	     (setf (getf props :tempo) (midi:message-tempo message)))
 	    ;;
 	    ;; Note messages (refer to specific notes)
 	    ;;
@@ -182,6 +182,7 @@
 				  (list :mode (getf note :mode))
 				  (list :barlength (getf note :barlength))
 				  (list :pulses (getf note :pulses))
+				  (list :tempo (getf note :tempo))
 				  (list :phrase (getf note :phrase))
 				  (list :voice (getf note :voice))
 				  (list :articulation 0)
