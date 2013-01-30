@@ -3,7 +3,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2013-01-23 10:50:07 jeremy>                           
+;;;; Time-stamp: <2013-01-23 16:46:29 jeremy>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -101,7 +101,7 @@ specifying the desired level of detail."
       (3 (values overall-ics melody-ics event-ics)))))
     
 (defun information-content-profiles (dataset-predictions) 
-  "Processes the output of DATASET-RESAMPLE, multiplying
+  "Processes the output of IDYOM-RESAMPLE, multiplying
 probabilities for different attributes and returning a list of lists
 the information content for each event in each melody (sorted by
 dataset-id)."
