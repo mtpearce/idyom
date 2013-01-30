@@ -9,4 +9,13 @@
                  (:file "methods")
                  (:file "functions")
                  (:file "macros")
-                 (:file "viewpoint-definitions")))
+		 (:file "basic-viewpoints")
+		 ;; Derived viewpoints
+		 (:module derived-viewpoints
+			  :components
+			  ((:file "pitch")
+			   (:file "temporal")
+			   (:file "scales")
+			   (:file "misc")
+			   (:file "implication-realisation")))))
+
