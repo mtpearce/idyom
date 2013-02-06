@@ -45,12 +45,19 @@ symbol if they are lists else nil."
 
 ; List defined viewpoints
 
-(defun all-viewpoints () 
-  (append (all-basic-viewpoints) (all-derived-viewpoints)))
-	  
 (defun all-basic-viewpoints ()
   (closer-mop:class-direct-subclasses (find-class 'viewpoints::basic)))
 
 (defun all-derived-viewpoints ()
   (closer-mop:class-direct-subclasses (find-class 'viewpoints::derived)))
 
+(defun all-threaded-viewpoints ()
+  (closer-mop:class-direct-subclasses (find-class 'viewpoints::threaded)))
+
+(defun all-test-viewpoints ()
+  (closer-mop:class-direct-subclasses (find-class 'viewpoints::test)))
+
+(defun all-viewpoints () 
+  (append (all-basic-viewpoints) (all-derived-viewpoints)
+	  (all-threaded-viewpoints) (all-test-viewpoints)))
+	  
