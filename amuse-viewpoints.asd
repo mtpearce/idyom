@@ -15,7 +15,8 @@
 			  :components
 			  ((:file "pitch")
 			   (:file "temporal")
-			   (:file "scales")
 			   (:file "misc")
-			   (:file "implication-realisation")))))
+			   (:file "scales")
+			   (:file "implication-realisation"))
+)))
 

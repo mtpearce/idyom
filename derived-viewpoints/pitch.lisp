@@ -3,7 +3,7 @@
 ;;;; File:       pitch.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2013-01-24 15:00:00 jeremy>
-;;;; Time-stamp: <2013-01-30 14:55:00 jeremy>
+;;;; Time-stamp: <2013-02-06 10:48:32 jeremy>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
@@ -155,6 +155,22 @@
                         (mod cpcint 6)))))
   ;; TODO: function* 
   )
+
+;; Keysig
+
+(define-viewpoint (referent derived (keysig))
+    (events element) 
+  :function (let ((keysig (keysig events))
+                  (mode (mode events)))
+              ;(declare (type (integer -7 7) keysig) (type (integer 0 11) mode))
+              (if (undefined-p keysig mode) +undefined+
+                  (cond ((and (numberp keysig) (> keysig 0))
+                         (mod (+ (* keysig 7) mode) 12))
+                        ((and (numberp keysig) (< keysig 0))
+                         (mod (+ (* (- keysig) 5) mode) 12))
+                        ((numberp mode) mode)
+			(t +undefined+)))) 
+  :function* (viewpoint-alphabet (get-viewpoint 'keysig)))
 
 
 
