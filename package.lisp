@@ -3,7 +3,7 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                           
-;;;; Time-stamp: <2010-02-25 12:21:07 marcusp>                           
+;;;; Time-stamp: <2013-02-21 15:44:06 jeremy>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -17,7 +17,7 @@
   (:export "MTP-EVENT" "MTP-COMPOSITION" "MTP-DATASET"
            "CONNECT-TO-DATABASE" "INITIALISE-DATABASE"
            "IMPORT-DATA" "EXPORT-DATA" "INSERT-DATASET" "DELETE-DATASET" 
-           "DESCRIBE-DATASET" "DESCRIBE-DATABASE" 
+           "LIST-CONTENTS" "DESCRIBE-DATASET" "DESCRIBE-DATABASE" 
            "DATASET-COMPOSITION" "COMPOSITION-EVENTS" 
            "GET-ID" "GET-DATASET" "GET-COMPOSITION" "GET-EVENT" 
            "COPY-EVENT" "GET-DESCRIPTION"
