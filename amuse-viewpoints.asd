@@ -14,9 +14,8 @@
 		 (:module derived-viewpoints
 			  :components
 			  ((:file "pitch")
+			   (:file "scales")
 			   (:file "temporal")
 			   (:file "misc")
-			   (:file "scales")
-			   (:file "implication-realisation"))
-)))
+			   (:file "implication-realisation")))))
 
