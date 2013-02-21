@@ -3,7 +3,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2012-05-29 17:17:52 marcusp>
+;;;; Time-stamp: <2013-02-21 17:14:14 jeremy>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -98,6 +98,7 @@
               list)))
 
 (defun flatten (list)
+  "Flatten nested lists."
   (labels ((flat (list result)
              (if (null list) (reverse result)
                  (let ((head (car list))
@@ -106,6 +107,21 @@
                        (flat tail (cons head result))
                        (flat tail (append (flatten head) result)))))))
     (flat list '())))
+
+(defun flatten-order (x)
+  "Flatten nested lists, preserving element order."
+  (cond ((null x) nil)
+    ((listp x) (append (flatten-order (car x)) (flatten-order (cdr x))))
+    (t (list x))))
+
+(defun count-frequencies (x p)
+  (let* ((flat (flatten x))
+	 (unique (sort (remove-duplicates flat) p)))
+    (pairlis unique
+	     (mapcar #'(lambda (y) (count y flat)) unique))))
+
+(defun numeric-frequencies (x)
+  (count-frequencies x #'>))
 
 ;from http://cs-www.cs.yale.edu/homes/dvm/nil.html
 (defun combinations (l n)

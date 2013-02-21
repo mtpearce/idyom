@@ -3,7 +3,7 @@
 ;;;; File:       amuse-interface.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2008-09-30 17:25:38 marcusp>
-;;;; Time-stamp: <2012-02-02 18:35:00 marcusp>
+;;;; Time-stamp: <2013-02-21 16:47:47 jeremy>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -20,6 +20,18 @@
                 (amuse-mtp:make-mtp-dataset-identifier dataset-id))))
         (sequence:dosequence (c d)
           (push (amuse:monody c) compositions))))))
+
+(defun composition-viewpoint (dataset-id composition-id viewpoint)
+  "Show viewpoint sequence for composition."
+  (viewpoints:viewpoint-sequence 
+   (viewpoints:get-viewpoint viewpoint)
+   (get-event-sequence dataset-id composition-id)))
+
+(defun dataset-viewpoint (dataset-id viewpoint)
+  "Show viewpoint sequences for dataset."
+  (viewpoints:viewpoint-sequences
+   (viewpoints:get-viewpoint viewpoint)
+   (get-event-sequences dataset-id)))
 
 (defgeneric get-attribute (event attribute))
 (defmethod get-attribute ((e amuse-mtp:mtp-event) attribute)
