@@ -3,7 +3,7 @@
 ;;;; File:       music-data.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2013-01-21 10:51:55 jeremy>                           
+;;;; Time-stamp: <2013-02-21 15:35:10 jeremy>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -651,6 +651,11 @@ from <event-id> to (+ <event-id> <length>)."
                               [>= [slot-value 'mtp-event 'event-id] event-id]
                               [< [slot-value 'mtp-event 'event-id] event-id-2]]
                   :field-names nil :flatp t)))
+
+
+(defun list-contents ()
+  (clsql:print-query [select [dataset-id][description] :from [mtp-dataset] :order-by [dataset-id]]))
+
 
 #.(clsql:restore-sql-reader-syntax-state)
 
