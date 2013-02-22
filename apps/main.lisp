@@ -3,7 +3,7 @@
 ;;;; File:       main.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2010-11-01 15:19:57 marcusp>
-;;;; Time-stamp: <2013-01-22 16:04:35 jeremy>
+;;;; Time-stamp: <2013-02-22 13:12:13 jeremy>
 ;;;; ======================================================================
 
 (cl:in-package #:idyom)
@@ -53,7 +53,7 @@
 		       (t *cpitch-viewpoints*)))
               (dp nil) (max-links 2)
               ;; Output 
-              (detail 3) (output-path nil))
+              (detail 2) (output-path nil))
   "IDyOM top level: computes information profiles for basic
    target-viewpoints over a dataset (dataset-id), using a set of
    source-viewpoints, which can be specified or selected
