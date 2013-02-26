@@ -3,7 +3,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2013-01-23 16:46:29 jeremy>                           
+;;;; Time-stamp: <2013-02-26 15:36:07 jeremy>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -64,7 +64,7 @@
                                                     :extension ".dat"
                                                     :pretraining-ids pretraining-ids
                                                     :k k :resampling-indices resampling-indices
-                                                    :models models))
+                                                    :models models :ltmo ltmo :stmo stmo))
          ;; the result
          (sequence-predictions))
     (dolist (resampling-set resampling-sets (values sequence-predictions filename))
