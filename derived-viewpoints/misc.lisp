@@ -3,14 +3,15 @@
 ;;;; File:       misc.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2013-01-24 15:00:00 jeremy>
-;;;; Time-stamp: <2013-02-06 10:48:17 jeremy>
+;;;; Time-stamp: <2013-02-27 15:11:54 jeremy>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
 
 
-;; Phrase
+;;; Phrases
 
+;; Is this note the first in a phrase?
 (define-viewpoint (fiph test (phrase))
     (events element) 
   :function (let ((phrase (phrase events)))
@@ -19,6 +20,7 @@
                     (t 0)))
   :function* (if (= element 1) 1 (list -1 0)))
 
+;; Is this note the last in a phrase?
 (define-viewpoint (liph test (phrase))
     (events element) 
   :function (let ((phrase (phrase events)))
@@ -27,6 +29,8 @@
                     (t 0)))
   :function* (if (= element 1) -1 (list 1 0)))
 
+;; Finds the duration of the preceding phrase iff the last event in
+;; the sequence is at a phrase boundary.
 (define-viewpoint (lphrase derived (phrase))
     (events element) 
   :function (let ((e2 (last-element events)))
@@ -47,8 +51,9 @@
   )
 
 
+;;; Threaded viewpoints
 
-
+;; cpint % fib
 (define-viewpoint (thrbar threaded (cpitch onset))
     (events element) 
   :function (let ((e1 (last-element (strip-until-true (get-viewpoint 'fib)
@@ -64,6 +69,7 @@
                                         (butlast events))))
                (list (+ element (cpitch e)))))
 
+;; cpint % fiph
 (define-viewpoint (thrfiph threaded (cpitch onset))
     (events element) 
   :function (let ((e1 (last-element (strip-until-true (get-viewpoint 'fiph)
@@ -78,7 +84,8 @@
   :function* (let ((e (strip-until-true (get-viewpoint 'fiph) 
                                         (butlast events))))
                (list (+ element (cpitch e)))))
-  
+
+;; cpint % liph
 (define-viewpoint (thrliph threaded (cpitch onset))
     (events element) 
   :function (let ((e1 (last-element (strip-until-true (get-viewpoint 'liph)
@@ -94,6 +101,7 @@
                                         (butlast events))))
                (list (+ element (cpitch e)))))
 
+;; cpintfref % liph
 (define-viewpoint (thrintfrefliph threaded (cpitch onset))
     (events element) 
   :function (let ((e (last-element events)))
@@ -105,6 +113,7 @@
   ;; TODO: function* 
   ) 
 
+;; cpint % crotchet
 (define-viewpoint (thrqu threaded (cpitch onset))
     (events element) 
   :function (let* ((events-1 (strip-until-true (get-viewpoint 'crotchet)
@@ -120,6 +129,7 @@
   ;; TODO: function*
   )
 
+;; cpint % tactus
 (define-viewpoint (thrtactus threaded (cpitch onset))
     (events element) 
   :function (let* ((events-1 (strip-until-true (get-viewpoint 'tactus)

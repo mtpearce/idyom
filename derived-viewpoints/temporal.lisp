@@ -3,15 +3,13 @@
 ;;;; File:       temporal.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2013-01-24 15:00:00 jeremy>
-;;;; Time-stamp: <2013-02-20 08:01:06 jeremy>
+;;;; Time-stamp: <2013-02-27 15:08:31 jeremy>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
 
 
-;;; Duration
-
-;; dur-ratio
+;; Duration of last / duration of previous
 (define-viewpoint (dur-ratio derived (dur))
     (events element) 
   :function (multiple-value-bind (e1 e2)
@@ -31,7 +29,7 @@
 ;;; IOI, a basic version bioi is also implemented, and used to define
 ;;; bioi-ratio and bioi-contour.
 
-;; ioi 
+;; Like bioi, though giving undefined for one-event sequence.
 (define-viewpoint (ioi derived (onset))
     (events element) 
   :function (multiple-value-bind (e1 e2)
@@ -43,7 +41,7 @@
                           (t (- onset2 onset1))))))
   :function* (list (+ element (onset (list (penultimate-element events))))))
 
-;; ioi-ratio
+;; ioi divided by the previous ioi (requires at least 3 events).
 (define-viewpoint (ioi-ratio derived (onset))
     (events element) 
   :function (multiple-value-bind (e1 e2 e3)
@@ -58,7 +56,7 @@
                (list (+ (onset penultimate-element) 
                         (* element (ioi penultimate-element))))))
 
-;; bioi-ratio
+;; bioi divided by the previous ioi (requires at least 3 events).
 (define-viewpoint (bioi-ratio derived (bioi))
     (events element) 
   :function (multiple-value-bind (e1 e2)
@@ -71,7 +69,8 @@
   :function* (let ((penultimate-element (list (penultimate-element events))))
                (list (* element (bioi penultimate-element)))))
 
-;; bioi-contour
+;; Whether bioi gets larger, smaller or stays the same between
+;; consecutive events
 (define-viewpoint (bioi-contour derived (bioi))
     (events element) 
   :function (let ((bioi-ratio (bioi-ratio events)))
@@ -104,7 +103,7 @@
   ;; TODO: function*
   )
 
-;; posinbar
+;; Time offset from beginning of bar.
 (define-viewpoint (posinbar derived (onset))
     (events element) 
   :function (let ((onset (onset events))
@@ -117,7 +116,7 @@
   ;; TODO: function*
   )
 
-;; fib
+;; First In Bar (is this the first note in the current bar?)
 (define-viewpoint (fib test (onset))
     (events element) 
   :function (let ((posinbar (posinbar events)))
@@ -127,7 +126,7 @@
   ;; TODO: function* 
   )
 
-;; crotchet
+;; Is this note on a crotchet pulse?
 (define-viewpoint (crotchet test (onset))
     (events element) 
   :function (let ((e1 (car events))
@@ -145,8 +144,7 @@
 
 ;; tactus
 ;;
-;; Does the note coincide with a beat?
-;;
+;; Is this note on tactus pulse?
 (define-viewpoint (tactus test (onset))
     (events element) 
   :function (let ((event (last events)))
@@ -319,3 +317,29 @@
                         +undefined+
 			(+ (metrical-accent-multiple onset pulses barlength timebase)
 			   (metrical-accent-divison onset pulses barlength)))))))
+
+;; Metric accent interval
+(define-viewpoint (met-interval derived (onset))
+    (events element) 
+  :function (multiple-value-bind (e1 e2)
+                (values-list (last events 2))
+              (if (or (null e1) (null e2)) +undefined+
+                  (let ((ma1 (metaccent (list e1)))
+                        (ma2 (metaccent (list e2))))
+                    (if (undefined-p ma1 ma2) +undefined+
+                        (- ma2 ma1)))))
+  :function* (list (+ element (metaccent (list (penultimate-element events))))))
+
+;; Metrical accent contour: -1 for a descending accent, 0 constant, 1
+;; ascending
+(define-viewpoint (met-contour derived (onset))
+    (events element) 
+  :function (let ((metint (met-interval events)))
+              (cond ((undefined-p metint) +undefined+)
+                    (t (signum metint))))
+  :function* (let ((accent (metaccent (list (penultimate-element events)))))
+               (remove-if #'(lambda (a) (case element
+                                          (-1 (>= a accent))
+                                          (0  (not (= a accent)))
+                                          (1  (<= a accent))))
+                          (viewpoint-alphabet (get-viewpoint 'metaccent)))))

@@ -3,23 +3,25 @@
 ;;;; File:       scales.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2013-01-24 15:00:00 jeremy>
-;;;; Time-stamp: <2013-02-21 00:03:51 jeremy>
+;;;; Time-stamp: <2013-02-27 14:49:04 jeremy>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
 
 ;; Original Western scale viewpoints
 ;;
-;; To do: make these compatible with cents pitch values
 
 (defun diatonic-set (referent mode)
-  (let* ((diatonic-set '(0 2 4 5 7 9 11))
+  (let* ((diatonic-set '(0 200 400 500 700 900 1100))
          (start (position mode diatonic-set)))
-    (mapcar #'(lambda (x) (mod (+ (- x mode) referent) 12))
+    (mapcar #'(lambda (x) (mod (+ (- x mode) referent) *octave*))
             (append (subseq diatonic-set start)
                     (subseq diatonic-set 0 start)))))
 
-
+;; Returns 1 if event would not require an accidental as a result of
+;; the prevailing key signature and 0 if it would (i.e. in A minor,
+;; members of the set {A, B, C, D, E, F, G} return true, with all
+;; others, including the leading note returning 0).
 (define-viewpoint (inscale derived (cpitch))
     (events element) 
   :function (let ((cpitch-class (cpitch-class events))
@@ -34,8 +36,8 @@
                     (mode (mode events))
                     (ds (diatonic-set referent mode)))
                (remove-if #'(lambda (e) (case element 
-                                          (0 (member (mod e 12) ds))
-                                          (1 (not (member (mod e 12) ds)))))
+                                          (0 (member (mod e *octave*) ds))
+                                          (1 (not (member (mod e *octave*) ds)))))
                           (viewpoint-alphabet (get-viewpoint 'cpitch)))))
 
 ;; Pitch scales
@@ -48,8 +50,6 @@
 (defvar *a3* 5700) 
 (defvar *a4* 6900) 
 (defvar *a5* 8100) 
-
-(defvar *octave* 1200)
 
 (defun bottom-pitch (pitch)
   "Minimum octave equivalent pitch"
