@@ -3,7 +3,7 @@
 ;;;; File:       scales.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2013-01-24 15:00:00 jeremy>
-;;;; Time-stamp: <2013-02-27 14:49:04 jeremy>
+;;;; Time-stamp: <2013-02-28 13:06:58 jeremy>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
@@ -12,9 +12,9 @@
 ;;
 
 (defun diatonic-set (referent mode)
-  (let* ((diatonic-set '(0 200 400 500 700 900 1100))
+  (let* ((diatonic-set '(0 2 4 5 7 9 11))
          (start (position mode diatonic-set)))
-    (mapcar #'(lambda (x) (mod (+ (- x mode) referent) *octave*))
+    (mapcar #'(lambda (x) (mod (* (+ (- x mode) referent) 100) *octave*))
             (append (subseq diatonic-set start)
                     (subseq diatonic-set 0 start)))))
 

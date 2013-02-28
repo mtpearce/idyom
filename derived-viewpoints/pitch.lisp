@@ -3,7 +3,7 @@
 ;;;; File:       pitch.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2013-01-24 15:00:00 jeremy>
-;;;; Time-stamp: <2013-02-27 14:50:19 jeremy>
+;;;; Time-stamp: <2013-02-28 12:50:33 jeremy>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
@@ -178,7 +178,7 @@
 ;; Keysig
 
 ;;  Chromatic interval of tonic from C (e.g. C major gives 0, F minor
-;;  gives 500, F major also 500, Bb minor 1000).
+;;  gives 5, F major also 5, Bb minor 100).
 (define-viewpoint (referent derived (keysig))
     (events element) 
   :function (let ((keysig (keysig events))
@@ -186,9 +186,9 @@
               ;(declare (type (integer -7 7) keysig) (type (integer 0 11) mode))
               (if (undefined-p keysig mode) +undefined+
                   (cond ((and (numberp keysig) (> keysig 0))
-                         (mod (* (+ (* keysig 7) mode) 100) *octave*))
+                         (mod (+ (* keysig 7) mode) 12))
                         ((and (numberp keysig) (< keysig 0))
-                         (mod (* (+ (* (- keysig) 5) mode) 100) *octave*))
+                         (mod (+ (* (- keysig) 5) mode) 12))
                         ((numberp mode) mode)
 			(t +undefined+)))) 
   :function* (viewpoint-alphabet (get-viewpoint 'keysig)))
@@ -200,9 +200,9 @@
   :function (let ((cpitch (cpitch events))
                   (referent (referent events)))
               (cond ((undefined-p cpitch referent) +undefined+)
-                    (t (mod (- cpitch referent) *octave*))))
+                    (t (mod (- cpitch (* referent 100)) *octave*))))
   :function* (let* ((referent (referent events))
-                    (pitch (mod (+ referent element) *octave*)))
+                    (pitch (mod (+ (* referent 100) element) *octave*)))
                (remove-if-not #'(lambda (e) (= (mod e *octave*) pitch))
                               (viewpoint-alphabet (get-viewpoint 'cpitch)))))
 
