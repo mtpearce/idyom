@@ -43,21 +43,31 @@ symbol if they are lists else nil."
         (t nil)))
 
 
-; List defined viewpoints
+;;; List defined viewpoints
 
-(defun all-basic-viewpoints ()
-  (closer-mop:class-direct-subclasses (find-class 'viewpoints::basic)))
+(defun list-direct-subclasses (class) 
+  (mapcar #'class-name (closer-mop:class-direct-subclasses (find-class class))))
 
-(defun all-derived-viewpoints ()
-  (closer-mop:class-direct-subclasses (find-class 'viewpoints::derived)))
+(defun list-basic-viewpoints ()
+  "List of all known basic viewpoints"
+  (list-direct-subclasses 'viewpoints::basic))
 
-(defun all-threaded-viewpoints ()
-  (closer-mop:class-direct-subclasses (find-class 'viewpoints::threaded)))
+(defun list-derived-viewpoints ()
+  "List of all known derived viewpoints"
+  (list-direct-subclasses 'viewpoints::derived))
 
-(defun all-test-viewpoints ()
-  (closer-mop:class-direct-subclasses (find-class 'viewpoints::test)))
+(defun list-threaded-viewpoints ()
+  "List of all known threaded viewpoints"
+  (list-direct-subclasses 'viewpoints::threaded))
 
-(defun all-viewpoints () 
-  (append (all-basic-viewpoints) (all-derived-viewpoints)
-	  (all-threaded-viewpoints) (all-test-viewpoints)))
+(defun list-test-viewpoints ()
+  "List of all known test viewpoints"
+  (list-direct-subclasses 'viewpoints::test))
+
+(defun list-viewpoints ()
+  "List of all known viewpoints"
+  (append (list-basic-viewpoints)
+	  (list-derived-viewpoints)
+	  (list-threaded-viewpoints)
+	  (list-test-viewpoints)))
 	  
