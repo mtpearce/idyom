@@ -6,8 +6,8 @@
            #:viewpoint-alphabet #:viewpoint-typeset  #:viewpoint-links 
            #:set-alphabet-from-context #:viewpoint-name #:viewpoint-type
            #:inverse-viewpoint-function-defined-p #:basic-element
-	   #:list-viewpoints #:list-basic-viewpoints #:list-derived-viewpoints
-	   #:list-threaded-viewpoints #:list-test-viewpoints
+	   #:list-viewpoints #:list-basic #:list-derived
+	   #:list-threaded #:list-test #:predictors #:predictable
            #:attribute-equal #:viewpoint #:viewpoint-equal #:basic-p 
            #:in-typeset-p #:alphabet->events #:viewpoint-element-equal)
   (:documentation "Multiple viewpoint framework for music representation."))

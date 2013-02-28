@@ -48,26 +48,48 @@ symbol if they are lists else nil."
 (defun list-direct-subclasses (class) 
   (mapcar #'class-name (closer-mop:class-direct-subclasses (find-class class))))
 
-(defun list-basic-viewpoints ()
+(defun list-basic ()
   "List of all known basic viewpoints"
   (list-direct-subclasses 'viewpoints::basic))
 
-(defun list-derived-viewpoints ()
+(defun list-derived ()
   "List of all known derived viewpoints"
   (list-direct-subclasses 'viewpoints::derived))
 
-(defun list-threaded-viewpoints ()
+(defun list-threaded ()
   "List of all known threaded viewpoints"
   (list-direct-subclasses 'viewpoints::threaded))
 
-(defun list-test-viewpoints ()
+(defun list-test ()
   "List of all known test viewpoints"
   (list-direct-subclasses 'viewpoints::test))
 
 (defun list-viewpoints ()
   "List of all known viewpoints"
-  (append (list-basic-viewpoints)
-	  (list-derived-viewpoints)
-	  (list-threaded-viewpoints)
-	  (list-test-viewpoints)))
+  (append (list-basic)
+	  (list-derived)
+	  (list-threaded)
+	  (list-test)))
 	  
+(defun viewpoint-symbol (vp)
+  (car (multiple-value-list (find-symbol (symbol-name vp)
+					 (find-package 'viewpoints)))))
+
+(defun predictors (vps)
+  "List of known viewpoints that are defined in terms of at least one of the
+given viewpoints, and hence may be useful for predicting them. Note
+the original viewpoints are included."
+  (let ((vp-names (mapcar #'viewpoint-symbol vps))
+	(desc nil))
+    (dolist (vp (list-viewpoints) desc)
+      (let* ((ts (viewpoint-typeset (make-instance vp))))
+	(if (not (null (intersection ts vp-names)))
+	    (push vp desc))))))
+
+(defun predictable ()
+  "List of known viewpoints which can be predicted."
+  (let ((vps nil))
+    (dolist (vp (list-basic) vps)
+      (if (not (null (predictors (list vp))))
+	  (push vp vps)))))
+
