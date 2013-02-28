@@ -3,7 +3,7 @@
 ;;;; File:       main.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2010-11-01 15:19:57 marcusp>
-;;;; Time-stamp: <2013-02-28 15:13:06 jeremy>
+;;;; Time-stamp: <2013-02-28 15:18:00 jeremy>
 ;;;; ======================================================================
 
 (cl:in-package #:idyom)
@@ -86,7 +86,7 @@
 
 
 (defun find-selection-basis (targets basis)
-  "Determine which viewpoints are to be used in selection process")
+  "Determine which viewpoints are to be used in selection process"
   (cond (; Auto mode: use all views derived from target viewpoints. 
 	 (eq basis :auto) 
 	 (let ((vps (viewpoints:predictors targets)))
