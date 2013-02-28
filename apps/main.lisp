@@ -1,41 +1,43 @@
 ;;;; -*- Mode: LISP; Syntax: ANSI-Common-Lisp; Base: 10 -*-
 ;;;; ======================================================================
 ;;;; File:       main.lisp
-;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
+;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2010-11-01 15:19:57 marcusp>
-;;;; Time-stamp: <2013-02-22 13:12:13 jeremy>
+;;;; Time-stamp: <2013-02-28 15:13:06 jeremy>
 ;;;; ======================================================================
 
 (cl:in-package #:idyom)
 
-(defvar *cpitch-viewpoints* '(;; Chromatic pitch
-                              :cpitch       ; chromatic pitch (midi pitch number)
-                              :cpitch-class ; octave equivalent pitch class (chroma)
-			      :cents
-                              :tessitura    ; 3 values: whether a note is between 66 (G#4) and 74 (D5), above, or below this range
-                              ;; Pitch interval
-                              :cpint        ; pitch interval in semitones 
-                              :cpint-size   ; absolute size of pitch interval
-                              :cpcint       ; pitch interval class (mod 12) 
-                              :cpcint-size  ; absolute size of pitc interval class
-                              ;; Contour
-                              :contour      ; contour (-1, 0, 1)
-                              :newcontour   ; boolean: whether or not contour is the same as the previous contour
-                              ;; Tonality
-                              :cpintfip     ; pitch interval from the first note in the piece
-                              :cpintfref    ; chromatic scale degree
-                              ;:inscale      ; boolean: whether or not the note is in the scale
-                              ))
+(defvar *cpitch-viewpoints*
+  '(;; Chromatic pitch
+    :cpitch       ; chromatic pitch (midi pitch number)
+    :cpitch-class ; octave equivalent pitch class (chroma)
+    :tessitura    ; 3 values: whether a note is between 66 (G#4) and 74 (D5), above, or below this range
+    ;; Pitch interval
+    :cpint        ; pitch interval in semitones 
+    :cpint-size   ; absolute size of pitch interval
+    :cpcint       ; pitch interval class (mod 12) 
+    :cpcint-size  ; absolute size of pitch interval class
+    ;; Contour
+    :contour      ; contour (-1, 0, 1)
+    :newcontour   ; boolean: whether or not contour is the same as the previous contour
+    ;; Tonality
+    :cpintfip     ; pitch interval from the first note in the piece
+    :cpintfref    ; chromatic scale degree
+    :inscale      ; boolean: whether or not the note is in the scale
+    ))
 
-(defvar *reduced-cpitch-viewpoints* '(:cpitch :cpitch-class :cpint :cpint-size :contour :newcontour))
+(defvar *cpitch-viewpoints-short*
+  '(:cpitch :cpitch-class :cpint :cpint-size :contour :newcontour))
 
-(defvar *bioi-viewpoints* '(:bioi           ; inter-onset interval
-                            :bioi-ratio     ; ratio between consecutive inter-onset intervals
-                            :bioi-contour   ; contour between consecutive inter-onset intervals
-                            ))
+(defvar *bioi-viewpoints*
+  '(:bioi           ; inter-onset interval
+    :bioi-ratio     ; ratio between consecutive inter-onset intervals
+    :bioi-contour   ; contour between consecutive inter-onset intervals
+    ))
 
 
-;;; 
+;;; IDyOM top-level
 ;;;
 (defun idyom (dataset-id target-viewpoints source-viewpoints
               &key 
@@ -48,9 +50,7 @@
 	      (models :both+)
 	      (ltmo mvs::*ltm-params*) (stmo mvs::*stm-params*)
               ;; Viewpoint selection 
-	      (basis (case (car target-viewpoints)
-		       (:bioi *bioi-viewpoints*)
-		       (t *cpitch-viewpoints*)))
+	      (basis :auto)
               (dp nil) (max-links 2)
               ;; Output 
               (detail 2) (output-path nil))
@@ -65,7 +65,8 @@
     (format t "~&Selecting viewpoints for the ~A model on dataset ~A predicting viewpoints ~A.~%" 
             models dataset-id target-viewpoints)
     (let* (; Generate candidate viewpoint systems
-	   (viewpoint-systems (generate-viewpoint-systems target-viewpoints basis max-links))
+	   (sel-basis (find-selection-basis target-viewpoints basis))
+	   (viewpoint-systems (generate-viewpoint-systems target-viewpoints sel-basis max-links))
            ; Select viewpoint system
 	   (selected (viewpoint-selection:dataset-viewpoint-selection
                       dataset-id target-viewpoints viewpoint-systems
@@ -83,6 +84,21 @@
       (resampling:format-information-content predictions (concatenate 'string output-path "/" filename) dataset-id detail))
     (resampling:output-information-content predictions detail)))
 
+
+(defun find-selection-basis (targets basis)
+  "Determine which viewpoints are to be used in selection process")
+  (cond (; Auto mode: use all views derived from target viewpoints. 
+	 (eq basis :auto) 
+	 (let ((vps (viewpoints:predictors targets)))
+	   (if (null vps)
+	       (error "Auto viewpoint selection: no defined viewpoints found that might predict target viewpoints ~S" targets)
+	       vps)))
+	;; Predefined viewpoint sets
+	((eq basis :ioi-views) *bioi-viewpoints*)
+	((eq basis :pitch-viewsA) *cpitch-viewpoints*)
+	((eq basis :pitch-viewsB) *cpitch-viewpoints-short*)
+	;; Else use supplied viewpoints
+	(t basis)))
 
 (defun generate-viewpoint-systems (basic-viewpoints basis-vps max-links)
   (if (= (length basic-viewpoints) 1)
