@@ -53,7 +53,7 @@
 	      (basis :auto)
               (dp nil) (max-links 2)
               ;; Output 
-              (detail 2) (output-path nil))
+              (detail 3) (output-path nil))
   "IDyOM top level: computes information profiles for basic
    target-viewpoints over a dataset (dataset-id), using a set of
    source-viewpoints, which can be specified or selected
