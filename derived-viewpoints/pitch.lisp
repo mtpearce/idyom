@@ -3,7 +3,7 @@
 ;;;; File:       pitch.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2013-01-24 15:00:00 jeremy>
-;;;; Time-stamp: <2013-02-28 12:50:33 jeremy>
+;;;; Time-stamp: <2013-03-07 18:37:35 mpearce>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
@@ -200,10 +200,10 @@
   :function (let ((cpitch (cpitch events))
                   (referent (referent events)))
               (cond ((undefined-p cpitch referent) +undefined+)
-                    (t (mod (- cpitch (* referent 100)) *octave*))))
+                    (t (mod (- cpitch referent) 12))))
   :function* (let* ((referent (referent events))
-                    (pitch (mod (+ (* referent 100) element) *octave*)))
-               (remove-if-not #'(lambda (e) (= (mod e *octave*) pitch))
+                    (pitch (mod (+ referent element) 12)))
+               (remove-if-not #'(lambda (e) (= (mod e 12) pitch))
                               (viewpoint-alphabet (get-viewpoint 'cpitch)))))
 
 ;; Chromatic interval from first event in piece.
