@@ -194,16 +194,16 @@
   :function* (viewpoint-alphabet (get-viewpoint 'keysig)))
 
 
-;;  Chromatic interval from tonic (0 = tonic, 4 mediant, 7 dominant, etc.)
+;;  Chromatic interval from tonic (0 = tonic, 400 mediant, 700 dominant, etc.)
 (define-viewpoint (cpintfref derived (cpitch))
     (events element) 
   :function (let ((cpitch (cpitch events))
                   (referent (referent events)))
               (cond ((undefined-p cpitch referent) +undefined+)
-                    (t (mod (- cpitch referent) 12))))
+                    (t (mod (- cpitch (* referent 100)) *octave*))))
   :function* (let* ((referent (referent events))
-                    (pitch (mod (+ referent element) 12)))
-               (remove-if-not #'(lambda (e) (= (mod e 12) pitch))
+                    (pitch (mod (+ (* referent 100) element) *octave*)))
+               (remove-if-not #'(lambda (e) (= (mod e *octave*) pitch))
                               (viewpoint-alphabet (get-viewpoint 'cpitch)))))
 
 ;; Chromatic interval from first event in piece.
