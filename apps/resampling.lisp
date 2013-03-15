@@ -3,7 +3,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2013-02-26 15:36:07 jeremy>                           
+;;;; Time-stamp: <2013-03-15 12:43:06 jeremy>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -34,7 +34,10 @@
    only a long-term model is used, else if it is 'stm only a short-term
    model is used and otherwise both models are used and their predictions
    combined."
-  (let* (;; Set LTM and STM parameters
+  (let* (;; Check model memory parameters
+	 (ltmo (apply #'check-model-defaults (cons mvs::*ltm-params* ltmo)))
+	 (stmo (apply #'check-model-defaults (cons mvs::*stm-params* stmo)))
+	 ;; Set LTM and STM parameters
          (mvs::*models* models)
          (mvs::*ltm-order-bound* (getf ltmo :order-bound))
          (mvs::*ltm-mixtures* (getf ltmo :mixtures))
@@ -83,7 +86,12 @@
           (push predictions sequence-predictions)))
       (incf resampling-id))))
 
-
+(defun check-model-defaults (defaults &key
+			      (order-bound (getf defaults :order-bound))
+			      (mixtures (getf defaults :mixtures))
+			      (update-exclusion (getf defaults :update-exclusion))
+			      (escape (getf defaults :escape)))  
+  (list :order-bound order-bound :mixtures mixtures :update-exclusion update-exclusion :escape escape))
 
 
 (defun monodies-to-lists (monodies) (mapcar #'monody-to-list monodies))
