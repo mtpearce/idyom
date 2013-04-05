@@ -3,13 +3,13 @@
 ;;;; File:       db2midi.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2005-06-09 11:01:51 marcusp>
-;;;; Time-stamp: <2011-07-27 15:23:53 marcusp>
+;;;; Time-stamp: <2013-04-05 13:57:25 jeremy>
 ;;;; ======================================================================
 
 (cl:in-package #:db2midi)
 
 (defvar *timebase* 96)
-(defvar *midc* 60) 
+(defvar *midc* 6000) 
 
 (defvar *tick-multiplier* 1)
 (defvar *default-tempo* 100)
@@ -82,7 +82,9 @@
   (let* ((non-onset (mtp-admin:get-attribute event :onset))
          (noff-onset (+ non-onset (mtp-admin:get-attribute event :dur)))
          (channel (mtp-admin:get-attribute event :voice))
-         (keynum  (+ (- 60 *midc*) (mtp-admin:get-attribute event :cpitch)))
+         (keynum  (round (/ (+ (- 60 *midc*)
+			       (mtp-admin:get-attribute event :cpitch))
+			    100)))
          (velocity (mtp-admin:get-attribute event :dyn)))
     (list (make-instance 'midi:note-on-message
                          :time (* non-onset *tick-multiplier*)

@@ -1,16 +1,16 @@
 ;;;; -*- Mode: LISP; Syntax: ANSI-Common-Lisp; Base: 10 -*-
 ;;;; ======================================================================
 ;;;; File:       tobias2db.lisp
-;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
+;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2007-04-19 11:15:57 marcusp>
-;;;; Time-stamp: <2011-10-06 14:46:10 marcusp>
+;;;; Time-stamp: <2013-04-05 13:24:20 jeremy>
 ;;;; ======================================================================
 
 (cl:in-package #:tobias2db) 
 
 (defparameter *duration* 24)
 (defvar *timebase* 96 "Basic time units per semibreve")
-(defvar *middle-c* 60 "Chromatic integer mapping for c_4")
+(defvar *middle-c* 6000 "Chromatic integer mapping for c_4")
 
 (defmethod import-data ((type (eql :tobias)) path description id)
   (mtp-admin:insert-dataset (tobias2db path description) id))
@@ -64,6 +64,6 @@
   (list (list :onset onset)
         (list :dur *duration*)
         (list :deltast 0)
-        (list :cpitch pitch)
+        (list :cpitch (* pitch 100))
         (list :voice 1)))
  

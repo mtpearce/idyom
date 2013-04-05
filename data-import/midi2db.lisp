@@ -1,15 +1,15 @@
 ;;;; -*- Mode: LISP; Syntax: ANSI-Common-Lisp; Base: 10 -*-
 ;;;; ======================================================================
 ;;;; File:       midi2db.lisp
-;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
+;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2007-03-21 09:47:26 marcusp>
-;;;; Time-stamp: <2013-01-24 13:10:12 jeremy>
+;;;; Time-stamp: <2013-04-05 13:23:58 jeremy>
 ;;;; ======================================================================
 
 (cl:in-package #:midi2db) 
 
 (defvar *timebase* 96 "Basic time units per semibreve")
-(defvar *middle-c* (list 60 35) 
+(defvar *middle-c* (list 6000 35) 
   "Chromatic and diatonic integer mappings for c_4")
 (defvar *default-midifile-extension* "mid")
 

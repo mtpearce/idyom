@@ -3,7 +3,7 @@
 ;;;; File:       db2cmn.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-08-17 18:54:17 marcusp>                           
-;;;; Time-stamp: <2008-10-31 17:12:11 marcusp>                           
+;;;; Time-stamp: <2013-04-05 13:57:36 jeremy>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cm) 
@@ -128,7 +128,7 @@ else for minor. Returns a CM/CMN key."
 (defvar *current-time* 0)
 
 (defvar *timebase* 96)
-(defvar *midc* 60) 
+(defvar *midc* 6000) 
 
 (defmethod export-data ((d mtp-admin:mtp-dataset) (type (eql :cmn)) path)
   (setf *timebase* (mtp-admin::dataset-timebase d)
@@ -240,7 +240,7 @@ else for minor. Returns a CM/CMN key."
         tempo)))
 
 (defun get-keynum (event)
-  (+ (get-attribute event :cpitch) (- 60 *midc*)))
+  (round (/ (+ (get-attribute event :cpitch) (- 6000 *midc*)) 100)))
 
 (defun get-time (event)
   (let ((onset (get-attribute event :onset)))

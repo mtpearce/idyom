@@ -3,7 +3,7 @@
 ;;;; File:       db2lilypond.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2005-06-07 10:13:24 marcusp>
-;;;; Time-stamp: <2011-02-11 16:21:28 marcusp>
+;;;; Time-stamp: <2013-04-05 15:17:05 jeremy>
 ;;;; ======================================================================
 ;;;; 
 ;;;; TODO 
@@ -46,7 +46,7 @@
   )
 
 (defvar *timebase* 96)
-(defvar *midc* 60) 
+(defvar *midc* 6000) 
 (defvar *current-pulses* nil)
 (defvar *current-barlength* nil)
 (defvar *default-barlength* *timebase*) ;4/4
@@ -182,7 +182,10 @@
 
 (defun write-note (s event duration)
   (multiple-value-bind (octave pitch-class)
-      (floor (- (mtp-admin:get-attribute event :cpitch) (- *midc* 12)) 12)
+      (floor (round (/ (- (mtp-admin:get-attribute event :cpitch)
+			  (- *midc* 1200))
+		       100))
+	     12)
     (let* ((octave-token (if (plusp octave) "'" ","))
            (pitches (if (< (mtp-admin:get-attribute event :keysig) 0)
                         '("c" "df" "d" "ef" "e" "f" "gf" "g" "af" "a" "bf" "b")

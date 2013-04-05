@@ -1,9 +1,9 @@
 ;;;; -*- Mode: LISP; Syntax: ANSI-Common-Lisp; Base: 10 -*-             
 ;;;; =======================================================================
 ;;;; File:       kern2db.lisp
-;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
+;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2011-03-28 09:48:12 marcusp>                           
+;;;; Time-stamp: <2013-04-05 13:28:53 jeremy>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -145,7 +145,7 @@
         *unrecognised-tokens* '())
   (let ((directory (not (pathname-name file-or-dir-name))))
     (prog1 
-        (append (list description *default-timebase* (car *middle-c*))
+        (append (list description *default-timebase* (* (car *middle-c*) 100))
                 (process-data file-or-dir-name directory))
       (print-status))))
   
@@ -738,12 +738,12 @@
                        (#\b 6))))
     (if (lower-case-p (char pitch 0))
         (list
-         (+ c-middle-c c-interval (* num-octaves 12) (- num-flats) num-sharps)
+         (* (+ c-middle-c c-interval (* num-octaves 12) (- num-flats) num-sharps) 100)
          (+ m-middle-c m-interval (* num-octaves 7))
          (- num-sharps num-flats))
         (list 
-         (- c-middle-c (- 12 c-interval) (* num-octaves 12) num-flats
-            (- num-sharps))
+         (* (- c-middle-c (- 12 c-interval) (* num-octaves 12) num-flats
+            (- num-sharps)) 100)
          (- m-middle-c (- 7 m-interval) (* num-octaves 7))
          (- num-sharps num-flats)))))
 
