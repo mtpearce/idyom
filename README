@@ -1,0 +1,67 @@
+IDYOM: Information Dynamics of Music
+Version 2.0 alpha
+
+Copyright 2013, Marcus Pearce (marcus.pearce@eecs.qmul.ac.uk)
+
+This program is distributed under the terms of the GNU General Public
+License.  See COPYING for details.
+
+==Documentation==
+
+Documentation on how to install and use the system can be found on the
+IDyOM wiki at Sound Software
+(https://code.soundsoftware.ac.uk/projects/idyom-project/wiki).
+Currently a login is required, but a public version is planned.
+
+The design of the system and its underlying principles are documented
+in Marcus Pearce's PhD thesis "The Construction and Evaluation of
+Statistical Models of Melodic Structure in Music Perception and
+Composition" (2005) - see thesis.pdf
+
+==Requirements==
+
+SBCL              http://www.sbcl.org 
+
+AMuSE		  https://code.soundsoftware.ac.uk/projects/amuse
+AMuSE Viewpoints  https://code.soundsoftware.ac.uk/projects/amuse-viewpoints
+MIPS  		  https://code.soundsoftware.ac.uk/projects/mips
+MTP-Admin	  https://code.soundsoftware.ac.uk/projects/mtp-admin
+PPM* 		  https://code.soundsoftware.ac.uk/projects/ppm-star
+
+IDyOM can be easily installed using quicklisp - see the wiki for
+details.
+
+==Directory Structure==
+
+The layout of the code is as follows: 
+
+* idyom.asd: the system definition 
+
+* utils/: general-purpose utilities 
+
+* amuse/: an interface to amuse music data interface
+** amuse-interface.lisp: look here to make this less dependent on amuse-mtp
+** viewpoint-extensions.lisp: extensions to the viewpoint framework useful for modelling
+
+* ppm/: the multiple-viewpoint system modelling framework
+** params.lisp: user-level parameters to the statistical modelling 
+** multiple-viewpoint-system.lisp: modelling with multiple-viewpoints 
+** prediction-sets.lisp: representing and combining distributions, computing entropy
+and information content
+
+* apps/: top-level applications for users 
+** apps.lisp: pathnames and filenames for saving data and results
+** main.lisp: top-level code for using the system
+** resampling.lisp: the main user interface - estimating information content
+by cross-validation
+** viewpoint-selection.lisp: on tin does it says the what
+** generation.lisp: code for generating melodies (possibly suffering from bitrot)
+
+==Top-level functions==
+
+idyom:idyom
+resampling:idyom-resample
+resampling:output-information-content
+
+For detailed documentation, see the wiki:
+https://code.soundsoftware.ac.uk/projects/idyom-project/wiki
