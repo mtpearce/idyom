@@ -1,7 +1,7 @@
 ;;;; -*- Mode: LISP; Syntax: ANSI-Common-Lisp; Base: 10 -*-             
 ;;;; ======================================================================
 ;;;; File:       viewpoint-selection.lisp
-;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
+;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2003-10-02 18:54:17 marcusp>                           
 ;;;; Time-stamp: <2013-01-22 16:16:13 jeremy>                           
 ;;;; ======================================================================

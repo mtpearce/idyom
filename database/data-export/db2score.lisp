@@ -1,7 +1,7 @@
 ;;;; -*- Mode: LISP; Syntax: ANSI-Common-Lisp; Base: 10 -*-
 ;;;; ======================================================================
 ;;;; File:       db2ps.lisp
-;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
+;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2005-11-25 17:08:20 marcusp>
 ;;;; Time-stamp: <2008-10-31 17:12:43 marcusp>
 ;;;; ======================================================================

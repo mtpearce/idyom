@@ -1,7 +1,7 @@
 ;;;; -*- Mode: LISP; Syntax: ANSI-Common-Lisp; Base: 10 -*-             
 ;;;; ======================================================================
 ;;;; File:       music-data.lisp
-;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
+;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
 ;;;; Time-stamp: <2013-04-17 16:18:12 jeremy>                           
 ;;;; ======================================================================

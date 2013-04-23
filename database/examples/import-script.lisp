@@ -1,7 +1,7 @@
 ;;;; -*- Mode: LISP; Syntax: ANSI-Common-Lisp; Base: 10 -*-
 ;;;; ======================================================================
 ;;;; File:       import-script.lisp
-;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
+;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2008-11-03 11:24:51 marcusp>
 ;;;; Time-stamp: <2008-11-03 11:48:02 marcusp>
 ;;;; ======================================================================

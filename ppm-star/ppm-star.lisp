@@ -1,7 +1,7 @@
 ;;;; -*- Mggode: LISP; Syntax: ANSI-Common-Lisp; Base: 10 -*-             
 ;;;; ======================================================================
 ;;;; File:       ppm-star.lisp
-;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
+;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
 ;;;; Time-stamp: <2011-08-22 18:09:56 marcusp>                           
 ;;;; ======================================================================
