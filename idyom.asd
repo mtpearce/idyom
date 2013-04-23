@@ -2,7 +2,7 @@
 ;;;; File:       IDyOM.asd
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-05-04 21:29:04 marcusp>
-;;;; Time-stamp: <2013-04-16 08:52:14 jeremy>
+;;;; Time-stamp: <2013-04-22 22:25:52 jeremy>
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -11,7 +11,7 @@
 (in-package #:idyom-system)
 
 (defsystem idyom
-  :depends-on (amuse amuse-mtp clsql cl-ppcre midi closer-mop psgraph)
+  :depends-on (clsql cl-ppcre midi closer-mop psgraph)
   :serial t
   :components
   (;; General utilities  
@@ -21,6 +21,15 @@
             ((:file "package")
              (:file "utils")))
    ;; Data Representation and Access
+   (:module events
+	    :serial t
+	    :components
+	    ((:file "package")
+	     (:file "extended-sequence")
+	     (:file "events")
+	     (:file "music-segment")
+	     (:file "music-db")
+	     (:file "music-db-segment")))
    (:module database
 	    :serial t
 	    :components
@@ -47,27 +56,22 @@
 	    :serial t
 	    :components
 	    ((:file "package")
-                 (:file "utils")
-                 (:file "generics")
-                 (:file "classes")
-                 (:file "methods")
-                 (:file "functions")
-                 (:file "macros")
-		 (:file "basic-viewpoints")
-		 ;; Derived viewpoints
-		 (:module derived-viewpoints
-			  :components
-			  ((:file "pitch")
-			   (:file "scales")
-			   (:file "temporal")
-			   (:file "misc")
-			   (:file "implication-realisation")))))
-   (:module amuse
-            :serial t 
-            :components
-            ((:file "package")
-             (:file "amuse-interface")
-             (:file "viewpoint-extensions")))
+	     (:file "generics")
+	     (:file "classes")
+	     (:file "methods")
+	     (:file "functions")
+	     (:file "macros")
+	     (:file "basic-viewpoints")
+	     (:file "extensions")
+	     ;; Derived viewpoints
+	     (:module derived-viewpoints
+		      :serial t
+		      :components
+		      ((:file "pitch")
+		       (:file "scales")
+		       (:file "temporal")
+		       (:file "misc")
+		       (:file "implication-realisation")))))
    ;; PPM Statistical Models
    (:module ppm-star
 	    :serial t

@@ -5,7 +5,7 @@
 (defmethod viewpoint-sequences ((v viewpoint) sequences)
   (mapcar #'(lambda (s) (viewpoint-sequence v s)) sequences))
 
-(defmethod viewpoint-sequence ((v viewpoint) (m amuse:monody))
+(defmethod viewpoint-sequence ((v viewpoint) (m md:music-composition))
   (viewpoint-sequence v (coerce m 'list)))
 
 (defmethod viewpoint-sequence ((v viewpoint) (event-list list))
@@ -20,7 +20,7 @@
 
 ;;; viewpoint-element 
 
-(defmethod viewpoint-element ((v viewpoint) (m amuse:monody))
+(defmethod viewpoint-element ((v viewpoint) (m md:music-composition))
   (viewpoint-element v (coerce m 'list)))
 
 (defmethod viewpoint-element ((v viewpoint) (event-list list))

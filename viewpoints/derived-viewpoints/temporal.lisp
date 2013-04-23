@@ -3,7 +3,7 @@
 ;;;; File:       temporal.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2013-01-24 15:00:00 jeremy>
-;;;; Time-stamp: <2013-02-27 15:08:31 jeremy>
+;;;; Time-stamp: <2013-04-17 17:18:44 jeremy>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
@@ -93,8 +93,7 @@
     (events element) 
   :function (let ((barlength (barlength events))
 		  (pulses (pulses events))
-		  (timebase (* (amuse:duration (amuse:crotchet
-						(last-element events))) 4)))
+		  (timebase (last-element events)))
 	      (cond ((undefined-p barlength pulses) +undefined+)
 		    ((zerop barlength) +undefined+)
 		    ((zerop pulses) +undefined+)
@@ -136,8 +135,7 @@
                         (onset2 (onset (list e2))))
                     (if (undefined-p onset1 onset2) +undefined+
 			(if (zerop (mod (- onset2 onset1)
-					(amuse:duration (amuse:crotchet
-						(last-element events)))))
+					(crotchet (last-element events))))
 			    1 0)))))
   ;; TODO: function* 
   )
@@ -290,8 +288,7 @@
                   (let ((pulses (pulses event))
 			(barlength (barlength event))
                         (onset (onset event))
-			(timebase (* (amuse:duration (amuse:crotchet
-						      (last-element events))) 4)))
+			(timebase (timebase (last-element events))))
 		    ;; Check these are properly defined
 		    (if (or (undefined-p pulses onset barlength)
                             (zerop barlength)
@@ -308,8 +305,7 @@
                   (let ((pulses (pulses event))
 			(barlength (barlength event))
                         (onset (onset event))
-			(timebase (* (amuse:duration (amuse:crotchet
-						      (last-element events))) 4)))
+			(timebase (timebase (last-element events))))
 		    ;; Check these are properly defined
 		    (if (or (undefined-p pulses onset barlength)
                             (zerop barlength)

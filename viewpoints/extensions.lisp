@@ -3,7 +3,7 @@
 ;;;; File:       viewpoint-extensions.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2008-10-31 13:08:09 marcusp>
-;;;; Time-stamp: <2011-04-10 17:55:42 marcusp>
+;;;; Time-stamp: <2013-04-17 15:50:50 jeremy>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints) 
@@ -106,7 +106,7 @@ values of the final event in <events>."
          (onset-alphabet (onset-alphabet previous-events)))
     (mapcar #'(lambda (viewpoint-element)
                 (let ((e (md:copy-event event)))
-                  (md:set-attribute e 'amuse::time viewpoint-element)
+                  (md:set-attribute e 'onset viewpoint-element)
                   e))
             onset-alphabet)))
  
@@ -115,7 +115,7 @@ values of the final event in <events>."
   (let ((bioi-alphabet (remove (viewpoint-alphabet (get-viewpoint 'bioi)) nil)))
     (if (null previous-events) bioi-alphabet
         (let* ((last-event (car (reverse previous-events)))
-               (onset (md:get-attribute last-event 'amuse::time)))
+               (onset (md:get-attribute last-event 'onset)))
           (mapcar #'(lambda (a) (+ onset a)) bioi-alphabet)))))
 
 (defmethod alphabet->events ((d derived) events)
@@ -142,3 +142,14 @@ values of the final event in <events>."
                                e))
                          alphabet))))
       (apply #'get-events (viewpoint-typeset l)))))
+
+
+
+(defun strip-until-true (test-viewpoint events)
+  "Return the longest prefix of the list EVENTS such that
+TEST-VIEWPOINT returns true (1 rather than 0)."
+  (cond ((null events) '())
+        ((undefined-p (viewpoint-element test-viewpoint events))
+         (strip-until-true test-viewpoint (butlast events)))
+        ((= (viewpoint-element test-viewpoint events) 1) events)
+        (t (strip-until-true test-viewpoint (butlast events)))))

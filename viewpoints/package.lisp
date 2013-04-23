@@ -1,5 +1,5 @@
 (cl:defpackage #:viewpoints 
-  (:use #:common-lisp)
+  (:use #:common-lisp #:utils)
   (:export #:+undefined+ #:undefined-p #:*basic-types* 
            #:get-viewpoint #:get-viewpoints  
            #:viewpoint-element #:viewpoint-sequence  #:viewpoint-sequences 
@@ -9,5 +9,6 @@
 	   #:list-viewpoints #:list-basic #:list-derived
 	   #:list-threaded #:list-test #:predictors #:predictable
            #:attribute-equal #:viewpoint #:viewpoint-equal #:basic-p 
-           #:in-typeset-p #:alphabet->events #:viewpoint-element-equal)
+           #:in-typeset-p #:alphabet->events #:viewpoint-element-equal
+	   #:composition-viewpoint #:dataset-viewpoint)
   (:documentation "Multiple viewpoint framework for music representation."))

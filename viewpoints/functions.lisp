@@ -93,3 +93,17 @@ the original viewpoints are included."
       (if (not (null (predictors (list vp))))
 	  (push vp vps)))))
 
+
+(defun composition-viewpoint (dataset-id composition-id viewpoint)
+  "Show viewpoint sequence for composition."
+  (viewpoints:viewpoint-sequence 
+   (viewpoints:get-viewpoint viewpoint)
+   (md:get-event-sequence dataset-id composition-id)))
+
+(defun dataset-viewpoint (dataset-id viewpoint)
+  "Show viewpoint sequences for dataset."
+  (viewpoints:viewpoint-sequences
+   (viewpoints:get-viewpoint viewpoint)
+   (mdLget-event-sequences dataset-id)))
+
+

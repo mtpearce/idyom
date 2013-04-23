@@ -3,7 +3,7 @@
 ;;;; File:       scales.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2013-01-24 15:00:00 jeremy>
-;;;; Time-stamp: <2013-02-28 13:06:58 jeremy>
+;;;; Time-stamp: <2013-04-18 11:02:26 jeremy>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)

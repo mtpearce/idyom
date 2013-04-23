@@ -3,7 +3,7 @@
 ;;;; File:       generation.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-08-21 18:54:17 marcusp>                           
-;;;; Time-stamp: <2011-08-01 13:33:57 marcusp>                           
+;;;; Time-stamp: <2013-04-22 23:46:52 jeremy>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -200,7 +200,7 @@
                            (output-file-path "/tmp"))
   (declare (ignorable description output-file-path))
   (initialise-prediction-cache dataset-id attributes)
-  (let* ((dataset (get-event-sequences dataset-id))
+  (let* ((dataset (md:get-event-sequences dataset-id))
          (pretraining-set (get-pretraining-set pretraining-ids))
          (viewpoints (get-viewpoints attributes))
          (basic-viewpoints (get-basic-viewpoints basic-attributes dataset))
@@ -233,8 +233,8 @@
                (remove-if-not #'(lambda (x)
                                   (member (cadr (mtp-admin:get-id (car x))) (unique-ids-2)
                                           :test #'=))
-                              (get-event-sequences 2))))
-         (drest (apply #'get-event-sequences
+                              (md:get-event-sequences 2))))
+         (drest (apply #'md:get-event-sequences
                        (remove-if #'(lambda (x) (= x 2)) dataset-ids))))
     (append d1 drest)))
 
@@ -610,7 +610,7 @@
   (let ((predictions (select-from-distributions predictions)))
     (dolist (p predictions event)
       (setf 
-       (slot-value event (find-symbol (symbol-name (car p)) (find-package :amuse-mtp)))
+       (slot-value event (find-symbol (symbol-name (car p)) (find-package :music-data)))
        (nth 2 p)))))
 
 (defun select-from-distributions (predictions)

@@ -3,7 +3,7 @@
 ;;;; File:       music-data.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2013-02-21 15:35:10 jeremy>                           
+;;;; Time-stamp: <2013-04-17 16:18:12 jeremy>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -491,16 +491,16 @@ a list containing the dataset-id is returned."))
          (accessor-symbol (find-symbol accessor-name (find-package :mtp-admin))))
     (funcall accessor-symbol e)))
 
-(defmethod get-attribute ((e amuse-mtp:mtp-event) attribute)
-  "Returns the value for slot <attribute> in event object <e>."
-  (let* ((attribute 
-          (case attribute
-            ((:onset) 'amuse::time)
-            ((:dur) 'amuse::interval)
-            (t 
-             (find-symbol (string-upcase (symbol-name attribute)) 
-                          (find-package :amuse-mtp))))))
-    (slot-value e attribute)))
+;; (defmethod get-attribute ((e amuse-mtp:mtp-event) attribute)
+;;   "Returns the value for slot <attribute> in event object <e>."
+;;   (let* ((attribute 
+;;           (case attribute
+;;             ((:onset) 'amuse::time)
+;;             ((:dur) 'amuse::interval)
+;;             (t 
+;;              (find-symbol (string-upcase (symbol-name attribute)) 
+;;                           (find-package :amuse-mtp))))))
+;;     (slot-value e attribute)))
 
 (defmethod copy-event ((l list))
   (make-instance 'mtp-event))
