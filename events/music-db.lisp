@@ -2,7 +2,7 @@
 ;;;; File:       music-db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2013-04-01 12:11:04 jeremy>
-;;;; Time-stamp: <2013-04-22 22:27:41 jeremy>
+;;;; Time-stamp: <2013-04-23 15:22:07 jeremy>
 ;;;; ======================================================================
 ;;;
 ;;; Basic version of amuse-mtp package.
@@ -124,7 +124,7 @@
   (mtp-data:make-dataset-id dataset-index))
 
 (defmethod lookup-composition (dataset-index composition-index (source (eql :sql)))
-  (mtp-data:make-dataset-id dataset-index composition-index))
+  (mtp-data:make-composition-id dataset-index composition-index))
 
 
 

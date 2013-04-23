@@ -2,7 +2,7 @@
 ;;;; File:       events.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2013-04-12 12:46:19 jeremy>
-;;;; Time-stamp: <2013-04-23 09:32:41 jeremy>
+;;;; Time-stamp: <2013-04-23 15:25:18 jeremy>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -26,7 +26,7 @@
 ;; Copy identifier
 (defgeneric copy-identifier (id))
 
-
+;; Lookup identifiers
 (defgeneric lookup-dataset (dataset-index datasource)
   (:documentation "Returns the identifier for the dataset that has
   this index in the given datasource"))
@@ -44,19 +44,13 @@
 (defgeneric get-composition (composition-identifier))
 (defgeneric get-event (event-identifier))
 
-
 (defmethod get-dataset ((index integer))
   (get-dataset (lookup-dataset index *idyom-datasource*)))
 
-(defmethod get-composition ((index integer))
-  (get-dataset (lookup-dataset index *idyom-datasource*)))
-
-(defmethod get-event ((index integer))
-  (get-dataset (lookup-dataset index *idyom-datasource*)))
-
-
-(defun get-event-sequence (composition-index)
-  (composition->monody (get-compsition composition-id)))
+(defun get-event-sequence (dataset-index composition-index)
+  (composition->monody (get-composition (lookup-composition dataset-index
+					  composition-index
+					  *idyom-datasource*))))
 
 (defun get-event-sequences (&rest dataset-ids)
   (let ((compositions '()))
@@ -67,9 +61,6 @@
 
 (defun count-compositions (dataset-id)
   (length (get-dataset dataset-id)))
-
-(defun count-events (composition-id)
-  (length (get-composition composition-id)))
 
 
 
