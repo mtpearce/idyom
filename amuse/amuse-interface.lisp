@@ -3,7 +3,7 @@
 ;;;; File:       amuse-interface.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2008-09-30 17:25:38 marcusp>
-;;;; Time-stamp: <2013-04-23 20:27:01 jeremy>
+;;;; Time-stamp: <2013-04-23 21:13:12 jeremy>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -105,12 +105,12 @@
 
 (defun composition-viewpoint (dataset-id composition-id viewpoint)
   "Show viewpoint sequence for composition."
-  (viewpoints:viewpoint-sequence 
-   (viewpoints:get-viewpoint viewpoint)
-   (get-event-sequence dataset-id composition-id)))
+  (viewpoint-sequence 
+   (get-viewpoint viewpoint)
+   (music-data:get-event-sequence dataset-id composition-id)))
 
 (defun dataset-viewpoint (dataset-id viewpoint)
   "Show viewpoint sequences for dataset."
-  (viewpoints:viewpoint-sequences
-   (viewpoints:get-viewpoint viewpoint)
-   (get-event-sequences dataset-id)))
+  (viewpoint-sequences
+   (get-viewpoint viewpoint)
+   (music-data:get-event-sequences dataset-id)))
