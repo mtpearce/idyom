@@ -22,14 +22,18 @@ Composition" (2005) - see thesis.pdf
 
 SBCL              http://www.sbcl.org 
 
-AMuSE		  https://code.soundsoftware.ac.uk/projects/amuse
-AMuSE Viewpoints  https://code.soundsoftware.ac.uk/projects/amuse-viewpoints
-MIPS  		  https://code.soundsoftware.ac.uk/projects/mips
-MTP-Admin	  https://code.soundsoftware.ac.uk/projects/mtp-admin
-PPM* 		  https://code.soundsoftware.ac.uk/projects/ppm-star
+Though not required, IDyOM is most easily installed using quicklisp:
 
-IDyOM can be easily installed using quicklisp - see the wiki for
-details.
+http://www.quicklisp.org/
+
+see the wiki for details.
+
+==Top-level function==
+
+idyom:idyom
+
+For detailed documentation, see the wiki:
+https://code.soundsoftware.ac.uk/projects/idyom-project/wiki
 
 ==Directory Structure==
 
@@ -46,22 +50,11 @@ The layout of the code is as follows:
 * ppm/: the multiple-viewpoint system modelling framework
 ** params.lisp: user-level parameters to the statistical modelling 
 ** multiple-viewpoint-system.lisp: modelling with multiple-viewpoints 
-** prediction-sets.lisp: representing and combining distributions, computing entropy
-and information content
+** prediction-sets.lisp: representing and combining distributions, computing entropy and information content
 
 * apps/: top-level applications for users 
 ** apps.lisp: pathnames and filenames for saving data and results
 ** main.lisp: top-level code for using the system
-** resampling.lisp: the main user interface - estimating information content
-by cross-validation
+** resampling.lisp: the main user interface - estimating information content by cross-validation
 ** viewpoint-selection.lisp: on tin does it says the what
 ** generation.lisp: code for generating melodies (possibly suffering from bitrot)
-
-==Top-level functions==
-
-idyom:idyom
-resampling:idyom-resample
-resampling:output-information-content
-
-For detailed documentation, see the wiki:
-https://code.soundsoftware.ac.uk/projects/idyom-project/wiki
