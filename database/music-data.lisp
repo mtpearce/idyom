@@ -486,21 +486,18 @@ a list containing the dataset-id is returned."))
 
 (defmethod get-attribute ((e mtp-event) attribute)
   "Returns the value for slot <attribute> in event object <e>."
-  (let* ((accessor-name 
-          (concatenate 'string "EVENT-" (string-upcase (symbol-name attribute))))
+  (let* ((accessor-name (string-upcase (symbol-name attribute)))
+	 (accessor-name 
+	  ;; for dataset-id, composition-id, event-id
+	  (if (string= (subseq (reverse accessor-name) 0 2) "DI")
+	      accessor-name
+	      (concatenate 'string "EVENT-" accessor-name)))
          (accessor-symbol (find-symbol accessor-name (find-package :mtp-admin))))
     (funcall accessor-symbol e)))
 
-;; (defmethod get-attribute ((e amuse-mtp:mtp-event) attribute)
-;;   "Returns the value for slot <attribute> in event object <e>."
-;;   (let* ((attribute 
-;;           (case attribute
-;;             ((:onset) 'amuse::time)
-;;             ((:dur) 'amuse::interval)
-;;             (t 
-;;              (find-symbol (string-upcase (symbol-name attribute)) 
-;;                           (find-package :amuse-mtp))))))
-;;     (slot-value e attribute)))
+(defmethod get-attribute ((e music-data::music-event) attribute)
+  "Returns the value for slot <attribute> in event object <e>."
+  (music-data:get-attribute e attribute))
 
 (defmethod copy-event ((l list))
   (make-instance 'mtp-event))

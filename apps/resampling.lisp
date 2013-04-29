@@ -193,7 +193,8 @@ dataset-id)."
                 ;; FOR EACH: event 
                 (dolist (ep (prediction-sets:prediction-set sp))
                   (let* ((event (prediction-sets:prediction-event ep))
-                         (event-id (mtp-admin:get-attribute event 'event-id))
+			 ;;; TODO: the following was (mtp-admin:get-attribute e 'event-id)
+                         (event-id (music-data:get-event-index (mtp-admin:get-attribute event 'identifier)))
                          (probability (float (probability ep) 0.0))
                          (distribution (prediction-sets:prediction-set ep))
                          (weights (prediction-sets:prediction-weights ep))
