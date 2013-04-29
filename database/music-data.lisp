@@ -626,16 +626,18 @@ per composition, as well as the domains of each event attribute."
 
 (defun describe-database (&key (attributes nil)
                           (output-stream *standard-output*)
-                          (mappings nil) (verbose nil))
+                          (mappings nil) (verbose nil) (quick t))
   "Prints information about all the datasets in database <db>." 
-  (mapc #'(lambda (id) (describe-dataset id 
-                                           :attributes attributes
-                                           :output-stream output-stream
-                                           :mappings mappings
-                                           :verbose verbose))
-        (clsql:select [dataset-id] :from 'mtp_dataset :order-by [dataset-id]
-                      :flatp t :field-names nil)))
-
+  (if quick
+      (clsql:print-query [select [dataset-id][description] :from [mtp-dataset] :order-by [dataset-id]])
+      (mapc #'(lambda (id) (describe-dataset id 
+					     :attributes attributes
+					     :output-stream output-stream
+					     :mappings mappings
+					     :verbose verbose))
+	    (clsql:select [dataset-id] :from 'mtp_dataset :order-by [dataset-id]
+			  :flatp t :field-names nil))))
+  
 (defun get-sequence (attribute dataset-id composition-id event-id length)
   "Returns a list of the values of <attribute> for the events with
 composition-id <composition-id>, dataset-id <dataset-id> and event-ids
