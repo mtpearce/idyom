@@ -3,7 +3,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2013-03-15 12:43:06 jeremy>                           
+;;;; Time-stamp: <2013-04-30 09:50:56 jeremy>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -371,6 +371,7 @@ supplied keyword parameters."
                            resampling-count)
   "Returns the filename in *model-directory* containing the ppm model
 for <viewpoint> in <dataset-id>."
+  (ensure-directories-exist *model-dir*)
   (string-append *model-dir*
                  (viewpoint-name viewpoint)
                  (if (null pretraining-ids) "_NIL"
@@ -425,6 +426,7 @@ for <viewpoint> in <dataset-id>."
 (defun get-resampling-sets (dataset-id &key (create? nil) (k 10))
   "Returns the resampling-sets for dataset <dataset-id>. If <create?> is
    null they are read from file, otherwise they are created." 
+  (ensure-directories-exist *resampling-dir*)
   (let* ((dataset-ids (if (consp dataset-id) dataset-id (list dataset-id)))
          (filename (get-resampling-sets-filename dataset-ids k)))
     (unless (and (null create?) (file-exists filename))
