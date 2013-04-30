@@ -2,7 +2,7 @@
 ;;;; File:       IDyOM.asd
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2003-05-04 21:29:04 marcusp>
-;;;; Time-stamp: <2013-04-22 22:25:52 jeremy>
+;;;; Time-stamp: <2013-04-30 10:05:04 jeremy>
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -11,6 +11,11 @@
 (in-package #:idyom-system)
 
 (defsystem idyom
+  :name "IDyOM"
+  :version "2.0"
+  :author "Marcus Pearce"
+  :licence "GPL (see COPYING file for details)"
+  :description "Information Dynamics of Music"
   :depends-on (clsql cl-ppcre midi closer-mop psgraph)
   :serial t
   :components
