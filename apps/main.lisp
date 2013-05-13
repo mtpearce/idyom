@@ -3,7 +3,7 @@
 ;;;; File:       main.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2010-11-01 15:19:57 marcusp>
-;;;; Time-stamp: <2013-02-28 15:18:00 jeremy>
+;;;; Time-stamp: <2013-05-13 23:38:05 jeremy>
 ;;;; ======================================================================
 
 (cl:in-package #:idyom)
@@ -50,8 +50,10 @@
 	      (models :both+)
 	      (ltmo mvs::*ltm-params*) (stmo mvs::*stm-params*)
               ;; Viewpoint selection 
-	      (basis :auto)
+	      (basis :default)
               (dp nil) (max-links 2)
+	      (vp-white '(:any))
+	      (vp-black nil)
               ;; Output 
               (detail 3) (output-path nil))
   "IDyOM top level: computes information profiles for basic
@@ -66,7 +68,7 @@
             models dataset-id target-viewpoints)
     (let* (; Generate candidate viewpoint systems
 	   (sel-basis (find-selection-basis target-viewpoints basis))
-	   (viewpoint-systems (generate-viewpoint-systems target-viewpoints sel-basis max-links))
+	   (viewpoint-systems (generate-viewpoint-systems sel-basis max-links vp-white vp-black))
            ; Select viewpoint system
 	   (selected (viewpoint-selection:dataset-viewpoint-selection
                       dataset-id target-viewpoints viewpoint-systems
@@ -93,6 +95,8 @@
 	   (if (null vps)
 	       (error "Auto viewpoint selection: no defined viewpoints found that might predict target viewpoints ~S" targets)
 	       vps)))
+	;; Default mode: use conservative default viewpoints for this target
+	((eq basis :default) *cpitch-viewpoints-short*)
 	;; Predefined viewpoint sets
 	((eq basis :ioi-views) *bioi-viewpoints*)
 	((eq basis :pitch-viewsA) *cpitch-viewpoints*)
@@ -100,18 +104,59 @@
 	;; Else use supplied viewpoints
 	(t basis)))
 
-(defun generate-viewpoint-systems (basic-viewpoints basis-vps max-links)
-  (if (= (length basic-viewpoints) 1)
-      ;; Single basic viewpoint
-      (progn (format t "Generating candidate viewpoints from: ~A~%" basis-vps)
-	     (reverse 
-	      (append basis-vps
-		      (sort (remove-if #'(lambda (x) (or (null x) (< (length x) 2) 
-							 (> (length x) max-links)))
-				       (utils:powerset basis-vps))
-			    #'(lambda (x y) (< (length x) (length y)))))))
-      ;; TODO: more than 1 basic viewpoint
-      (format t "~&Viewpoint selection unable to handle more than one basic viewpoint at present.~%")))
+;;
+;; Each candidate viewpoint must match at least viewpoint patterns on
+;; the whitelist, and none on the black.
+;;
+;; E.g. (generate-viewpoint-systems '(:cpitch :cpint :bioi :bioi-ratio) 3 '(:pitch (:pitch :pitch :ioi)) nil)
+;; => (:CPITCH :CPINT (:CPITCH :CPINT :BIOI-RATIO) (:CPITCH :CPINT :BIOI))
+;;
+(defun generate-viewpoint-systems (basis-vps max-links white black)
+      (format t "Generating candidate viewpoints from: ~A~%Max. links ~A, whitelist ~A, blacklist ~A~%" basis-vps max-links white black)
+      (let* ((links (remove-if #'(lambda (x) (or (null x) (< (length x) 2) 
+						 (> (length x) max-links)))
+			       (utils:powerset basis-vps)))
+	     (slinks (sort links #'(lambda (x y) (< (length x) (length y)))))
+	     (candidates (append basis-vps slinks))
+	     (filtered (remove-if-not #'(lambda (x) (and (match-vp-patterns x white)
+						       (not (match-vp-patterns x black))))
+				    candidates)))
+	(progn (format t "Candidate viewpoints: ~A~%" filtered)
+	       filtered)))
+
+(defun match-vp-patterns (vp patterns)
+  "Does the viewpoint match one of the patterns?"
+  (if (or (not (listp patterns))
+	  (null patterns))
+      nil
+      (or (match-vp-pattern vp (car patterns))
+	  (match-vp-patterns vp (cdr patterns)))))
+
+(defun match-vp-pattern (vp pattern)
+  "Does the viewpoint match this pattern?"
+  (or
+   ;; ATOMIC PATTERNS
+   ;;
+   ;; Match any viewpoint
+   (eq pattern :any)
+   ;; Pitch viewpoint
+   (and (eq pattern :pitch) (member vp *cpitch-viewpoints*))
+   ;; IOI viewpoint
+   (and (eq pattern :ioi) (member vp *bioi-viewpoints*))
+   ;;
+   ;; COMPOUND PATTERNS
+   ;;
+   (and (listp pattern)
+	(if (eq (car pattern) :or)
+	    ;; List of ground viewpoints
+	    (member vp (cdr pattern))
+	    ;; Match linked viewpoint
+	    (and (listp vp)
+		 (eq (length vp) (length pattern))
+		 (reduce #'(lambda (a b) (and a b))
+			 (mapcar #'match-vp-pattern vp pattern)))))))
+		 
+
 
 
 
