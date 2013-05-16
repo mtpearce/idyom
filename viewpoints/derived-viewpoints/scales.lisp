@@ -3,7 +3,7 @@
 ;;;; File:       scales.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2013-01-24 15:00:00 jeremy>
-;;;; Time-stamp: <2013-04-18 11:02:26 jeremy>
+;;;; Time-stamp: <2013-05-16 12:54:05 jeremy>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
@@ -40,16 +40,66 @@
                                           (1 (not (member (mod e *octave*) ds)))))
                           (viewpoint-alphabet (get-viewpoint 'cpitch)))))
 
+
+;; Western scale degree
+;;
+
+;; Pitch to tonic interval
+(define-viewpoint (tonint derived (cpitch))
+    (events element) 
+  :function (- (cpitch events)
+	       (+ (* (octave (list (car events))) *octave*)
+		  (* (referent events) 100))))
+
+(define-viewpoint (sdeg-west derived (cpitch))
+    (events element) 
+  :function (let* ((pitch (cpitch events))
+		   (interval (tonint events))
+		   (scale-intervals (case (mode events)
+				      (0 viewpoints::*major-intervals*)
+				      (9 viewpoints::*minor-intervals*)))
+		   (degree (degree interval scale-intervals)))
+	      (if (null degree)
+		  pitch
+		  (+ degree
+		     (* (- (utils:quotient interval *octave*)
+			   (if (< interval 0) 1 0))
+			7)))))
+		 
+;; Degree number for pitch interval
+(defun degree (interval scale-intervals)
+  (let ((degree nil)
+	(eqint (mod interval *octave*)))
+    (dotimes (n (length scale-intervals) degree)
+      (if (eq eqint (nth n scale-intervals))
+	  (setq degree (+ n 1))))))
+
+
 ;; Pitch scales
 ;;
 ;; A scale is defined as a list of pitch values, including a
 ;; distinguished tonic pitch.
 
 ;; Named pitches
-(defvar *c4* 5994)
 (defvar *a3* 5700) 
+(defvar *c4* 6000)
+(defvar *cs4* 6100)
+(defvar *d4* 6200)
+(defvar *ds4* 6300)
+(defvar *e* 6400)
+(defvar *f* 6500)
+(defvar *fs4* 6600)
+(defvar *g* 6700)
+(defvar *gs4* 6800)
 (defvar *a4* 6900) 
+(defvar *as4* 7000)
+(defvar *b4* 7100)
 (defvar *a5* 8100) 
+
+
+(defvar *major-intervals* '(0 200 400 500 700 900 1100))
+(defvar *minor-intervals* '(0 200 300 500 700 800 1000))
+
 
 (defun bottom-pitch (pitch)
   "Minimum octave equivalent pitch"
@@ -175,50 +225,25 @@ return that degree"
 
 
 ;;; Scale degree viewpoints
+;;; 
+;;; Various definitions of scale degree are implemented below, varying
+;;; in
+;;; a) which octaves are considered (just a3, a3-a5, or all)
+;;; b) how off-scale pitches are treated (use pitch value, or use 100
+;;; as an off-scale symbol) 
+;;;
+;;; Each viewpoint is specific to a particular scale, either
+;;; Hicaz or Ussak.  Note many other Turkish Makams/scales exist!
+;;;
+;;; This code could be replaced with a few macros.
+;;;
 
+;; Pitches in the a4 scale are replaced with scale degree, the rest
+;; are untouched.
 (define-viewpoint (sd-hicaz-a4 derived (cpitch))
     (events element)
   :function (let* ((pitch (cpitch events))
 		   (sd (scaledegree pitch *hicaz-a4*)))
-	      (if (not (null sd))
-		  sd
-		  pitch)))
-
-(define-viewpoint (sd-hicaz-a4-total derived (cpitch))
-    (events element)
-  :function (let* ((pitch (cpitch events))
-		   (sd (scaledegree pitch *hicaz-a4*)))
-	      (if (not (null sd))
-		  sd
-		  100)))
-
-(define-viewpoint (sd-hicaz-a3-5 derived (cpitch))
-    (events element)
-  :function (let* ((pitch (cpitch events))
-		   (sd (first-scaledegree pitch
-					  (list *hicaz-a4*
-						*hicaz-a3*
-						*hicaz-a5*))))
-	      (if (not (null sd))
-		  sd
-		  pitch)))
-
-(define-viewpoint (sd-hicaz-a3-5-total derived (cpitch))
-    (events element)
-  :function (let* ((pitch (cpitch events))
-		   (sd (first-scaledegree pitch
-					  (list *hicaz-a4*
-						*hicaz-a3*
-						*hicaz-a5*))))
-	      (if (not (null sd))
-		  sd
-		  100)))
-
-(define-viewpoint (sd-hicaz-octave derived (cpitch))
-    (events element)
-  :function (let* ((pitch (cpitch events))
-		   (sd (scaledegree-octave (mod pitch *octave*)
-					   *hicaz-bottom*)))
 	      (if (not (null sd))
 		  sd
 		  pitch)))
@@ -231,6 +256,18 @@ return that degree"
 		  sd
 		  pitch)))
 
+
+;; Scale degree for a4 pitches, others represented with off scale
+;; symbol (100).
+;;
+(define-viewpoint (sd-hicaz-a4-total derived (cpitch))
+    (events element)
+  :function (let* ((pitch (cpitch events))
+		   (sd (scaledegree pitch *hicaz-a4*)))
+	      (if (not (null sd))
+		  sd
+		  100)))
+
 (define-viewpoint (sd-ussak-a4-total derived (cpitch))
     (events element)
   :function (let* ((pitch (cpitch events))
@@ -238,6 +275,21 @@ return that degree"
 	      (if (not (null sd))
 		  sd
 		  100)))
+
+
+;; Pitches in the a4, a3 and a5 scales are replaced with scale degree,
+;; the rest are untouched.
+;;
+(define-viewpoint (sd-hicaz-a3-5 derived (cpitch))
+    (events element)
+  :function (let* ((pitch (cpitch events))
+		   (sd (first-scaledegree pitch
+					  (list *hicaz-a4*
+						*hicaz-a3*
+						*hicaz-a5*))))
+	      (if (not (null sd))
+		  sd
+		  pitch)))
 
 (define-viewpoint (sd-ussak-a3-5 derived (cpitch))
     (events element)
@@ -250,6 +302,22 @@ return that degree"
 		  sd
 		  pitch)))
 
+
+;; Pitches in the a4, a3 and a5 scales are replaced with scale degree,
+;; others represented with off scale symbol (100).
+;;
+(define-viewpoint (sd-hicaz-a3-5-total derived (cpitch))
+    (events element)
+  :function (let* ((pitch (cpitch events))
+		   (sd (first-scaledegree pitch
+					  (list *hicaz-a4*
+						*hicaz-a3*
+						*hicaz-a5*))))
+	      (if (not (null sd))
+		  sd
+		  100)))
+
+
 (define-viewpoint (sd-ussak-a3-5-total derived (cpitch))
     (events element)
   :function (let* ((pitch (cpitch events))
@@ -261,6 +329,20 @@ return that degree"
 		  sd
 		  100)))
 
+
+;; Scale degree is assigned over all octaves, off-scale pitches are
+;; left untouched.
+;;
+(define-viewpoint (sd-hicaz-octave derived (cpitch))
+    (events element)
+  :function (let* ((pitch (cpitch events))
+		   (sd (scaledegree-octave (mod pitch *octave*)
+					   *hicaz-bottom*)))
+	      (if (not (null sd))
+		  sd
+		  pitch)))
+
+
 (define-viewpoint (sd-ussak-octave derived (cpitch))
     (events element)
   :function (let* ((pitch (cpitch events))
@@ -269,3 +351,93 @@ return that degree"
 	      (if (not (null sd))
 		  sd
 		  pitch)))
+
+;; Scale degree is assigned over all octaves, off-scale pitches are
+;; left untouched.
+;;
+(define-viewpoint (sd-hicaz-octave-total derived (cpitch))
+    (events element)
+  :function (let* ((pitch (cpitch events))
+		   (sd (scaledegree-octave (mod pitch *octave*)
+					   *hicaz-bottom*)))
+	      (if (not (null sd))
+		  sd
+		  100)))
+
+(define-viewpoint (sd-ussak-octave-total derived (cpitch))
+    (events element)
+  :function (let* ((pitch (cpitch events))
+		   (sd (scaledegree-octave (mod pitch *octave*)
+					   *ussak-bottom*)))
+	      (if (not (null sd))
+		  sd
+		  100)))
+
+
+;; The viewpoints below have been written to analyse a set of Makam
+;; stimuli, and should be used carefully: they use *terrible* hacks to
+;; determine the scale of a composition.
+
+;; A scale degree viewpoint for Hicaz and Ussak.  A hack: it uses the
+;; composition descriptive text to select a Makam-specific viewpoint.
+;;
+;; This is very inefficient - use sd-makam-a4 below.
+(define-viewpoint (sd-makam-a4-desc derived (cpitch))
+    (events element)
+  :function (let* ((last (last-element events))
+		   (comp (music-data:get-composition (ident last)))
+		   (desc (music-data:description comp)))
+	      (if (equal (subseq desc 5 10) "hicaz")
+		  (sd-hicaz-a4 events)
+		  (sd-ussak-a4 events))))
+
+;; A quicker version on Makam scale degree, which relies on the
+;; mode viewpoint being used to indicate the current Makam scale.
+(define-viewpoint (sd-makam-a4 derived (cpitch))
+    (events element)
+  :function (if (eq (mode events) 0)
+		 (sd-hicaz-a4 events)
+		 (sd-ussak-a4 events)))
+
+(defvar *hicaz-mode* 0)
+(defvar *ussak-mode* 9)
+
+;; Store identity of current Makam in unused mode viewpoint
+(defun makam-modes (set-id)
+  (dotimes (n (mtp-admin:count-compositions set-id))
+    (let* ((text (mtp-admin:get-description set-id n))
+	   (mode (if (string= (subseq text 5 10)
+			    "hicaz")
+		     *hicaz-mode*
+		     *ussak-mode*))
+	   (cmd (concatenate 'string
+			     "UPDATE mtp_event SET mode=" (write-to-string mode)
+			     " WHERE dataset_id=" (write-to-string set-id)
+			     " and composition_id=" (write-to-string n))))
+      (clsql:execute-command cmd))))
+
+
+;; A 'general' scale degree viewpoint - a horrible hack that uses the
+;; dataset id to select a Western or Turkish scale degree viewpoint.
+(define-viewpoint (sdeg derived (cpitch))
+    (events element)
+  :function (let* ((last (last-element events))
+		   (set-id (music-data:get-dataset-index (music-data:ident last))))
+	      (if (< set-id 400)
+		  (sdeg-west events)
+		  (sd-makam-a4 events))))
+
+;; Scale degree interval
+(define-viewpoint (sdint derived (cpitch))
+    (events element) 
+  :function (multiple-value-bind (e1 e2)
+                (values-list (last events 2))
+              (if (or (null e1) (null e2)) +undefined+
+                  (let ((degree1 (sdeg (list e1)))
+                        (degree2 (sdeg (list e2))))
+                    (if (undefined-p degree1 degree2) +undefined+
+                        (let ((interval (- degree2 degree1)))
+			  (if (> (abs interval) 20)
+			      100
+			      interval)))))))
+			

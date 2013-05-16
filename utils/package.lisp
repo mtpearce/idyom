@@ -3,7 +3,7 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                           
-;;;; Time-stamp: <2013-04-18 11:10:59 jeremy>                           
+;;;; Time-stamp: <2013-05-16 12:54:32 jeremy>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -11,7 +11,7 @@
 (defpackage #:utils
   (:use #:cl)
   (:export "ROUND-TO-NEAREST-DECIMAL-PLACE" "AVERAGE" "GENERATE-INTEGERS"
-	   "POWERSET"
+	   "POWERSET" "QUOTIENT"
            "NTH-ROOT" "STRING-APPEND" "SPLIT-STRING" 
            "INSERTION-SORT" "CARTESIAN-PRODUCT" "FLATTEN" "COMBINATIONS"
 	   "FLATTEN-ORDER" "COUNT-FREQUENCIES" "NUMERIC-FREQUENCIES"

@@ -3,7 +3,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2013-04-17 15:47:59 jeremy>
+;;;; Time-stamp: <2013-05-16 12:52:08 jeremy>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -41,6 +41,8 @@
       (let ((ps (powerset (cdr l))))
         (append ps (mapcar #'(lambda (x) (cons (car l) x)) ps)))))
 
+(defun quotient (x y)
+  (car (multiple-value-list (truncate (/ x y)))))
 
 ;;;===========================================================================
 ;;; Strings 
