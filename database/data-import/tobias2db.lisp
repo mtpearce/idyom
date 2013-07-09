@@ -1,9 +1,8 @@
-;;;; -*- Mode: LISP; Syntax: ANSI-Common-Lisp; Base: 10 -*-
 ;;;; ======================================================================
 ;;;; File:       tobias2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2007-04-19 11:15:57 marcusp>
-;;;; Time-stamp: <2013-04-05 13:24:20 jeremy>
+;;;; Time-stamp: <2013-07-09 16:48:51 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:tobias2db) 
@@ -62,6 +61,7 @@
 
 (defun make-event-alist (pitch onset)
   (list (list :onset onset)
+        (list :bioi *duration*)
         (list :dur *duration*)
         (list :deltast 0)
         (list :cpitch (* pitch 100))
