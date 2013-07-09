@@ -1,9 +1,8 @@
-;;;; -*- Mode: LISP; Syntax: ANSI-Common-Lisp; Base: 10 -*-
 ;;;; ======================================================================
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2013-05-16 12:52:08 jeremy>
+;;;; Time-stamp: <2013-07-09 16:45:17 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -244,7 +243,7 @@
       (with-standard-io-syntax
           (let ((*package* (find-package package)))
             (funcall fun object s))))
-    #-win32 (gzip filename)))
+    (gzip filename)))
       
 (defun read-object-from-file (filename &optional (package :cl-user))
   (let ((gzipped-filename (add-file-suffix filename ".gz")))
@@ -278,12 +277,16 @@
   (string-append filename suffix))
 
 (defun gunzip (filename)
-  #+(and x86-64 linux) (shell-command "/bin/gunzip" (list filename))
-  #-(and x86-64 linux) (shell-command "/usr/bin/gunzip" (list filename)))
+  #-win32
+  (progn
+    #+(and x86-64 linux) (shell-command "/bin/gunzip" (list filename))
+    #-(and x86-64 linux) (shell-command "/usr/bin/gunzip" (list filename))))
 
 (defun gzip (filename)
-  #+(and x86-64 linux) (shell-command "/bin/gzip" (list filename))
-  #-(and x86-64 linux) (shell-command "/usr/bin/gzip" (list filename)))
+  #-win32
+  (progn
+    #+(and x86-64 linux) (shell-command "/bin/gzip" (list filename))
+    #-(and x86-64 linux) (shell-command "/usr/bin/gzip" (list filename))))
 
 
 ;;;===========================================================================
