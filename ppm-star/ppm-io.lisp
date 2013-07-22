@@ -2,7 +2,7 @@
 ;;;; File:       ppm-io.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2013-04-17 15:47:59 marcusp>
+;;;; Time-stamp: <2013-07-22 08:56:32 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package :ppm)
@@ -52,7 +52,7 @@
   "Returns a PPM model initialised with the supplied parameters. If
    <filename> exists the model is read from the designated file otherwise
    it is constructed from the database and written to <filename>." 
-  (unless (file-exists filename)
+  (unless (utils:file-exists filename)
     (let ((model (make-ppm alphabet)))
       (model-dataset model dataset :construct? t :predict? nil)
       (write-model-to-file model filename)
