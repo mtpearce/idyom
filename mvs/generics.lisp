@@ -1,9 +1,8 @@
-;;;; -*- Mode: LISP; Syntax: ANSI-Common-Lisp; Base: 10 -*-
 ;;;; ======================================================================
 ;;;; File:       generics.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2004-10-28 11:56:59 marcusp>
-;;;; Time-stamp: <2008-11-03 14:08:54 marcusp>
+;;;; Time-stamp: <2014-01-28 09:54:13 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:prediction-sets)

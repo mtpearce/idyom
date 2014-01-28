@@ -1,9 +1,8 @@
-;;;; -*- Mode: LISP; Syntax: ANSI-Common-Lisp; Base: 10 -*-
 ;;;; ======================================================================
 ;;;; File:       db2midi.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2005-06-09 11:01:51 marcusp>
-;;;; Time-stamp: <2013-04-17 16:43:13 jeremy>
+;;;; Time-stamp: <2014-01-28 09:52:38 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:db2midi)

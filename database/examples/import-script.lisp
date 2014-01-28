@@ -1,4 +1,3 @@
-;;;; -*- Mode: LISP; Syntax: ANSI-Common-Lisp; Base: 10 -*-
 ;;;; ======================================================================
 ;;;; File:       import-script.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>

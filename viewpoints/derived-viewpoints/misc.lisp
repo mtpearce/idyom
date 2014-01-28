@@ -1,9 +1,8 @@
-;;;; -*- Mode: LISP; Syntax: ANSI-Common-Lisp; Base: 10 -*-
 ;;;; ======================================================================
 ;;;; File:       misc.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2013-01-24 15:00:00 jeremy>
-;;;; Time-stamp: <2013-02-27 15:11:54 jeremy>
+;;;; Time-stamp: <2014-01-28 09:57:29 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)

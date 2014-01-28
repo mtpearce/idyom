@@ -1,9 +1,8 @@
-;;;; -*- Mode: LISP; Syntax: ANSI-Common-Lisp; Base: 10 -*-
 ;;;; ======================================================================
 ;;;; File:       apps.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2005-11-27 16:27:35 marcusp>
-;;;; Time-stamp: <2013-02-26 15:41:36 jeremy>
+;;;; Time-stamp: <2014-01-28 09:50:08 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:apps) 

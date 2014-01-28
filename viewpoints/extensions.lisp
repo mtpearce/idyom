@@ -1,9 +1,8 @@
-;;;; -*- Mode: LISP; Syntax: ANSI-Common-Lisp; Base: 10 -*-
 ;;;; ======================================================================
 ;;;; File:       viewpoint-extensions.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2008-10-31 13:08:09 marcusp>
-;;;; Time-stamp: <2013-04-17 15:50:50 jeremy>
+;;;; Time-stamp: <2014-01-28 09:56:10 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints) 

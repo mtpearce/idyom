@@ -1,9 +1,8 @@
-;;;; -*- Mode: LISP; Syntax: ANSI-Common-Lisp; Base: 10 -*-
 ;;;; ======================================================================
 ;;;; File:       implication-realisation.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2013-01-24 15:00:00 jeremy>
-;;;; Time-stamp: <2013-02-27 12:51:32 jeremy>
+;;;; Time-stamp: <2014-01-28 09:57:32 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)

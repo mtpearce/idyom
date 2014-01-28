@@ -1,9 +1,8 @@
-;;;; -*- Mode: LISP; Syntax: ANSI-Common-Lisp; Base: 10 -*-             
 ;;;; ======================================================================
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                           
-;;;; Time-stamp: <2013-02-21 15:44:06 jeremy>                           
+;;;; Time-stamp: <2014-01-28 09:50:51 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)

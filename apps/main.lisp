@@ -1,9 +1,8 @@
-;;;; -*- Mode: LISP; Syntax: ANSI-Common-Lisp; Base: 10 -*-
 ;;;; ======================================================================
 ;;;; File:       main.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2010-11-01 15:19:57 marcusp>
-;;;; Time-stamp: <2013-05-13 23:38:05 jeremy>
+;;;; Time-stamp: <2014-01-28 09:49:54 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:idyom)

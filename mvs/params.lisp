@@ -1,9 +1,8 @@
-;;;; -*- Mode: LISP; Syntax: ANSI-Common-Lisp; Base: 10 -*-             
 ;;;; ======================================================================
 ;;;; File:       params.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2003-06-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2012-12-09 20:13:49 jeremy>                           
+;;;; Time-stamp: <2014-01-28 09:54:02 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:mvs)

@@ -1,9 +1,8 @@
-;;;; -*- Mode: LISP; Syntax: ANSI-Common-Lisp; Base: 10 -*-
 ;;;; ======================================================================
 ;;;; File:       scales.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2013-01-24 15:00:00 jeremy>
-;;;; Time-stamp: <2013-05-16 12:54:05 jeremy>
+;;;; Time-stamp: <2014-01-28 09:57:22 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
