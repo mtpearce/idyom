@@ -2,7 +2,7 @@
 ;;;; File:       events.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2013-04-12 12:46:19 jeremy>
-;;;; Time-stamp: <2013-04-23 15:25:18 jeremy>
+;;;; Time-stamp: <2014-01-28 09:45:33 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -22,6 +22,9 @@
   (:documentation "Integer index for composition"))
 (defgeneric get-event-index (event-identifier)
   (:documentation "Integer index for event"))
+
+;; Get an identifier
+(defgeneric get-identifier (object))
 
 ;; Copy identifier
 (defgeneric copy-identifier (id))
@@ -125,10 +128,7 @@
             ornament comma articulation))
 (defvar *md-music-slots* (mapcar #'music-symbol *music-slots*))
 
-
-
 (defgeneric get-alphabet (attribute dataset))
-
 
 (defmethod copy-event ((e music-event))
   (make-instance 'music-event
@@ -151,9 +151,6 @@
                  :comma (comma e)
                  :articulation (articulation e)
                  :voice (voice e)))
-
-
-
 
 ;; Moved from amuse/implementations/mtp
 
@@ -189,7 +186,7 @@
 ;  (/ (timebase event) 4))
 
 (defmethod timebase ((event music-event))
-  (timebase (identifier event)))
+  (timebase (ident event)))
 
 (defmethod timebase ((id composition-identifier))
   (composition-timebase (get-composition id)))

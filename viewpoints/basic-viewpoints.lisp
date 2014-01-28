@@ -1,9 +1,8 @@
-;;;; -*- Mode: LISP; Syntax: ANSI-Common-Lisp; Base: 10 -*-
 ;;;; ======================================================================
 ;;;; File:       basic-viewpoints.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2013-01-24 15:00:00 jeremy>
-;;;; Time-stamp: <2013-04-17 16:48:53 jeremy>
+;;;; Time-stamp: <2014-01-27 17:25:32 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
@@ -62,7 +61,7 @@
 ;; Gap between last note and its predecessor (returns 0 for first
 ;; note).  
 (define-basic-viewpoint deltast (events)
-  (if (slot-exists-p (car (last events)) 'mtp-data::deltast)
+  (if (slot-exists-p (car (last events)) 'mtp-data::deltast) ;; todo check whether this should be 'music-data::deltast
       ;; Special case for MTP-EVENT
       (md:deltast (last-element events))
       ;; Otherwise calculate it 
@@ -83,7 +82,7 @@
 ;; (returns 0 for first note).
 (define-basic-viewpoint bioi (events)
   ;; BIOI = Basic IOI (IOI as a basic feature) 
-  (if (slot-exists-p (car (last events)) 'mtp-data::bioi)
+  (if (slot-exists-p (car (last events)) 'music-data::bioi) ;;'mtp-data::bioi)
       ;; Special case for MTP-EVENT
       (md:bioi (car (last events)))
       (let* ((last-element (last-element events))

@@ -1,13 +1,14 @@
-;;;; -*- Mode: LISP; Syntax: ANSI-Common-Lisp; Base: 10 -*-
 ;;;; ======================================================================
 ;;;; File:       temporal.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2013-01-24 15:00:00 jeremy>
-;;;; Time-stamp: <2013-04-17 17:18:44 jeremy>
+;;;; Time-stamp: <2014-01-27 17:27:08 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
 
+(defun timebase (event)
+  (md:timebase event))
 
 ;; Duration of last / duration of previous
 (define-viewpoint (dur-ratio derived (dur))
@@ -64,6 +65,8 @@
               (if (or (null e1) (null e2)) +undefined+
                   (let ((ioi1 (bioi (list e1)))
                         (ioi2 (bioi (list e2))))
+                    ;;(print (list (slot-value e1 'md::bioi) (slot-value e2 'md::bioi)))
+                    ;;(print (list ioi1 ioi2))
                     (if (or (zerop ioi1) (undefined-p ioi1 ioi2)) +undefined+
                         (/ ioi2 ioi1)))))
   :function* (let ((penultimate-element (list (penultimate-element events))))
@@ -93,7 +96,7 @@
     (events element) 
   :function (let ((barlength (barlength events))
 		  (pulses (pulses events))
-		  (timebase (last-element events)))
+		  (timebase (timebase (last-element events))))
 	      (cond ((undefined-p barlength pulses) +undefined+)
 		    ((zerop barlength) +undefined+)
 		    ((zerop pulses) +undefined+)
