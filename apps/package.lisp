@@ -1,8 +1,8 @@
 ;;;; ======================================================================
 ;;;; File:       package.lisp
-;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
-;;;; Created:    <2003-04-05 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-01-28 09:49:50 marcusp>                           
+;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
+;;;; Created:    <2003-04-05 18:54:17 marcusp>                        
+;;;; Time-stamp: <2014-02-07 23:10:27 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -14,7 +14,7 @@
 
 (defpackage #:idyom
   (:use #:cl)
-  (:export "IDYOM")
+  (:export "IDYOM" "CONKLIN90" "CONKWIT95" "PEARCE05")
   (:documentation "Main access to IDyOM functionality."))
 
 (defpackage #:resampling 
@@ -24,7 +24,6 @@
            "BUILD-EP-CACHE" "SELECT-VIEWPOINTS-FOR-GENERATION" 
            "GET-RESAMPLING-SETS" "GET-TRAINING-SET" "GET-TEST-SET" 
            "GET-LONG-TERM-MODELS"
-           "CONKLIN90" "CONKWIT95" "PEARCE05"
            "TEST-COMBINATIONS")
   (:documentation "Prediction of datasets using cross-validation."))
 
