@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2013-08-08 11:40:17 marcusp>                           
+;;;; Time-stamp: <2014-02-07 19:08:05 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -196,6 +196,7 @@ dataset-id)."
                          (event-id (music-data:get-event-index (mtp-admin:get-attribute event 'identifier)))
                          (probability (float (probability ep) 0.0))
                          (distribution (prediction-sets:prediction-set ep))
+                         (orders (prediction-sets:prediction-order ep))
                          (weights (prediction-sets:prediction-weights ep))
                          (existing-results (gethash (list composition-id event-id) results))
                          (event-results (if existing-results existing-results (make-hash-table)))
@@ -212,8 +213,10 @@ dataset-id)."
                             (setf value (* value (/ timebase 96))))
                           (setf (gethash attribute event-results) value))))
                     ;; Store feature prediction
-                    (setf (gethash (create-key feature 'weight.ltm) event-results) (car weights))
-                    (setf (gethash (create-key feature 'weight.stm) event-results) (cadr weights))
+                    (dolist (o orders) ; orders
+                      (setf (gethash (create-key feature (car o)) event-results) (cadr o)))
+                    (dolist (w weights) ; weights
+                      (setf (gethash (create-key feature (car w)) event-results) (cadr w)))
                     (setf (gethash (create-key feature 'probability) event-results) probability)
                     (setf (gethash (create-key feature 'information.content) event-results) (- (log probability 2)))
                     (setf (gethash (create-key feature 'entropy) event-results) (float (prediction-sets:shannon-entropy distribution) 0.0))

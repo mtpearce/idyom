@@ -2,7 +2,7 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-01-28 09:54:05 marcusp>                           
+;;;; Time-stamp: <2014-02-07 17:22:28 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -11,7 +11,7 @@
   (:use #:cl #:utils #:viewpoints)
   (:export "DATASET-PREDICTION" "COMPOSITION-PREDICTION" "EVENT-PREDICTION"
            "PREDICTION-VIEWPOINT" "PREDICTION-SET" "PREDICTION-ELEMENT"
-           "PREDICTION-INDEX" "PREDICTION-WEIGHTS" "PREDICTION-EVENT"
+           "PREDICTION-INDEX" "PREDICTION-WEIGHTS" "PREDICTION-EVENT" "PREDICTION-ORDER"
            "MAKE-EVENT-PREDICTION" "MAKE-DATASET-PREDICTION" "MAKE-SEQUENCE-PREDICTION"
            "MULTIPLY-PREDICTIONS" "COMBINE-DISTRIBUTIONS" "ARITHMETIC-COMBINATION"
            "GEOMETRIC-COMBINATION" "RANKED-COMBINATION" "BAYESIAN-COMBINATION"

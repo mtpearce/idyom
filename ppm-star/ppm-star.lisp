@@ -2,7 +2,7 @@
 ;;;; File:       ppm-star.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-01-28 09:54:48 marcusp>                           
+;;;; Time-stamp: <2014-02-07 16:30:24 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -559,10 +559,15 @@
    is called."
   (add-event-to-model-dataset m symbol)
   (let* ((novel? (when construct? (unless (occurs? m location symbol) t)))
-         (distribution (when predict? (get-distribution m location)))
-         (next-location (ukkstep m nil location symbol construct?)))
+         (next-location (ukkstep m nil location symbol construct?))
+         (distribution nil)
+         (order nil))
+    (when predict?
+      (multiple-value-bind (d o)
+          (get-distribution m location)
+        (setf distribution d order o)))
     (when construct? (increment-counts m next-location novel?))
-    (values next-location distribution)))
+    (values next-location distribution order)))
 
 
 ;;;===========================================================================
@@ -830,8 +835,9 @@
    symbol from that location."
   (multiple-value-bind (selected-location selected?)
       (select-state m location)
-    ;(format t "~S~%" (get-order m location))
-    (probability-distribution m selected-location selected?)))
+    ;; (format t "~S~%" (get-order m selected-location))
+    (values (probability-distribution m selected-location selected?)
+            (get-order m selected-location))))
     
 (defmethod select-state ((m ppm) location)
   "Returns the shortest deterministic state on the chain of suffix links

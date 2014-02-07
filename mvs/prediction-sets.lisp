@@ -2,7 +2,7 @@
 ;;;; File:       prediction-sets.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2003-04-18 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-01-28 09:53:59 marcusp>                           
+;;;; Time-stamp: <2014-02-07 19:11:19 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -20,34 +20,40 @@
 ;;;========================================================================
 
 (defclass dataset-prediction ()
-  ((viewpoint :accessor prediction-viewpoint :initarg :viewpoint
+  ((basic-viewpoint :accessor basic-viewpoint :initarg :basic-viewpoint :type (or null viewpoint))
+   (viewpoint :accessor prediction-viewpoint :initarg :viewpoint
               :type (or null viewpoints:viewpoint))
    (set       :accessor prediction-set :initarg :set :type list)))
 
 (defclass sequence-prediction ()
-  ((viewpoint :accessor prediction-viewpoint :initarg :viewpoint
+  ((basic-viewpoint :accessor basic-viewpoint :initarg :basic-viewpoint :type (or null viewpoint))
+   (viewpoint :accessor prediction-viewpoint :initarg :viewpoint
               :type (or null viewpoint))
    (index     :accessor prediction-index :initarg :index :type (integer 0 *))
    (set       :accessor prediction-set :initarg :set :type list)))
 
 (defclass event-prediction ()
-  ((viewpoint :accessor prediction-viewpoint :initarg :viewpoint
+  ((basic-viewpoint :accessor basic-viewpoint :initarg :basic-viewpoint :type (or null viewpoint))
+   (viewpoint :accessor prediction-viewpoint :initarg :viewpoint
               :type (or null viewpoint))
+   (order     :accessor prediction-order :initarg :order)
    (event     :accessor prediction-event :initarg :event)
    (weights   :accessor prediction-weights :initarg :weights)
    (element   :accessor prediction-element :initarg :element)
    (set       :accessor prediction-set :initarg :set :type list)))
 
-(defun make-dataset-prediction (&key viewpoint set)
-  (make-instance 'dataset-prediction :viewpoint viewpoint :set set))
+(defun make-dataset-prediction (&key viewpoint set basic-viewpoint)
+  (make-instance 'dataset-prediction :viewpoint viewpoint :set set 
+                 :basic-viewpoint basic-viewpoint))
 
-(defun make-sequence-prediction (&key viewpoint index set)
+(defun make-sequence-prediction (&key viewpoint index set basic-viewpoint)
   (make-instance 'sequence-prediction :viewpoint viewpoint :index index
-                 :set set))
+                 :set set :basic-viewpoint basic-viewpoint))
 
-(defun make-event-prediction (&key viewpoint element set event weights)
+(defun make-event-prediction (&key viewpoint element set event weights basic-viewpoint order)
   (make-instance 'event-prediction :viewpoint viewpoint :element element
-                 :set set :event event :weights weights))
+                 :set set :event event :weights weights 
+                 :order order :basic-viewpoint basic-viewpoint))
 
 ;;;========================================================================
 ;;; Entropies for dataset and sequence prediction sets
@@ -207,23 +213,29 @@
                               type)
   "Combines a list of distributionse using the combination function
    <function> with a bias value of <bias>. Type is a symbol reflecting
-   the type of combination: STM-LTM and VIEWPOINT are meaningful
+   the type of combination: STM-LTM, STM and LTM are meaningful
    values."
-  (declare (ignore type))
   (let ((f (find-symbol (symbol-name function) (find-package :prediction-sets)))
         (distributions (mapcar #'prediction-set event-predictions))
+        (old-weights (mapcar #'prediction-weights event-predictions))
+        (orders (mapcar #'prediction-order event-predictions))
         (element (prediction-element (car event-predictions)))
         (viewpoint (prediction-viewpoint (car event-predictions))))
     (multiple-value-bind (set weights)
         (funcall f distributions bias)
-      ;; (when (eq type :ltm-stm) (print-weights weights))
       (make-event-prediction
-       :viewpoint viewpoint
-       :element   element
+       :basic-viewpoint (basic-viewpoint (car event-predictions))
+       :viewpoint viewpoint ; (if (eq type :ltm-stm) viewpoint (mapcar #'prediction-viewpoint event-predictions))
+       :element   element 
        :event     (prediction-event (car event-predictions))
-       ;; NB: This will be LTM-STM weights as long as ltm-stm 
-       ;; combination is done after viewpoint combination.
-       :weights   (normalise-weights weights)
+       :order (if (eq type :ltm-stm) 
+                  (reduce #'append orders)
+                  (mapcar #'(lambda (ep o) (list (utils:string-append (format nil "order.~(~A~)." type) (viewpoints:viewpoint-name (prediction-viewpoint ep))) o))
+                          event-predictions orders))
+       :weights   (if (eq type :ltm-stm)
+                      (append (mapcar #'list '("weight.ltm" "weight.stm") (normalise-weights weights)) (reduce #'append old-weights))
+                      (mapcar #'(lambda (ep w) (list (utils:string-append (format nil "weight.~(~A~)." type) (viewpoints:viewpoint-name (prediction-viewpoint ep))) w))
+                              event-predictions (normalise-weights weights)))
        :set       set))))
   
 (defun print-weights (weights)

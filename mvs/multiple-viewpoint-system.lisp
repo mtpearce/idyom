@@ -2,7 +2,7 @@
 ;;;; File:       multiple-viewpoint-system.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2003-04-27 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-01-28 09:54:09 marcusp>                           
+;;;; Time-stamp: <2014-02-07 17:54:28 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -375,7 +375,7 @@ multiple viewpoint system <m>."
         (unless (undefined-p event)
           ;;(when predict? 
           ;;  (format t "~&LTM: ~S" (viewpoints:viewpoint-name viewpoint)))
-          (multiple-value-bind (ltm-next-location ltm-distribution)
+          (multiple-value-bind (ltm-next-location ltm-distribution ltm-order)
               (ppm:ppm-model-event ltm event :location ltm-location 
                                :construct? (and construct? 
                                                 (or (eq *models* :ltm+)
@@ -387,15 +387,16 @@ multiple viewpoint system <m>."
                                                   (eq *models* :both+))))
             (setf (aref ltm-locations i) ltm-next-location)
             ;(format t "~&ltm-distribution = ~&~A~%" ltm-distribution)
-            (push (make-event-prediction :viewpoint viewpoint
+            (push (make-event-prediction :order ltm-order
+                                         :viewpoint viewpoint
                                          :event (car (last events))
                                          :element event
                                          :set ltm-distribution)
                   ltm-prediction-sets))
           
           ;;(when predict? 
-          ;;  (format t "~&STM: ~S" (viewpoints:viewpoint-name viewpoint)))
-          (multiple-value-bind (stm-next-location stm-distribution)
+            ;;(format t "~&STM: ~S" (viewpoints:viewpoint-name viewpoint)))
+          (multiple-value-bind (stm-next-location stm-distribution stm-order)
               (ppm:ppm-model-event stm event :location stm-location 
                                :construct? (or (eq *models* :stm)
                                                (eq *models* :both) 
@@ -405,7 +406,9 @@ multiple viewpoint system <m>."
                                                   (eq *models* :both) 
                                                   (eq *models* :both+))))
             (setf (aref stm-locations i) stm-next-location)
-            (push (make-event-prediction :viewpoint viewpoint
+            ;; (format t "~&stm-distribution = ~&~A~%" stm-distribution)
+            (push (make-event-prediction :order stm-order
+                                         :viewpoint viewpoint
                                          :event (car (last events))
                                          :element event
                                          :set stm-distribution)
@@ -433,8 +436,8 @@ multiple viewpoint system <m>."
       (combine-viewpoint-predictions basic-viewpoints stm-prediction-sets 
                                      events :stm)))))
 
-(defun combine-viewpoint-distributions (dists) 
-  (combine-distributions dists *viewpoint-combination* *viewpoint-bias* :viewpoint))
+(defun combine-viewpoint-distributions (dists model) 
+  (combine-distributions dists *viewpoint-combination* *viewpoint-bias* model))
 
 (defun combine-ltm-stm-distributions (dists) 
   (combine-distributions dists *ltm-stm-combination* *ltm-stm-bias* :ltm-stm))
@@ -479,6 +482,8 @@ multiple viewpoint system <m>."
               ;; 3. uniform distrubution over basic alphabet; 
               (push 
                (make-event-prediction
+                :basic-viewpoint basic-viewpoint
+                :order 0
                 :viewpoint basic-viewpoint
                 :event (car (last events))
                 :element (viewpoint-element basic-viewpoint events)
@@ -499,7 +504,7 @@ multiple viewpoint system <m>."
                                  (prediction-viewpoint derived-prediction-set))
                                 (car (last events)))
                       (push basic-distribution basic-distributions))))
-                (push (combine-viewpoint-distributions basic-distributions)
+                (push (combine-viewpoint-distributions basic-distributions model)
                       distributions)))))
       (reverse distributions))))
 
@@ -554,7 +559,10 @@ given a sequence of events <sequence>."
         (format t "~&~A (~A) = ~&~A~%" (viewpoint-name basic-viewpoint)
                 viewpoint-element distribution))
       (make-event-prediction
-       :viewpoint basic-viewpoint
+       :basic-viewpoint basic-viewpoint
+       :viewpoint derived-viewpoint
+       :order (prediction-sets:prediction-order derived-prediction-set)
+       :weights (prediction-sets:prediction-weights derived-prediction-set)
        :event (car (last events))
        :element viewpoint-element
        :set distribution))))
