@@ -1,8 +1,8 @@
 ;;;; ======================================================================
 ;;;; File:       multiple-viewpoint-system.lisp
-;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
+;;;; Author:     Marcus Pearce <marcus.pearce@.qmul.ac.uk>
 ;;;; Created:    <2003-04-27 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-02-07 17:54:28 marcusp>                           
+;;;; Time-stamp: <2014-02-07 19:30:59 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 

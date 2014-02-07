@@ -1,8 +1,8 @@
 ;;;; ======================================================================
 ;;;; File:       prediction-sets.lisp
-;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
+;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-18 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-02-07 19:11:19 marcusp>                           
+;;;; Time-stamp: <2014-02-07 19:30:48 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 

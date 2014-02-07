@@ -1,8 +1,8 @@
 ;;;; ======================================================================
 ;;;; File:       ppm-star.lisp
-;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
+;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-02-07 16:30:24 marcusp>                           
+;;;; Time-stamp: <2014-02-07 19:31:22 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 

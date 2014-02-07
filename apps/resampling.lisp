@@ -1,8 +1,8 @@
 ;;;; ======================================================================
 ;;;; File:       resampling.lisp
-;;;; Author:     Marcus  Pearce <marcus.pearce@eecs.qmul.ac.uk>
+;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-02-07 19:08:05 marcusp>                           
+;;;; Time-stamp: <2014-02-07 19:49:31 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -290,66 +290,6 @@ dataset-id)."
                     (mapcar (lambda (x) (float (cadr x) 0.0f0)) distribution))                    
             (incf event-id)))
       (incf melody-index)))))
-
-
-;;;===========================================================================
-;;; Conklin (1990), Conklin and Witten (1995), and Pearce (2005)
-;;;===========================================================================
-
-(defun conklin90 (&optional (dataset 2) (resampling-indices '(0)))
-  (format 
-   t "~&Simulation of the pitch-based features of Conklin (1990, Experiment 8, p. 115).~%")
-  (let ((viewpoints '(cpint
-                      (cpint ioi)
-                      (cpintfiph contour)
-                      (cpintfref cpintfip)
-                      (cpintfib barlength))))
-    (output-information-content 
-     (idyom-resample dataset '(cpitch) viewpoints
-                         :resampling-indices resampling-indices)
-     1)))
-
-(defun conkwit95 (&optional (dataset 2) (resampling-indices '(1)))
-  (format 
-   t "~&Simulation of the experiments of Conklin & Witten (1995, Table 4).~%")
-  (let ((systems '((cpitch)
-                   (cpint)
-                   ((cpint ioi))
-                   ((cpint ioi) cpitch)
-                   ((cpintfref cpint))
-                   ((cpintfref cpint) (cpint ioi))
-                   ((cpintfref cpint) (cpint ioi) cpitch)
-                   ((cpintfref cpint) (cpint ioi) cpitch (cpintfref fib))))
-        (system-id 1))
-    (dolist (system systems)
-      (let ((mean-ic 
-             (output-information-content 
-              (idyom-resample dataset '(cpitch) system
-                                  :resampling-indices resampling-indices)
-              1)))
-        (format t "~&System ~A; Mean Information Content: ~,2F ~%" system-id 
-                mean-ic)
-        (incf system-id)))))
-
-(defun pearce05 (&optional (dataset-id 1))
-  (format t "~&Simulation of the experiments of Pearce (2005, Table 9.1/9.8, p. 191/206).~%")
-  (let ((systems '((A (cpitch))
-                   (B (cpintfip (cpintfref dur-ratio) thrfiph))
-                   (C (thrfiph cpintfip (cpint dur-ratio) (cpintfref dur) 
-                       thrtactus (cpintfref fib) (cpitch dur) 
-                       (cpintfref cpintfip) (cpint dur)))
-                   (D (cpintfiph (cpintfref dur) (cpint inscale) 
-                       (cpint dur-ratio) (cpintfref liph) thrfiph 
-                       (cpitch dur) (cpintfref cpintfip) 
-                       (cpintfref mode) (cpint dur))))))
-    (dolist (system systems)
-      (let ((mean-ic 
-             (output-information-content 
-              (idyom-resample dataset-id '(cpitch) (cadr system) :k 10)
-              1)))
-        (format t "~&System ~A; Mean Information Content: ~,2F ~%" (car system) 
-                mean-ic)))))
-
   
 ;;;===========================================================================
 ;;; Constructing the Long term models 

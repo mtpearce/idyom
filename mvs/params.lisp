@@ -1,8 +1,8 @@
 ;;;; ======================================================================
 ;;;; File:       params.lisp
-;;;; Author:     Marcus  Pearce <marcus.pearce@eecs.qmul.ac.uk>
+;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-06-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-01-28 09:54:02 marcusp>                           
+;;;; Time-stamp: <2014-02-07 19:31:30 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:mvs)

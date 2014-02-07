@@ -1,8 +1,8 @@
 ;;;; ======================================================================
 ;;;; File:       main.lisp
-;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
+;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2010-11-01 15:19:57 marcusp>
-;;;; Time-stamp: <2014-01-28 09:49:54 marcusp>
+;;;; Time-stamp: <2014-02-07 19:51:09 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:idyom)
@@ -156,20 +156,49 @@
 			 (mapcar #'match-vp-pattern vp pattern)))))))
 		 
 
+;;;===========================================================================
+;;; Simulation of Conklin (1990), Conklin and Witten (1995), and Pearce (2005)
+;;;===========================================================================
+
+(defun conklin90 (&optional (dataset 2) (resampling-indices '(0)))
+  (format t "~&Simulation of the pitch-based features of Conklin (1990, Experiment 8, p. 115).~%")
+  (let ((viewpoints '(cpint
+                      (cpint ioi)
+                      (cpintfiph contour)
+                      (cpintfref cpintfip)
+                      (cpintfib barlength))))
+    (idyom:idyom dataset '(cpitch) viewpoints :resampling-indices resampling-indices :detail 1)))
+
+(defun conkwit95 (&optional (dataset 2) (resampling-indices '(1)))
+  (format t "~&Simulation of the experiments of Conklin & Witten (1995, Table 4).~%")
+  (let ((systems '((cpitch)
+                   (cpint)
+                   ((cpint ioi))
+                   ((cpint ioi) cpitch)
+                   ((cpintfref cpint))
+                   ((cpintfref cpint) (cpint ioi))
+                   ((cpintfref cpint) (cpint ioi) cpitch)
+                   ((cpintfref cpint) (cpint ioi) cpitch (cpintfref fib))))
+        (system-id 1))
+    (dolist (system systems)
+      (let ((mean-ic (idyom:idyom dataset '(cpitch) system :resampling-indices resampling-indices :detail 1)))
+        (format t "~&System ~A; Mean Information Content: ~,2F ~%" system-id mean-ic)
+        (incf system-id)))))
+
+(defun pearce05 (&optional (dataset-id 1))
+  (format t "~&Simulation of the experiments of Pearce (2005, Table 9.1/9.8, p. 191/206).~%")
+  (let ((systems '((A (cpitch))
+                   (B (cpintfip (cpintfref dur-ratio) thrfiph))
+                   (C (thrfiph cpintfip (cpint dur-ratio) (cpintfref dur) 
+                       thrtactus (cpintfref fib) (cpitch dur) 
+                       (cpintfref cpintfip) (cpint dur)))
+                   (D (cpintfiph (cpintfref dur) (cpint inscale) 
+                       (cpint dur-ratio) (cpintfref liph) thrfiph 
+                       (cpitch dur) (cpintfref cpintfip) 
+                       (cpintfref mode) (cpint dur))))))
+    (dolist (system systems)
+      (let ((mean-ic (idyom:idyom dataset-id '(cpitch) (cadr system) :k 10 :detail 1)))
+        (format t "~&System ~A; Mean Information Content: ~,2F ~%" (car system) mean-ic)))))
 
 
-
-;;; 170: unmeasured prelude
-;;; 30: 120 hymns
-;;; 130: flute corpus
-;;; 250: Persian melodies
-;;
-;; (defun main (dataset-id pretraining-ids k dp basic-viewpoints viewpoints)
-;;   (dolist (models '(:stm :ltm :ltm+ :both :both+))
-;;     (format t "~&Dataset: ~A; Model: ~A~%" dataset-id models)
-;;     (viewpoint-selection:dataset-viewpoint-selection dataset-id basic-viewpoints viewpoints 
-;;                                                      :dp dp
-;;                                                      :models models
-;;                                                      :pretraining-ids pretraining-ids
-;;                                                      :k k)))
 
