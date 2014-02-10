@@ -2,7 +2,7 @@
 ;;;; File:       prediction-sets.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-18 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-02-07 19:30:48 marcusp>                           
+;;;; Time-stamp: <2014-02-10 18:48:39 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -215,29 +215,47 @@
    <function> with a bias value of <bias>. Type is a symbol reflecting
    the type of combination: STM-LTM, STM and LTM are meaningful
    values."
-  (let ((f (find-symbol (symbol-name function) (find-package :prediction-sets)))
-        (distributions (mapcar #'prediction-set event-predictions))
-        (old-weights (mapcar #'prediction-weights event-predictions))
-        (orders (mapcar #'prediction-order event-predictions))
-        (element (prediction-element (car event-predictions)))
-        (viewpoint (prediction-viewpoint (car event-predictions))))
+  (let* ((f (find-symbol (symbol-name function) (find-package :prediction-sets)))
+         (full-prediction-sets (remove-if #'null event-predictions :key #'prediction-set))
+         (empty-prediction-sets (remove-if-not #'null event-predictions :key #'prediction-set))
+         (distributions (mapcar #'prediction-set full-prediction-sets))
+         (old-weights (mapcar #'prediction-weights event-predictions))
+         (orders (mapcar #'prediction-order event-predictions))
+         (element (prediction-element (car event-predictions)))
+         (viewpoint (prediction-viewpoint (car event-predictions))))
+    ;;(print (list event-predictions distributions empty-prediction-sets))
     (multiple-value-bind (set weights)
         (funcall f distributions bias)
-      (make-event-prediction
-       :basic-viewpoint (basic-viewpoint (car event-predictions))
-       :viewpoint viewpoint ; (if (eq type :ltm-stm) viewpoint (mapcar #'prediction-viewpoint event-predictions))
-       :element   element 
-       :event     (prediction-event (car event-predictions))
-       :order (if (eq type :ltm-stm) 
-                  (reduce #'append orders)
-                  (mapcar #'(lambda (ep o) (list (utils:string-append (format nil "order.~(~A~)." type) (viewpoints:viewpoint-name (prediction-viewpoint ep))) o))
-                          event-predictions orders))
-       :weights   (if (eq type :ltm-stm)
-                      (append (mapcar #'list '("weight.ltm" "weight.stm") (normalise-weights weights)) (reduce #'append old-weights))
-                      (mapcar #'(lambda (ep w) (list (utils:string-append (format nil "weight.~(~A~)." type) (viewpoints:viewpoint-name (prediction-viewpoint ep))) w))
-                              event-predictions (normalise-weights weights)))
-       :set       set))))
-  
+      (let ((orders 
+             (cond ((and (eq type :ltm-stm) (null (car old-weights)))
+                    (mapcar #'(lambda (ep o type) 
+                                (list (utils:string-append (format nil "order.~(~A~)." type) 
+                                                           (viewpoints:viewpoint-name (prediction-viewpoint ep))) 
+                                      (if (null o) "NA" o)))
+                            event-predictions orders '(:ltm :stm)))
+                   ((eq type :ltm-stm) 
+                    (reduce #'append orders))
+                   (t (property-identifiers "order" type event-predictions orders))))
+            (weights (if (eq type :ltm-stm)
+                        (append (mapcar #'list '("weight.ltm" "weight.stm") (normalise-weights weights)) (reduce #'append old-weights))
+                        (property-identifiers "weight" type full-prediction-sets (normalise-weights weights)))))
+        (unless (eq type :ltm-stm)
+          (setf weights (append weights (property-identifiers "weight" type empty-prediction-sets (make-list (length empty-prediction-sets) :initial-element "NA")))))
+        ;; (print (list type "orders" orders "old-weights" old-weights "weights" weights))
+        (make-event-prediction
+         :basic-viewpoint (basic-viewpoint (car event-predictions))
+         :viewpoint viewpoint ; (if (eq type :ltm-stm) viewpoint (mapcar #'prediction-viewpoint event-predictions))
+         :element   element 
+         :event     (prediction-event (car event-predictions))
+         :order     orders
+         :weights   weights
+         :set       set)))))
+    
+(defun property-identifiers (property type event-predictions list)
+  (mapcar #'(lambda (ep l) 
+              (list (utils:string-append (format nil "~A.~(~A~)." property type) (viewpoints:viewpoint-name (prediction-viewpoint ep))) l))
+          event-predictions list))
+
 (defun print-weights (weights)
   (format t "~&~{~,3F ~}~%" (normalise-weights weights)))
 

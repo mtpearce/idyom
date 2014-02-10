@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-02-07 19:49:31 marcusp>                           
+;;;; Time-stamp: <2014-02-10 18:49:19 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -192,7 +192,7 @@ dataset-id)."
                 ;; FOR EACH: event 
                 (dolist (ep (prediction-sets:prediction-set sp))
                   (let* ((event (prediction-sets:prediction-event ep))
-			 ;;; TODO: the following was (mtp-admin:get-attribute e 'event-id)
+			 ;;; NB: the following was (mtp-admin:get-attribute e 'event-id)
                          (event-id (music-data:get-event-index (mtp-admin:get-attribute event 'identifier)))
                          (probability (float (probability ep) 0.0))
                          (distribution (prediction-sets:prediction-set ep))
@@ -215,8 +215,9 @@ dataset-id)."
                     ;; Store feature prediction
                     (dolist (o orders) ; orders
                       (setf (gethash (create-key feature (car o)) event-results) (cadr o)))
-                    (dolist (w weights) ; weights
-                      (setf (gethash (create-key feature (car w)) event-results) (cadr w)))
+                    (when weights
+                      (dolist (w weights) ; weights
+                        (setf (gethash (create-key feature (car w)) event-results) (cadr w))))
                     (setf (gethash (create-key feature 'probability) event-results) probability)
                     (setf (gethash (create-key feature 'information.content) event-results) (- (log probability 2)))
                     (setf (gethash (create-key feature 'entropy) event-results) (float (prediction-sets:shannon-entropy distribution) 0.0))
@@ -239,7 +240,7 @@ dataset-id)."
                      (setf (gethash 'probability event-results) probability)
                      (setf (gethash 'information.content event-results) (- (log probability 2)))
                      (setf (gethash 'entropy event-results) (prediction-sets:shannon-entropy distribution))
-                     ;; TODO elements of distribution
+                     ;; TODO elements of combined distribution
                      (mapc #'(lambda (key) (remhash key event-results)) distribution-keys)
                      (setf (gethash k results) event-results)))
                results)
