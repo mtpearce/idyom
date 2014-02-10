@@ -2,7 +2,7 @@
 ;;;; File:       multiple-viewpoint-system.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@.qmul.ac.uk>
 ;;;; Created:    <2003-04-27 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-02-07 19:30:59 marcusp>                           
+;;;; Time-stamp: <2014-02-10 01:12:23 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -194,7 +194,7 @@ See also VIEWPOINTS:SET-ALPHABET-FROM-CONTEXT."
            (2 (mapcar #'viewpoints:get-viewpoint viewpoints:*basic-types*))
            ;; specified list           
            (t unconstrained))))
-    (unless (or (viewpoints:basic-p viewpoint) (undefined-p event))
+    (unless (or (viewpoints:basic-p viewpoint) (undefined-p event)) 
       (viewpoints:set-alphabet-from-context viewpoint events unconstrained))
     ;(format t "~&Viewpoint: ~A; Event: ~A; Alphabet length: ~A~%" 
     ;        (viewpoint-type viewpoint) event 
@@ -369,12 +369,10 @@ multiple viewpoint system <m>."
              (stm (aref (mvs-stm m) i))
              (ltm-location (aref ltm-locations i))
              (stm-location (aref stm-locations i)))
-        ;(print (viewpoints:viewpoint-name viewpoint))
         (set-model-alphabets m event-array events viewpoint ltm stm 
                              *marginalise-using-current-event*)
         (unless (undefined-p event)
-          ;;(when predict? 
-          ;;  (format t "~&LTM: ~S" (viewpoints:viewpoint-name viewpoint)))
+          (when (and *debug* predict?) (format t "~&LTM: ~S" (viewpoints:viewpoint-name viewpoint)))
           (multiple-value-bind (ltm-next-location ltm-distribution ltm-order)
               (ppm:ppm-model-event ltm event :location ltm-location 
                                :construct? (and construct? 
@@ -386,7 +384,7 @@ multiple viewpoint system <m>."
                                                   (eq *models* :both)
                                                   (eq *models* :both+))))
             (setf (aref ltm-locations i) ltm-next-location)
-            ;(format t "~&ltm-distribution = ~&~A~%" ltm-distribution)
+            (when (and *debug* predict?) (format t "~&ltm-distribution = ~&~A~%" ltm-distribution))
             (push (make-event-prediction :order ltm-order
                                          :viewpoint viewpoint
                                          :event (car (last events))
@@ -394,8 +392,7 @@ multiple viewpoint system <m>."
                                          :set ltm-distribution)
                   ltm-prediction-sets))
           
-          ;;(when predict? 
-            ;;(format t "~&STM: ~S" (viewpoints:viewpoint-name viewpoint)))
+          (when (and *debug* predict?) (format t "~&STM: ~S" (viewpoints:viewpoint-name viewpoint)))
           (multiple-value-bind (stm-next-location stm-distribution stm-order)
               (ppm:ppm-model-event stm event :location stm-location 
                                :construct? (or (eq *models* :stm)
@@ -406,7 +403,7 @@ multiple viewpoint system <m>."
                                                   (eq *models* :both) 
                                                   (eq *models* :both+))))
             (setf (aref stm-locations i) stm-next-location)
-            ;; (format t "~&stm-distribution = ~&~A~%" stm-distribution)
+            (when (and *debug* predict?) (format t "~&stm-distribution = ~&~A~%" stm-distribution))
             (push (make-event-prediction :order stm-order
                                          :viewpoint viewpoint
                                          :event (car (last events))
@@ -483,7 +480,7 @@ multiple viewpoint system <m>."
               (push 
                (make-event-prediction
                 :basic-viewpoint basic-viewpoint
-                :order 0
+                :order (list (list (format nil "~A.~(~A~).~A" "order" model (viewpoint-name basic-viewpoint)) 0))
                 :viewpoint basic-viewpoint
                 :event (car (last events))
                 :element (viewpoint-element basic-viewpoint events)
