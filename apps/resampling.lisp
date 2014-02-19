@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-02-10 18:49:19 marcusp>                           
+;;;; Time-stamp: <2014-02-19 17:32:25 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -252,7 +252,7 @@ dataset-id)."
             (maphash #'(lambda (k v) (declare (ignore v)) (format stream "~A " (string-downcase (symbol-name k)))) (cdr entry))
             (setf print-header nil))
           (format stream "~&")
-          (maphash #'(lambda (k v) (declare (ignore k)) (format stream "~A " v)) (cdr entry)))))))
+          (maphash #'(lambda (k v) (declare (ignore k)) (format stream "~A " (if v v "NA"))) (cdr entry)))))))
 
 (defun format-information-content-detail=4 (stream resampling-predictions dataset-id) 
   "Old version 3, not to be used anymore. Here only for comparing with old output."
