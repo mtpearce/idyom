@@ -2,7 +2,7 @@
 ;;;; File:       prediction-sets.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-18 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-02-10 18:48:39 marcusp>                           
+;;;; Time-stamp: <2014-02-19 16:25:08 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -51,6 +51,7 @@
                  :set set :basic-viewpoint basic-viewpoint))
 
 (defun make-event-prediction (&key viewpoint element set event weights basic-viewpoint order)
+  ;; (format t "~&make-event-prediction: ~A ~A ~A ~A ~A ~A ~A" viewpoint element event weights basic-viewpoint order set  )
   (make-instance 'event-prediction :viewpoint viewpoint :element element
                  :set set :event event :weights weights 
                  :order order :basic-viewpoint basic-viewpoint))

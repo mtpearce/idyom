@@ -2,7 +2,7 @@
 ;;;; File:       ppm-star.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-02-07 19:31:22 marcusp>                           
+;;;; Time-stamp: <2014-02-19 16:37:40 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -558,14 +558,11 @@
    vector must be set to the appropriate event index before this method
    is called."
   (add-event-to-model-dataset m symbol)
-  (let* ((novel? (when construct? (unless (occurs? m location symbol) t)))
-         (next-location (ukkstep m nil location symbol construct?))
-         (distribution nil)
-         (order nil))
-    (when predict?
-      (multiple-value-bind (d o)
-          (get-distribution m location)
-        (setf distribution d order o)))
+  (let* ((gd (when predict? (multiple-value-list (get-distribution m location))))
+         (distribution (car gd))
+         (order (cadr gd))
+         (novel? (when construct? (unless (occurs? m location symbol) t)))
+         (next-location (ukkstep m nil location symbol construct?)))
     (when construct? (increment-counts m next-location novel?))
     (values next-location distribution order)))
 
