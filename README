@@ -1,7 +1,7 @@
 IDYOM: Information Dynamics of Music
 Version 2.0 alpha
 
-Copyright 2013, Marcus Pearce (marcus.pearce@eecs.qmul.ac.uk)
+Copyright 2002-2014, Marcus Pearce (marcus.pearce@qmul.ac.uk)
 
 This program is distributed under the terms of the GNU General Public
 License.  See COPYING for details.
@@ -11,7 +11,6 @@ License.  See COPYING for details.
 Documentation on how to install and use the system can be found on the
 IDyOM wiki at Sound Software
 (https://code.soundsoftware.ac.uk/projects/idyom-project/wiki).
-Currently a login is required, but a public version is planned.
 
 The design of the system and its underlying principles are documented
 in Marcus Pearce's PhD thesis "The Construction and Evaluation of

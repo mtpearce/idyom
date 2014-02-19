@@ -1,8 +1,8 @@
 ;;;; ======================================================================
 ;;;; File:       IDyOM.asd
-;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
+;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-05-04 21:29:04 marcusp>
-;;;; Time-stamp: <2013-04-30 10:05:04 jeremy>
+;;;; Time-stamp: <2014-02-19 17:37:35 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
