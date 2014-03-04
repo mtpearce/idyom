@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-01-28 09:51:53 marcusp>                           
+;;;; Time-stamp: <2014-03-04 14:48:12 marcusp>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -110,6 +110,7 @@
 (defparameter *default-keysig* nil)         ;no. of sharps in keysig
 (defparameter *default-mode* nil)           ;0 major - 9 minor
 (defparameter *default-tempo* nil)          ;default tempo/bpm
+(defparameter *default-bioi* 0)             ;default inter-onset interval
 
 
 ;;;==================
@@ -120,15 +121,15 @@
   (mtp-admin:insert-dataset (kern2db path description) id))
 
 (defun kern2db (file-or-dir-name description
-                                    &key 
-                                    (timesig *default-timesig*)
-                                    (keysig *default-keysig*)
-                                    (mode *default-mode*)
-                                    (timebase *default-timebase*)
-                                    (onset *default-onset*)
-                                    (pause *default-pause*)
-                                    (tempo *default-tempo*)
-                                    (middle-c *middle-c*))
+                &key (timesig *default-timesig*)
+                  (keysig *default-keysig*)
+                  (mode *default-mode*)
+                  (timebase *default-timebase*)
+                  (onset *default-onset*)
+                  (pause *default-pause*)
+                  (tempo *default-tempo*)
+                  (bioi *default-bioi*)
+                  (middle-c *middle-c*))
   "A top level call to convert a kern file or a directory of kern files
    <file-or-dir-name> to CHARM readable format. The keyword parameters
    allow the user to change the default parameters for the conversion."
@@ -139,6 +140,7 @@
         *default-onset* onset
         *default-pause* pause
         *default-tempo* tempo
+        *default-bioi* bioi
         *middle-c* middle-c
         *unrecognised-representations* '()
         *unrecognised-tokens* '())
@@ -367,7 +369,7 @@
   "Converts kern spines into CHARM readable format."
   (let ((environment-alist
          (list (list 'onset *default-onset*)
-               (list 'bioi 1)
+               (list 'bioi *default-bioi*)
                (list 'keysig *default-keysig*)
                (list 'mode *default-mode*)
                (list 'timesig *default-timesig*)
@@ -526,7 +528,10 @@
       (kern-event
        (let* ((dur (cadr (assoc :dur current-event)))
               (onset (list 'onset (+ current-onset dur)))
-              (bioi (list 'bioi dur))
+              (bioi (list 'bioi (+ dur 
+                                   (if (close-tie-p token) 
+                                       (cadr (assoc 'bioi environment))
+                                       0))))
               (deltast (list 'deltast 0))
               ;(phrase (list 'phrase 0))
               (pause (if (pause-p token) (list 'pause 1) (list 'pause 0))))
