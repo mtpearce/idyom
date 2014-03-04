@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-02-19 17:32:25 marcusp>                           
+;;;; Time-stamp: <2014-03-04 21:46:17 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -129,17 +129,20 @@ dataset-id)."
               ;; FOR EACH: event 
               (dolist (ep (prediction-sets:prediction-set sp))
                 (let ((probability (probability ep)))
+                  ;; (format t "~&~A ~A ~A~%" song-id (prediction-sets::prediction-element ep) (prediction-sets:prediction-set ep))
                   (push probability fsp)))
               (let ((fr (gethash feature results)))
                 (setf (gethash feature results)
                       (cons (list song-id (nreverse fsp)) fr))))))))
     (let ((information-contents))
       ;; For each song
+      ;; (print keys)
       (dolist (key (sort keys #'<))
         (let* (;; get the probabilities for each feature 
                (sp (mapcar #'(lambda (x) 
                                (cadr (assoc key (cadr x))))
                            (utils:hash-table->alist results)))
+               ;; (foo (progn (print (list key sp)) nil))
                ;; multiply them together 
                (spm (apply #'mapcar #'* sp))
                ;; compute the information content 

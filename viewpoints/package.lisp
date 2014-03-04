@@ -4,7 +4,10 @@
            #:get-viewpoint #:get-viewpoints  
            #:viewpoint-element #:viewpoint-sequence  #:viewpoint-sequences 
            #:viewpoint-alphabet #:viewpoint-typeset  #:viewpoint-links 
-           #:set-alphabet-from-context #:viewpoint-name #:viewpoint-type
+           #:set-alphabet-from-context #:set-alphabet-from-dataset
+           #:alphabet->events #:get-basic-viewpoints
+           #:set-onset-alphabet
+           #:viewpoint-name #:viewpoint-type
            #:inverse-viewpoint-function-defined-p #:basic-element
 	   #:list-viewpoints #:list-basic #:list-derived
 	   #:list-threaded #:list-test #:predictors #:predictable

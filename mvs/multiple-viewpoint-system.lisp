@@ -1,8 +1,8 @@
 ;;;; ======================================================================
 ;;;; File:       multiple-viewpoint-system.lisp
-;;;; Author:     Marcus Pearce <marcus.pearce@.qmul.ac.uk>
+;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-27 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-02-10 18:47:18 marcusp>                           
+;;;; Time-stamp: <2014-03-04 22:04:02 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -196,6 +196,7 @@ See also VIEWPOINTS:SET-ALPHABET-FROM-CONTEXT."
            (t unconstrained))))
     (unless (or (viewpoints:basic-p viewpoint) (undefined-p event)) 
       (viewpoints:set-alphabet-from-context viewpoint events unconstrained))
+    (viewpoints::set-onset-alphabet (butlast events))
     ;(format t "~&Viewpoint: ~A; Event: ~A; Alphabet length: ~A~%" 
     ;        (viewpoint-type viewpoint) event 
     ;        (length (viewpoint-alphabet viewpoint)))
@@ -299,8 +300,7 @@ the supplied parameters."
   "Models a dataset <dataset> (a vector of sequence vectors) given the
 multiple-viewpoint system <m>."
   (labels ((model-d (dataset sequence-index prediction-sets)
-             (when *debug*
-               (format t "~&Composition ~A~%" sequence-index))
+             (when *debug* (format t "~&Composition ~A~%" sequence-index))
              (if (null dataset) (reverse prediction-sets)
                  (let ((prediction-set (model-sequence m (car dataset) 
                                                        :construct? construct?
@@ -308,8 +308,8 @@ multiple-viewpoint system <m>."
                    (unless (= sequence-index 1)
                      (operate-on-models m #'increment-sequence-front))
                    (operate-on-models m #'reinitialise-ppm :models 'stm)
-                   (model-d (cdr dataset) (1- sequence-index)
-                            (cons prediction-set prediction-sets))))))
+                     (model-d (cdr dataset) (1- sequence-index)
+                              (cons prediction-set prediction-sets))))))
     (dataset-prediction-sets m (model-d dataset (length dataset) '()))))
 
 (defmethod model-sequence ((m mvs) sequence &key construct? predict? 
@@ -490,10 +490,8 @@ multiple viewpoint system <m>."
                   (let ((basic-distribution
                          (derived->basic derived-prediction-set basic-viewpoint
                                          events)))
-                    ;;(format t "~&Derived distribution: ~A~%" 
-                    ;;        (prediction-set derived-prediction-set))
-                    ;;(format t "~&Basic distribution: ~A~%" 
-                    ;;        (prediction-set basic-distribution))
+                    ;;(format t "~&Derived distribution: ~A~%" (prediction-set derived-prediction-set))
+                    ;;(format t "~&Basic distribution: ~A~%" (prediction-set basic-distribution))
                     (unless (null basic-distribution)
                       (cache-ep (prediction-set basic-distribution) model 
                                 (viewpoint-type 
@@ -505,6 +503,7 @@ multiple viewpoint system <m>."
                     (push (make-custom-event-prediction basic-viewpoint v events :empty) basic-distributions)))
                 (push (combine-viewpoint-distributions basic-distributions model)
                       distributions)))))
+      ;; (format t "~&Combined viewpoint distributions = ~A~%" (mapcar #'prediction-sets:prediction-set (reverse distributions)))
       (reverse distributions))))
 
 (defun make-custom-event-prediction (basic-viewpoint viewpoint events type)
@@ -533,8 +532,9 @@ given a sequence of events <sequence>."
     (when *debug* 
       (format t "~&derived->basic: ~A (~A) = ~&~A~%" (viewpoint-name derived-viewpoint) 
               (prediction-element derived-prediction-set) derived-distribution)
-      (format t "~&~A: ~A~%" basic-viewpoint basic-alphabet))
+      (format t "~&Basic viewpoint: ~A: ~A~%" basic-viewpoint basic-alphabet))
     (if (viewpoints:inverse-viewpoint-function-defined-p derived-viewpoint)
+        ;; There is an inverse viewpoint function defined, use it
         (dolist (ep derived-distribution) 
           (let* ((e (nth 0 ep))
                  (p (nth 1 ep))
@@ -543,13 +543,16 @@ given a sequence of events <sequence>."
                                             e events))
                  (p (unless (or (null basic-elements) (undefined-p e)) 
                       (/ p (length basic-elements)))))
-            ;;(format t "~&e = ~A; old-p = ~A; l = ~A; p = ~A~%" 
-            ;;        e (nth 1 ep) (length basic-elements) p)
+            ;;(when *debug*
+            ;;  (format t "~&e = ~A; old-p = ~A; l = ~A; p = ~A~%" 
+            ;;          e (nth 1 ep) (length basic-elements) p))
             (dolist (be basic-elements) 
               (if (gethash be basic-distribution)
                   (incf (gethash be basic-distribution) p)
                   (setf (gethash be basic-distribution) p)))))
+        ;; no inverse viewpoint function defined so compute mapping
         (let ((mapping (mapping derived-viewpoint basic-viewpoint events)))
+          (when *debug* (format t "~&mapping = ~A~%" mapping))
           (dolist (map mapping)
             (let* ((derived-element (car map))
                    (basic-elements (nth 1 map))
@@ -563,8 +566,8 @@ given a sequence of events <sequence>."
     (let ((viewpoint-element (viewpoint-element basic-viewpoint events))
           (distribution 
            (normalise-distribution 
-            (mapcar #'(lambda (a) (list a (gethash a basic-distribution)))
-                    basic-alphabet))))
+            (remove nil (mapcar #'(lambda (a) (list a (gethash a basic-distribution)))
+                                basic-alphabet) :key #'cadr))))
       (when *debug* 
         (format t "~&~A (~A) = ~&~A~%" (viewpoint-name basic-viewpoint)
                 viewpoint-element distribution))

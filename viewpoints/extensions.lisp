@@ -1,18 +1,11 @@
 ;;;; ======================================================================
-;;;; File:       viewpoint-extensions.lisp
-;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
+;;;; File:       extensions.lisp
+;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2008-10-31 13:08:09 marcusp>
-;;;; Time-stamp: <2014-02-09 22:51:38 marcusp>
+;;;; Time-stamp: <2014-03-04 22:03:14 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints) 
-
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (let ((symbols 
-         '(set-alphabet-from-context set-alphabet-from-dataset
-           alphabet->events get-basic-viewpoints)))
-    (dolist (s symbols)
-      (export s (find-package :viewpoints)))))
 
 (defgeneric set-alphabet-from-dataset (viewpoint dataset))
 (defgeneric set-alphabet-from-context (viewpoint events unconstrained))
@@ -20,6 +13,7 @@
 
 (defun get-basic-viewpoints (attributes dataset)
   (initialise-basic-viewpoints dataset)
+  (set-onset-alphabet nil)
   (get-viewpoints attributes))
 
 (defun initialise-basic-viewpoints (dataset)
@@ -27,6 +21,9 @@
 *basic-types* to those elements which appear in <dataset>."
   (dolist (attribute *basic-types*)
     (set-alphabet-from-dataset (get-viewpoint attribute) dataset)))
+
+(defun set-onset-alphabet (context)
+  (setf (viewpoint-alphabet (get-viewpoint 'onset)) (onset-alphabet context)))
 
 (defmethod set-alphabet-from-dataset ((v viewpoint) dataset)
   "Initialises the alphabet of viewpoint <v> in <dataset>."
@@ -142,8 +139,6 @@ values of the final event in <events>."
                                e))
                          alphabet))))
       (apply #'get-events (viewpoint-typeset l)))))
-
-
 
 (defun strip-until-true (test-viewpoint events)
   "Return the longest prefix of the list EVENTS such that
