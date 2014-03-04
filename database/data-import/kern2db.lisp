@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-03-04 14:48:12 marcusp>                           
+;;;; Time-stamp: <2014-03-04 21:54:18 marcusp>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -495,10 +495,11 @@
               ((= current-onset first-onset)
                (cons (update-alist current-event
                                    (list :onset new-onset)
+                                   (list :bioi new-onset)
                                    ;(list :deltast new-onset))
                                    (list :deltast 0))
                      (cdr converted-spine)))
-              (t (cons (update-alist current-event (list :onset new-onset))
+              (t (cons (update-alist current-event (list :onset new-onset :bioi new-onset))
                        (correct-onsets-in-first-bar (cdr converted-spine)
                                                     first-onset
                                                     environment
