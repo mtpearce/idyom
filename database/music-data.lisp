@@ -2,7 +2,7 @@
 ;;;; File:       music-data.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-01-28 09:50:54 marcusp>                           
+;;;; Time-stamp: <2014-03-05 11:11:14 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -248,11 +248,6 @@ no. in which the event occurs." ))
     :comma          ',(event-comma e)
     :voice          ',(event-voice e)))
     
-;; General database management functions
-;;=======================================
-
-(defun connect-to-database ()
-  (clsql:connect '("/home/marcusp/research/projects/idyom2/lisp/database.sqlite") :if-exists :old :database-type :sqlite3))
 
 ;; Inserting and deleting datasets 
 ;;================================
