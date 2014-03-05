@@ -1,8 +1,8 @@
 ;;;; ======================================================================
 ;;;; File:       temporal.lisp
-;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
+;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2013-01-24 15:00:00 jeremy>
-;;;; Time-stamp: <2014-01-27 17:27:08 marcusp>
+;;;; Time-stamp: <2014-03-05 10:35:37 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
@@ -10,7 +10,25 @@
 (defun timebase (event)
   (md:timebase event))
 
-;; Duration of last / duration of previous
+;;; Barlength, Pulses ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Denominator of the time signature
+
+(define-viewpoint (beatunit derived (barlength pulses))
+    (events element) 
+  :function (let ((barlength (barlength events))
+		  (pulses (pulses events))
+		  (timebase (timebase (last-element events))))
+	      (cond ((undefined-p barlength pulses) +undefined+)
+		    ((zerop barlength) +undefined+)
+		    ((zerop pulses) +undefined+)
+		    (t (/ (* timebase pulses) barlength))))
+  ;; TODO: function*
+  )
+
+
+;;; Dur ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (define-viewpoint (dur-ratio derived (dur))
     (events element) 
   :function (multiple-value-bind (e1 e2)
@@ -24,38 +42,7 @@
   :function* (list (* element (dur (list (penultimate-element events))))))
 
 
-;;; Inter-Onset Interval
-;;;
-;;; ioi and ioi-ratio are derived from note onset times.  To predict
-;;; IOI, a basic version bioi is also implemented, and used to define
-;;; bioi-ratio and bioi-contour.
-
-;; Like bioi, though giving undefined for one-event sequence.
-(define-viewpoint (ioi derived (onset))
-    (events element) 
-  :function (multiple-value-bind (e1 e2)
-                (values-list (last events 2))
-              (if (or (null e1) (null e2)) +undefined+
-                  (let ((onset1 (onset (list e1)))
-                        (onset2 (onset (list e2))))
-                    (cond ((undefined-p onset1 onset2) +undefined+)
-                          (t (- onset2 onset1))))))
-  :function* (list (+ element (onset (list (penultimate-element events))))))
-
-;; ioi divided by the previous ioi (requires at least 3 events).
-(define-viewpoint (ioi-ratio derived (onset))
-    (events element) 
-  :function (multiple-value-bind (e1 e2 e3)
-                (values-list (last events 3))
-              (if (or (null e1) (null e2) (null e3)) +undefined+
-                  (let ((ioi1 (ioi (list e1 e2)))
-                        (ioi2 (ioi (list e2 e3))))
-                    (declare (type fixnum ioi1 ioi2))
-                    (if (undefined-p ioi1 ioi2) +undefined+
-                        (/ ioi2 ioi1)))))
-  :function* (let ((penultimate-element (list (penultimate-element events))))
-               (list (+ (onset penultimate-element) 
-                        (* element (ioi penultimate-element))))))
+;;; BIOI ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; bioi divided by the previous ioi (requires at least 3 events).
 (define-viewpoint (bioi-ratio derived (bioi))
@@ -88,22 +75,49 @@
 
 
 
-;; beatunit (note value equal to one beat)
-;;
-;; The denominator for the current time signature. 
-;;
-(define-viewpoint (beatunit derived (barlength pulses))
+;;; ONSET ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Like bioi, but undefined for first event in sequence
+(define-viewpoint (ioi derived (onset))
     (events element) 
-  :function (let ((barlength (barlength events))
-		  (pulses (pulses events))
-		  (timebase (timebase (last-element events))))
-	      (cond ((undefined-p barlength pulses) +undefined+)
-		    ((zerop barlength) +undefined+)
-		    ((zerop pulses) +undefined+)
-		    (t (/ (* timebase pulses)
-			  barlength))))
-  ;; TODO: function*
-  )
+  :function (multiple-value-bind (e1 e2)
+                (values-list (last events 2))
+              (if (or (null e1) (null e2)) +undefined+
+                  (let ((onset1 (onset (list e1)))
+                        (onset2 (onset (list e2))))
+                    (if (undefined-p onset1 onset2) +undefined+
+                        (- onset2 onset1)))))
+  :function* (list (+ element (onset (list (penultimate-element events))))))
+
+;; ioi divided by the previous ioi (requires at least 3 events).
+(define-viewpoint (ioi-ratio derived (onset))
+    (events element) 
+  :function (multiple-value-bind (e1 e2 e3)
+                (values-list (last events 3))
+              (if (or (null e1) (null e2) (null e3)) +undefined+
+                  (let ((ioi1 (ioi (list e1 e2)))
+                        (ioi2 (ioi (list e2 e3))))
+                    (if (undefined-p ioi1 ioi2) +undefined+
+                        (/ ioi2 ioi1)))))
+  :function* (let ((penultimate-element (list (penultimate-element events))))
+               (list (+ (onset penultimate-element)
+                        (* element (bioi penultimate-element))))))
+
+;; Whether ioi gets larger, smaller or stays the same between consecutive events
+(define-viewpoint (ioi-contour derived (onset))
+    (events element) 
+  :function (let ((ioi-ratio (ioi-ratio events)))
+              (if (undefined-p ioi-ratio) +undefined+
+                  (signum (- ioi-ratio 1))))
+  :function* (let* ((penultimate-element (list (penultimate-element events)))
+                    (ioi (bioi penultimate-element))
+                    (onset (onset penultimate-element))
+                    (ioi-set (remove-if #'(lambda (a) (case element
+                                                        (-1 (>= a ioi))
+                                                        (0  (not (= a ioi)))
+                                                        (1  (<= a ioi))))
+                                        (viewpoint-alphabet (get-viewpoint 'bioi)))))
+               (mapcar #'(lambda (x) (+ onset x)) ioi-set)))
 
 ;; Time offset from beginning of bar.
 (define-viewpoint (posinbar derived (onset))
@@ -118,7 +132,7 @@
   ;; TODO: function*
   )
 
-;; First In Bar (is this the first note in the current bar?)
+;; First In Bar (Is this the first note in the current bar?)
 (define-viewpoint (fib test (onset))
     (events element) 
   :function (let ((posinbar (posinbar events)))
@@ -128,18 +142,17 @@
   ;; TODO: function* 
   )
 
-;; Is this note on a crotchet pulse?
-(define-viewpoint (crotchet test (onset))
+;; does this note fall on a crotchet beat from the first note in the piece?
+(define-viewpoint (crotchet derived (onset))
     (events element) 
   :function (let ((e1 (car events))
-                  (e2 (last-element events)))
+                  (e2 (car (last events))))
               (if (or (null e1) (null e2)) +undefined+
                   (let ((onset1 (onset (list e1)))
                         (onset2 (onset (list e2))))
                     (if (undefined-p onset1 onset2) +undefined+
-			(if (zerop (mod (- onset2 onset1)
-					(crotchet (last-element events))))
-			    1 0)))))
+                        ;;this only works if crotchet == 24 
+                        (if (zerop (mod (- onset2 onset1) 24)) 1 0)))))
   ;; TODO: function* 
   )
 
