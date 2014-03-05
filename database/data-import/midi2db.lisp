@@ -2,13 +2,13 @@
 ;;;; File:       midi2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2007-03-21 09:47:26 marcusp>
-;;;; Time-stamp: <2014-01-28 09:51:49 marcusp>
+;;;; Time-stamp: <2014-03-05 11:35:29 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:midi2db) 
 
 (defvar *timebase* 96 "Basic time units per semibreve")
-(defvar *middle-c* (list 6000 35) 
+(defvar *middle-c* (list 60 35) 
   "Chromatic and diatonic integer mappings for c_4")
 (defvar *default-midifile-extension* "mid")
 
@@ -149,9 +149,9 @@
 		   (midi-offset (getf note :offset))
 		   (offset (midi-time->time midi-offset ppqn))
 		   ;; Pitch
-		   (midi-pitch (getf note :pitch))
+		   (midi-pitch (midi-pitch->pitch (getf note :pitch)))
 		   (bend (cdr (assoc midi-onset (nth i bends))))
-		   (cpitch (+ (* midi-pitch 100)
+		   (cpitch (+ midi-pitch
 			      (if (null bend) 0
 				  (pitch-bend->cents bend))))
 		   ;; Duration
@@ -192,7 +192,6 @@
 
 ;;; Convert MIDI into database events
 ;;;
-;;; MIDI pitch values are multipled by 100 ("cents above C-1").
 ;;; Interprets pitch bend messages as adjustments to the pitch of the
 ;;; entire note.
 (defun convert-midi-file-old (midifile)
@@ -293,10 +292,10 @@
 		   (+ straight (cdr bend)))))
     (append (list (list :cpitch bent)) note)))
 
-; Convert pitch adjustment encoded as MIDI pitch bend value to cents
+; Convert pitch adjustment encoded as MIDI pitch bend value to cents / 100
 (defun pitch-bend->cents (bend)
   (let* ((bend-cents (/ (- bend 8192) 40.96)))
-    (car (multiple-value-list (round bend-cents)))))
+    (/ (car (multiple-value-list (round bend-cents))) 100)))
 
 (defun make-event-alist (onset dur deltast bioi cpitch keysig mode barlength 
                          pulses phrase voice dyn)
@@ -333,7 +332,7 @@
   (* (/ timebase 4) (/ midi-time ppqn)))
 
 (defun midi-pitch->pitch (midi-pitch)
-  (* midi-pitch 100))
+  midi-pitch)
 
 
 ;;; Quantisation 

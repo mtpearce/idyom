@@ -2,7 +2,7 @@
 ;;;; File:       db2lilypond.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2005-06-07 10:13:24 marcusp>
-;;;; Time-stamp: <2014-01-28 09:52:42 marcusp>
+;;;; Time-stamp: <2014-03-05 11:41:13 marcusp>
 ;;;; ======================================================================
 ;;;; 
 ;;;; TODO 
@@ -181,10 +181,9 @@
 
 (defun write-note (s event duration)
   (multiple-value-bind (octave pitch-class)
-      (floor (round (/ (- (mtp-admin:get-attribute event :cpitch)
-			  (- *midc* 1200))
-		       100))
-	     12)
+      (floor (round (- (mtp-admin:get-attribute event :cpitch)
+                       (- *midc* 12)))
+             12)
     (let* ((octave-token (if (plusp octave) "'" ","))
            (pitches (if (< (mtp-admin:get-attribute event :keysig) 0)
                         '("c" "df" "d" "ef" "e" "f" "gf" "g" "af" "a" "bf" "b")

@@ -2,14 +2,14 @@
 ;;;; File:       tobias2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2007-04-19 11:15:57 marcusp>
-;;;; Time-stamp: <2013-07-09 16:48:51 marcusp>
+;;;; Time-stamp: <2014-03-05 11:28:16 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:tobias2db) 
 
 (defparameter *duration* 24)
 (defvar *timebase* 96 "Basic time units per semibreve")
-(defvar *middle-c* 6000 "Chromatic integer mapping for c_4")
+(defvar *middle-c* 60 "Chromatic integer mapping for c_4")
 
 (defmethod import-data ((type (eql :tobias)) path description id)
   (mtp-admin:insert-dataset (tobias2db path description) id))
@@ -64,6 +64,6 @@
         (list :bioi *duration*)
         (list :dur *duration*)
         (list :deltast 0)
-        (list :cpitch (* pitch 100))
+        (list :cpitch pitch)
         (list :voice 1)))
  

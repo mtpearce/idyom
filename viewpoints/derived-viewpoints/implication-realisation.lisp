@@ -1,16 +1,16 @@
 ;;;; ======================================================================
 ;;;; File:       implication-realisation.lisp
-;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
+;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2013-01-24 15:00:00 jeremy>
-;;;; Time-stamp: <2014-01-28 09:57:32 marcusp>
+;;;; Time-stamp: <2014-03-05 14:17:12 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
 
 ;; IR Principles
 
-(defun large-interval (interval) (> (abs interval) 600))
-(defun small-interval (interval) (< (abs interval) 600))
+(defun large-interval (interval) (> (abs interval) 6))
+(defun small-interval (interval) (< (abs interval) 6))
 (defun same-direction (int1 int2) (= (signum int1) (signum int2)))
 (defun different-direction (int1 int2) (not (same-direction int1 int2)))
 
@@ -50,7 +50,7 @@
                   (let ((implicative (cpint (list e1 e2)))
                         (realised (cpint (list e2 e3))))
                     (if (undefined-p implicative realised) +undefined+
-                        (let ((margin (if (same-direction implicative realised) 300 200)))
+                        (let ((margin (if (same-direction implicative realised) 3 2)))
                           (cond ((large-interval implicative)
                                  (if (>= (abs realised) (- (abs implicative) margin))
                                      0 1))
@@ -81,9 +81,9 @@
                     (cond ((undefined-p implicative realised) +undefined+)
                           ((different-direction realised implicative)
                            (cond ((or (zerop implicative) (zerop realised)) 0)
-                                 ((and (<= cpitch3 (+ cpitch1 200))
-                                       (>= cpitch3 (- cpitch1 200)))
-                                  (/ (- 300 (abs (- cpitch1 cpitch3))) 100))
+                                 ((and (<= cpitch3 (+ cpitch1 2))
+                                       (>= cpitch3 (- cpitch1 2)))
+                                  (/ (- 3 (abs (- cpitch1 cpitch3))) 1))
                                  (t 0)))
                           (t 0)))))
   ;; TODO: function*
@@ -99,7 +99,7 @@
               (if (or (null e1) (null e2)) +undefined+
                   (let ((realised (cpint (list e1 e2))))
                     (if (undefined-p realised) +undefined+
-                        (let ((proximity (- 6 (/ (abs realised) 100))))
+                        (let ((proximity (- 6 (/ (abs realised) 1))))
                           (if (< proximity 0) 0 proximity))))))
   ;; TODO: function*
   )

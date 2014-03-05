@@ -1,13 +1,13 @@
 ;;;; ======================================================================
 ;;;; File:       pitch.lisp
-;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
+;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2013-01-24 15:00:00 jeremy>
-;;;; Time-stamp: <2014-01-28 09:57:27 marcusp>
+;;;; Time-stamp: <2014-03-05 14:15:16 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
 
-(defvar *octave* 1200)
+(defvar *octave* 12)
 
 ;; Morphetic pitch
 
@@ -75,7 +75,7 @@
   ;; TODO: function* 
   )
 
-;; Pitch modulo 1200 (so C = 0, D = 200 etc.)
+;; Pitch modulo 12 (so C = 0, D = 2 etc.)
 (define-viewpoint (cpitch-class derived (cpitch))
     (events element) 
   :function (let ((cpitch (cpitch events)))
@@ -84,7 +84,7 @@
   :function* (remove-if-not #'(lambda (e) (= (mod e *octave*) element)) 
                             (viewpoint-alphabet (get-viewpoint 'cpitch))))
 
-;; Equivalent to cpint modulo 1200 (so both perfect unison and perfect
+;; Equivalent to cpint modulo 12 (so both perfect unison and perfect
 ;; octave = 0), but preserving sign, so ascending and descending
 ;; intervals are still discriminated. (It looks like this was
 ;; originally calculated as cpcint-size and then redefined when
@@ -114,7 +114,7 @@
   ;; TODO: function*
   )
 
-;; cpcint-size modulo 200.
+;; cpcint-size modulo 2.
 (define-viewpoint (cpcint-2 derived (cpitch))
     (events element) 
   :function (multiple-value-bind (e1 e2)
@@ -122,11 +122,11 @@
               (if (or (null e1) (null e2)) +undefined+
                   (let ((cpcint (cpcint-size (list e1 e2))))
                     (if (undefined-p cpcint) +undefined+
-                        (mod cpcint 200)))))
+                        (mod cpcint 2)))))
   ;; TODO: function* 
   )
 
-;; cpcint-size modulo 400.
+;; cpcint-size modulo 3.
 (define-viewpoint (cpcint-3 derived (cpitch))
     (events element) 
   :function (multiple-value-bind (e1 e2)
@@ -134,11 +134,11 @@
               (if (or (null e1) (null e2)) +undefined+
                   (let ((cpcint (cpcint-size (list e1 e2))))
                     (if (undefined-p cpcint) +undefined+
-                        (mod cpcint 300)))))
+                        (mod cpcint 3)))))
   ;; TODO: function* 
   )
 
-;; cpcint-size modulo 400.
+;; cpcint-size modulo 4.
 (define-viewpoint (cpcint-4 derived (cpitch))
     (events element) 
   :function (multiple-value-bind (e1 e2)
@@ -146,11 +146,11 @@
               (if (or (null e1) (null e2)) +undefined+
                   (let ((cpcint (cpcint-size (list e1 e2))))
                     (if (undefined-p cpcint) +undefined+
-                        (mod cpcint 400)))))
+                        (mod cpcint 4)))))
   ;; TODO: function* 
   )
   
-;; cpcint-size modulo 500.
+;; cpcint-size modulo 5.
 (define-viewpoint (cpcint-5 derived (cpitch))
     (events element) 
   :function (multiple-value-bind (e1 e2)
@@ -158,11 +158,11 @@
               (if (or (null e1) (null e2)) +undefined+
                   (let ((cpcint (cpcint-size (list e1 e2))))
                     (if (undefined-p cpcint) +undefined+
-                        (mod cpcint 500)))))
+                        (mod cpcint 5)))))
   ;; TODO: function* 
   )
 
-;; cpcint-size modulo 600.
+;; cpcint-size modulo 6.
 (define-viewpoint (cpcint-6 derived (cpitch))
     (events element) 
   :function (multiple-value-bind (e1 e2)
@@ -170,14 +170,14 @@
               (if (or (null e1) (null e2)) +undefined+
                   (let ((cpcint (cpcint-size (list e1 e2))))
                     (if (undefined-p cpcint) +undefined+
-                        (mod cpcint 600)))))
+                        (mod cpcint 6)))))
   ;; TODO: function* 
   )
 
 ;; Keysig
 
 ;;  Chromatic interval of tonic from C (e.g. C major gives 0, F minor
-;;  gives 5, F major also 5, Bb minor 100).
+;;  gives 5, F major also 5, Bb minor 1).
 (define-viewpoint (referent derived (keysig))
     (events element) 
   :function (let ((keysig (keysig events))
@@ -193,15 +193,15 @@
   :function* (viewpoint-alphabet (get-viewpoint 'keysig)))
 
 
-;;  Chromatic interval from tonic (0 = tonic, 400 mediant, 700 dominant, etc.)
+;;  Chromatic interval from tonic (0 = tonic, 4 mediant, 7 dominant, etc.)
 (define-viewpoint (cpintfref derived (cpitch))
     (events element) 
   :function (let ((cpitch (cpitch events))
                   (referent (referent events)))
               (cond ((undefined-p cpitch referent) +undefined+)
-                    (t (mod (- cpitch (* referent 100)) *octave*))))
+                    (t (mod (- cpitch referent) *octave*))))
   :function* (let* ((referent (referent events))
-                    (pitch (mod (+ (* referent 100) element) *octave*)))
+                    (pitch (mod (+ referent element) *octave*)))
                (remove-if-not #'(lambda (e) (= (mod e *octave*) pitch))
                               (viewpoint-alphabet (get-viewpoint 'cpitch)))))
 
@@ -266,13 +266,13 @@
     (events element) 
   :function (let ((cpitch (cpitch events)))    
               (cond ((undefined-p cpitch) +undefined+)
-                    ((< cpitch 6600) 0) ; from chorales 
-                    ((> cpitch 7400) 2) ; from chorales 
+                    ((< cpitch 66) 0) ; from chorales 
+                    ((> cpitch 74) 2) ; from chorales 
                     (t 1)))
   :function* (remove-if #'(lambda (e) 
                             (case element
-                              (0 (>= e 6600))
-                              (1 (not (<= 6600 e 7400)))
-                              (2 (<= e 7400))))
+                              (0 (>= e 66))
+                              (1 (not (<= 66 e 74)))
+                              (2 (<= e 74))))
                         (viewpoint-alphabet (get-viewpoint 'cpitch))))
 

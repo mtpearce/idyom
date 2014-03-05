@@ -1,11 +1,53 @@
 ;;;; ======================================================================
 ;;;; File:       events.lisp
-;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
+;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2013-04-12 12:46:19 jeremy>
-;;;; Time-stamp: <2014-01-28 09:45:33 marcusp>
+;;;; Time-stamp: <2014-03-05 15:10:42 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
+
+(defvar *time-slots* '(onset dur deltast barlength bioi))
+(defvar *md-time-slots* (mapcar #'music-symbol *time-slots*))
+
+; the order must match *event-attributes* in mtp-data
+(defvar *music-slots* '(onset dur deltast cpitch mpitch accidental 
+            keysig mode barlength pulses phrase tempo dyn voice bioi 
+            ornament comma articulation))
+(defvar *md-music-slots* (mapcar #'music-symbol *music-slots*))
+
+
+;;; Classes
+
+(defclass music-object ()
+  ((identifier :initarg :id :accessor ident :type composition-identifier)
+   (description :initarg :description :accessor description)
+   (timebase :initarg :timebase :accessor composition-timebase)
+   (midc :initarg :midc :accessor dataset-midc)))
+
+(defclass music-composition (list-slot-sequence music-object) ())
+
+(defclass music-dataset (list-slot-sequence music-object) ())
+
+(defclass music-event (music-object) 
+  ((onset :initarg :onset :accessor onset) 
+   (dur :initarg :dur :accessor duration)
+   (bioi :initarg :bioi :accessor bioi)
+   (deltast :initarg :deltast :accessor deltast)
+   (cpitch :initarg :cpitch :accessor chromatic-pitch)
+   (mpitch :initarg :mpitch :accessor morphetic-pitch)
+   (accidental :initarg :accidental :accessor accidental)
+   (keysig :initarg :keysig :accessor key-signature)
+   (mode :initarg :mode :accessor mode)
+   (barlength :initarg :barlength :accessor barlength)
+   (pulses :initarg :pulses :accessor pulses)
+   (phrase :initarg :phrase :accessor phrase)
+   (tempo :initarg :tempo :accessor tempo)
+   (dyn :initarg :dyn :accessor dynamics)
+   (ornament :initarg :ornament :accessor ornament)
+   (comma :initarg :comma :accessor comma)
+   (articulation :initarg :articulation :accessor articulation)
+   (voice :initarg :voice :accessor voice)))
 
 ;; Identifiers refer to a particular dataset and its constiuent parts.
 ;; We assume a dataset contains multiple compositions (event
@@ -13,6 +55,7 @@
 (defclass dataset-identifier () ())
 (defclass composition-identifier (dataset-identifier) ())
 (defclass event-identifier (composition-identifier) ())
+
 
 ;; Datasets, compositions and events are required to have an unique
 ;; integer index.
@@ -25,6 +68,9 @@
 
 ;; Get an identifier
 (defgeneric get-identifier (object))
+
+(defmethod get-identifier ((mo music-object))
+  (ident mo))
 
 ;; Copy identifier
 (defgeneric copy-identifier (id))
@@ -65,49 +111,11 @@
 (defun count-compositions (dataset-id)
   (length (get-dataset dataset-id)))
 
-
-
-;;; Events
-
-(defclass music-event () 
-  ((identifier :initarg :id :accessor ident :type event-identifier)
-   (onset :initarg :onset :accessor onset) 
-   (dur :initarg :dur :accessor duration)
-   (bioi :initarg :bioi :accessor bioi)
-   (deltast :initarg :deltast :accessor deltast)
-   (cpitch :initarg :cpitch :accessor chromatic-pitch)
-   (mpitch :initarg :mpitch :accessor morphetic-pitch)
-   (accidental :initarg :accidental :accessor accidental)
-   (keysig :initarg :keysig :accessor key-signature)
-   (mode :initarg :mode :accessor mode)
-   (barlength :initarg :barlength :accessor barlength)
-   (pulses :initarg :pulses :accessor pulses)
-   (phrase :initarg :phrase :accessor phrase)
-   (tempo :initarg :tempo :accessor tempo)
-   (dyn :initarg :dyn :accessor dynamics)
-   (ornament :initarg :ornament :accessor ornament)
-   (comma :initarg :comma :accessor comma)
-   (articulation :initarg :articulation :accessor articulation)
-   (voice :initarg :voice :accessor voice)))
-
-(defclass music-composition (list-slot-sequence) 
-  ((identifier :initarg :id :accessor ident :type composition-identifier)
-   (description :initarg :description :accessor description)
-   (timebase :initarg :timebase :accessor composition-timebase)))
-
-(defclass music-dataset (list-slot-sequence)
-  ((identifier :initarg :id :accessor ident :type dataset-identifier)
-   (description :initarg :description :accessor description)
-   (timebase :initarg :timebase :accessor dataset-timebase)
-   (midc :initarg :midc :accessor dataset-midc)))
-
-
 ;; From idyom/amuse/amuse-interface.lisp
 
 (defun music-symbol (x)
   (find-symbol (string-upcase (symbol-name x))
 	       (find-package :music-data)))
-
 
 ;(defgeneric get-attribute (event attribute))
 (defmethod get-attribute ((e music-event) attribute)
@@ -118,15 +126,6 @@
 (defmethod set-attribute ((e music-event) attribute value)
   (setf (slot-value e (music-symbol attribute))
 	value))
-
-(defvar *time-slots* '(onset dur deltast barlength bioi))
-(defvar *md-time-slots* (mapcar #'music-symbol *time-slots*))
-
-; the order must match *event-attributes* in mtp-data
-(defvar *music-slots* '(onset dur deltast cpitch mpitch accidental 
-            keysig mode barlength pulses phrase tempo dyn voice bioi 
-            ornament comma articulation))
-(defvar *md-music-slots* (mapcar #'music-symbol *music-slots*))
 
 (defgeneric get-alphabet (attribute dataset))
 
@@ -186,7 +185,7 @@
 ;  (/ (timebase event) 4))
 
 (defmethod timebase ((event music-event))
-  (timebase (ident event)))
+  (timebase (get-identifier event)))
 
 (defmethod timebase ((id composition-identifier))
   (composition-timebase (get-composition id)))

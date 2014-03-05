@@ -1,8 +1,8 @@
 ;;;; ======================================================================
 ;;;; File:       conklin2db.lisp
-;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
+;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-06-28 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-01-28 09:51:58 marcusp>                           
+;;;; Time-stamp: <2014-03-05 11:31:03 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:conklin2db)
@@ -11,7 +11,7 @@
 (defvar *original-timebase* 16)
 (defvar *timebase* 96)
 (defvar *timebase-ratio* (/ *timebase* *original-timebase*))
-(defvar *midc* 6000)
+(defvar *midc* 60)
 
 (defmethod import-data ((type (eql :conklin)) path description id)
   (setf *description* description)
@@ -59,7 +59,7 @@
 (defun dur (event)
   (list 'dur (* *timebase-ratio* (nth 1 (assoc 'dur event)))))
 
-(defun cpitch (event) (list 'cpitch (* (nth 1 (assoc 'pitch event)) 100)))
+(defun cpitch (event) (list 'cpitch (nth 1 (assoc 'pitch event))))
 
 (defun keysig (event) (assoc 'keysig event))
 

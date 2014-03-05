@@ -1,8 +1,8 @@
 ;;;; ======================================================================
 ;;;; File:       basic-viewpoints.lisp
-;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
+;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2013-01-24 15:00:00 jeremy>
-;;;; Time-stamp: <2014-01-27 17:25:32 marcusp>
+;;;; Time-stamp: <2014-03-05 13:54:35 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
@@ -13,7 +13,7 @@
 (define-basic-viewpoint onset (events)
   (md:onset (last-element events)))
 
-;; Cents above C-1
+;; Midi note numbers
 (define-basic-viewpoint cpitch (events)
   (md:chromatic-pitch (last-element events)))
 

@@ -2,7 +2,7 @@
 ;;;; File:       scales.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2013-01-24 15:00:00 jeremy>
-;;;; Time-stamp: <2014-01-28 09:57:22 marcusp>
+;;;; Time-stamp: <2014-03-05 15:08:43 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
@@ -13,7 +13,7 @@
 (defun diatonic-set (referent mode)
   (let* ((diatonic-set '(0 2 4 5 7 9 11))
          (start (position mode diatonic-set)))
-    (mapcar #'(lambda (x) (mod (* (+ (- x mode) referent) 100) *octave*))
+    (mapcar #'(lambda (x) (mod (+ (- x mode) referent) *octave*))
             (append (subseq diatonic-set start)
                     (subseq diatonic-set 0 start)))))
 
@@ -48,7 +48,7 @@
     (events element) 
   :function (- (cpitch events)
 	       (+ (* (octave (list (car events))) *octave*)
-		  (* (referent events) 100))))
+		  (referent events))))
 
 (define-viewpoint (sdeg-west derived (cpitch))
     (events element) 
@@ -80,24 +80,24 @@
 ;; distinguished tonic pitch.
 
 ;; Named pitches
-(defvar *a3* 5700) 
-(defvar *c4* 6000)
-(defvar *cs4* 6100)
-(defvar *d4* 6200)
-(defvar *ds4* 6300)
-(defvar *e* 6400)
-(defvar *f* 6500)
-(defvar *fs4* 6600)
-(defvar *g* 6700)
-(defvar *gs4* 6800)
-(defvar *a4* 6900) 
-(defvar *as4* 7000)
-(defvar *b4* 7100)
-(defvar *a5* 8100) 
+(defvar *a3* 57) 
+(defvar *c4* 60)
+(defvar *cs4* 61)
+(defvar *d4* 62)
+(defvar *ds4* 63)
+(defvar *e* 64)
+(defvar *f* 65)
+(defvar *fs4* 66)
+(defvar *g* 67)
+(defvar *gs4* 68)
+(defvar *a4* 69) 
+(defvar *as4* 70)
+(defvar *b4* 71)
+(defvar *a5* 81) 
 
 
-(defvar *major-intervals* '(0 200 400 500 700 900 1100))
-(defvar *minor-intervals* '(0 200 300 500 700 800 1000))
+(defvar *major-intervals* '(0 2 4 5 7 9 11))
+(defvar *minor-intervals* '(0 2 3 5 7 8 10))
 
 
 (defun bottom-pitch (pitch)
@@ -148,18 +148,25 @@ scale."
 ;; "development" tetra/pentachord is specified for notes below the
 ;; tonic, and another for notes above the tonic+octave.
 
+(defun divide-by-100 (x)
+  (mapcar #'(lambda (y) 
+              (if (numberp y)
+                  (/ y 100)
+                  (mapcar #'(lambda (z) (/ z 100)) y)))
+          x))
 
 ;;; Hicaz makam
 
-(defvar *hicaz-intervals* '(;; Development: Rast pentachord
-			    -702 -498 (-317 -340) -204 
-			    ;; Hicaz tetrachord, from tonic
-			    0 113 (362 385) ; 498
-			    ;; Rast pentachord (default) OR Buselik pentachord
-			    ;; (optionally used when descending)
-			    498 702 (770 792 860 883) 996 ; 1200
-			    ;; Development: Buselik tetrachord
-			    1200 1404 1494 1698))
+(defvar *hicaz-intervals* (divide-by-100
+                           '(;; Development: Rast pentachord
+                             -702 -498 (-317 -340) -204 
+                             ;; Hicaz tetrachord, from tonic
+                             0 113 (362 385) ; 498
+                             ;; Rast pentachord (default) OR Buselik pentachord
+                             ;; (optionally used when descending)
+                             498 702 (770 792 860 883) 996 ; 1200
+                             ;; Development: Buselik tetrachord
+                             1200 1404 1494 1698)))
 
 (defvar *hicaz-a3* (intervals->scale *a3* *hicaz-intervals*))
 (defvar *hicaz-a4* (intervals->scale *a4* *hicaz-intervals*))
@@ -170,14 +177,15 @@ scale."
 
 ;;; Ussak makam
 
-(defvar *ussak-intervals* '(;; Development: Rast pentachord
-			    -702 -498 (-317 -340) -204 ; 0
-			    ;; Ussak tetrachord, from tonic
-			    0 (158 181) 294 ; 498
-			    ;; Buselik pentachord
-			    498 702 792 996 ; 1200
-			    ;; Development: Ussak tetrachord
-			    1200 (1358 1381) 1494 1698))
+(defvar *ussak-intervals* (divide-by-100
+                           '(;; Development: Rast pentachord
+                             -702 -498 (-317 -340) -204 ; 0
+                             ;; Ussak tetrachord, from tonic
+                             0 (158 181) 294 ; 498
+                             ;; Buselik pentachord
+                             498 702 792 996 ; 1200
+                             ;; Development: Ussak tetrachord
+                             1200 (1358 1381) 1494 1698)))
 
 (defvar *ussak-a3* (intervals->scale *a3* *ussak-intervals*))
 (defvar *ussak-a4* (intervals->scale *a4* *ussak-intervals*))
@@ -257,7 +265,7 @@ return that degree"
 
 
 ;; Scale degree for a4 pitches, others represented with off scale
-;; symbol (100).
+;; symbol (1).
 ;;
 (define-viewpoint (sd-hicaz-a4-total derived (cpitch))
     (events element)
@@ -265,7 +273,7 @@ return that degree"
 		   (sd (scaledegree pitch *hicaz-a4*)))
 	      (if (not (null sd))
 		  sd
-		  100)))
+		  1)))
 
 (define-viewpoint (sd-ussak-a4-total derived (cpitch))
     (events element)
@@ -273,7 +281,7 @@ return that degree"
 		   (sd (scaledegree pitch *ussak-a4*)))
 	      (if (not (null sd))
 		  sd
-		  100)))
+		  1)))
 
 
 ;; Pitches in the a4, a3 and a5 scales are replaced with scale degree,
@@ -303,7 +311,7 @@ return that degree"
 
 
 ;; Pitches in the a4, a3 and a5 scales are replaced with scale degree,
-;; others represented with off scale symbol (100).
+;; others represented with off scale symbol (1).
 ;;
 (define-viewpoint (sd-hicaz-a3-5-total derived (cpitch))
     (events element)
@@ -314,7 +322,7 @@ return that degree"
 						*hicaz-a5*))))
 	      (if (not (null sd))
 		  sd
-		  100)))
+		  1)))
 
 
 (define-viewpoint (sd-ussak-a3-5-total derived (cpitch))
@@ -326,7 +334,7 @@ return that degree"
 						*ussak-a5*))))
 	      (if (not (null sd))
 		  sd
-		  100)))
+		  1)))
 
 
 ;; Scale degree is assigned over all octaves, off-scale pitches are
@@ -361,7 +369,7 @@ return that degree"
 					   *hicaz-bottom*)))
 	      (if (not (null sd))
 		  sd
-		  100)))
+		  1)))
 
 (define-viewpoint (sd-ussak-octave-total derived (cpitch))
     (events element)
@@ -370,7 +378,7 @@ return that degree"
 					   *ussak-bottom*)))
 	      (if (not (null sd))
 		  sd
-		  100)))
+		  1)))
 
 
 ;; The viewpoints below have been written to analyse a set of Makam
@@ -384,7 +392,7 @@ return that degree"
 (define-viewpoint (sd-makam-a4-desc derived (cpitch))
     (events element)
   :function (let* ((last (last-element events))
-		   (comp (music-data:get-composition (ident last)))
+		   (comp (music-data:get-composition (md:get-identifier last)))
 		   (desc (music-data:description comp)))
 	      (if (equal (subseq desc 5 10) "hicaz")
 		  (sd-hicaz-a4 events)
@@ -436,7 +444,7 @@ return that degree"
                         (degree2 (sdeg (list e2))))
                     (if (undefined-p degree1 degree2) +undefined+
                         (let ((interval (- degree2 degree1)))
-			  (if (> (abs interval) 20)
-			      100
+			  (if (> (abs interval) 0.2)
+			      1
 			      interval)))))))
 			

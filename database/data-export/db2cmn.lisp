@@ -2,7 +2,7 @@
 ;;;; File:       db2cmn.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2003-08-17 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-01-28 09:52:48 marcusp>                           
+;;;; Time-stamp: <2014-03-05 11:42:06 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cm) 
@@ -239,7 +239,7 @@ else for minor. Returns a CM/CMN key."
         tempo)))
 
 (defun get-keynum (event)
-  (round (/ (+ (get-attribute event :cpitch) (- 6000 *midc*)) 100)))
+  (round (+ (get-attribute event :cpitch) (- 60 *midc*))))
 
 (defun get-time (event)
   (let ((onset (get-attribute event :onset)))
