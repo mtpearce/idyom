@@ -2,7 +2,7 @@
 ;;;; File:       basic-viewpoints.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2013-01-24 15:00:00 jeremy>
-;;;; Time-stamp: <2014-03-05 13:54:35 marcusp>
+;;;; Time-stamp: <2014-03-06 10:29:49 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
@@ -58,11 +58,10 @@
 (define-basic-viewpoint barlength (events)
   (md:barlength (last-element events)))
 
-;; Gap between last note and its predecessor (returns 0 for first
-;; note).  
+;; Gap between last note and its predecessor (returns 0 for first note).  
 (define-basic-viewpoint deltast (events)
-  (if (slot-exists-p (car (last events)) 'mtp-data::deltast) ;; todo check whether this should be 'music-data::deltast
-      ;; Special case for MTP-EVENT
+  (if (slot-exists-p (car (last events)) 'music-data:deltast) 
+      ;; MTP-EVENT, which has a deltast slot
       (md:deltast (last-element events))
       ;; Otherwise calculate it 
       (let* ((last-element (last-element events))
@@ -75,15 +74,11 @@
 	       0)
 	      (t nil)))))
   
-
-
-
-;; Inter Onset Interval between ultimate and penultimate onsets
-;; (returns 0 for first note).
+;; Inter Onset Interval between ultimate and penultimate onsets (returns interval from 0 to onset for first note).
 (define-basic-viewpoint bioi (events)
   ;; BIOI = Basic IOI (IOI as a basic feature) 
-  (if (slot-exists-p (car (last events)) 'music-data::bioi) ;;'mtp-data::bioi)
-      ;; Special case for MTP-EVENT
+  (if (slot-exists-p (car (last events)) 'music-data::bioi) 
+      ;; Special case for MTP-EVENT, which has a bioi slot
       (md:bioi (car (last events)))
       (let* ((last-element (last-element events))
 	     (penultimate-element (penultimate-element events)))
@@ -97,14 +92,7 @@
 
 ;; 1 if event begins a phrase, -1 if it ends a phrase. Otherwise 0.
 (define-basic-viewpoint phrase (events) 
-  (let ((after  (music-segment:ground-truth-segmenter-after (car events)))
-        (before (music-segment:ground-truth-segmenter-before (car events)))
-        (last-element (last-element events)))
-    (cond ((= 1 (music-segment:boundary-strength after last-element nil))
-           1)
-          ((= 1 (music-segment:boundary-strength before last-element nil))
-           -1)
-          (t 0))))
+  (md:phrase (last-element events)))
 
 ;; Meredith's morphetic pitch - count of name-notes (white notes) up
 ;; or down from middle C = 35 (N.B. This number itself is 12 greater

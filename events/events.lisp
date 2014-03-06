@@ -2,15 +2,19 @@
 ;;;; File:       events.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2013-04-12 12:46:19 jeremy>
-;;;; Time-stamp: <2014-03-05 15:10:42 marcusp>
+;;;; Time-stamp: <2014-03-06 10:17:28 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
 
+(defun music-symbol (x)
+  (find-symbol (string-upcase (symbol-name x))
+	       (find-package :music-data)))
+
 (defvar *time-slots* '(onset dur deltast barlength bioi))
 (defvar *md-time-slots* (mapcar #'music-symbol *time-slots*))
 
-; the order must match *event-attributes* in mtp-data
+; the order must match *event-attributes* in music-db.lisp
 (defvar *music-slots* '(onset dur deltast cpitch mpitch accidental 
             keysig mode barlength pulses phrase tempo dyn voice bioi 
             ornament comma articulation))
@@ -113,16 +117,12 @@
 
 ;; From idyom/amuse/amuse-interface.lisp
 
-(defun music-symbol (x)
-  (find-symbol (string-upcase (symbol-name x))
-	       (find-package :music-data)))
-
-;(defgeneric get-attribute (event attribute))
+(defgeneric get-attribute (event attribute))
 (defmethod get-attribute ((e music-event) attribute)
   "Returns the value for slot <attribute> in event object <e>."
   (slot-value e (music-symbol attribute)))
 
-;; (defgeneric set-attribute (event attribute value))
+(defgeneric set-attribute (event attribute value))
 (defmethod set-attribute ((e music-event) attribute value)
   (setf (slot-value e (music-symbol attribute))
 	value))

@@ -2,7 +2,7 @@
 ;;;; File:       IDyOM.asd
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-05-04 21:29:04 marcusp>
-;;;; Time-stamp: <2014-02-19 17:37:35 marcusp>
+;;;; Time-stamp: <2014-03-06 10:18:08 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -32,9 +32,7 @@
 	    ((:file "package")
 	     (:file "extended-sequence")
 	     (:file "events")
-	     (:file "music-segment")
-	     (:file "music-db")
-	     (:file "music-db-segment")))
+	     (:file "music-db")))
    (:module database
 	    :serial t
 	    :components

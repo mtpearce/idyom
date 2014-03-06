@@ -1,8 +1,8 @@
 ;;;; ======================================================================
 ;;;; File:       music-db.lisp
-;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
+;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2013-04-01 12:11:04 jeremy>
-;;;; Time-stamp: <2013-04-23 15:22:07 jeremy>
+;;;; Time-stamp: <2014-03-06 10:15:34 marcusp>
 ;;;; ======================================================================
 ;;;
 ;;; Basic version of amuse-mtp package.
