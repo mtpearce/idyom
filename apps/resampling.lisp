@@ -27,19 +27,23 @@
 ;;;===========================================================================
     
 (defun idyom-resample (dataset-id target-viewpoints source-viewpoints
-                           &key pretraining-ids (k 10) resampling-indices
-			   (models :both+) (ltmo mvs::*ltm-params*) (stmo mvs::*stm-params*))
-  "IDyOM top level: returns the average cross-entropy of a model with the
-   supplied parameters on <testing-sequence> where the long-term model has
-   been trained on <training-sequence> and both <testing-sequence> and
-   <training-sequence> are composed from <alphabet>. If <models> is 'ltm
-   only a long-term model is used, else if it is 'stm only a short-term
-   model is used and otherwise both models are used and their predictions
-   combined."
+                       &key pretraining-ids (k 10)
+                         resampling-indices (models :both+)
+                         (ltmo mvs::*ltm-params*)
+                         (stmo mvs::*stm-params*)
+                         (use-resampling-set-cache? t)
+                         (use-ltms-cache? t))
+  "IDyOM top level: returns the average cross-entropy of a model with
+   the supplied parameters on <testing-sequence> where the long-term
+   model has been trained on <training-sequence> and both
+   <testing-sequence> and <training-sequence> are composed from
+   <alphabet>. If <models> is 'ltm only a long-term model is used,
+   else if it is 'stm only a short-term model is used and otherwise
+   both models are used and their predictions combined."
   (let* (;; Check model memory parameters
-	 (ltmo (apply #'check-model-defaults (cons mvs::*ltm-params* ltmo)))
-	 (stmo (apply #'check-model-defaults (cons mvs::*stm-params* stmo)))
-	 ;; Set LTM and STM parameters
+         (ltmo (apply #'check-model-defaults (cons mvs::*ltm-params* ltmo)))
+         (stmo (apply #'check-model-defaults (cons mvs::*stm-params* stmo)))
+         ;; Set LTM and STM parameters
          (mvs::*models* models)
          (mvs::*ltm-order-bound* (getf ltmo :order-bound))
          (mvs::*ltm-mixtures* (getf ltmo :mixtures))
@@ -58,10 +62,11 @@
           (viewpoints:get-basic-viewpoints target-viewpoints (append dataset pretraining-set)))
          ;; resampling sets
          (k (if (eq k :full) (length dataset) k))
-         (resampling-sets (get-resampling-sets dataset-id :k k))
+         (resampling-sets (get-resampling-sets dataset-id :k k
+                                               :use-cache? use-resampling-set-cache?))
          (resampling-id 0)
-	 ;; If no resampling sets specified, then use all sets
-         (resampling-indices (if (null resampling-indices) 
+         ;; If no resampling sets specified, then use all sets
+         (resampling-indices (if (null resampling-indices)
                                  (utils:generate-integers 0 (1- k))
                                  resampling-indices))
          ;; an output filename
@@ -81,9 +86,9 @@
                (test-set (monodies-to-lists (get-test-set dataset resampling-set)))
                (ltms (get-long-term-models sources training-set
                                            pretraining-ids dataset-id
-                                           resampling-id k))
+                                           resampling-id k use-ltms-cache?))
                (mvs (make-mvs targets sources ltms))
-               (predictions 
+               (predictions
                 (mvs:model-dataset mvs test-set :construct? t :predict? t)))
           (push predictions sequence-predictions)))
       (incf resampling-id))))
@@ -309,20 +314,28 @@ dataset-id)."
 ;;;===========================================================================
 
 (defun get-long-term-models (viewpoints training-set pretraining-ids
-                             training-id resampling-id resampling-count)
+                             training-id resampling-id
+                             resampling-count use-cache?)
   "Returns a vector of long-term models -- one for each viewpoint in
 <viewpoints> -- trained on <training-set> and initialised with the
 supplied keyword parameters."
-  (mapcar #'(lambda (viewpoint)
-                (let ((filename
-                       (get-model-filename viewpoint pretraining-ids
-                                           training-id resampling-id
-                                           resampling-count))
-                      (training-set
-                       (viewpoint-sequences viewpoint training-set))
-                      (alphabet (viewpoint-alphabet viewpoint)))
-                  (get-model filename alphabet training-set)))
-          viewpoints))
+  (let ((constructor-fun
+         (if use-cache?
+             #'(lambda (viewpoint)
+                 (let ((filename
+                        (get-model-filename viewpoint pretraining-ids
+                                            training-id resampling-id
+                                            resampling-count))
+                       (training-set
+                        (viewpoint-sequences viewpoint training-set))
+                       (alphabet (viewpoint-alphabet viewpoint)))
+                   (get-model filename alphabet training-set)))
+             #'(lambda (viewpoint)
+                 (let ((training-set
+                        (viewpoint-sequences viewpoint training-set))
+                       (alphabet (viewpoint-alphabet viewpoint)))
+                   (build-model training-set alphabet))))))
+    (mapcar constructor-fun viewpoints)))
 
 (defun get-model-filename (viewpoint pretraining-ids training-id resampling-id
                            resampling-count)
@@ -379,18 +392,24 @@ for <viewpoint> in <dataset-id>."
       (incf composition-index))
     (reverse test-set)))
 
-(defun get-resampling-sets (dataset-id &key (create? nil) (k 10))
-  "Returns the resampling-sets for dataset <dataset-id>. If <create?> is
-   null they are read from file, otherwise they are created." 
+(defun get-resampling-sets (dataset-id &key (create? nil) (k 10)
+                                         (use-cache? nil))
+  "Returns the resampling-sets for dataset <dataset-id>. If <create?>
+   is null they are read from file, otherwise they are created."
   (let* ((dataset-ids (if (consp dataset-id) dataset-id (list dataset-id)))
          (filename (get-resampling-sets-filename dataset-ids k)))
-    (unless (and (null create?) (file-exists filename))
-      (let* ((composition-count (apply #'+ (mapcar #'md:count-compositions 
-                                                   dataset-ids)))
-             (resampling-sets (create-resampling-sets composition-count k)))
-        (write-resampling-sets-to-file resampling-sets filename)))
-    (let ((resampling-sets (read-object-from-file filename :resampling)))
-      resampling-sets)))
+    (if (or (not use-cache?) create? (not (file-exists filename)))
+        (let* ((composition-count
+                (apply #'+ (mapcar #'md:count-compositions
+                                   dataset-ids)))
+               (resampling-sets (create-resampling-sets
+                                 composition-count k)))
+          (when use-cache? (write-resampling-sets-to-file
+                            resampling-sets filename))
+          ;; FIXME: Why did Marcus return an object read back?
+          resampling-sets)
+        ;; Retrieve the previously cached resampling-set.
+        (read-object-from-file filename :resampling))))
         
 (defun write-resampling-sets-to-file (resampling-sets filename)
   "Writes <resampling-sets> to <file>." 
