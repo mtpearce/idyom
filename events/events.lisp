@@ -2,7 +2,7 @@
 ;;;; File:       events.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2013-04-12 12:46:19 jeremy>
-;;;; Time-stamp: <2014-03-19 14:07:13 marcusp>
+;;;; Time-stamp: <2014-03-19 14:27:52 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -109,13 +109,13 @@
 ;;; Identifiers 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defclass dataset-identifier (dataset-identifier)
+(defclass dataset-identifier ()
   ((dataset-id :initarg :dataset-index :accessor dataset-index :type (integer 0 *))))
    
-(defclass composition-identifier (dataset-identifier composition-identifier)
+(defclass composition-identifier (dataset-identifier)
   ((composition-id :initarg :composition-index :accessor composition-index :type (integer 0 *))))
 
-(defclass event-identifier (composition-identifier event-identifier)
+(defclass event-identifier (composition-identifier)
   ((event-id :initarg :event-index :accessor event-index :type (integer 0 *))))
 
 (defun make-dataset-id (dataset-index) 
@@ -217,7 +217,6 @@
   (let ((monody (make-instance 'music-composition 
                                :id (copy-identifier (ident composition))
                                :description (description composition)
-                               :midc (midc composition)
                                :timebase (timebase composition)))
         (events nil)
         (monody-voice nil))
@@ -327,7 +326,8 @@
 				 (second db-event)
 				 (third db-event)))
          (music-event (make-instance 'music-event
-				   :id event-id)))
+				   :id event-id
+                                   :timebase timebase)))
     (do* ((slts *md-music-slots* (cdr slts))
           (db-atts (nthcdr 3 db-event) (cdr db-atts)))
          ((null slts) music-event)
