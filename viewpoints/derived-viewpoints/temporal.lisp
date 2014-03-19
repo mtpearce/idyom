@@ -2,13 +2,10 @@
 ;;;; File:       temporal.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2013-01-24 15:00:00 jeremy>
-;;;; Time-stamp: <2014-03-19 14:31:42 marcusp>
+;;;; Time-stamp: <2014-03-19 14:54:51 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
-
-(defun timebase (event)
-  (md:timebase event))
 
 ;;; Barlength, Pulses ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -18,7 +15,7 @@
     (events element) 
   :function (let ((barlength (barlength events))
 		  (pulses (pulses events))
-		  (timebase (timebase (last-element events))))
+		  (timebase (md:timebase (last-element events))))
 	      (cond ((undefined-p barlength pulses) +undefined+)
 		    ((zerop barlength) +undefined+)
 		    ((zerop pulses) +undefined+)
@@ -315,7 +312,7 @@
                   (let ((pulses (pulses event))
 			(barlength (barlength event))
                         (onset (onset event))
-			(timebase (timebase (last-element events))))
+			(timebase (md:timebase (last-element events))))
 		    ;; Check these are properly defined
 		    (if (or (undefined-p pulses onset barlength)
                             (zerop barlength)
@@ -332,7 +329,7 @@
                   (let ((pulses (pulses event))
 			(barlength (barlength event))
                         (onset (onset event))
-			(timebase (timebase (last-element events))))
+			(timebase (md:timebase (last-element events))))
 		    ;; Check these are properly defined
 		    (if (or (undefined-p pulses onset barlength)
                             (zerop barlength)

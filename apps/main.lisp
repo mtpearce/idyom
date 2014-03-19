@@ -2,7 +2,7 @@
 ;;;; File:       main.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2010-11-01 15:19:57 marcusp>
-;;;; Time-stamp: <2014-02-11 00:16:45 marcusp>
+;;;; Time-stamp: <2014-03-19 17:25:11 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:idyom)
@@ -35,6 +35,13 @@
     :bioi-contour   ; contour between consecutive inter-onset intervals
     ))
 
+(defvar *onset-viewpoints*
+  '(:onset
+    :ioi
+    :ioi-ratio
+    :ioi-contour
+    :metaccent
+    :posinbar))
 
 ;;; IDyOM top-level
 ;;;
@@ -98,6 +105,7 @@
 	((eq basis :default) *cpitch-viewpoints-short*)
 	;; Predefined viewpoint sets
 	((eq basis :ioi-views) *bioi-viewpoints*)
+        ((eq basis :onset-views) *onset-viewpoints*)
 	((eq basis :pitch-viewsA) *cpitch-viewpoints*)
 	((eq basis :pitch-viewsB) *cpitch-viewpoints-short*)
 	;; Else use supplied viewpoints

@@ -2,7 +2,7 @@
 ;;;; File:       events.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2013-04-12 12:46:19 jeremy>
-;;;; Time-stamp: <2014-03-19 14:27:52 marcusp>
+;;;; Time-stamp: <2014-03-19 14:41:36 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -83,9 +83,9 @@
 (defmethod copy-event ((e music-event))
   (make-instance 'music-event
                  :id (copy-identifier (ident e))
-                 :description (description e)
                  :timebase (timebase e)
-                 :midc (midc e)
+                 ;;:description (description e)
+                 ;;:midc (midc e)
                  :onset (onset e)
 		 :dur (duration e)
                  :deltast (deltast e)

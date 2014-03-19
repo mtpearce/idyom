@@ -1,8 +1,8 @@
 ;;;; ======================================================================
 ;;;; File:       viewpoint-selection.lisp
-;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
+;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-10-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-01-28 09:49:44 marcusp>                           
+;;;; Time-stamp: <2014-03-19 17:22:39 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoint-selection)
