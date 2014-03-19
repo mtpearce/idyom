@@ -2,7 +2,7 @@
 ;;;; File:       temporal.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2013-01-24 15:00:00 jeremy>
-;;;; Time-stamp: <2014-03-05 10:35:37 marcusp>
+;;;; Time-stamp: <2014-03-19 14:31:42 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
@@ -235,7 +235,7 @@
     (:pulses 9 :units 8 :accents ((1 . 2) (4 . 1) (7 . 1)))))
 ;; Create an accent hash table
 (defun make-multiple-level-accents-table ()
-  (let ((table (make-hash-table :test 'equal)))
+  (let ((table (make-hash-table :test 'equal :size (length *multiple-level-accents*))))
     (dolist (accents *multiple-level-accents* table)
       (let ((key (list (getf accents :pulses)
 		       (getf accents :units)))
@@ -250,6 +250,7 @@
 
 (defun metrical-accent-multiple (onset pulses barlength timebase)
   "Multiple-level metrical accent for note at onset."
+  (declare (optimize speed) (fixnum onset pulses barlength timebase))
   (let* ((beatlength (/ barlength pulses))
 	 (beatunit (/ timebase beatlength))
 	 (accents (time-signature->metrical-multiple-levels pulses beatunit))
@@ -257,26 +258,36 @@
 	 (accent (cdr (assoc posn accents))))
     (if (null accent) 0 accent)))
 
-(defun metrical-accent-divison (onset pulses barlength)
-  "Division-level metrical accent for note at onset."
-  (labels ((factor2 (n) ; 2s in prime factorisation
+(defparameter *factor2* (make-hash-table :test 'eq))
+(defun factor2 (n)
+  (labels ((f2 (n) ; 2s in prime factorisation
+             (declare (fixnum n))
 	     (if (zerop (mod n 2))
 		 (+ (factor2 (/ n 2)) 1)
 		 0)))
-    (let* (;; Length of single beat
-	   (beatlength (/ barlength pulses))
-	   ;; Maximum we can divide beat by 2
-	   (max-level (factor2 beatlength)) 
-	   ;; Assume no accent will be found
-	   (note-accent 0))
-      ;; Iterate through levels (from beat level 0)
-      (do ((level 0 (1+ level)))
-	  ((or (>= level max-level)  
-	       (not (= note-accent 0))) ; Stop if accent determined
-	   note-accent) ; Return note accent
-	(if (zerop (mod onset (/ beatlength (expt 2 level))))
-	    (setf note-accent (- (+ max-level 1) level)))))))
+    (let ((fs (gethash n *factor2*)))
+      (if fs
+          fs
+          (let ((fs (f2 n)))
+            (setf (gethash n *factor2*) fs)
+            fs)))))
 
+(defun metrical-accent-division (onset pulses barlength)
+  "Division-level metrical accent for note at onset."
+  (declare (optimize speed) (fixnum onset pulses barlength))
+  (let* (;; Length of single beat
+         (beatlength (/ barlength pulses))
+         ;; Maximum we can divide beat by 2
+         (max-level (factor2 beatlength))
+         ;; Assume no accent will be found
+         (note-accent 0))
+    ;; Iterate through levels (from beat level 0)
+    (do ((level 0 (1+ level)))
+        ((or (>= level max-level)  
+             (not (= note-accent 0))) ; Stop if accent determined
+         note-accent) ; Return note accent
+      (if (zerop (mod onset (/ beatlength (expt 2 level))))
+          (setf note-accent (- (1+ max-level) level))))))
 
 ;; Division-level metrical accent
 (define-viewpoint (metaccent-div derived (onset))
@@ -292,7 +303,7 @@
                             (zerop barlength)
                             (zerop pulses))
                         +undefined+
-			(metrical-accent-divison onset pulses barlength))))))
+			(metrical-accent-division onset pulses barlength))))))
 
 
 ;; Multiple-level metrical accent
@@ -328,7 +339,7 @@
                             (zerop pulses))
                         +undefined+
 			(+ (metrical-accent-multiple onset pulses barlength timebase)
-			   (metrical-accent-divison onset pulses barlength)))))))
+			   (metrical-accent-division onset pulses barlength)))))))
 
 ;; Metric accent interval
 (define-viewpoint (met-interval derived (onset))
