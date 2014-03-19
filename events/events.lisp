@@ -2,7 +2,7 @@
 ;;;; File:       events.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2013-04-12 12:46:19 jeremy>
-;;;; Time-stamp: <2014-03-19 14:41:36 marcusp>
+;;;; Time-stamp: <2014-03-19 17:36:43 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -230,6 +230,9 @@
      :initial-contents (sort events #'< :key #'onset))
     monody))
 
+(defun count-compositions (dataset-id)
+  (length (get-dataset dataset-id)))
+
 (defgeneric get-dataset (dataset-identifier))
 (defgeneric get-composition (composition-identifier))
 (defgeneric get-event (event-identifier))
@@ -354,12 +357,7 @@
 ;; (defmethod timebase ((id composition-identifier))
 ;;   (timebase (get-composition id)))
 
-
 ;; (defgeneric get-alphabet (attribute dataset))
-
-
-;; (defun count-compositions (dataset-id)
-;;   (length (get-dataset dataset-id)))
 
 
 ;; #.(clsql:locally-enable-sql-reader-syntax)
