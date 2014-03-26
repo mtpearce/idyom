@@ -2,7 +2,7 @@
 ;;;; File:       midi2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2007-03-21 09:47:26 marcusp>
-;;;; Time-stamp: <2014-03-05 11:35:29 marcusp>
+;;;; Time-stamp: <2014-03-26 15:44:37 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:midi2db) 
@@ -159,8 +159,9 @@
 		   ;; IOI
 		   (midi-bioi (if (null prev-onset) 0
 				  (- midi-onset prev-onset)))
-		   (bioi (if (zerop midi-bioi) 1
-			     (midi-time->time midi-bioi ppqn)))
+		   (bioi (cond ((null prev-onset) 0)
+                               ((zerop midi-bioi) 1)
+                               (t (midi-time->time midi-bioi ppqn))))
 		   ;; deltast
 		   (midi-deltast (if (null prev-offset) 0 
 				     (- midi-onset prev-offset)))
