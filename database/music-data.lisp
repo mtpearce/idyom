@@ -2,7 +2,7 @@
 ;;;; File:       music-data.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-03-05 11:11:14 marcusp>                           
+;;;; Time-stamp: <2014-03-28 12:05:45 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -255,7 +255,7 @@ no. in which the event occurs." ))
 (defmethod import-data ((type (eql :lisp)) filename description id)
   (declare (ignore description))
   (with-open-file (s filename :direction :input)
-    (insert-dataset (read-object-from-file filename) id)))
+    (insert-dataset (utils:read-object-from-file filename) id)))
 
 (defmethod export-data ((d mtp-dataset) (type (eql :lisp)) filename)
   (let ((dataset nil))
@@ -651,69 +651,3 @@ from <event-id> to (+ <event-id> <length>)."
 
 
 #.(clsql:restore-sql-reader-syntax-state)
-
-;;;===========================================================================
-;;; File I/O 
-;;;===========================================================================
-                            
-(defun write-object-to-file (object filename &optional (package :cl-user)
-                             (fun #'prin1))
-  (let ((gzipped-filename (add-file-suffix filename ".gz")))
-    (if (probe-file gzipped-filename) (delete-file gzipped-filename))
-    (with-open-file (s filename :direction :output :if-exists :overwrite
-                       :if-does-not-exist :create)
-      (with-standard-io-syntax
-          (let ((*package* (find-package package)))
-            (funcall fun object s))))
-    (gzip filename)))
-      
-(defun read-object-from-file (filename &optional (package :cl-user))
-  (let ((gzipped-filename (add-file-suffix filename ".gz")))
-    (if (probe-file gzipped-filename)
-        (read-object-from-gzipped-file gzipped-filename package)
-        (if (probe-file filename) 
-            (with-open-file (s filename :direction :input)
-              (with-standard-io-syntax
-                  (let ((*package* (find-package package)))
-                    (read s nil))))
-            (format t "~%~A does not exist." filename)))))
-
-(defun file-exists (filename &key (suffix ".gz"))
-  (or (probe-file filename)
-      (probe-file (add-file-suffix filename suffix))))
-
-(defun read-object-from-gzipped-file (filename &optional (package :cl-user))
-  (let ((output-filename (remove-file-suffix filename)))
-    (gunzip filename)
-    (with-open-file (s output-filename :direction :input)
-      (prog1
-          (with-standard-io-syntax
-              (let ((*package* (find-package package)))
-                (read s nil)))
-        (gzip output-filename)))))
-       
-(defun remove-file-suffix (filename &optional (suffix ".gz"))
-  (reverse (subseq (reverse filename) (length suffix))))
-
-(defun add-file-suffix (filename &optional (suffix ".gz"))
-  (string-append filename suffix))
-
-(defun gunzip (filename)
-  #+(and x86-64 linux) (shell-command "/bin/gunzip" (list filename))
-  #-(and x86-64 linux) (shell-command "/usr/bin/gunzip" (list filename)))
-
-(defun gzip (filename)
-  #+(and x86-64 linux) (shell-command "/bin/gzip" (list filename))
-  #-(and x86-64 linux) (shell-command "/usr/bin/gzip" (list filename)))
-
-(defun string-append (&rest args)
-  "Concatenates its string arguments <args>."
-  (apply #'concatenate 'string args))
-
-(defun shell-command (command args) 
-  #+cmu (ext:run-program command args)
-  #+sbcl (sb-ext:run-program command args)
-  #+allegro (excl:run-shell-command 
-             (apply #'string-append command 
-                    (mapcar #'(lambda (x) (format nil " ~A" x)) args)))
-  ) 
