@@ -2,7 +2,7 @@
 ;;;; File:       music-data.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-03-28 12:05:45 marcusp>                           
+;;;; Time-stamp: <2014-03-28 13:06:20 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -296,23 +296,25 @@ no. in which the event occurs." ))
    <midc> and inserts it into the dataset table of the default database.
    Calls <insert-composition> to insert each composition in
    <compositions> into the composition table." 
-  (let* ((id (or id (get-next-free-id)))
-         (description (nth 0 data))
-         (timebase (nth 1 data))
-         (midc (nth 2 data))
-         (compositions (nthcdr 3 data))
-         (count (length compositions))
-         (dataset-object (make-instance 'mtp-dataset
-                                        :dataset-id id
-                                        :description description
-                                        :timebase timebase
-                                        :midc midc)))
-    (format t "~%Inserting data into database: dataset ~A." id)
-    (clsql:with-transaction () 
-      (clsql:update-records-from-instance dataset-object)
-      (dotimes (composition-id count)
-        (insert-composition dataset-object (nth composition-id compositions)
-                            composition-id)))))
+  (if (null (nthcdr 3 data))
+      (print "Cowardly refusing to import an empty dataset.")
+      (let* ((id (or id (get-next-free-id)))
+             (description (nth 0 data))
+             (timebase (nth 1 data))
+             (midc (nth 2 data))
+             (compositions (nthcdr 3 data))
+             (count (length compositions))
+             (dataset-object (make-instance 'mtp-dataset
+                                            :dataset-id id
+                                            :description description
+                                            :timebase timebase
+                                            :midc midc)))
+        (format t "~%Inserting data into database: dataset ~A." id)
+        (clsql:with-transaction () 
+          (clsql:update-records-from-instance dataset-object)
+          (dotimes (composition-id count)
+            (insert-composition dataset-object (nth composition-id compositions)
+                                composition-id))))))
         
 (defmethod insert-composition ((d mtp-dataset) composition id)
   "Takes a preprocessed composition <composition> and
