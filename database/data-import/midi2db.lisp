@@ -1,15 +1,14 @@
 ;;;; ======================================================================
 ;;;; File:       midi2db.lisp
-;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
+;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2007-03-21 09:47:26 marcusp>
-;;;; Time-stamp: <2014-03-26 15:44:37 marcusp>
+;;;; Time-stamp: <2014-05-09 18:43:27 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:midi2db) 
 
 (defvar *timebase* 96 "Basic time units per semibreve")
-(defvar *middle-c* (list 60 35) 
-  "Chromatic and diatonic integer mappings for c_4")
+(defvar *middle-c* (list 60 35) "Chromatic and diatonic integer mappings for c_4")
 (defvar *default-midifile-extension* "mid")
 
 (defmethod import-data ((type (eql :mid)) path description id)
@@ -24,6 +23,7 @@
       (list (cons (pathname-name path)
                   (convert-midi-file (midi:read-midi-file path))))
       (mapcar #'(lambda (f) 
+                  ;; (format t "~&Convert-midi-file: ~A~%" f)
                   (cons (pathname-name f)
                         (convert-midi-file (midi:read-midi-file f))))
               (directory 
@@ -134,14 +134,13 @@
       ;; Next track
       (incf tracknum))))
 
-
 (defun convert-midi-file (midifile)
   (multiple-value-bind (notes bends) (extract-midi-notes midifile)
     (let* ((ppqn (midi:midifile-division midifile))
 	   (dbevents))
       (dotimes (i (length notes) (nreverse dbevents))
-	(let* ((prev-onset)
-	       (prev-offset))
+	(let* ((prev-onset) (prev-offset)
+               (ponset 0) (pdur 0) (pdeltast 0) (pbioi 0))
 	  (dolist (note (nth i notes))
 	    (let* (;; Timing
 		   (midi-onset (getf note :onset))
@@ -155,7 +154,7 @@
 			      (if (null bend) 0
 				  (pitch-bend->cents bend))))
 		   ;; Duration
-		   (dur (- offset onset))	       
+		   (dur (- offset onset))
 		   ;; IOI
 		   (midi-bioi (if (null prev-onset) 0
 				  (- midi-onset prev-onset)))
@@ -165,30 +164,38 @@
 		   ;; deltast
 		   (midi-deltast (if (null prev-offset) 0 
 				     (- midi-onset prev-offset)))
-		   (deltast (midi-time->time midi-deltast ppqn))
-		   ;; Create database event
-		   (dbevent (make-dbevent onset dur deltast bioi cpitch note)))
-	      (push dbevent dbevents)
-	      (setf prev-onset midi-onset
+		   (deltast (midi-time->time midi-deltast ppqn)))
+              ;; (format t "~&A: ~A ~A ~A ~A~%" (float onset) (float bioi) (float deltast) (float dur))
+              (setf bioi (round bioi)
+                    onset (+ ponset bioi)
+                    dur (round dur)
+                    deltast (- bioi pdur))
+              ;; (format t "~&B: ~A ~A ~A ~A~%" onset bioi deltast dur)
+	      (push (make-dbevent onset dur deltast bioi cpitch note) dbevents)
+	      (setf ponset onset
+                    pdur dur
+                    pdeltast deltast
+                    pbioi bioi
+                    prev-onset midi-onset
 		    prev-offset midi-offset))))))))
 
 (defun make-dbevent (onset dur deltast bioi cpitch note)
-  (list (list :onset (round onset))
-				  (list :dur (round dur))
-				  (list :deltast (round deltast))
-				  (list :bioi (round bioi))
-				  (list :cpitch cpitch)
-				  (list :keysig (getf note :keysig))
-				  (list :mode (getf note :mode))
-				  (list :barlength (getf note :barlength))
-				  (list :pulses (getf note :pulses))
-				  (list :tempo (getf note :tempo))
-				  (list :phrase (getf note :phrase))
-				  (list :voice (getf note :voice))
-				  (list :articulation 0)
-				  (list :comma 0)
-				  (list :ornament 0)
-				  (list :dyn (getf note :dyn))))
+  (list (list :onset onset)
+        (list :dur dur)
+        (list :deltast deltast)
+        (list :bioi bioi)
+        (list :cpitch cpitch)
+        (list :keysig (getf note :keysig))
+        (list :mode (getf note :mode))
+        (list :barlength (getf note :barlength))
+        (list :pulses (getf note :pulses))
+        (list :tempo (getf note :tempo))
+        (list :phrase (getf note :phrase))
+        (list :voice (getf note :voice))
+        (list :articulation 0)
+        (list :comma 0)
+        (list :ornament 0)
+        (list :dyn (getf note :dyn))))
 
 
 ;;; Convert MIDI into database events
