@@ -2,7 +2,7 @@
 ;;;; File:       main.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2010-11-01 15:19:57 marcusp>
-;;;; Time-stamp: <2014-03-19 17:25:11 marcusp>
+;;;; Time-stamp: <2014-05-09 19:07:50 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:idyom)
@@ -41,7 +41,8 @@
     :ioi-ratio
     :ioi-contour
     :metaccent
-    :posinbar))
+    ;; :posinbar
+    ))
 
 ;;; IDyOM top-level
 ;;;
@@ -104,10 +105,10 @@
 	;; Default mode: use conservative default viewpoints for this target
 	((eq basis :default) *cpitch-viewpoints-short*)
 	;; Predefined viewpoint sets
-	((eq basis :ioi-views) *bioi-viewpoints*)
-        ((eq basis :onset-views) *onset-viewpoints*)
-	((eq basis :pitch-viewsA) *cpitch-viewpoints*)
-	((eq basis :pitch-viewsB) *cpitch-viewpoints-short*)
+	((eq basis :bioi) *bioi-viewpoints*)
+        ((eq basis :onset) *onset-viewpoints*)
+	((eq basis :pitch-full) *cpitch-viewpoints*)
+	((eq basis :pitch-short) *cpitch-viewpoints-short*)
 	;; Else use supplied viewpoints
 	(t basis)))
 
