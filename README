@@ -1,7 +1,7 @@
 IDYOM: Information Dynamics of Music
 Version 2.0 alpha
 
-Copyright 2002-2014, Marcus Pearce (marcus.pearce@qmul.ac.uk)
+Copyright 2001-2014, Marcus Pearce (marcus.pearce@qmul.ac.uk)
 
 This program is distributed under the terms of the GNU General Public
 License.  See COPYING for details.
@@ -11,6 +11,11 @@ License.  See COPYING for details.
 Documentation on how to install and use the system can be found on the
 IDyOM wiki at Sound Software
 (https://code.soundsoftware.ac.uk/projects/idyom-project/wiki).
+
+The primary top-level funciton is (idyom:idyom ...)
+
+For detailed documentation on usage, see the wiki:
+https://code.soundsoftware.ac.uk/projects/idyom-project/wiki
 
 The design of the system and its underlying principles are documented
 in Marcus Pearce's PhD thesis "The Construction and Evaluation of
@@ -25,35 +30,4 @@ Though not required, IDyOM is most easily installed using quicklisp:
 
 http://www.quicklisp.org/
 
-see the wiki for details.
-
-==Top-level function==
-
-idyom:idyom
-
-For detailed documentation, see the wiki:
-https://code.soundsoftware.ac.uk/projects/idyom-project/wiki
-
-==Directory Structure==
-
-The layout of the code is as follows: 
-
-* idyom.asd: the system definition 
-
-* utils/: general-purpose utilities 
-
-* amuse/: an interface to amuse music data interface
-** amuse-interface.lisp: look here to make this less dependent on amuse-mtp
-** viewpoint-extensions.lisp: extensions to the viewpoint framework useful for modelling
-
-* ppm/: the multiple-viewpoint system modelling framework
-** params.lisp: user-level parameters to the statistical modelling 
-** multiple-viewpoint-system.lisp: modelling with multiple-viewpoints 
-** prediction-sets.lisp: representing and combining distributions, computing entropy and information content
-
-* apps/: top-level applications for users 
-** apps.lisp: pathnames and filenames for saving data and results
-** main.lisp: top-level code for using the system
-** resampling.lisp: the main user interface - estimating information content by cross-validation
-** viewpoint-selection.lisp: on tin does it says the what
-** generation.lisp: code for generating melodies (possibly suffering from bitrot)
+see the wiki for further details on installation.
