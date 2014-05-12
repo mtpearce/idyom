@@ -2,7 +2,7 @@
 ;;;; File:       main.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2010-11-01 15:19:57 marcusp>
-;;;; Time-stamp: <2014-05-09 19:07:50 marcusp>
+;;;; Time-stamp: <2014-05-12 11:46:52 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:idyom)
@@ -36,7 +36,7 @@
     ))
 
 (defvar *onset-viewpoints*
-  '(:onset
+  '(;;:onset
     :ioi
     :ioi-ratio
     :ioi-contour
