@@ -1,8 +1,8 @@
 ;;;; ======================================================================
 ;;;; File:       ppm-io.lisp
-;;;; Author:     Marcus  Pearce <marcus.pearce@eecs.qmul.ac.uk>
+;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2013-07-22 08:56:32 marcusp>
+;;;; Time-stamp: <2014-06-04 16:05:14 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package :ppm)

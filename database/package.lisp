@@ -1,8 +1,8 @@
 ;;;; ======================================================================
 ;;;; File:       package.lisp
-;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
+;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-01-28 09:50:51 marcusp>                           
+;;;; Time-stamp: <2014-06-04 16:07:04 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)

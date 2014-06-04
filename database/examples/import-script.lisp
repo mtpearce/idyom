@@ -1,8 +1,8 @@
 ;;;; ======================================================================
 ;;;; File:       import-script.lisp
-;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
+;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2008-11-03 11:24:51 marcusp>
-;;;; Time-stamp: <2008-11-03 11:48:02 marcusp>
+;;;; Time-stamp: <2014-06-04 16:07:23 marcusp>
 ;;;; ======================================================================
 
 ;; This is the script I use to import data into the amuse-mtp

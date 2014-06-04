@@ -1,8 +1,8 @@
 ;;;; ======================================================================
 ;;;; File:       db2cmn.lisp
-;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
+;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-08-17 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-03-05 11:42:06 marcusp>                           
+;;;; Time-stamp: <2014-06-04 16:08:34 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cm) 

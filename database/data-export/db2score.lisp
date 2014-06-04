@@ -1,8 +1,8 @@
 ;;;; ======================================================================
 ;;;; File:       db2ps.lisp
-;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
+;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2005-11-25 17:08:20 marcusp>
-;;;; Time-stamp: <2014-01-28 09:52:33 marcusp>
+;;;; Time-stamp: <2014-06-04 16:08:48 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:db2lilypond) 

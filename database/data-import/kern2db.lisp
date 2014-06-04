@@ -1,8 +1,8 @@
 ;;;; =======================================================================
 ;;;; File:       kern2db.lisp
-;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
+;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-03-05 11:36:44 marcusp>                           
+;;;; Time-stamp: <2014-06-04 16:07:42 marcusp>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================

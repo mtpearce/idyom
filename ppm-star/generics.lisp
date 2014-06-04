@@ -1,8 +1,8 @@
 ;;;; ======================================================================
 ;;;; File:       generics.lisp
-;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
+;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2008-11-03 14:07:53 marcusp>
-;;;; Time-stamp: <2014-01-28 09:54:59 marcusp>
+;;;; Time-stamp: <2014-06-04 16:04:55 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:ppm)

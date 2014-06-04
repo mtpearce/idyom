@@ -1,8 +1,8 @@
 ;;;; ======================================================================
 ;;;; File:       generation.lisp
-;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
+;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-08-21 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-01-28 09:50:02 marcusp>                           
+;;;; Time-stamp: <2014-06-04 16:03:58 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 

@@ -9,5 +9,4 @@
            "READ-MODEL-FROM-FILE" "GET-MODEL"
            ;; From ppm-ui.lisp
            "GET-PPM-ALPHABET" "NGRAM-FREQUENCIES" "BUILD-MODEL")
-  (:documentation "Prediction by Partial Match modelling including
-methods for model initialisation, construction and prediction."))
+  (:documentation "Prediction by Partial Match modelling including methods for model initialisation, construction and prediction."))

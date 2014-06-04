@@ -1,8 +1,8 @@
 ;;;; ======================================================================
 ;;;; File:       misc.lisp
-;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
+;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2013-01-24 15:00:00 jeremy>
-;;;; Time-stamp: <2014-01-28 09:57:29 marcusp>
+;;;; Time-stamp: <2014-06-04 16:06:23 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)

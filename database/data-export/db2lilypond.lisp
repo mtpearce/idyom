@@ -1,8 +1,8 @@
 ;;;; ======================================================================
 ;;;; File:       db2lilypond.lisp
-;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
+;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2005-06-07 10:13:24 marcusp>
-;;;; Time-stamp: <2014-03-05 11:41:13 marcusp>
+;;;; Time-stamp: <2014-06-04 16:08:39 marcusp>
 ;;;; ======================================================================
 ;;;; 
 ;;;; TODO 

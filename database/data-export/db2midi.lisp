@@ -1,8 +1,8 @@
 ;;;; ======================================================================
 ;;;; File:       db2midi.lisp
-;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
+;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2005-06-09 11:01:51 marcusp>
-;;;; Time-stamp: <2014-03-05 11:37:39 marcusp>
+;;;; Time-stamp: <2014-06-04 16:08:43 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:db2midi)

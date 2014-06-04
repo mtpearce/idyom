@@ -1,8 +1,8 @@
 ;;;; ======================================================================
 ;;;; File:       apps.lisp
-;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
+;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2005-11-27 16:27:35 marcusp>
-;;;; Time-stamp: <2014-01-28 09:50:08 marcusp>
+;;;; Time-stamp: <2014-06-04 16:04:03 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:apps) 

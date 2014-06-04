@@ -1,8 +1,8 @@
 ;;;; ======================================================================
 ;;;; File:       tobias2db.lisp
-;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
+;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2007-04-19 11:15:57 marcusp>
-;;;; Time-stamp: <2014-03-05 11:28:16 marcusp>
+;;;; Time-stamp: <2014-06-04 16:07:49 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:tobias2db) 

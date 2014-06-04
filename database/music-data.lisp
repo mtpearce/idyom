@@ -1,8 +1,8 @@
 ;;;; ======================================================================
 ;;;; File:       music-data.lisp
-;;;; Author:     Marcus Pearce <marcus.pearce@eecs.qmul.ac.uk>
+;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-03-28 13:06:20 marcusp>                           
+;;;; Time-stamp: <2014-06-04 16:06:59 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 

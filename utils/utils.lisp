@@ -1,8 +1,8 @@
 ;;;; ======================================================================
 ;;;; File:       utils.lisp
-;;;; Author:     Marcus  Pearce <marcus.pearce@eecs.qmul.ac.uk>
+;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2014-01-28 09:55:17 marcusp>
+;;;; Time-stamp: <2014-06-04 16:05:51 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
