@@ -2,7 +2,7 @@
 ;;;; File:       generation.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-08-21 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-07-17 15:09:07 marcusp>                           
+;;;; Time-stamp: <2014-07-17 15:26:06 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -258,10 +258,13 @@
 (defun select-from-distribution (distribution)
   (let ((r (random 1.0))
         (cum-prob 0.0))
-    ;(format t "~&R: ~A; Sum: ~A~%"
-    ;        r (reduce #'+ distribution :key #'cadr))
-    (dolist (ep distribution)
-      ;(format t "~&EP: ~A; CP: ~A~%" ep cum-prob)
+    ;;(format t "~&R: ~A; Sum: ~A~%"
+    ;;        r (reduce #'+ distribution :key #'cadr))
+    (dolist (ep distribution (values-list (car (last distribution))))
+      ;; FIXME: Distributions do not sum to 1, therefore this can
+      ;; possibly return nil. As a hack we'll always return the final
+      ;; element, but this is distorting the statistics.
+      ;;(format t "~&EP: ~A; CP: ~A~%" ep cum-prob)
       (incf cum-prob (cadr ep))
       (when (>= cum-prob r)
         (return (car ep))))))
