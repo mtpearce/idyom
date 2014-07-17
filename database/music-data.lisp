@@ -2,7 +2,7 @@
 ;;;; File:       music-data.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-06-04 16:06:59 marcusp>                           
+;;;; Time-stamp: <2014-07-17 13:07:51 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -426,8 +426,9 @@ no. in which the event occurs." ))
       (composition-description (get-composition dataset-id composition-id))))
 
 (defun get-compositions (dataset-id)
-  "Returns alist of composition objects whose dataset-id is <dataset-id>." 
-  (dataset-compositions (get-dataset dataset-id)))
+  "Returns a list of composition objects whose dataset-id is <dataset-id>." 
+  (sort (dataset-compositions (get-dataset dataset-id))
+        #'< :key #'composition-id))
  
 (defun get-composition (dataset-id composition-id)
   "Returns the composition whose dataset-id is <dataset-id> and whose
@@ -452,7 +453,8 @@ no. in which the event occurs." ))
 (defun get-event-sequence (dataset-id composition-id)
   "Returns a list of event objects whose dataset-id is <dataset-id> and
    whose composition-id is <composition-id>." 
-  (composition-events (get-composition dataset-id composition-id)))
+  (sort (composition-events (get-composition dataset-id composition-id))
+        #'< :key #'event-id))
 
 (defun get-event-attribute (attribute dataset-id composition-id event-id)
   "Returns the attribute value denoted by <attribute> of the event
