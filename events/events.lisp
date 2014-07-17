@@ -2,7 +2,7 @@
 ;;;; File:       events.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2013-04-12 12:46:19 jeremy>
-;;;; Time-stamp: <2014-07-17 15:43:15 marcusp>
+;;;; Time-stamp: <2014-07-17 19:40:15 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -328,7 +328,7 @@
 #.(clsql:restore-sql-reader-syntax-state) 
 
 #.(clsql:locally-enable-sql-reader-syntax)
-(defmethod get-event ((identifier mtp-data:mtp-event-identifier))
+(defmethod get-event ((identifier event-identifier))
   "Returns nil when the event doesn't exist."
   (let* ((dataset-id (get-dataset-index identifier))
          (composition-id (get-composition-index identifier))
@@ -347,7 +347,7 @@
                                        (list :from [mtp-event]
                                              :where event-where-clause))))))
     (when (and timebase db-event)
-      (mtp-data:db-event->mtp-event db-event timebase))))
+      (db-event->music-event db-event timebase))))
 #.(clsql:restore-sql-reader-syntax-state) 
 
 (defun db-event->music-event (db-event timebase)
