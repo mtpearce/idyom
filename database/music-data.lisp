@@ -2,7 +2,7 @@
 ;;;; File:       music-data.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-07-17 14:00:33 marcusp>                           
+;;;; Time-stamp: <2014-07-17 15:48:30 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -536,7 +536,7 @@ a list containing the dataset-id is returned."))
 ;; Utility functions
 ;;===================
 
- (defun get-next-free-id (&optional dataset-id composition-id)
+(defun get-next-free-id (&optional dataset-id composition-id)
   "If <dataset-id> is null returns the lowest whole number which is
    not used as a dataset identifier; 2. else if <composition-id> is null
    returns the lowest whole number not being used as a composition-id
@@ -552,7 +552,7 @@ a list containing the dataset-id is returned."))
                                          dataset-id]))
                 (t (clsql:select [max[event_id]] :from 'mtp_event
                                  :where 
-                                 [and [= [slot-value 'mtp-event 'mtp-composition-id]
+                                 [and [= [slot-value 'mtp-event 'composition-id]
                                          composition-id]
                                       [= [slot-value 'mtp-event 'dataset-id]
                                          dataset-id]]))))
@@ -651,8 +651,7 @@ from <event-id> to (+ <event-id> <length>)."
   (let ((event-id-2 (+ event-id length)))
     (clsql:select attribute :from 'mtp-event :order-by [event-id]
                   :where [and [= [slot-value 'mtp-event 'dataset-id] dataset-id]
-                              [= [slot-value 'mtp-event 'composition-id]
-                                 composition-id]
+                              [= [slot-value 'mtp-event 'composition-id] composition-id]
                               [>= [slot-value 'mtp-event 'event-id] event-id]
                               [< [slot-value 'mtp-event 'event-id] event-id-2]]
                   :field-names nil :flatp t)))

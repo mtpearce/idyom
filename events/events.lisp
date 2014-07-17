@@ -2,7 +2,7 @@
 ;;;; File:       events.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2013-04-12 12:46:19 jeremy>
-;;;; Time-stamp: <2014-03-19 17:36:43 marcusp>
+;;;; Time-stamp: <2014-07-17 15:43:15 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -30,7 +30,7 @@
 (defvar *time-slots* '(onset dur deltast barlength bioi))
 (defvar *md-time-slots* (mapcar #'music-symbol *time-slots*))
 
-(defparameter *idyom-datasource* :sql)
+(defparameter *idyom-datasource* :sql) ;; FIXME: remove globals
 
 
 
@@ -193,7 +193,8 @@
 (defmethod lookup-composition (dataset-index composition-index (source (eql :sql)))
   (make-composition-id dataset-index composition-index))
 
-
+(defmethod lookup-event (dataset-index composition-index event-index (source (eql :sql)))
+  (make-event-id dataset-index composition-index event-index))
 
 
 ;;; Getting music objects from the database
@@ -262,36 +263,37 @@
 				 :midc (fourth db-dataset)))
          (compositions nil)
          (events nil))
-    ;; for each db-composition 
-    (dolist (dbc db-compositions)
-      (let ((composition-id (first dbc))
-            (description (second dbc))
-            (timebase (third dbc)))
-        ;; for each db-event 
-        (do* ((dbes db-events (cdr dbes))
-              (dbe (car dbes) (car dbes))
-              (cid (second dbe) (second dbe)))
-             ((or (null dbes) (not (= cid composition-id)))
-              (setf db-events dbes))
-          (when dbe
-            (push (db-event->music-event dbe timebase) events)))
-        (when events
-          (let* (;(interval (+ (md:onset (car events)) (md:duration (car events))))
-		 (comp-id (make-composition-id dataset-id composition-id))
-                 (composition
-                  (make-instance 'music-composition
-				 :id comp-id
-				 :description description
-				 :timebase timebase)))
-				 ;:time 0
-				 ;:interval interval)))
-            (sequence:adjust-sequence composition (length events)
-                                      :initial-contents (nreverse events))
-            (setf events nil)
-            (push composition compositions)))))
-    (sequence:adjust-sequence dataset (length compositions)
-                              :initial-contents (nreverse compositions))
-    dataset))
+    (when db-dataset
+      ;; for each db-composition 
+      (dolist (dbc db-compositions)
+        (let ((composition-id (first dbc))
+              (description (second dbc))
+              (timebase (third dbc)))
+          ;; for each db-event 
+          (do* ((dbes db-events (cdr dbes))
+                (dbe (car dbes) (car dbes))
+                (cid (second dbe) (second dbe)))
+               ((or (null dbes) (not (= cid composition-id)))
+                (setf db-events dbes))
+            (when dbe
+              (push (db-event->music-event dbe timebase) events)))
+          (when events
+            (let* (;(interval (+ (md:onset (car events)) (md:duration (car events))))
+                   (comp-id (make-composition-id dataset-id composition-id))
+                   (composition
+                    (make-instance 'music-composition
+                                   :id comp-id
+                                   :description description
+                                   :timebase timebase)))
+                                        ;:time 0
+                                        ;:interval interval)))
+              (sequence:adjust-sequence composition (length events)
+                                        :initial-contents (nreverse events))
+              (setf events nil)
+              (push composition compositions)))))
+      (sequence:adjust-sequence dataset (length compositions)
+                                :initial-contents (nreverse compositions))
+      dataset)))
 #.(clsql:restore-sql-reader-syntax-state)
 
 #.(clsql:locally-enable-sql-reader-syntax)
@@ -312,16 +314,40 @@
                                          :order-by '(([event-id] :asc))
                                          :where where-clause))))
          (events nil))
-    (dolist (e db-events)
-      (push (db-event->music-event e timebase) events))
-    (let* ((composition 
-            (make-instance 'music-composition
-			   :id identifier
-			   :description description
-			   :timebase timebase)))
-      (sequence:adjust-sequence composition (length events)
-                                :initial-contents (nreverse events))
-      composition)))
+    (when (and db-events timebase)
+      (dolist (e db-events)
+        (push (db-event->music-event e timebase) events))
+      (let* ((composition 
+              (make-instance 'music-composition
+                             :id identifier
+                             :description description
+                             :timebase timebase)))
+        (sequence:adjust-sequence composition (length events)
+                                  :initial-contents (nreverse events))
+        composition))))
+#.(clsql:restore-sql-reader-syntax-state) 
+
+#.(clsql:locally-enable-sql-reader-syntax)
+(defmethod get-event ((identifier mtp-data:mtp-event-identifier))
+  "Returns nil when the event doesn't exist."
+  (let* ((dataset-id (get-dataset-index identifier))
+         (composition-id (get-composition-index identifier))
+         (event-id (get-event-index identifier))
+         (composition-where-clause [and [= [dataset-id] dataset-id]
+                                   [= [composition-id] composition-id]])
+         (event-where-clause [and [= [dataset-id] dataset-id]
+                             [= [composition-id] composition-id]
+                             [= [event-id] event-id]])
+         (timebase
+          (car (clsql:select [timebase] :from [mtp-composition]
+                             :where composition-where-clause
+                             :flatp t :field-names nil)))
+         (db-event (car (apply #'clsql:select
+                               (append *event-attributes*
+                                       (list :from [mtp-event]
+                                             :where event-where-clause))))))
+    (when (and timebase db-event)
+      (mtp-data:db-event->mtp-event db-event timebase))))
 #.(clsql:restore-sql-reader-syntax-state) 
 
 (defun db-event->music-event (db-event timebase)
