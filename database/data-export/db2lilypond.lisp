@@ -2,7 +2,7 @@
 ;;;; File:       db2lilypond.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2005-06-07 10:13:24 marcusp>
-;;;; Time-stamp: <2014-06-04 16:08:39 marcusp>
+;;;; Time-stamp: <2014-07-17 14:35:30 marcusp>
 ;;;; ======================================================================
 ;;;; 
 ;;;; TODO 
@@ -12,40 +12,13 @@
 ;;;;
 ;;;; ======================================================================
 
+;; NB: Global variables should be re-bound to preserve dynamic scope
+;; rather than setf.
+
 (cl:in-package #:db2lilypond)
 
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (unless (find-package 'sb-posix) 
-    (require 'sb-posix)))
-
-(defun cd (&optional (dir (user-homedir-pathname)))
-  (sb-posix:chdir dir)
-  (let ((host (pathname-host dir))
-        (name (pathname-name dir))
-        (path (pathname-directory dir)))
-    ;; allow dirs without ending delim "/tmp"
-    (when name
-      (setq path (append path (list name))))
-    (setq *default-pathname-defaults*
-          (make-pathname :host host :directory path))
-    (namestring *default-pathname-defaults*)))
-
-(defun pwd ()
-  (namestring
-   (make-pathname :host (pathname-host *default-pathname-defaults*)
-                  :directory (pathname-directory
-                              *default-pathname-defaults*))))
-
-(defun shell-command (command args) 
-  #+cmu (ext:run-program command args)
-  #+sbcl (sb-ext:run-program command args)
-  #+allegro (excl:run-shell-command 
-             (apply #'string-append command 
-                    (mapcar #'(lambda (x) (format nil " ~A" x)) args)))
-  )
-
 (defvar *timebase* 96)
-(defvar *midc* 6000) 
+(defvar *midc* 60) 
 (defvar *current-pulses* nil)
 (defvar *current-barlength* nil)
 (defvar *default-barlength* *timebase*) ;4/4
@@ -55,6 +28,8 @@
 (defvar *tuplet* nil)
 
 (defmethod export-data ((d mtp-admin:mtp-dataset) (type (eql :ly)) path)
+  ;; FIXME: *midc* is never set if export-data is called with a
+  ;; composition directly.
   (setf *timebase* (mtp-admin::dataset-timebase d)
         *midc*     (mtp-admin::dataset-midc d))
   (dolist (c (mtp-admin::dataset-compositions d))
@@ -101,7 +76,7 @@
         (barlength1 (mtp-admin:get-attribute (car events) :barlength))
         (write-rest? nil))
     (when (> onset1 0)
-      (format s "~&  \\partial ~A~%" 
+      (format s "~&  \\partial ~A~%" ; FIXME: Fails when (- 96 (mod 1092 96)). 
               (car (get-duration (- barlength1 (mod onset1 barlength1))))))
     (dolist (e events)
       (if (tied-p e)

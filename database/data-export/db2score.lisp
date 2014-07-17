@@ -1,15 +1,13 @@
 ;;;; ======================================================================
-;;;; File:       db2ps.lisp
+;;;; File:       db2score.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2005-11-25 17:08:20 marcusp>
-;;;; Time-stamp: <2014-06-04 16:08:48 marcusp>
+;;;; Time-stamp: <2014-07-17 14:50:39 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:db2lilypond) 
 
-(defvar *lilypond* 
-  #+linux "/usr/bin/lilypond"
-  #+darwin "/usr/local/bin/lilypond")
+(defvar *lilypond*  "lilypond")
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
 (defmacro define-lilypond-exporter (format backend)
@@ -21,23 +19,23 @@
       (let* ((title (mtp-admin::composition-description c))
              (ly-file (concatenate 'string path "/" title ".ly")))
         (export-data c :ly path)
-        (let ((current-dir (pwd))
+        (let ((current-dir (utils:pwd))
               (output-format (string-downcase (format nil "--~A" ,format)))
               (backend (string-downcase (format nil "--backend=~A" ,backend))))
-          (cd path)
-          (shell-command *lilypond* (list backend output-format ly-file))
-          (cd current-dir)))
+          (utils:cd path)
+          (utils:shell-command *lilypond* (list backend output-format ly-file))
+          (utils:cd current-dir)))
       nil)
     (defmethod export-data ((event-list list) (type (eql ,format)) path)
       (let* ((title (mtp-admin::composition-description (car event-list)))
              (ly-file (concatenate 'string path "/" title ".ly")))
         (export-data event-list :ly path)
-        (let ((current-dir (pwd))
+        (let ((current-dir (utils:pwd))
               (output-format (string-downcase (format nil "--~A" ,format)))
               (backend (string-downcase (format nil "--backend=~A" ,backend))))
-          (cd path)
-          (shell-command *lilypond* (list backend output-format ly-file))
-          (cd current-dir)))
+          (utils:cd path)
+          (utils:shell-command *lilypond* (list backend output-format ly-file))
+          (utils:cd current-dir)))
       nil)))
 ) ; eval-when 
 
