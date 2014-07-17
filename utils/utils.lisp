@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2014-06-04 16:05:51 marcusp>
+;;;; Time-stamp: <2014-07-17 15:02:15 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -277,16 +277,10 @@
   (string-append filename suffix))
 
 (defun gunzip (filename)
-  #-win32
-  (progn
-    #+(and x86-64 linux) (shell-command "/bin/gunzip" (list filename))
-    #-(and x86-64 linux) (shell-command "/usr/bin/gunzip" (list filename))))
+  #-win32 (shell-command "gunzip" (list filename)))
 
 (defun gzip (filename)
-  #-win32
-  (progn
-    #+(and x86-64 linux) (shell-command "/bin/gzip" (list filename))
-    #-(and x86-64 linux) (shell-command "/usr/bin/gzip" (list filename))))
+  #-win32 (shell-command "gzip" (list filename)))
 
 
 ;;;===========================================================================
@@ -329,7 +323,7 @@
 
 (defun shell-command (command args) 
   #+cmu (ext:run-program command args)
-  #+sbcl (sb-ext:run-program command args)
+  #+sbcl (sb-ext:run-program command args :search t)
   #+allegro (excl:run-shell-command 
              (apply #'string-append command 
                     (mapcar #'(lambda (x) (format nil " ~A" x)) args)))
