@@ -2,7 +2,7 @@
 ;;;; File:       multiple-viewpoint-system.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-27 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-03-04 22:04:02 marcusp>                           
+;;;; Time-stamp: <2014-07-17 15:16:14 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -63,7 +63,7 @@
 (defvar *ep-cache* nil)
 
 (defun ep-cache-path (filename) 
-  (utils:string-append *ep-cache-dir* filename))
+  (utils:string-append (namestring *ep-cache-dir*) filename))
 
 (defun initialise-ep-cache ()
   (setf *ep-cache* (make-hash-table :test #'equal)))

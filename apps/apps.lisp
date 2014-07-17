@@ -2,7 +2,7 @@
 ;;;; File:       apps.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2005-11-27 16:27:35 marcusp>
-;;;; Time-stamp: <2014-06-04 16:04:03 marcusp>
+;;;; Time-stamp: <2014-07-17 15:17:46 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:apps) 
@@ -19,12 +19,12 @@
 	;; Use *idyom-root* if defined
 	common-lisp-user::*idyom-root*
 	;; Else use home directory
-	(concatenate 'string
-		     #+cmu (namestring (car (ext:search-list "home:")))
-		     #+sbcl (sb-ext:posix-getenv "HOME")
-		     "/idyom/")))
+        (ensure-directories-exist
+         (merge-pathnames "idyom/" (user-homedir-pathname)))))
   ;; *ep-cache-dir* 
-  (setf mvs:*ep-cache-dir* (string-append *root-dir* "data/cache/")))
+  (setf mvs:*ep-cache-dir* (ensure-directories-exist
+                            (merge-pathnames "data/cache/"
+                                             *root-dir*))))
 
 ;;; A way of generating filenames to store results, cached data etc.
 (defun dataset-modelling-filename (dataset-id basic-attributes attributes

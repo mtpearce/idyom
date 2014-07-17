@@ -2,7 +2,7 @@
 ;;;; File:       main.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2010-11-01 15:19:57 marcusp>
-;;;; Time-stamp: <2014-05-12 11:46:52 marcusp>
+;;;; Time-stamp: <2014-07-17 15:11:13 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:idyom)
@@ -86,11 +86,15 @@
   ;; Derive target viewpoint IC profile from source viewpoints
   (multiple-value-bind (predictions filename)
       (resampling:idyom-resample dataset-id target-viewpoints source-viewpoints
-                                     :pretraining-ids pretraining-ids
-				     :k k :resampling-indices resampling-indices
-                                     :models models :ltmo ltmo :stmo stmo)
+                                 :pretraining-ids pretraining-ids
+                                 :k k :resampling-indices resampling-indices
+                                 :models models :ltmo ltmo :stmo stmo)
     (when output-path
-      (resampling:format-information-content predictions (concatenate 'string output-path "/" filename) dataset-id detail))
+      (resampling:format-information-content predictions 
+                                             (ensure-directories-exist
+                                              (merge-pathnames
+                                               filename output-path))
+                                             dataset-id detail))
     (resampling:output-information-content predictions detail)))
 
 

@@ -2,7 +2,7 @@
 ;;;; File:       generation.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-08-21 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-06-04 16:03:58 marcusp>                           
+;;;; Time-stamp: <2014-07-17 15:09:07 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -307,7 +307,7 @@
 (defvar *prediction-cache-directory* mvs:*ep-cache-dir*)
 
 (defun get-prediction-cache-filename (dataset-id viewpoints)
-  (string-append *prediction-cache-directory*
+  (string-append (namestring *prediction-cache-directory*)
                  (reduce #'(lambda (&optional (x "") (y ""))
                              (string-append x y))
                          (viewpoints:get-viewpoints viewpoints)

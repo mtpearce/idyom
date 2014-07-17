@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-03-04 21:46:17 marcusp>                           
+;;;; Time-stamp: <2014-07-17 15:14:37 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -15,10 +15,12 @@
 (cl:in-package #:resampling)
 
 (defparameter *model-dir* 
-  (utils:string-append apps:*root-dir* "data/models/"))
-(defparameter *resampling-dir*
-  (utils:string-append apps:*root-dir* "data/resampling/"))
+  (ensure-directories-exist
+   (merge-pathnames "data/models/" apps:*root-dir*)))
 
+(defparameter *resampling-dir*
+  (ensure-directories-exist
+   (merge-pathnames "data/resampling/" apps:*root-dir*)))
 
 ;;;===========================================================================
 ;;; Dataset Prediction 
@@ -319,7 +321,7 @@ supplied keyword parameters."
                            resampling-count)
   "Returns the filename in *model-directory* containing the ppm model
 for <viewpoint> in <dataset-id>."
-  (string-append *model-dir*
+  (string-append (namestring *model-dir*)
                  (viewpoint-name viewpoint)
                  (if (null pretraining-ids) "_NIL"
                      (string-append
@@ -391,7 +393,7 @@ for <viewpoint> in <dataset-id>."
 (defun get-resampling-sets-filename (dataset-ids k)
   "Returns the filename in *resampling-sets-directory* containing the
    resampling-sets for <dataset-id>." 
-  (string-append *resampling-dir*
+  (string-append (namestring *resampling-dir*)
                  (format nil "~{~S-~}~S" (sort dataset-ids #'<) k)
                  ".resample"))
   

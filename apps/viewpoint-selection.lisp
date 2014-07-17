@@ -2,7 +2,7 @@
 ;;;; File:       viewpoint-selection.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-10-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-03-19 17:22:39 marcusp>                           
+;;;; Time-stamp: <2014-07-17 15:15:25 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoint-selection)
@@ -71,7 +71,8 @@
 (defparameter *vs-cache* '())
 (defparameter *vs-cache-dir* mvs:*ep-cache-dir*)
 
-(defun vs-cache-path (filename) (utils:string-append *vs-cache-dir* filename))
+(defun vs-cache-path (filename) 
+  (utils:string-append (namestring *vs-cache-dir*) filename))
 
 (defun initialise-vs-cache () (setf *vs-cache* nil))
 
