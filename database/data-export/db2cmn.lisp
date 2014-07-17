@@ -2,7 +2,7 @@
 ;;;; File:       db2cmn.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-08-17 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-06-04 16:08:34 marcusp>                           
+;;;; Time-stamp: <2014-07-17 18:19:40 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cm) 
@@ -130,14 +130,15 @@ else for minor. Returns a CM/CMN key."
 (defvar *midc* 6000) 
 
 (defmethod export-data ((d mtp-admin:mtp-dataset) (type (eql :cmn)) path)
-  (setf *timebase* (mtp-admin::dataset-timebase d)
-        *midc*     (mtp-admin::dataset-midc d))
-  (dolist (c (mtp-admin::dataset-compositions d))
-    (export-data c type path)))
+  (let ((*timebase* (mtp-admin::dataset-timebase d))
+        (*midc*     (mtp-admin::dataset-midc d)))
+    (dolist (c (mtp-admin::dataset-compositions d))
+      (export-data c type path))))
 
 (defmethod export-data ((c mtp-admin:mtp-composition) (type (eql :cmn)) path)
   (let* ((title (mtp-admin::composition-description c))
-         (file (concatenate 'string path "/" title ".cmn")))
+         (file (concatenate 'string path "/" title ".cmn"))
+         (*timebase* (mtp-admin::composition-timebase c)))
     (write-composition (mtp-admin::composition-events c) type file)))
 
 (defmethod export-data ((event-list list) (type (eql :cmn)) path)
@@ -145,15 +146,16 @@ else for minor. Returns a CM/CMN key."
          (file (concatenate 'string path "/" title ".cmn")))
     (write-composition event-list type file)))
 
-(defmethod export-data ((d mtp-admin:dataset) (type (eql :eps)) path)
-  (setf *timebase* (mtp-admin::dataset-timebase d)
-        *midc*     (mtp-admin::dataset-midc d))
-  (dolist (c (mtp-admin::dataset-compositions d))
-    (export-data c type path)))
+(defmethod export-data ((d mtp-admin:mtp-dataset) (type (eql :eps)) path)
+  (let ((*timebase* (mtp-admin::dataset-timebase d))
+        (*midc*     (mtp-admin::dataset-midc d)))
+    (dolist (c (mtp-admin::dataset-compositions d))
+      (export-data c type path))))
 
-(defmethod export-data ((c mtp-admin:composition) (type (eql :eps)) path)
+(defmethod export-data ((c mtp-admin:mtp-composition) (type (eql :eps)) path)
   (let* ((title (mtp-admin::composition-description c))
-         (file (concatenate 'string path "/" title ".eps")))
+         (file (concatenate 'string path "/" title ".eps"))
+         (*timebase* (mtp-admin::composition-timebase c)))
     (write-composition (mtp-admin::composition-events c) type file)))
 
 (defmethod export-data ((event-list list) (type (eql :eps)) path)
@@ -166,11 +168,11 @@ else for minor. Returns a CM/CMN key."
   (let* ((first-event (car event-list))
          ;(tempo (get-tempo first-event))
          ;(keysig (get-keysig first-event))
-         (timesig (get-timesig first-event)))
-    (setf *current-timesig* timesig
-          *current-keysig* nil
-          *current-tempo* nil
-          *current-time* 0)
+         (timesig (get-timesig first-event))
+         (*current-timesig* timesig)
+         (*current-keysig* nil)
+         (*current-tempo* nil)
+         (*current-time* 0))
     (case type 
       (midi
        ;(cm::io file :timesig timesig :tempo tempo :keysig keysig)

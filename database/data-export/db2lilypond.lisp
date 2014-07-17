@@ -2,7 +2,7 @@
 ;;;; File:       db2lilypond.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2005-06-07 10:13:24 marcusp>
-;;;; Time-stamp: <2014-07-17 14:35:30 marcusp>
+;;;; Time-stamp: <2014-07-17 18:13:18 marcusp>
 ;;;; ======================================================================
 ;;;; 
 ;;;; TODO 
@@ -12,7 +12,7 @@
 ;;;;
 ;;;; ======================================================================
 
-;; NB: Global variables should be re-bound to preserve dynamic scope
+;; FIXME: Global variables should be re-bound to preserve dynamic scope
 ;; rather than setf.
 
 (cl:in-package #:db2lilypond)
@@ -28,17 +28,17 @@
 (defvar *tuplet* nil)
 
 (defmethod export-data ((d mtp-admin:mtp-dataset) (type (eql :ly)) path)
-  ;; FIXME: *midc* is never set if export-data is called with a
-  ;; composition directly.
-  (setf *timebase* (mtp-admin::dataset-timebase d)
-        *midc*     (mtp-admin::dataset-midc d))
-  (dolist (c (mtp-admin::dataset-compositions d))
-    (export-data c type path)))
+  (let ((*timebase* (mtp-admin::dataset-timebase d))
+        (*midc*     (mtp-admin::dataset-midc d)))
+    (dolist (c (mtp-admin::dataset-compositions d))
+      (export-data c type path))))
 
 (defmethod export-data ((c mtp-admin:mtp-composition) (type (eql :ly)) path)
+  ;; FIXME: *midc* is never set if export-data is called with a
+  ;; composition directly.
   (let* ((title (mtp-admin::composition-description c))
-         (file (concatenate 'string path "/" title ".ly")))
-    (setf *timebase* (mtp-admin::composition-timebase c))
+         (file (concatenate 'string path "/" title ".ly"))
+         (*timebase* (mtp-admin::composition-timebase c)))
     (with-open-file (s file :direction :output :if-exists :supersede 
                        :if-does-not-exist :create)
       (write-composition s (mtp-admin::composition-events c) title))))
@@ -66,15 +66,15 @@
     (format s "~&}~%"))
 
 (defun write-melody (s events)
-  (setf *current-pulses* nil
-        *current-barlength* nil
-        *current-keysig* nil
-        *current-mode* nil
-        *tuplet* nil
-        *new-timesig* 0)
-  (let ((onset1 (mtp-admin:get-attribute (car events) :onset))
-        (barlength1 (mtp-admin:get-attribute (car events) :barlength))
-        (write-rest? nil))
+  (let* ((*current-pulses* nil)
+         (*current-barlength* nil)
+         (*current-keysig* nil)
+         (*current-mode* nil)
+         (*tuplet* nil)
+         (*new-timesig* 0)
+         (onset1 (mtp-admin:get-attribute (car events) :onset))
+         (barlength1 (mtp-admin:get-attribute (car events) :barlength))
+         (write-rest? nil))
     (when (> onset1 0)
       (format s "~&  \\partial ~A~%" ; FIXME: Fails when (- 96 (mod 1092 96)). 
               (car (get-duration (- barlength1 (mod onset1 barlength1))))))

@@ -2,7 +2,7 @@
 ;;;; File:       db2midi.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2005-06-09 11:01:51 marcusp>
-;;;; Time-stamp: <2014-06-04 16:08:43 marcusp>
+;;;; Time-stamp: <2014-07-17 18:15:50 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:db2midi)
@@ -16,15 +16,17 @@
 (defvar *default-program* 0)
 
 (defmethod export-data ((d mtp-admin:mtp-dataset) (type (eql :mid)) path)
-  (setf *timebase* (mtp-admin::dataset-timebase d)
-        *midc*     (mtp-admin::dataset-midc d))
-  (dolist (c (mtp-admin::dataset-compositions d))
-    (export-data c type path)))
+  (let ((*timebase* (mtp-admin::dataset-timebase d))
+        (*midc*     (mtp-admin::dataset-midc d)))
+    (dolist (c (mtp-admin::dataset-compositions d))
+      (export-data c type path))))
 
 (defmethod export-data ((c mtp-admin:mtp-composition) (type (eql :mid)) path)
+  ;; FIXME: *midc* is never set if export-data is called with a
+  ;; composition directly.
   (let* ((title (mtp-admin::composition-description c))
-         (file (concatenate 'string path "/" title ".mid")))
-    (setf *timebase* (mtp-admin::composition-timebase c))
+         (file (concatenate 'string path "/" title ".mid"))
+         (*timebase* (mtp-admin::composition-timebase c)))
     (events->midi (mtp-admin::composition-events c) file)))
 
 (defmethod export-data ((event-list list) (type (eql :mid)) path)
