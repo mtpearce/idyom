@@ -2,7 +2,7 @@
 ;;;; File:       music-data.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-07-17 13:07:51 marcusp>                           
+;;;; Time-stamp: <2014-07-17 14:00:33 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -19,9 +19,17 @@
 
 (cl:in-package #:mtp-admin)
 
+(defclass thread-safe-db-obj (clsql-sys:standard-db-object)
+  nil
+  (:metaclass clsql-sys::standard-db-class))
+
+(defmethod clsql-sys::choose-database-for-instance
+    ((object thread-safe-db-obj) &optional database)
+  (or database clsql-sys:*default-database*))
+
 #.(clsql:locally-enable-sql-reader-syntax)
 
-(clsql:def-view-class mtp-dataset ()
+(clsql:def-view-class mtp-dataset (thread-safe-db-obj)
   ((dataset-id
     :db-kind :key
     :db-constraints :not-null
@@ -58,7 +66,7 @@ representing the timebase and chromatic mapping for middle c of the
 original encoding; and <compositions> which defines a one to many join
 with the composition table based on dataset-id in both tables."))
 
-(clsql:def-view-class mtp-composition ()
+(clsql:def-view-class mtp-composition (thread-safe-db-obj)
   ((composition-id
     :db-kind :key
     :db-constraints :not-null
@@ -97,7 +105,7 @@ describing the composition; and <events> which defines a one to many join
 with the event table based on the dataset-id and composition-id keys of
 each table."))
                   
-(clsql:def-view-class mtp-event ()
+(clsql:def-view-class mtp-event (thread-safe-db-obj)
   ((event-id 
     :db-kind :key
     :db-constraints :not-null
