@@ -2,7 +2,7 @@
 ;;;; File:       music-data.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-07-17 15:48:30 marcusp>                           
+;;;; Time-stamp: <2014-07-17 19:49:04 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -634,15 +634,16 @@ per composition, as well as the domains of each event attribute."
                           (output-stream *standard-output*)
                           (mappings nil) (verbose nil) (quick t))
   "Prints information about all the datasets in database <db>." 
-  (if quick
-      (clsql:print-query [select [dataset-id][description] :from [mtp-dataset] :order-by [dataset-id]])
-      (mapc #'(lambda (id) (describe-dataset id 
-					     :attributes attributes
-					     :output-stream output-stream
-					     :mappings mappings
-					     :verbose verbose))
-	    (clsql:select [dataset-id] :from 'mtp_dataset :order-by [dataset-id]
-			  :flatp t :field-names nil))))
+  (when (clsql:table-exists-p [mtp-dataset])
+    (if quick
+        (clsql:print-query [select [dataset-id][description] :from [mtp-dataset] :order-by [dataset-id]])
+        (mapc #'(lambda (id) (describe-dataset id 
+                                               :attributes attributes
+                                               :output-stream output-stream
+                                               :mappings mappings
+                                               :verbose verbose))
+              (clsql:select [dataset-id] :from 'mtp_dataset :order-by [dataset-id]
+                            :flatp t :field-names nil)))))
   
 (defun get-sequence (attribute dataset-id composition-id event-id length)
   "Returns a list of the values of <attribute> for the events with
@@ -655,10 +656,5 @@ from <event-id> to (+ <event-id> <length>)."
                               [>= [slot-value 'mtp-event 'event-id] event-id]
                               [< [slot-value 'mtp-event 'event-id] event-id-2]]
                   :field-names nil :flatp t)))
-
-
-(defun list-contents ()
-  (clsql:print-query [select [dataset-id][description] :from [mtp-dataset] :order-by [dataset-id]]))
-
 
 #.(clsql:restore-sql-reader-syntax-state)
