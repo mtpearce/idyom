@@ -162,6 +162,9 @@ dataset-id)."
 ;;; Formatted output of information content etc.
 ;;;===========================================================================
 
+(defun quote-string (string)
+  (format nil "~s" string))
+
 (defun format-information-content (resampling-predictions file dataset-id detail)
   (with-open-file (o file :direction :output :if-exists :supersede)
     (case detail 
@@ -177,7 +180,7 @@ dataset-id)."
     (do* ((ic composition-means (cdr ic))
           (cid 1 (1+ cid)))
          ((null ic) overall-mean)
-      (let ((d (mtp-admin:get-description dataset-id (1- cid))))
+      (let ((d (quote-string (mtp-admin:get-description dataset-id (1- cid)))))
         (format stream "~&~A ~A ~A~%" cid d (car ic))))))
 
 (defun format-information-content-detail=3 (stream resampling-predictions dataset-id) 
@@ -211,7 +214,10 @@ dataset-id)."
                       (setf (gethash 'dataset.id event-results) dataset-id)
                       (setf (gethash 'melody.id event-results) (1+ composition-id))
                       (setf (gethash 'note.id event-results) (1+ event-id))
-                      (setf (gethash 'melody.name event-results) (mtp-admin:get-description dataset-id composition-id))
+                      (setf (gethash 'melody.name event-results)
+                            (quote-string (mtp-admin:get-description
+                                           dataset-id
+                                           composition-id)))
                       (dolist (attribute viewpoints:*basic-types*)
                         (let ((value (mtp-admin:get-attribute event attribute)))
                           (when (member attribute '(:dur :bioi :deltast :onset) :test #'eq)
@@ -266,7 +272,8 @@ dataset-id)."
         (data (prediction-sets:prediction-set (caar resampling-predictions))))
     (dolist (sp data)
       (let* ((melody-id (prediction-sets:prediction-index sp))
-             (name (mtp-admin:get-description dataset-id melody-id))
+             (name (quote-string (mtp-admin:get-description dataset-id
+                                                            melody-id)))
              (event-predictions (prediction-sets:prediction-set sp))
              (event-id 0))
         ;;(format t "~&~3A ~3A ~5A~%" melody-index melody-id name)
