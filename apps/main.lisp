@@ -72,7 +72,9 @@
    source-viewpoints, which can be specified or selected
    automatically.  The LTM is optionally pretrained on multiple
    datasets (pretraining-ids) and/or other members of the target
-   dataset using k-fold cross validation (AKA resampling)."
+   dataset using k-fold cross validation (AKA resampling).  The
+   parameters <use-resampling-set-cache?> and <use-ltms-cache?> enable
+   or disable respectively the caching of resampling-sets and LTMs."
   ;; Select source viewpoints, if requested
   (when (eq source-viewpoints :select)
     (format t "~&Selecting viewpoints for the ~A model on dataset ~A predicting viewpoints ~A.~%" 
