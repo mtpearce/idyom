@@ -47,22 +47,26 @@
 ;;; IDyOM top-level
 ;;;
 (defun idyom (dataset-id target-viewpoints source-viewpoints
-              &key 
-	      ;; Dataset IDs for LTM pretraining
-              pretraining-ids 
-	      ;; Resampling
-	      (k 10) ; Number of cross-validation folds (:full = LOO CV)
-              resampling-indices ; Evaluate only certain resampling subsets
-	      ;; Model options
-	      (models :both+)
-	      (ltmo mvs::*ltm-params*) (stmo mvs::*stm-params*)
-              ;; Viewpoint selection 
-	      (basis :default)
-              (dp nil) (max-links 2)
-	      (vp-white '(:any))
-	      (vp-black nil)
-              ;; Output 
-              (detail 3) (output-path nil))
+              &key
+          ;; Dataset IDs for LTM pretraining
+                pretraining-ids
+          ;; Resampling
+                (k 10) ; Number of cross-validation folds (:full = LOO CV)
+                resampling-indices ; Evaluate only certain resampling subsets
+          ;; Model options
+                (models :both+)
+                (ltmo mvs::*ltm-params*) (stmo mvs::*stm-params*)
+          ;; Viewpoint selection
+                (basis :default)
+                (dp nil) (max-links 2)
+                (vp-white '(:any))
+                (vp-black nil)
+          ;; Output
+                (detail 3)
+                (output-path nil)
+          ;; Caching
+                (use-resampling-set-cache? t)
+                (use-ltms-cache? t))
   "IDyOM top level: computes information profiles for basic
    target-viewpoints over a dataset (dataset-id), using a set of
    source-viewpoints, which can be specified or selected
@@ -88,7 +92,9 @@
       (resampling:idyom-resample dataset-id target-viewpoints source-viewpoints
                                  :pretraining-ids pretraining-ids
                                  :k k :resampling-indices resampling-indices
-                                 :models models :ltmo ltmo :stmo stmo)
+                                 :models models :ltmo ltmo :stmo stmo
+                                 :use-resampling-set-cache? use-resampling-set-cache?
+                                 :use-ltms-cache? use-ltms-cache?)
     (when output-path
       (resampling:format-information-content predictions 
                                              (ensure-directories-exist
