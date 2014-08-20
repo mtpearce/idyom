@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-07-17 15:14:37 marcusp>                           
+;;;; Time-stamp: <2014-08-20 13:14:02 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -396,15 +396,16 @@ for <viewpoint> in <dataset-id>."
       (incf composition-index))
     (reverse test-set)))
 
-(defun get-resampling-sets (dataset-id &key (create? nil) (k 10)
-                                         (use-cache? nil))
+(defun get-resampling-sets (dataset-id &key (k 10) (use-cache? t))
   "Returns the resampling-sets for dataset <dataset-id>. If
    <use-cache?> is null, or <create?> is T, or the cache file does not
    exist, they are created (and optionally cached if <use-cache?> is
    T), otherwise they are read from file."
   (let* ((dataset-ids (if (consp dataset-id) dataset-id (list dataset-id)))
          (filename (get-resampling-sets-filename dataset-ids k)))
-    (if (or (not use-cache?) create? (not (file-exists filename)))
+    (if (and use-cache? (file-exists filename))
+        ;; Retrieve the previously cached resampling-set.
+        (read-object-from-file filename :resampling)
         (let* ((composition-count
                 (apply #'+ (mapcar #'md:count-compositions
                                    dataset-ids)))
@@ -412,9 +413,7 @@ for <viewpoint> in <dataset-id>."
                                  composition-count k)))
           (when use-cache? (write-resampling-sets-to-file
                             resampling-sets filename))
-          resampling-sets)
-        ;; Retrieve the previously cached resampling-set.
-        (read-object-from-file filename :resampling))))
+          resampling-sets))))
 
 (defun write-resampling-sets-to-file (resampling-sets filename)
   "Writes <resampling-sets> to <file>." 
