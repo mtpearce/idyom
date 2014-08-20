@@ -398,9 +398,9 @@ for <viewpoint> in <dataset-id>."
 
 (defun get-resampling-sets (dataset-id &key (k 10) (use-cache? t))
   "Returns the resampling-sets for dataset <dataset-id>. If
-   <use-cache?> is null, or <create?> is T, or the cache file does not
-   exist, they are created (and optionally cached if <use-cache?> is
-   T), otherwise they are read from file."
+   <use-cache?> is T and the cache file exists, they are read from
+   file, otherwise they are created and optionally cached if
+   <use-cache?> is T."
   (let* ((dataset-ids (if (consp dataset-id) dataset-id (list dataset-id)))
          (filename (get-resampling-sets-filename dataset-ids k)))
     (if (and use-cache? (file-exists filename))
