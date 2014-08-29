@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-08-20 13:14:02 marcusp>                           
+;;;; Time-stamp: <2014-08-29 12:12:55 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -56,8 +56,8 @@
          (mvs::*stm-update-exclusion* (getf stmo :update-exclusion))
          (mvs::*stm-escape* (getf stmo :escape))
          ;; data
-         (dataset (get-event-sequences dataset-id))
-         (pretraining-set (apply #'get-event-sequences pretraining-ids))
+         (dataset (get-event-sequences (list dataset-id)))
+         (pretraining-set (get-event-sequences pretraining-ids))
          ;; viewpoints
          (sources (get-viewpoints source-viewpoints))
          (targets

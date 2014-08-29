@@ -2,7 +2,7 @@
 ;;;; File:       generation.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-08-21 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-07-17 15:26:06 marcusp>                           
+;;;; Time-stamp: <2014-08-29 12:14:19 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -199,7 +199,7 @@
                            (output-file-path "/tmp"))
   (declare (ignorable description output-file-path))
   (initialise-prediction-cache dataset-id attributes)
-  (let* ((dataset (md:get-event-sequences dataset-id))
+  (let* ((dataset (md:get-event-sequences (list dataset-id)))
          (pretraining-set (get-pretraining-set pretraining-ids))
          (viewpoints (get-viewpoints attributes))
          (basic-viewpoints (get-basic-viewpoints basic-attributes dataset))
@@ -232,9 +232,9 @@
                (remove-if-not #'(lambda (x)
                                   (member (cadr (mtp-admin:get-id (car x))) (unique-ids-2)
                                           :test #'=))
-                              (md:get-event-sequences 2))))
-         (drest (apply #'md:get-event-sequences
-                       (remove-if #'(lambda (x) (= x 2)) dataset-ids))))
+                              (md:get-event-sequences (list 2)))))
+         (drest (md:get-event-sequences
+                 (remove-if #'(lambda (x) (= x 2)) dataset-ids))))
     (append d1 drest)))
 
 (defun unique-ids-2 ()

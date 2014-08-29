@@ -104,6 +104,6 @@ the original viewpoints are included."
   "Show viewpoint sequences for dataset."
   (viewpoints:viewpoint-sequences
    (viewpoints:get-viewpoint viewpoint)
-   (md:get-event-sequences dataset-id)))
+   (md:get-event-sequences (list dataset-id))))
 
 
