@@ -2,7 +2,7 @@
 ;;;; File:       events.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2013-04-12 12:46:19 jeremy>
-;;;; Time-stamp: <2014-08-29 11:57:13 marcusp>
+;;;; Time-stamp: <2014-08-31 20:15:37 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -45,16 +45,19 @@
 
 (defclass music-dataset (list-slot-sequence music-object) ())
 
-(defclass music-sequence (list-slot-sequence music-object) ()) ; sequence of music objects ordered in time 
-(defclass music-slice (list-slot-sequence music-object) ())    ; set of music objects overlapping in time, ordered by voice
+(defclass music-temporal-object (music-object)
+  ((onset :initarg :onset :accessor onset) 
+   (dur :initarg :dur :accessor duration)))
+
+(defclass music-sequence (list-slot-sequence music-temporal-object) ()) ; sequence of music objects ordered in time 
+(defclass music-slice (list-slot-sequence music-temporal-object) ())    ; set of music objects overlapping in time, ordered by voice
+
 (defclass music-composition (music-sequence) ())               ; a composition is an unconstrained sequence of music objects
 (defclass music-melodic-sequence (music-sequence) ())          ; a sequence of non-overlapping notes
 (defclass music-harmonic-sequence (music-sequence) ())         ; a sequence of harmonic slices
 
-(defclass music-event (music-object) 
-  ((onset :initarg :onset :accessor onset) 
-   (dur :initarg :dur :accessor duration)
-   (bioi :initarg :bioi :accessor bioi)
+(defclass music-event (music-temporal-object) 
+  ((bioi :initarg :bioi :accessor bioi)
    (deltast :initarg :deltast :accessor deltast)
    (cpitch :initarg :cpitch :accessor chromatic-pitch)
    (mpitch :initarg :mpitch :accessor morphetic-pitch)
@@ -70,7 +73,6 @@
    (comma :initarg :comma :accessor comma)
    (articulation :initarg :articulation :accessor articulation)
    (voice :initarg :voice :accessor voice)))
-
 
 ;; Accessing data
 (defgeneric get-attribute (event attribute))
@@ -88,8 +90,8 @@
   (make-instance 'music-event
                  :id (copy-identifier (ident e))
                  :timebase (timebase e)
-                 :description (description e)
-                 :midc (midc e)
+                 ;;:description (description e)
+                 ;;:midc (midc e)
                  :onset (onset e)
 		 :dur (duration e)
                  :deltast (deltast e)
@@ -204,33 +206,41 @@
 ;;; Getting music objects from the database
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun get-music-objects (dataset-indices composition-indices &key voice type)
+(defun get-music-objects (dataset-indices composition-indices &key voices)
   "Return music objects from the database corresponding to
   DATASET-INDICES, COMPOSITION-INDICES which may be single numeric IDs
   or lists of IDs. COMPOSITION-INDICES is only considered if
-  DATASET-INDICES is a single ID. TYPE can be :melodic or :harmonic
+  DATASET-INDICES is a single ID. If voice is nil, the melody corresponding to the voice of the first event is extracted, if 
   determining the type of sequence returned, using the voices
   specified by the list VOICE."
-  (cond ((eq type :melodic)
-         (if (numberp dataset-indices)
-             (if (null composition-indices)
-                 (get-event-sequence dataset-indices composition-indices :voice voice)
-                 (mapcar #'(lambda (c) (get-event-sequence dataset-indices c :voice voice)) composition-indices))
-             (get-event-sequences dataset-indices :voice voice)))
-        ((eq type :harmonic)
-         (if (numberp dataset-indices)
-             (if (null composition-indices)
-                 (get-event-sequence dataset-indices composition-indices :voice voice)
-                 (mapcar #'(lambda (c) (get-event-sequence dataset-indices c :voice voice)) composition-indices))
-             (get-event-sequences dataset-indices :voice voice)))
-        (t 
-         (print "Unrecognised type. Expecting one of :melodic or :harmonic."))))
+  (if (or  (null voices) (integerp voices) (= (length voices) 1))
+      ;; it is a melodic sequence
+      (let ((voice (if (listp voices) (car voices) voices)))
+        (if (numberp dataset-indices)
+            (if (null composition-indices)
+                (get-event-sequence dataset-indices composition-indices :voice voice)
+                (mapcar #'(lambda (c) (get-event-sequence dataset-indices c :voice voice)) composition-indices))
+            (get-event-sequences dataset-indices :voice voice)))
+      ;; else it is a harmonic sequence
+      (if (numberp dataset-indices)
+          (if (null composition-indices)
+              (get-harmonic-sequence dataset-indices composition-indices :voices voices)
+              (mapcar #'(lambda (c) (get-harmonic-sequence dataset-indices c :voices voices)) composition-indices))
+          (get-harmonic-sequences dataset-indices :voices voices))))
 
-(defun get-harmonic-sequence (dataset-index composition-index &key voice)
-  (list dataset-index composition-index voice))
-
-(defun get-harmonic-sequences (dataset-indices &key voice)
-  (list dataset-indices voice))
+(defun get-harmonic-sequence (dataset-index composition-index &key voices)
+  (composition->harmony 
+   (get-composition (lookup-composition dataset-index
+                                        composition-index
+                                        *idyom-datasource*))
+   :voices voices))
+                    
+(defun get-harmonic-sequences (dataset-ids &key voices)
+    (let ((compositions '()))
+    (dolist (dataset-id dataset-ids (nreverse compositions))
+      (let ((d (get-dataset dataset-id)))
+        (sequence:dosequence (c d)
+          (push (composition->harmony c :voices voices) compositions))))))
 
 (defun get-event-sequence (dataset-index composition-index &key voice)
   (composition->monody 
@@ -246,11 +256,68 @@
         (sequence:dosequence (c d)
           (push (composition->monody c :voice voice) compositions))))))
 
+(defun composition->harmony (composition &key voices)
+   "Extract a sequence of harmonic slices from a composition according
+to the VOICE argument, which should be a list of integers."
+   (let* ((hs (make-instance 'music-harmonic-sequence
+                             :onset 0
+                             :dur (duration composition)
+                             :midc (midc composition)
+                             :id (copy-identifier (ident composition))
+                             :description (description composition)
+                             :timebase (timebase composition)))
+          (sorted-composition (sort composition #'< :key #'md:onset))
+          (event-list (coerce sorted-composition 'list))
+          (onsets (remove-duplicates (mapcar #'onset event-list)))
+          (l (length onsets))
+          (slices nil))
+     ;; Extract the slices
+     (dotimes (i l)
+       ;; For each onset
+       (let* ((onset (nth i onsets))
+              ;; find the events that are sounding at that onset
+              (matching-events (remove-if-not #'(lambda (x) 
+                                                  (and (member (md:voice x) voices :test #'=) 
+                                                       (<= (md:onset x) onset) 
+                                                       (> (+ (md:onset x) (md:duration x)) onset)))
+                                              event-list))
+              ;; change onset and, if necessary, shorten duration to avoid overlap with next onset
+              (matching-events (mapcar #'(lambda (x) 
+                                           (let ((e (md:copy-event x)))
+                                             (md:set-attribute e 'onset onset)
+                                             (if (< i (1- l))
+                                                 (md:set-attribute e 'dur (min (duration x) (- (nth (1+ i) onsets) onset)))
+                                                 (md:set-attribute e 'dur (apply #'max (mapcar #'duration matching-events))))
+                                             e))
+                                       matching-events))
+              ;; sort them by voice
+              (matching-events (sort matching-events #'< :key #'voice))
+              ;; create a slice object containing those events
+              (slice (make-instance 'music-slice 
+                                    :onset onset 
+                                    :dur (apply #'max (mapcar #'duration matching-events))
+                                    :midc (midc composition)
+                                    :id (copy-identifier (ident composition))
+                                    :description (description composition)
+                                    :timebase (timebase composition))))
+         (sequence:adjust-sequence 
+          slice (length matching-events)
+          :initial-contents (sort matching-events #'< :key #'voice))
+         (push slice slices)))
+     ;; return the new harmonic sequence
+     (sequence:adjust-sequence 
+      hs (length slices)
+      :initial-contents (sort slices #'< :key #'onset))
+     hs))
+
 (defun composition->monody (composition &key voice)
   "Extract a melody from a composition according to the VOICE
 argument, which should be an integer. If VOICE is null the voice of
 the first event in the piece is extracted."
-  (let ((monody (make-instance 'music-sequence
+  (let ((monody (make-instance 'music-melodic-sequence
+                               :onset 0
+                               :dur (duration composition)
+                               :midc (midc composition)
                                :id (copy-identifier (ident composition))
                                :description (description composition)
                                :timebase (timebase composition)))
@@ -280,6 +347,7 @@ the first event in the piece is extracted."
   (let* ((dataset-id (get-dataset-index identifier))
          (where-clause [= [dataset-id] dataset-id])
          (db-dataset (car (clsql:select [*] :from [mtp-dataset] :where where-clause)))
+         (midc (fourth db-dataset))
          (db-compositions (clsql:select [composition-id][description][timebase]
                                         :from [mtp-composition] 
                                         :order-by '(([composition-id] :asc))
@@ -294,7 +362,7 @@ the first event in the piece is extracted."
 				 :id identifier
 				 :description (second db-dataset) 
 				 :timebase (third db-dataset) 
-				 :midc (fourth db-dataset)))
+				 :midc midc))
          (compositions nil)
          (events nil))
     (when db-dataset
@@ -312,15 +380,16 @@ the first event in the piece is extracted."
             (when dbe
               (push (db-event->music-event dbe timebase) events)))
           (when events
-            (let* (;(interval (+ (md:onset (car events)) (md:duration (car events))))
+            (let* ((interval (+ (md:onset (car events)) (md:duration (car events))))
                    (comp-id (make-composition-id dataset-id composition-id))
                    (composition
                     (make-instance 'music-composition
                                    :id comp-id
                                    :description description
+                                   :onset 0
+                                   :dur interval
+                                   :midc midc
                                    :timebase timebase)))
-                                        ;:time 0
-                                        ;:interval interval)))
               (sequence:adjust-sequence composition (length events)
                                         :initial-contents (nreverse events))
               (setf events nil)
@@ -342,6 +411,7 @@ the first event in the piece is extracted."
          (timebase 
           (car (clsql:select [timebase] :from [mtp-composition] 
                              :where where-clause :flatp t :field-names nil)))
+         (midc (car (clsql:select [midc] :from [mtp-dataset] :where [= [dataset-id] dataset-id] :flatp t)))
          (db-events (apply #'clsql:select 
                            (append *event-attributes* 
                                    (list :from [mtp-event] 
@@ -351,10 +421,14 @@ the first event in the piece is extracted."
     (when (and db-events timebase)
       (dolist (e db-events)
         (push (db-event->music-event e timebase) events))
-      (let* ((composition 
+      (let* ((interval (+ (md:onset (car events)) (md:duration (car events))))
+             (composition 
               (make-instance 'music-composition
                              :id identifier
+                             :onset 0
+                             :dur interval
                              :description description
+                             :midc midc
                              :timebase timebase)))
         (sequence:adjust-sequence composition (length events)
                                   :initial-contents (nreverse events))
