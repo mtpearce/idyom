@@ -2,7 +2,7 @@
 ;;;; File:       time.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-04 12:00:19 marcusp>
-;;;; Time-stamp: <2014-09-04 13:45:01 marcusp>
+;;;; Time-stamp: <2014-09-04 16:25:40 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -104,7 +104,7 @@
   (and (before o1 o2) (time> (end-time o1) o2) (time< (end-time o1) (end-time o2))))
 
 (defmethod meets ((o1 anchored-time-interval) (o2 anchored-time-interval))
-  (and (before o1 o2) (time= (end-time o1) o2)))
+  (and (time< o1 o2) (time= (end-time o1) o2)))
 
 
 
