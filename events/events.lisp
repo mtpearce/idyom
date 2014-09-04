@@ -2,7 +2,7 @@
 ;;;; File:       events.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2013-04-12 12:46:19 jeremy>
-;;;; Time-stamp: <2014-09-04 12:38:20 marcusp>
+;;;; Time-stamp: <2014-09-04 14:04:55 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -49,7 +49,7 @@
   ((onset :initarg :onset :accessor onset)))
 
 (defclass time-interval ()
-  ((dur :initarg :dur :accessor duration)))
+  ((dur :initarg :duration :accessor duration)))
 
 (defclass anchored-time-interval (time-point time-interval) ())
 
@@ -99,7 +99,7 @@
                  ;;:description (description e)
                  ;;:midc (midc e)
                  :onset (onset e)
-		 :dur (duration e)
+		 :duration (duration e)
                  :deltast (deltast e)
                  :bioi (bioi e)
                  :cpitch (chromatic-pitch e)
@@ -269,7 +269,7 @@ to the VOICE argument, which should be a list of integers. This uses
 full expansion (cf. Conklin, 2002)."
    (let* ((hs (make-instance 'music-harmonic-sequence
                              :onset 0
-                             :dur (duration composition)
+                             :duration (duration composition)
                              :midc (midc composition)
                              :id (copy-identifier (ident composition))
                              :description (description composition)
@@ -303,7 +303,7 @@ full expansion (cf. Conklin, 2002)."
               ;; create a slice object containing those events
               (slice (make-instance 'music-slice 
                                     :onset onset 
-                                    :dur (apply #'max (mapcar #'duration matching-events))
+                                    :duration (apply #'max (mapcar #'duration matching-events))
                                     :midc (midc composition)
                                     :id (copy-identifier (ident composition))
                                     :description (description composition)
@@ -324,7 +324,7 @@ argument, which should be an integer. If VOICE is null the voice of
 the first event in the piece is extracted."
   (let ((monody (make-instance 'music-melodic-sequence
                                :onset 0
-                               :dur (duration composition)
+                               :duration (duration composition)
                                :midc (midc composition)
                                :id (copy-identifier (ident composition))
                                :description (description composition)
@@ -395,7 +395,7 @@ the first event in the piece is extracted."
                                    :id comp-id
                                    :description description
                                    :onset 0
-                                   :dur interval
+                                   :duration interval
                                    :midc midc
                                    :timebase timebase)))
               (sequence:adjust-sequence composition (length events)
@@ -434,7 +434,7 @@ the first event in the piece is extracted."
               (make-instance 'music-composition
                              :id identifier
                              :onset 0
-                             :dur interval
+                             :duration interval
                              :description description
                              :midc midc
                              :timebase timebase)))
