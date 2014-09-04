@@ -2,7 +2,7 @@
 ;;;; File:       events.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2013-04-12 12:46:19 jeremy>
-;;;; Time-stamp: <2014-09-04 14:04:55 marcusp>
+;;;; Time-stamp: <2014-09-04 14:23:27 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -116,6 +116,9 @@
                  :comma (comma e)
                  :articulation (articulation e)
                  :voice (voice e)))
+
+(defun count-compositions (dataset-id)
+  (length (get-dataset dataset-id)))
 
 
 ;;; Identifiers 
@@ -340,8 +343,7 @@ the first event in the piece is extracted."
      :initial-contents (sort events #'< :key #'onset))
     monody))
 
-(defun count-compositions (dataset-id)
-  (length (get-dataset dataset-id)))
+;; low-level database access functions
 
 (defgeneric get-dataset (dataset-identifier))
 (defgeneric get-composition (composition-identifier))
@@ -449,6 +451,7 @@ the first event in the piece is extracted."
   (let* ((dataset-id (get-dataset-index identifier))
          (composition-id (get-composition-index identifier))
          (event-id (get-event-index identifier))
+         (midc (car (clsql:select [midc] :from [mtp-dataset] :where [= [dataset-id] dataset-id] :flatp t)))
          (composition-where-clause [and [= [dataset-id] dataset-id]
                                    [= [composition-id] composition-id]])
          (event-where-clause [and [= [dataset-id] dataset-id]
@@ -463,15 +466,17 @@ the first event in the piece is extracted."
                                        (list :from [mtp-event]
                                              :where event-where-clause))))))
     (when (and timebase db-event)
-      (db-event->music-event db-event timebase))))
+      (db-event->music-event db-event timebase midc))))
 #.(clsql:restore-sql-reader-syntax-state) 
 
-(defun db-event->music-event (db-event timebase)
+(defun db-event->music-event (db-event timebase midc)
   (let* ((event-id (make-event-id (first db-event)
 				 (second db-event)
 				 (third db-event)))
          (music-event (make-instance 'music-event
 				   :id event-id
+                                   :description ""
+                                   :midc midc
                                    :timebase timebase)))
     (do* ((slts *md-music-slots* (cdr slts))
           (db-atts (nthcdr 3 db-event) (cdr db-atts)))
