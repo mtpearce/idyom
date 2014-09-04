@@ -2,7 +2,7 @@
 ;;;; File:       events.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2013-04-12 12:46:19 jeremy>
-;;;; Time-stamp: <2014-09-04 14:23:27 marcusp>
+;;;; Time-stamp: <2014-09-04 16:26:12 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -215,28 +215,39 @@
 ;;; Getting music objects from the database
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun get-music-objects (dataset-indices composition-indices &key voices)
+(defun get-music-objects (dataset-indices composition-indices &key voices (type :melody))
   "Return music objects from the database corresponding to
   DATASET-INDICES, COMPOSITION-INDICES which may be single numeric IDs
   or lists of IDs. COMPOSITION-INDICES is only considered if
-  DATASET-INDICES is a single ID. If voice is nil, the melody
-  corresponding to the voice of the first event is extracted, if
-  determining the type of sequence returned, using the voices
-  specified by the list VOICE."
-  (if (or  (null voices) (integerp voices) (= (length voices) 1))
-      ;; it is a melodic sequence
-      (let ((voice (if (listp voices) (car voices) voices)))
-        (if (numberp dataset-indices)
-            (if (null composition-indices)
-                (get-event-sequence dataset-indices composition-indices :voices voices)
-                (mapcar #'(lambda (c) (get-event-sequence dataset-indices c :voices voices)) composition-indices))
-            (get-event-sequences dataset-indices :voices voices)))
-      ;; else it is a harmonic sequence
-      (if (numberp dataset-indices)
-          (if (null composition-indices)
-              (get-harmonic-sequence dataset-indices composition-indices :voices voices)
-              (mapcar #'(lambda (c) (get-harmonic-sequence dataset-indices c :voices voices)) composition-indices))
-          (get-harmonic-sequences dataset-indices :voices voices))))
+  DATASET-INDICES is a single ID. TYPE determines whether the returned
+  object is a melody (using the Skyline algorithm if necessary) or a
+  sequence of harmonic slices using full expansion (cf. Conklin,
+  2002). The voices specified by VOICES are used. If VOICES is nil,
+  the melody corresponding to the voice of the first event is
+  extracted or the harmony corresponding to all voices is used."
+  (cond ((eq type :melody)
+         (if (numberp dataset-indices)
+             (cond ((null composition-indices)
+                    (get-event-sequences dataset-indices :voices voices))
+                   ((numberp composition-indices)
+                    (get-event-sequence dataset-indices composition-indices :voices voices))
+                   (t 
+                    (mapcar #'(lambda (c) (get-event-sequence dataset-indices c :voices voices)) composition-indices)))
+             (get-event-sequences dataset-indices :voices voices)))
+        ((eq type :harmony)
+         (if (numberp dataset-indices)
+             (cond ((null composition-indices)
+                    (get-harmonic-sequences dataset-indices :voices voices))
+                   ((numberp composition-indices)
+                    (get-harmonic-sequence dataset-indices composition-indices :voices voices))
+                   (t 
+                    (mapcar #'(lambda (c) (get-harmonic-sequence dataset-indices c :voices voices)) composition-indices)))
+             (get-harmonic-sequences dataset-indices :voices voices)))
+        (t 
+         (print "Unrecognised type of music object. Options are :melody or :harmony."))))
+
+
+;; harmonic sequences
 
 (defun get-harmonic-sequence (dataset-index composition-index &key voices)
   (composition->harmony 
@@ -252,20 +263,6 @@
         (sequence:dosequence (c d)
           (push (composition->harmony c :voices voices) compositions))))))
 
-(defun get-event-sequence (dataset-index composition-index &key voices)
-  (composition->monody 
-   (get-composition (lookup-composition dataset-index
-					  composition-index
-					  *idyom-datasource*))
-   :voices voices))
-
-(defun get-event-sequences (dataset-ids &key voices)
-  (let ((compositions '()))
-    (dolist (dataset-id dataset-ids (nreverse compositions))
-      (let ((d (get-dataset dataset-id)))
-        (sequence:dosequence (c d)
-          (push (composition->monody c :voices voices) compositions))))))
-
 (defun composition->harmony (composition &key voices)
    "Extract a sequence of harmonic slices from a composition according
 to the VOICE argument, which should be a list of integers. This uses
@@ -279,6 +276,9 @@ full expansion (cf. Conklin, 2002)."
                              :timebase (timebase composition)))
           (sorted-composition (sort composition #'< :key #'md:onset))
           (event-list (coerce sorted-composition 'list))
+          (event-list (if (null voices) 
+                          event-list 
+                          (remove-if #'(lambda (x) (not (member x voices))) event-list :key #'md:voice)))
           (onsets (remove-duplicates (mapcar #'onset event-list)))
           (l (length onsets))
           (slices nil))
@@ -288,8 +288,7 @@ full expansion (cf. Conklin, 2002)."
        (let* ((onset (nth i onsets))
               ;; find the events that are sounding at that onset
               (matching-events (remove-if-not #'(lambda (x) 
-                                                  (and (member (md:voice x) voices :test #'=) 
-                                                       (<= (md:onset x) onset) 
+                                                  (and (<= (md:onset x) onset) 
                                                        (> (+ (md:onset x) (md:duration x)) onset)))
                                               event-list))
               ;; change onset and, if necessary, shorten duration to avoid overlap with next onset
@@ -321,7 +320,24 @@ full expansion (cf. Conklin, 2002)."
       :initial-contents (sort slices #'< :key #'onset))
      hs))
 
-(defun composition->monody (composition &key voice)
+
+;; melodic sequences
+
+(defun get-event-sequence (dataset-index composition-index &key voices)
+  (composition->monody 
+   (get-composition (lookup-composition dataset-index
+					  composition-index
+					  *idyom-datasource*))
+   :voices voices))
+
+(defun get-event-sequences (dataset-ids &key voices)
+  (let ((compositions '()))
+    (dolist (dataset-id dataset-ids (nreverse compositions))
+      (let ((d (get-dataset dataset-id)))
+        (sequence:dosequence (c d)
+          (push (composition->monody c :voices voices) compositions))))))
+
+(defun composition->monody (composition &key voices)
   "Extract a melody from a composition according to the VOICE
 argument, which should be an integer. If VOICE is null the voice of
 the first event in the piece is extracted."
@@ -332,16 +348,52 @@ the first event in the piece is extracted."
                                :id (copy-identifier (ident composition))
                                :description (description composition)
                                :timebase (timebase composition)))
-        (events nil))
-    (sequence:dosequence (event composition)
-      (when (null voice)
-        (setf voice (voice event)))
-      (when (= (voice event) voice)
-        (push event events)))
+        (events nil)
+        (voice (if (listp voices) (car voices) voices)))
+    (if (and (or (null voices) (integerp voices) (= (length voices) 1)) (ensure-monody composition :voices voices))
+        ;; return the specified voice
+        (sequence:dosequence (event composition)
+          (when (null voices)
+            (setf voice (voice event)))
+          (when (= (voice event) voice)
+            (push event events)))
+        ;; else use skyline algorithm to extract monody
+        (setf events (skyline composition :voices voices)))
     (sequence:adjust-sequence 
      monody (length events)
      :initial-contents (sort events #'< :key #'onset))
     monody))
+
+(defun ensure-monody (composition &key voices) 
+  (let* ((sorted-composition (sort composition #'< :key #'md:onset))
+         (event-list (coerce sorted-composition 'list))
+         (event-list (if (null voices) 
+                         event-list 
+                         (remove-if #'(lambda (x) (not (member x voices))) event-list :key #'md:voice)))
+         (result t))
+    (dotimes (i (1- (length event-list)) result)
+      (let ((e1 (elt event-list i))
+            (e2 (elt event-list (1+ i))))
+        (unless (disjoint e1 e2)
+          (setf result nil))))))
+
+(defun skyline (composition &key voices) 
+  "For each event onset in a composition, retain only the voice with
+the highest pitch sounding at that onset position."
+  (let ((hs (composition->harmony composition :voices voices))
+        (result nil)
+        (previous-event nil))
+    (sequence:dosequence (slice hs (nreverse result))
+      (let ((top (elt (sort slice #'> :key #'md:chromatic-pitch) 0)))
+        (unless (null previous-event)
+          (when (not (= (bioi top) (- (onset top) (onset previous-event))))
+            (md:set-attribute top 'bioi (- (onset top) (onset previous-event))))
+          (when (before previous-event top)
+            (md:set-attribute top 'deltast (- (onset top) (onset (end-time previous-event))))))
+        (print (list top (chromatic-pitch top) (length slice)))
+        (setf previous-event top)
+        (push top result)))))
+
 
 ;; low-level database access functions
 
@@ -388,7 +440,7 @@ the first event in the piece is extracted."
                ((or (null dbes) (not (= cid composition-id)))
                 (setf db-events dbes))
             (when dbe
-              (push (db-event->music-event dbe timebase) events)))
+              (push (db-event->music-event dbe timebase midc) events)))
           (when events
             (let* ((interval (+ (md:onset (car events)) (md:duration (car events))))
                    (comp-id (make-composition-id dataset-id composition-id))
@@ -430,7 +482,7 @@ the first event in the piece is extracted."
          (events nil))
     (when (and db-events timebase)
       (dolist (e db-events)
-        (push (db-event->music-event e timebase) events))
+        (push (db-event->music-event e timebase midc) events))
       (let* ((interval (+ (md:onset (car events)) (md:duration (car events))))
              (composition 
               (make-instance 'music-composition
