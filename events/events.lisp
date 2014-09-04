@@ -2,7 +2,7 @@
 ;;;; File:       events.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2013-04-12 12:46:19 jeremy>
-;;;; Time-stamp: <2014-08-31 20:15:37 marcusp>
+;;;; Time-stamp: <2014-09-04 12:38:20 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -45,9 +45,15 @@
 
 (defclass music-dataset (list-slot-sequence music-object) ())
 
-(defclass music-temporal-object (music-object)
-  ((onset :initarg :onset :accessor onset) 
-   (dur :initarg :dur :accessor duration)))
+(defclass time-point () 
+  ((onset :initarg :onset :accessor onset)))
+
+(defclass time-interval ()
+  ((dur :initarg :dur :accessor duration)))
+
+(defclass anchored-time-interval (time-point time-interval) ())
+
+(defclass music-temporal-object (music-object anchored-time-interval) ())
 
 (defclass music-sequence (list-slot-sequence music-temporal-object) ()) ; sequence of music objects ordered in time 
 (defclass music-slice (list-slot-sequence music-temporal-object) ())    ; set of music objects overlapping in time, ordered by voice
@@ -210,7 +216,8 @@
   "Return music objects from the database corresponding to
   DATASET-INDICES, COMPOSITION-INDICES which may be single numeric IDs
   or lists of IDs. COMPOSITION-INDICES is only considered if
-  DATASET-INDICES is a single ID. If voice is nil, the melody corresponding to the voice of the first event is extracted, if 
+  DATASET-INDICES is a single ID. If voice is nil, the melody
+  corresponding to the voice of the first event is extracted, if
   determining the type of sequence returned, using the voices
   specified by the list VOICE."
   (if (or  (null voices) (integerp voices) (= (length voices) 1))
@@ -218,9 +225,9 @@
       (let ((voice (if (listp voices) (car voices) voices)))
         (if (numberp dataset-indices)
             (if (null composition-indices)
-                (get-event-sequence dataset-indices composition-indices :voice voice)
-                (mapcar #'(lambda (c) (get-event-sequence dataset-indices c :voice voice)) composition-indices))
-            (get-event-sequences dataset-indices :voice voice)))
+                (get-event-sequence dataset-indices composition-indices :voices voices)
+                (mapcar #'(lambda (c) (get-event-sequence dataset-indices c :voices voices)) composition-indices))
+            (get-event-sequences dataset-indices :voices voices)))
       ;; else it is a harmonic sequence
       (if (numberp dataset-indices)
           (if (null composition-indices)
@@ -242,23 +249,24 @@
         (sequence:dosequence (c d)
           (push (composition->harmony c :voices voices) compositions))))))
 
-(defun get-event-sequence (dataset-index composition-index &key voice)
+(defun get-event-sequence (dataset-index composition-index &key voices)
   (composition->monody 
    (get-composition (lookup-composition dataset-index
 					  composition-index
 					  *idyom-datasource*))
-   :voice voice))
+   :voices voices))
 
-(defun get-event-sequences (dataset-ids &key voice)
+(defun get-event-sequences (dataset-ids &key voices)
   (let ((compositions '()))
     (dolist (dataset-id dataset-ids (nreverse compositions))
       (let ((d (get-dataset dataset-id)))
         (sequence:dosequence (c d)
-          (push (composition->monody c :voice voice) compositions))))))
+          (push (composition->monody c :voices voices) compositions))))))
 
 (defun composition->harmony (composition &key voices)
    "Extract a sequence of harmonic slices from a composition according
-to the VOICE argument, which should be a list of integers."
+to the VOICE argument, which should be a list of integers. This uses
+full expansion (cf. Conklin, 2002)."
    (let* ((hs (make-instance 'music-harmonic-sequence
                              :onset 0
                              :dur (duration composition)
