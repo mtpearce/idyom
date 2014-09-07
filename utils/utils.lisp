@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2014-07-17 15:02:15 marcusp>
+;;;; Time-stamp: <2014-09-07 21:02:09 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -154,11 +154,11 @@
 
 (defun last-element (list)
   "Returns the last element of a list."
-  (car (reverse list)))
+  (elt (reverse list) 0))
 
 (defun penultimate-element (list) 
   "Returns the penultimate element of a list."
-  (nth 1 (reverse list)))
+  (elt (reverse list) 1))
 
 
 ;;;===========================================================================
