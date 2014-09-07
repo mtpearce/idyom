@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2014-09-07 13:33:54 marcusp>
+;;;; Time-stamp: <2014-09-07 13:51:45 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -38,7 +38,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defclass music-object ()
-  ((identifier :initarg :id :accessor identifier :type identifier)
+  ((identifier :initarg :id :accessor get-identifier :type identifier)
    (description :initarg :description :accessor description)
    (timebase :initarg :timebase :accessor timebase)
    (midc :initarg :midc :accessor midc)))
@@ -77,14 +77,15 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defclass dataset-identifier ()
-  ((dataset-id :initarg :dataset-index :accessor dataset-index :type (integer 0 *))))
+  ((dataset-id :initarg :dataset-index :accessor get-dataset-index :type (integer 0 *))))
    
 (defclass composition-identifier (dataset-identifier)
-  ((composition-id :initarg :composition-index :accessor composition-index :type (integer 0 *))))
+  ((composition-id :initarg :composition-index :accessor get-composition-index :type (integer 0 *))))
 
 (defclass event-identifier (composition-identifier)
-  ((event-id :initarg :event-index :accessor event-index :type (integer 0 *))))
+  ((event-id :initarg :event-index :accessor get-event-index :type (integer 0 *))))
 
+;; Make identifiers
 (defun make-dataset-id (dataset-index) 
   (make-instance 'dataset-identifier :dataset-index dataset-index))
 
@@ -99,47 +100,23 @@
 		 :composition-index composition-index
 		 :event-index event-index))
 
-;; Datasets, compositions and events are required to have an unique integer index.
-(defgeneric get-dataset-index (dataset-identifier)
-  (:documentation "Integer index for dataset"))
-(defgeneric get-composition-index (composition-identifier)
-  (:documentation "Integer index for composition"))
-(defgeneric get-event-index (event-identifier)
-  (:documentation "Integer index for event"))
-
-(defmethod get-dataset-index ((id dataset-identifier))
-  (dataset-index id))
-
-(defmethod get-composition-index ((id composition-identifier))
-  (composition-index id))
-
-(defmethod get-event-index ((id event-identifier))
-  (event-index id))
-
-;; Get an identifier
-(defgeneric get-identifier (object))
-
-(defmethod get-identifier ((mo music-object))
-  (identifier mo))
-
-;; Copy identifier
+;; Copy identifiers
 (defgeneric copy-identifier (id))
 
 (defmethod copy-identifier ((id dataset-identifier))
   (make-instance 'dataset-identifier
-		 :dataset-index (dataset-index id)))
+		 :dataset-index (get-dataset-index id)))
 
 (defmethod copy-identifier ((id composition-identifier))
   (make-instance 'composition-identifier
-		 :dataset-index (dataset-index id)
-		 :composition-index (composition-index id)))
+		 :dataset-index (get-dataset-index id)
+		 :composition-index (get-composition-index id)))
 
 (defmethod copy-identifier ((id event-identifier))
   (make-instance 'event-identifier
-		 :dataset-index (dataset-index id)
-		 :composition-index (composition-index id)
-		 :event-index (event-index id)))
-
+		 :dataset-index (get-dataset-index id)
+		 :composition-index (get-composition-index id)
+		 :event-index (get-event-index id)))
 
 ;; Lookup identifiers
 (defgeneric lookup-dataset (dataset-index datasource)
@@ -180,7 +157,7 @@
 (defgeneric copy-event (music-event))
 (defmethod copy-event ((e music-event))
   (make-instance 'music-event
-                 :id (copy-identifier (identifier e))
+                 :id (copy-identifier (get-identifier e))
                  :timebase (timebase e)
                  ;;:description (description e)
                  ;;:midc (midc e)
@@ -209,7 +186,8 @@
 (defun get-description (dataset-id &optional composition-id)
   (if (null composition-id)
       (description (get-dataset dataset-id))
-      (description (lookup-composition dataset-id composition-id *idyom-datasource*))))
+      (description (get-composition (lookup-composition dataset-id composition-id *idyom-datasource*)))))
+
 
 ;;; Getting music objects from the database
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -270,7 +248,7 @@ full expansion (cf. Conklin, 2002)."
                              :onset 0
                              :duration (duration composition)
                              :midc (midc composition)
-                             :id (copy-identifier (identifier composition))
+                             :id (copy-identifier (get-identifier composition))
                              :description (description composition)
                              :timebase (timebase composition)))
           (sorted-composition (sort composition #'< :key #'md:onset))
@@ -306,7 +284,7 @@ full expansion (cf. Conklin, 2002)."
                                     :onset onset 
                                     :duration (apply #'max (mapcar #'duration matching-events))
                                     :midc (midc composition)
-                                    :id (copy-identifier (identifier composition))
+                                    :id (copy-identifier (get-identifier composition))
                                     :description (description composition)
                                     :timebase (timebase composition))))
          (sequence:adjust-sequence 
@@ -344,7 +322,7 @@ the first event in the piece is extracted."
                                :onset 0
                                :duration (duration composition)
                                :midc (midc composition)
-                               :id (copy-identifier (identifier composition))
+                               :id (copy-identifier (get-identifier composition))
                                :description (description composition)
                                :timebase (timebase composition)))
         (events nil)

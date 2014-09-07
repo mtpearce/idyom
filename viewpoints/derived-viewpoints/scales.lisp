@@ -2,7 +2,7 @@
 ;;;; File:       scales.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2013-01-24 15:00:00 jeremy>
-;;;; Time-stamp: <2014-09-07 13:29:12 marcusp>
+;;;; Time-stamp: <2014-09-07 13:56:58 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
@@ -392,8 +392,8 @@ return that degree"
 (define-viewpoint (sd-makam-a4-desc derived (cpitch))
     (events element)
   :function (let* ((last (last-element events))
-		   (comp (music-data:get-composition (md:get-identifier last)))
-		   (desc (music-data:description comp)))
+		   (comp (md:get-composition (md:get-identifier last)))
+		   (desc (md:description comp)))
 	      (if (equal (subseq desc 5 10) "hicaz")
 		  (sd-hicaz-a4 events)
 		  (sd-ussak-a4 events))))
@@ -429,7 +429,7 @@ return that degree"
 (define-viewpoint (sdeg derived (cpitch))
     (events element)
   :function (let* ((last (last-element events))
-		   (set-id (music-data:get-dataset-index (music-data:ident last))))
+		   (set-id (md:get-dataset-index (md:get-identifier last))))
 	      (if (< set-id 400)
 		  (sdeg-west events)
 		  (sd-makam-a4 events))))
