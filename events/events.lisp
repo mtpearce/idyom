@@ -2,7 +2,7 @@
 ;;;; File:       events.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2013-04-12 12:46:19 jeremy>
-;;;; Time-stamp: <2014-09-04 16:26:12 marcusp>
+;;;; Time-stamp: <2014-09-07 11:46:48 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -44,14 +44,6 @@
    (midc :initarg :midc :accessor midc)))
 
 (defclass music-dataset (list-slot-sequence music-object) ())
-
-(defclass time-point () 
-  ((onset :initarg :onset :accessor onset)))
-
-(defclass time-interval ()
-  ((dur :initarg :duration :accessor duration)))
-
-(defclass anchored-time-interval (time-point time-interval) ())
 
 (defclass music-temporal-object (music-object anchored-time-interval) ())
 
@@ -288,8 +280,8 @@ full expansion (cf. Conklin, 2002)."
        (let* ((onset (nth i onsets))
               ;; find the events that are sounding at that onset
               (matching-events (remove-if-not #'(lambda (x) 
-                                                  (and (<= (md:onset x) onset) 
-                                                       (> (+ (md:onset x) (md:duration x)) onset)))
+                                                  (and (<= (onset x) onset) 
+                                                       (> (onset (end-time x)) onset)))
                                               event-list))
               ;; change onset and, if necessary, shorten duration to avoid overlap with next onset
               (matching-events (mapcar #'(lambda (x) 
@@ -442,7 +434,7 @@ the highest pitch sounding at that onset position."
             (when dbe
               (push (db-event->music-event dbe timebase midc) events)))
           (when events
-            (let* ((interval (+ (md:onset (car events)) (md:duration (car events))))
+            (let* ((interval (onset (end-time (car events))))
                    (comp-id (make-composition-id dataset-id composition-id))
                    (composition
                     (make-instance 'music-composition
@@ -483,7 +475,7 @@ the highest pitch sounding at that onset position."
     (when (and db-events timebase)
       (dolist (e db-events)
         (push (db-event->music-event e timebase midc) events))
-      (let* ((interval (+ (md:onset (car events)) (md:duration (car events))))
+      (let* ((interval (onset (end-time (car events))))
              (composition 
               (make-instance 'music-composition
                              :id identifier

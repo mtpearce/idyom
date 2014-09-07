@@ -2,10 +2,44 @@
 ;;;; File:       time.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-04 12:00:19 marcusp>
-;;;; Time-stamp: <2014-09-04 16:25:40 marcusp>
+;;;; Time-stamp: <2014-09-07 12:13:56 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
+
+;; classes
+
+(defclass time-point () 
+  ((onset :initarg :onset :accessor onset)))
+
+(defclass time-interval ()
+  ((dur :initarg :duration :accessor duration)))
+
+(defclass anchored-time-interval (time-point time-interval) ())
+
+
+;; (defgeneric time+ (o1 o2)
+;;  (:documentation "Addition for time points"))
+;; (defgeneric time- (o1 o2)
+;;  (:documentation "Subtraction for time points"))
+;; (defgeneric duration+ (o1 o2)
+;;  (:documentation "Addition for time intervals"))
+;; (defgeneric duration- (o1 o2)
+;;  (:documentation "Subtraction for time intervals"))
+;; 
+;; time+:     <point>      <interval> -> <point> 
+;;            <interval>   <point>    -> ERROR 
+;;            <point>      <point>    -> <point>    ;; how should precedence work for anchored-time-intervals?
+;; 
+;; time-:     <point>      <interval> -> <point>    ;; are negative time points allowed?
+;;            <interval>   <point>    -> ERROR 
+;;            <point>      <point>    -> <interval> ;; how should precedence work for anchored-time-intervals?
+;; 
+;; duration+: <interval>   <interval> -> <interval> 
+;; duration-: <interval>   <interval> -> <interval> ;; are negative intervals allowed?
+;;  
+;; ** not clear these are necessary. **
+
 
 ;; time-point
 
