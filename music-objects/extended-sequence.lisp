@@ -1,8 +1,8 @@
 ;;;; ======================================================================
 ;;;; File:       extended-sequence.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
-;;;; Created:    <2013-04-01 12:11:04 jeremy>
-;;;; Time-stamp: <2014-06-04 15:55:53 marcusp>
+;;;; Created:    <2014-09-07 12:11:04 marcusp>
+;;;; Time-stamp: <2014-09-07 12:26:07 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)

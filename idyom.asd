@@ -2,7 +2,7 @@
 ;;;; File:       IDyOM.asd
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-05-04 21:29:04 marcusp>
-;;;; Time-stamp: <2014-09-07 12:15:15 marcusp>
+;;;; Time-stamp: <2014-09-07 12:35:41 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -25,14 +25,15 @@
             :components 
             ((:file "package")
              (:file "utils")))
-   ;; Data Representation and Access
-   (:module events
+   ;; Representation language for music objects
+   (:module music-objects
 	    :serial t
 	    :components
 	    ((:file "package")
 	     (:file "extended-sequence")
 	     (:file "time")
-             (:file "events")))
+             (:file "music-objects")))
+   ;; Database for storage and retrieval of music
    (:module database
 	    :serial t
 	    :components

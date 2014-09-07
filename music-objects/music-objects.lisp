@@ -1,8 +1,8 @@
 ;;;; ======================================================================
-;;;; File:       events.lisp
+;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
-;;;; Created:    <2013-04-12 12:46:19 jeremy>
-;;;; Time-stamp: <2014-09-07 11:46:48 marcusp>
+;;;; Created:    <2014-09-07 12:24:19 marcusp>
+;;;; Time-stamp: <2014-09-07 12:26:26 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
