@@ -2,7 +2,7 @@
 ;;;; File:       music-data.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-07-17 19:49:04 marcusp>                           
+;;;; Time-stamp: <2014-09-07 13:02:39 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -500,10 +500,6 @@ a list containing the dataset-id is returned."))
 	      (concatenate 'string "EVENT-" accessor-name)))
          (accessor-symbol (find-symbol accessor-name (find-package :mtp-admin))))
     (funcall accessor-symbol e)))
-
-(defmethod get-attribute ((e music-data::music-event) attribute)
-  "Returns the value for slot <attribute> in event object <e>."
-  (music-data:get-attribute e attribute))
 
 (defmethod copy-event ((l list))
   (make-instance 'mtp-event))

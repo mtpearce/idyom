@@ -2,7 +2,7 @@
 ;;;; File:       scales.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2013-01-24 15:00:00 jeremy>
-;;;; Time-stamp: <2014-06-04 16:06:30 marcusp>
+;;;; Time-stamp: <2014-09-07 13:04:43 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
@@ -411,7 +411,7 @@ return that degree"
 
 ;; Store identity of current Makam in unused mode viewpoint
 (defun makam-modes (set-id)
-  (dotimes (n (mtp-admin:count-compositions set-id))
+  (dotimes (n (md:count-compositions set-id))
     (let* ((text (mtp-admin:get-description set-id n))
 	   (mode (if (string= (subseq text 5 10)
 			    "hicaz")

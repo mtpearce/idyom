@@ -2,7 +2,7 @@
 ;;;; File:       generation.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-08-21 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-08-29 12:14:19 marcusp>                           
+;;;; Time-stamp: <2014-09-07 13:01:14 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -230,7 +230,7 @@
 (defun get-pretraining-set (dataset-ids)
   (let* ((d1 (when (member 2 dataset-ids :test #'=)
                (remove-if-not #'(lambda (x)
-                                  (member (cadr (mtp-admin:get-id (car x))) (unique-ids-2)
+                                  (member (md:get-dataset-index (md:get-identifier (car x))) (unique-ids-2)
                                           :test #'=))
                               (md:get-event-sequences (list 2)))))
          (drest (md:get-event-sequences
@@ -242,7 +242,7 @@
     46 47 48 50 52 54 56 57 58 60 65 69 72 81 93 97))
 
 (defun get-context-length (sequence)
-  (1+ (position-if #'(lambda (e) (= (mtp-admin::get-attribute e 'phrase) -1)) sequence)))
+  (1+ (position-if #'(lambda (e) (= (md:get-attribute e 'phrase) -1)) sequence)))
   
 (defun generate-resampling-set (dataset base-id)
   (let* ((high-id (1- (length dataset)))

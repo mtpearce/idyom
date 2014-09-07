@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2014-09-07 12:26:26 marcusp>
+;;;; Time-stamp: <2014-09-07 13:06:27 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -333,7 +333,7 @@ full expansion (cf. Conklin, 2002)."
   "Extract a melody from a composition according to the VOICE
 argument, which should be an integer. If VOICE is null the voice of
 the first event in the piece is extracted."
-  (let ((monody (make-instance 'music-melodic-sequence
+  (let ((monody (make-instance 'music-composition ;; 'music-melodic-sequence
                                :onset 0
                                :duration (duration composition)
                                :midc (midc composition)

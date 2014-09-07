@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-08-29 12:12:55 marcusp>                           
+;;;; Time-stamp: <2014-09-07 12:53:34 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -177,8 +177,7 @@ dataset-id)."
     (case detail 
       (1 (format t "~&Not implemented.~%"))
       (2 (format-information-content-detail=2 o resampling-predictions dataset-id))
-      (3 (format-information-content-detail=3 o resampling-predictions dataset-id))
-      (4 (format-information-content-detail=4 o resampling-predictions dataset-id)))))
+      (3 (format-information-content-detail=3 o resampling-predictions dataset-id)))))
 
 (defun format-information-content-detail=2 (stream resampling-predictions dataset-id)
   (multiple-value-bind (overall-mean composition-means)
@@ -207,15 +206,15 @@ dataset-id)."
                 ;; FOR EACH: event 
                 (dolist (ep (prediction-sets:prediction-set sp))
                   (let* ((event (prediction-sets:prediction-event ep))
-			 ;;; NB: the following was (mtp-admin:get-attribute e 'event-id)
-                         (event-id (music-data:get-event-index (mtp-admin:get-attribute event 'identifier)))
+                         (event-id (md:get-event-index (md:get-attribute event 'identifier)))
                          (probability (float (probability ep) 0.0))
                          (distribution (prediction-sets:prediction-set ep))
                          (orders (prediction-sets:prediction-order ep))
                          (weights (prediction-sets:prediction-weights ep))
                          (existing-results (gethash (list composition-id event-id) results))
                          (event-results (if existing-results existing-results (make-hash-table)))
-                         (timebase (mtp-admin:get-timebase dataset-id composition-id)))
+                         ;;(timebase (mtp-admin:get-timebase dataset-id composition-id)))
+                         (timebase (md:timebase event)))
                     ;; Store event information
                     (unless existing-results
                       (setf (gethash 'dataset.id event-results) dataset-id)
@@ -226,7 +225,7 @@ dataset-id)."
                                            dataset-id
                                            composition-id)))
                       (dolist (attribute viewpoints:*basic-types*)
-                        (let ((value (mtp-admin:get-attribute event attribute)))
+                        (let ((value (md:get-attribute event attribute)))
                           (when (member attribute '(:dur :bioi :deltast :onset) :test #'eq)
                             (setf value (* value (/ timebase 96))))
                           (setf (gethash attribute event-results) value))))
@@ -272,45 +271,7 @@ dataset-id)."
           (format stream "~&")
           (maphash #'(lambda (k v) (declare (ignore k)) (format stream "~A " (if v v "NA"))) (cdr entry)))))))
 
-(defun format-information-content-detail=4 (stream resampling-predictions dataset-id) 
-  "Old version 3, not to be used anymore. Here only for comparing with old output."
-  (let ((melody-index 1)
-        (print-header t)
-        (data (prediction-sets:prediction-set (caar resampling-predictions))))
-    (dolist (sp data)
-      (let* ((melody-id (prediction-sets:prediction-index sp))
-             (name (quote-string (mtp-admin:get-description dataset-id
-                                                            melody-id)))
-             (event-predictions (prediction-sets:prediction-set sp))
-             (event-id 0))
-        ;;(format t "~&~3A ~3A ~5A~%" melody-index melody-id name)
-        (dolist (ep event-predictions)
-          (let* ((event (mtp-admin:get-event dataset-id melody-id event-id))
-                 (onset (mtp-admin:get-attribute event :onset))
-                 (dur (mtp-admin:get-attribute event :dur))
-                 (deltast (mtp-admin:get-attribute event :deltast))
-                 (pitch (mtp-admin:get-attribute event :cpitch))
-                 (keysig (mtp-admin:get-attribute event :keysig))
-                 (mode (mtp-admin:get-attribute event :mode))
-                 (element (prediction-sets:prediction-element ep))
-                 (distribution (prediction-sets:prediction-set ep))
-                 (probability (float (cadr (assoc element distribution)) 0.0))
-                 (information-content (- (log probability 2)))
-                 (entropy (float (prediction-sets:shannon-entropy distribution) 0.0)))
-            (when print-header
-              (format stream "~&melody.id note.id melody.name onset duration deltast pitch keysig mode probability information.content entropy ~{~A ~} ~%" 
-                      (mapcar (lambda (x) (car x)) distribution))
-              (setf print-header nil))
-            (format stream "~&~A ~A ~A ~A ~A ~A ~A ~A ~A ~A ~A ~A ~{~A ~}~%" 
-                    (1+ melody-id) (1+ event-id) name 
-                    onset dur deltast pitch keysig mode
-                    (float probability 0.0f0)
-                    (utils:round-to-nearest-decimal-place information-content 3)
-                    (utils:round-to-nearest-decimal-place entropy 3)
-                    (mapcar (lambda (x) (float (cadr x) 0.0f0)) distribution))                    
-            (incf event-id)))
-      (incf melody-index)))))
-  
+
 ;;;===========================================================================
 ;;; Constructing the Long term models 
 ;;;===========================================================================
