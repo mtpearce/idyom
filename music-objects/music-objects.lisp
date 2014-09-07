@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2014-09-07 13:21:44 marcusp>
+;;;; Time-stamp: <2014-09-07 13:33:54 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -38,7 +38,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defclass music-object ()
-  ((identifier :initarg :id :accessor ident :type identifier)
+  ((identifier :initarg :id :accessor identifier :type identifier)
    (description :initarg :description :accessor description)
    (timebase :initarg :timebase :accessor timebase)
    (midc :initarg :midc :accessor midc)))
@@ -120,7 +120,7 @@
 (defgeneric get-identifier (object))
 
 (defmethod get-identifier ((mo music-object))
-  (ident mo))
+  (identifier mo))
 
 ;; Copy identifier
 (defgeneric copy-identifier (id))
@@ -180,7 +180,7 @@
 (defgeneric copy-event (music-event))
 (defmethod copy-event ((e music-event))
   (make-instance 'music-event
-                 :id (copy-identifier (ident e))
+                 :id (copy-identifier (identifier e))
                  :timebase (timebase e)
                  ;;:description (description e)
                  ;;:midc (midc e)
@@ -270,7 +270,7 @@ full expansion (cf. Conklin, 2002)."
                              :onset 0
                              :duration (duration composition)
                              :midc (midc composition)
-                             :id (copy-identifier (ident composition))
+                             :id (copy-identifier (identifier composition))
                              :description (description composition)
                              :timebase (timebase composition)))
           (sorted-composition (sort composition #'< :key #'md:onset))
@@ -306,7 +306,7 @@ full expansion (cf. Conklin, 2002)."
                                     :onset onset 
                                     :duration (apply #'max (mapcar #'duration matching-events))
                                     :midc (midc composition)
-                                    :id (copy-identifier (ident composition))
+                                    :id (copy-identifier (identifier composition))
                                     :description (description composition)
                                     :timebase (timebase composition))))
          (sequence:adjust-sequence 
@@ -344,7 +344,7 @@ the first event in the piece is extracted."
                                :onset 0
                                :duration (duration composition)
                                :midc (midc composition)
-                               :id (copy-identifier (ident composition))
+                               :id (copy-identifier (identifier composition))
                                :description (description composition)
                                :timebase (timebase composition)))
         (events nil)
