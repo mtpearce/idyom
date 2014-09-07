@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2014-09-07 13:06:27 marcusp>
+;;;; Time-stamp: <2014-09-07 13:21:44 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -71,46 +71,6 @@
    (comma :initarg :comma :accessor comma)
    (articulation :initarg :articulation :accessor articulation)
    (voice :initarg :voice :accessor voice)))
-
-;; Accessing data
-(defgeneric get-attribute (event attribute))
-(defmethod get-attribute ((e music-event) attribute)
-  "Returns the value for slot <attribute> in event object <e>."
-  (slot-value e (music-symbol attribute)))
-
-(defgeneric set-attribute (event attribute value))
-(defmethod set-attribute ((e music-event) attribute value)
-  (setf (slot-value e (music-symbol attribute))
-	value))
-
-(defgeneric copy-event (music-event))
-(defmethod copy-event ((e music-event))
-  (make-instance 'music-event
-                 :id (copy-identifier (ident e))
-                 :timebase (timebase e)
-                 ;;:description (description e)
-                 ;;:midc (midc e)
-                 :onset (onset e)
-		 :duration (duration e)
-                 :deltast (deltast e)
-                 :bioi (bioi e)
-                 :cpitch (chromatic-pitch e)
-                 :mpitch (morphetic-pitch e)
-                 :keysig (key-signature e)
-                 :accidental (accidental e)
-                 :mode (mode e)
-                 :barlength (barlength e)
-                 :pulses (pulses e)
-                 :phrase (phrase e)
-                 :dyn (dynamics e)
-                 :tempo (tempo e)
-                 :ornament (ornament e)
-                 :comma (comma e)
-                 :articulation (articulation e)
-                 :voice (voice e)))
-
-(defun count-compositions (dataset-id)
-  (length (get-dataset dataset-id)))
 
 
 ;;; Identifiers 
@@ -203,6 +163,53 @@
 (defmethod lookup-event (dataset-index composition-index event-index (source (eql :sql)))
   (make-event-id dataset-index composition-index event-index))
 
+
+;;; Accessing properties of music objects
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defgeneric get-attribute (event attribute))
+(defmethod get-attribute ((e music-event) attribute)
+  "Returns the value for slot <attribute> in event object <e>."
+  (slot-value e (music-symbol attribute)))
+
+(defgeneric set-attribute (event attribute value))
+(defmethod set-attribute ((e music-event) attribute value)
+  (setf (slot-value e (music-symbol attribute))
+	value))
+
+(defgeneric copy-event (music-event))
+(defmethod copy-event ((e music-event))
+  (make-instance 'music-event
+                 :id (copy-identifier (ident e))
+                 :timebase (timebase e)
+                 ;;:description (description e)
+                 ;;:midc (midc e)
+                 :onset (onset e)
+		 :duration (duration e)
+                 :deltast (deltast e)
+                 :bioi (bioi e)
+                 :cpitch (chromatic-pitch e)
+                 :mpitch (morphetic-pitch e)
+                 :keysig (key-signature e)
+                 :accidental (accidental e)
+                 :mode (mode e)
+                 :barlength (barlength e)
+                 :pulses (pulses e)
+                 :phrase (phrase e)
+                 :dyn (dynamics e)
+                 :tempo (tempo e)
+                 :ornament (ornament e)
+                 :comma (comma e)
+                 :articulation (articulation e)
+                 :voice (voice e)))
+
+(defun count-compositions (dataset-id)
+  (length (get-dataset dataset-id)))
+
+(defun get-description (dataset-id &optional composition-id)
+  (if (null composition-id)
+      (description (get-dataset dataset-id))
+      (description (lookup-composition dataset-id composition-id *idyom-datasource*))))
 
 ;;; Getting music objects from the database
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

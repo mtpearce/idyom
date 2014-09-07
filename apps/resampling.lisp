@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-09-07 12:53:34 marcusp>                           
+;;;; Time-stamp: <2014-09-07 13:29:04 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -186,7 +186,7 @@ dataset-id)."
     (do* ((ic composition-means (cdr ic))
           (cid 1 (1+ cid)))
          ((null ic) overall-mean)
-      (let ((d (quote-string (mtp-admin:get-description dataset-id (1- cid)))))
+      (let ((d (quote-string (md:get-description dataset-id (1- cid)))))
         (format stream "~&~A ~A ~A~%" cid d (car ic))))))
 
 (defun format-information-content-detail=3 (stream resampling-predictions dataset-id) 
@@ -221,7 +221,7 @@ dataset-id)."
                       (setf (gethash 'melody.id event-results) (1+ composition-id))
                       (setf (gethash 'note.id event-results) (1+ event-id))
                       (setf (gethash 'melody.name event-results)
-                            (quote-string (mtp-admin:get-description
+                            (quote-string (md:get-description
                                            dataset-id
                                            composition-id)))
                       (dolist (attribute viewpoints:*basic-types*)
