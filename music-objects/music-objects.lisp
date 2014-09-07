@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2014-09-07 13:51:45 marcusp>
+;;;; Time-stamp: <2014-09-07 14:25:22 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -16,22 +16,19 @@
         [ornament] [comma] [articulation]))
 #.(clsql:restore-sql-reader-syntax-state)
 
-(defun music-symbol (x)
-  (find-symbol (string-upcase (symbol-name x))
-	       (find-package :music-data)))
-
 ; the order must match *event-attributes*
 (defvar *music-slots* '(onset dur deltast cpitch mpitch accidental 
             keysig mode barlength pulses phrase tempo dyn voice bioi 
             ornament comma articulation))
 
+(defun music-symbol (x)
+  (find-symbol (string-upcase (symbol-name x))
+	       (find-package :music-data)))
+
 (defvar *md-music-slots* (mapcar #'music-symbol *music-slots*))
 
 (defvar *time-slots* '(onset dur deltast barlength bioi))
 (defvar *md-time-slots* (mapcar #'music-symbol *time-slots*))
-
-(defparameter *idyom-datasource* :sql) ;; FIXME: remove globals
-
 
 
 ;;; Classes for music objects
@@ -118,26 +115,26 @@
 		 :composition-index (get-composition-index id)
 		 :event-index (get-event-index id)))
 
-;; Lookup identifiers
-(defgeneric lookup-dataset (dataset-index datasource)
+;; Lookup identifiers (to facilitate extension to other data sources)
+(defgeneric lookup-dataset (dataset-index)
   (:documentation "Returns the identifier for the dataset that has
   this index in the given datasource"))
 
-(defgeneric lookup-composition (dataset-index composition-index datasource)
+(defgeneric lookup-composition (dataset-index composition-index)
   (:documentation "Returns the identifier for the composition that has
   these indices in the given datasource"))
 
-(defgeneric lookup-event (dataset-index composition-index event-index datasource)
+(defgeneric lookup-event (dataset-index composition-index event-index)
   (:documentation "Returns the identifier for the event that has
   these indices in the given datasource"))
 
-(defmethod lookup-dataset (dataset-index (source (eql :sql)))  
+(defmethod lookup-dataset (dataset-index)
   (make-dataset-id dataset-index))
 
-(defmethod lookup-composition (dataset-index composition-index (source (eql :sql)))
+(defmethod lookup-composition (dataset-index composition-index)
   (make-composition-id dataset-index composition-index))
 
-(defmethod lookup-event (dataset-index composition-index event-index (source (eql :sql)))
+(defmethod lookup-event (dataset-index composition-index event-index)
   (make-event-id dataset-index composition-index event-index))
 
 
@@ -181,12 +178,12 @@
                  :voice (voice e)))
 
 (defun count-compositions (dataset-id)
-  (length (get-dataset dataset-id)))
+  (length (get-dataset (lookup-dataset dataset-id))))
 
 (defun get-description (dataset-id &optional composition-id)
   (if (null composition-id)
-      (description (get-dataset dataset-id))
-      (description (get-composition (lookup-composition dataset-id composition-id *idyom-datasource*)))))
+      (description (get-dataset (lookup-dataset dataset-id)))
+      (description (get-composition (lookup-composition dataset-id composition-id)))))
 
 
 ;;; Getting music objects from the database
@@ -228,15 +225,13 @@
 
 (defun get-harmonic-sequence (dataset-index composition-index &key voices)
   (composition->harmony 
-   (get-composition (lookup-composition dataset-index
-                                        composition-index
-                                        *idyom-datasource*))
+   (get-composition (lookup-composition dataset-index composition-index))
    :voices voices))
                     
 (defun get-harmonic-sequences (dataset-ids &key voices)
     (let ((compositions '()))
     (dolist (dataset-id dataset-ids (nreverse compositions))
-      (let ((d (get-dataset dataset-id)))
+      (let ((d (get-dataset (lookup-dataset dataset-id))))
         (sequence:dosequence (c d)
           (push (composition->harmony c :voices voices) compositions))))))
 
@@ -302,15 +297,13 @@ full expansion (cf. Conklin, 2002)."
 
 (defun get-event-sequence (dataset-index composition-index &key voices)
   (composition->monody 
-   (get-composition (lookup-composition dataset-index
-					  composition-index
-					  *idyom-datasource*))
+   (get-composition (lookup-composition dataset-index composition-index))
    :voices voices))
 
 (defun get-event-sequences (dataset-ids &key voices)
   (let ((compositions '()))
     (dolist (dataset-id dataset-ids (nreverse compositions))
-      (let ((d (get-dataset dataset-id)))
+      (let ((d (get-dataset (lookup-dataset dataset-id))))
         (sequence:dosequence (c d)
           (push (composition->monody c :voices voices) compositions))))))
 
@@ -377,9 +370,6 @@ the highest pitch sounding at that onset position."
 (defgeneric get-dataset (dataset-identifier))
 (defgeneric get-composition (composition-identifier))
 (defgeneric get-event (event-identifier))
-
-(defmethod get-dataset ((index integer))
-  (get-dataset (lookup-dataset index *idyom-datasource*)))
 
 #.(clsql:locally-enable-sql-reader-syntax)
 (defmethod get-dataset ((identifier dataset-identifier))
