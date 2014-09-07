@@ -2,7 +2,7 @@
 ;;;; File:       basic-viewpoints.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2013-01-24 15:00:00 jeremy>
-;;;; Time-stamp: <2014-03-06 10:29:49 marcusp>
+;;;; Time-stamp: <2014-09-07 18:42:02 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
@@ -13,7 +13,7 @@
 (define-basic-viewpoint onset (events)
   (md:onset (last-element events)))
 
-;; Midi note numbers
+;; Pitch as a midi note number
 (define-basic-viewpoint cpitch (events)
   (md:chromatic-pitch (last-element events)))
 
@@ -22,46 +22,39 @@
   (md:duration (last-element events)))
 
 ;;  Integer indicating the position of the key signature on a line of
-;;  fifths with C major = 0. Roughly corresponds to a positive count
-;;  of the number of sharps or a negative count of the number of flats
-;;  (corresponds exactly if the range is limited as indicated in the
-;;  table to +/-7, since this avoids double accidentals, but that
-;;  limitation appears unjustified in the general case).
+;;  fifths with C major = 0. Corresponds to a positive count of the
+;;  number of sharps or a negative count of the number of flats (as
+;;  long as the range is limited to +/-7, avoiding double
+;;  accidentals).
 (define-basic-viewpoint keysig (events)
   (md:key-signature (last-element events)))
 
-;; NB: By default, amuse returns midi mode indicators: i.e., 0 =
-;; major; 1 = minor. The viewpoints code has a more general
-;; representation that is intended to cover the church modes as
-;; well: 0 = major; 9 = minor reflecting the fact that the minor
-;; mode corresponds to rotation of the pitch class set corresponding
-;; to its relative major scale by 9 semitones (see Balzano, 1982). 
-;;
-;; Allows a crude representation of the simpler common modes: Dorian
-;; is 2, Lydian 5, etc
+;; This reflects the prevailing mode using a general representation
+;; that is intended to cover the church modes as well as
+;; major/minor. 0 = major; 9 = minor reflecting the fact that the
+;; minor mode corresponds to rotation of the pitch class set
+;; corresponding to its relative major scale by 9 semitones (see
+;; Balzano, 1982). This allows a crude representation of the simpler
+;; common modes: Dorian is 2, Lydian 5, etc
 (define-basic-viewpoint mode (events)
   (md:mode (last-element events)))
 
-;; Currently applicable tempo in bpm
+;; Current tempo in bpm
 (define-basic-viewpoint tempo (events)
   (md:tempo (last-element events)))
 
-;; Beats/pulses/tactus units in a bar (uses amuse:beat-units-per-bar
-;; on the applicable time signature - this may give interesting
-;; results for unusual cases).
+;; Beats/pulses/tactus units in a bar 
 (define-basic-viewpoint pulses (events)
   (md:pulses (last-element events)))
 
 ;; Basic time units (ticks) in a bar, based on the timebase
-;; (N.B. Viewpoints export information to a database and so avoid the
-;; arbitrary fractions used in amuse as a whole)
 (define-basic-viewpoint barlength (events)
   (md:barlength (last-element events)))
 
 ;; Gap between last note and its predecessor (returns 0 for first note).  
 (define-basic-viewpoint deltast (events)
   (if (slot-exists-p (car (last events)) 'music-data:deltast) 
-      ;; MTP-EVENT, which has a deltast slot
+      ;; if there is a deltast slot, then return the value
       (md:deltast (last-element events))
       ;; Otherwise calculate it 
       (let* ((last-element (last-element events))
@@ -74,12 +67,14 @@
 	       0)
 	      (t nil)))))
   
-;; Inter Onset Interval between ultimate and penultimate onsets (returns interval from 0 to onset for first note).
+;; Inter Onset Interval between ultimate and penultimate onsets
+;; (returns interval from 0 to onset for first note). BIOI = Basic IOI
+;; (IOI as a basic feature)
 (define-basic-viewpoint bioi (events)
-  ;; BIOI = Basic IOI (IOI as a basic feature) 
   (if (slot-exists-p (car (last events)) 'music-data::bioi) 
-      ;; Special case for MTP-EVENT, which has a bioi slot
+      ;; if BIOI slot exists return the value
       (md:bioi (car (last events)))
+      ;; else calculate
       (let* ((last-element (last-element events))
 	     (penultimate-element (penultimate-element events)))
 	(cond ((and last-element penultimate-element)
@@ -89,56 +84,39 @@
 	       0)
               (t nil)))))
 
-
 ;; 1 if event begins a phrase, -1 if it ends a phrase. Otherwise 0.
 (define-basic-viewpoint phrase (events) 
   (md:phrase (last-element events)))
 
-;; Meredith's morphetic pitch - count of name-notes (white notes) up
-;; or down from middle C = 35 (N.B. This number itself is 12 greater
-;; than the one used for the same purpose by AMuSE. I don't remember
-;; why or which DM himself uses - DL)
+;; David Meredith's morphetic pitch: count of name-notes (white notes)
+;; up or down from middle C = 35 
 (define-basic-viewpoint mpitch (events) 
   (md:morphetic-pitch (last-element events)))
 
-
-;; Inflection of name note, so 0 for a natural, 1 for a single sharp,
-;; 2 for a double sharp, -1 for a flat and so on. Uses
-;; amuse:diatonic-pitch-accidental
+;; Inflection of note name, so 0 for a natural, 1 for a single sharp,
+;; 2 for a double sharp, -1 for a flat and so on.
 (define-basic-viewpoint accidental (events)
   (md:accidental (last-element events)))
-
 
 ;; Dynamics: ppppp = -11; pppp = -9; ppp = -7; pp = -5; p = -3; mp =
 ;; -1; mf = 1; f = 3; ff = 5; fff = 7; ffff = 9; fffff = 11
 (define-basic-viewpoint dyn (events)
   (md:dynamics (last-element events)))
 
-
 ;; Note ornaments (0 = no ornament; 1 = accacciatura; 2 = mordent; 3 =
 ;; trill
 (define-basic-viewpoint ornament (events)
   (md:ornament (last-element events)))
 
-
-;; Voice number in a score (voice 0 assumed to be the monody
+;; Voice number in a score
 (define-basic-viewpoint voice (events)
   (md:voice (last-element events)))
-
 
 ;; 0 = no comma; 1 = comma (breath mark)
 (define-basic-viewpoint comma (events)
   (md:comma (last-element events)))
 
-
 ;; 0 = no articulation mark; 1 = staccato; 2 = staccatissimo; 3 =
 ;; sforzando; 4 = marcato
 (define-basic-viewpoint articulation (events)
   (md:articulation (last-element events)))
-
-
-
- 
-                    
-
-
