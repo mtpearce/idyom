@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2014-09-07 20:41:18 marcusp>
+;;;; Time-stamp: <2014-09-12 19:38:58 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -178,13 +178,15 @@
                  :voice (voice e)))
 
 (defun count-compositions (dataset-id)
-  (length (get-dataset (lookup-dataset dataset-id))))
+  ;;(length (get-dataset (lookup-dataset dataset-id))))
+  (car (clsql:query (format nil "SELECT count(composition_id) FROM mtp_composition WHERE (dataset_id = ~A);" dataset-id) :flatp t)))
 
 (defun get-description (dataset-id &optional composition-id)
   (if (null composition-id)
-      (description (get-dataset (lookup-dataset dataset-id)))
-      (description (get-composition (lookup-composition dataset-id composition-id)))))
-
+      ;; (description (get-dataset (lookup-dataset dataset-id)))
+      ;; (description (get-composition (lookup-composition dataset-id composition-id)))))
+      (car (clsql:query (format nil "SELECT description FROM mtp_dataset WHERE (dataset_id = ~A);" dataset-id) :flatp t))
+      (car (clsql:query (format nil "SELECT description FROM mtp_composition WHERE (dataset_id = ~A AND composition_id = ~A);" dataset-id composition-id) :flatp t))))
 
 ;;; Getting music objects from the database
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

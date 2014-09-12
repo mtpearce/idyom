@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-09-07 13:29:04 marcusp>                           
+;;;; Time-stamp: <2014-09-12 19:43:34 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -213,7 +213,6 @@ dataset-id)."
                          (weights (prediction-sets:prediction-weights ep))
                          (existing-results (gethash (list composition-id event-id) results))
                          (event-results (if existing-results existing-results (make-hash-table)))
-                         ;;(timebase (mtp-admin:get-timebase dataset-id composition-id)))
                          (timebase (md:timebase event)))
                     ;; Store event information
                     (unless existing-results
