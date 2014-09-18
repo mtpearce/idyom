@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2014-09-07 21:02:09 marcusp>
+;;;; Time-stamp: <2014-09-17 19:36:27 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -42,6 +42,28 @@
 
 (defun quotient (x y)
   (car (multiple-value-list (truncate (/ x y)))))
+
+
+;;;===========================================================================
+;;; Sequences
+;;;===========================================================================
+
+(defun last-element (sequence)
+  "Returns the last element of a sequence."
+  (elt (reverse sequence) 0))
+
+(defun penultimate-element (sequence) 
+  "Returns the penultimate element of a sequence."
+  (elt (reverse sequence) 1))
+
+(defun last-n (sequence &optional (n 1))
+  "Return the last n elements of a sequence."
+  (subseq sequence (- (length sequence) n)))
+          
+(defun butlast-n (sequence &optional (n 1))
+  "Return a sequence with the last n elements removed."
+  (subseq sequence 0 (- (length sequence) n)))
+
 
 ;;;===========================================================================
 ;;; Strings 
@@ -149,16 +171,6 @@
                (find-duplicates (set-difference (rest list) matches)
                                 :test test :key key))
              (find-duplicates (rest list) :test test :key key)))))
-
-
-
-(defun last-element (list)
-  "Returns the last element of a list."
-  (elt (reverse list) 0))
-
-(defun penultimate-element (list) 
-  "Returns the penultimate element of a list."
-  (elt (reverse list) 1))
 
 
 ;;;===========================================================================
@@ -309,7 +321,17 @@
                   :directory (pathname-directory
                               *default-pathname-defaults*))))
 
+;;;===========================================================================
+;;; Objects
+;;;===========================================================================
 
+(defun copy-instance (object)
+  (let* ((class (class-of object))
+         (copy (allocate-instance class)))
+    (dolist (slot (mapcar #'sb-mop:slot-definition-name (sb-mop:class-slots class)))
+      (when (slot-boundp object slot)
+        (setf (slot-value copy slot) (slot-value object slot))))
+    copy))
 
 ;;;===========================================================================
 ;;; Portability 
