@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2014-09-12 19:38:58 marcusp>
+;;;; Time-stamp: <2014-09-18 16:43:33 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -47,7 +47,7 @@
 (defclass music-sequence (list-slot-sequence music-temporal-object) ()) ; sequence of music objects ordered in time 
 (defclass music-slice (list-slot-sequence music-temporal-object) ())    ; set of music objects overlapping in time, ordered by voice
 
-(defclass music-composition (music-sequence) ())               ; a composition is an unconstrained sequence of music objects
+(defclass music-composition (music-sequence) ())         ; a composition is an unconstrained sequence of music objects
 (defclass melodic-sequence (music-sequence) ())          ; a sequence of non-overlapping notes
 (defclass harmonic-sequence (music-sequence) ())         ; a sequence of harmonic slices
 
@@ -313,7 +313,7 @@ full expansion (cf. Conklin, 2002)."
   "Extract a melody from a composition according to the VOICE
 argument, which should be an integer. If VOICE is null the voice of
 the first event in the piece is extracted."
-  (let ((monody (make-instance 'music-composition ;; 'melodic-sequence
+  (let ((monody (make-instance 'melodic-sequence
                                :onset 0
                                :duration (duration composition)
                                :midc (midc composition)
