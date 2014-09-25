@@ -1,8 +1,8 @@
 ;;;; ======================================================================
 ;;;; File:       implication-realisation.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
-;;;; Created:    <2013-01-24 15:00:00 jeremy>
-;;;; Time-stamp: <2014-03-05 14:17:12 marcusp>
+;;;; Created:    <2005-11-29 10:41:20 marcusp>
+;;;; Time-stamp: <2014-09-25 11:00:54 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
@@ -23,7 +23,7 @@
 ;; intervals, despite my use of diatonic ones in the description, a
 ;; diminished fifth and an augmented fourth would look the same).
 (define-viewpoint (registral-direction derived (cpitch))
-    (events element) 
+    ((events md:melodic-sequence) element) 
   :function (multiple-value-bind (e1 e2 e3)
                 (values-list (last events 3))
               (if (or (null e1) (null e2) (null e3)) +undefined+
@@ -43,7 +43,7 @@
 ;; small jump followed by a similar interval? I think this returns 1 in
 ;; these cases, and 0 otherwise. I could be wrong.
 (define-viewpoint (intervallic-difference derived (cpitch))
-    (events element) 
+    ((events md:melodic-sequence) element) 
   :function (multiple-value-bind (e1 e2 e3)
                 (values-list (last events 3))
               (if (or (null e1) (null e2) (null e3)) +undefined+
@@ -70,7 +70,7 @@
 ;; an arch (\/ or /\), with a rising or falling contour or with any pitch
 ;; repeated, this returns 0.
 (define-viewpoint (registral-return derived (cpitch))
-    (events element) 
+    ((events md:melodic-sequence) element) 
   :function (multiple-value-bind (e1 e2 e3)
                 (values-list (last events 3))
               (if (or (null e1) (null e2) (null e3)) +undefined+
@@ -93,7 +93,7 @@
 ;; interval is a tritone or greater; 1 for a perfect fourth; 4 for a tone;
 ;; 6 for a unison.
 (define-viewpoint (proximity derived (cpitch))
-    (events element) 
+    ((events md:melodic-sequence) element) 
   :function (multiple-value-bind (e1 e2)
                 (values-list (last events 2))
               (if (or (null e1) (null e2)) +undefined+
@@ -108,7 +108,7 @@
 ;; for a change of direction, 1 point for an interval that is more than a
 ;; tone smaller than the preceding one (so score can be 0, 1, 2)
 (define-viewpoint (closure derived (cpitch))
-    (events element) 
+    ((events md:melodic-sequence) element) 
   :function (multiple-value-bind (e1 e2 e3)
                 (values-list (last events 3))
               (if (or (null e1) (null e2) (null e3)) +undefined+

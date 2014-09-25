@@ -1,8 +1,8 @@
 ;;;; ======================================================================
 ;;;; File:       scales.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
-;;;; Created:    <2013-01-24 15:00:00 jeremy>
-;;;; Time-stamp: <2014-09-07 13:56:58 marcusp>
+;;;; Created:    <2005-11-29 10:41:20 marcusp>
+;;;; Time-stamp: <2014-09-25 10:59:07 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
@@ -22,7 +22,7 @@
 ;; members of the set {A, B, C, D, E, F, G} return true, with all
 ;; others, including the leading note returning 0).
 (define-viewpoint (inscale derived (cpitch))
-    (events element) 
+    ((events md:melodic-sequence) element) 
   :function (let ((cpitch-class (cpitch-class events))
                   (referent (referent events))
                   (mode (mode events)))
@@ -45,13 +45,13 @@
 
 ;; Pitch to tonic interval
 (define-viewpoint (tonint derived (cpitch))
-    (events element) 
+    ((events md:melodic-sequence) element) 
   :function (- (cpitch events)
 	       (+ (* (octave (list (car events))) *octave*)
 		  (referent events))))
 
 (define-viewpoint (sdeg-west derived (cpitch))
-    (events element) 
+    ((events md:melodic-sequence) element) 
   :function (let* ((pitch (cpitch events))
 		   (interval (tonint events))
 		   (scale-intervals (case (mode events)
@@ -248,7 +248,7 @@ return that degree"
 ;; Pitches in the a4 scale are replaced with scale degree, the rest
 ;; are untouched.
 (define-viewpoint (sd-hicaz-a4 derived (cpitch))
-    (events element)
+    ((events md:melodic-sequence) element)
   :function (let* ((pitch (cpitch events))
 		   (sd (scaledegree pitch *hicaz-a4*)))
 	      (if (not (null sd))
@@ -256,7 +256,7 @@ return that degree"
 		  pitch)))
 
 (define-viewpoint (sd-ussak-a4 derived (cpitch))
-    (events element)
+    ((events md:melodic-sequence) element)
   :function (let* ((pitch (cpitch events))
 		   (sd (scaledegree pitch *ussak-a4*)))
 	      (if (not (null sd))
@@ -268,7 +268,7 @@ return that degree"
 ;; symbol (1).
 ;;
 (define-viewpoint (sd-hicaz-a4-total derived (cpitch))
-    (events element)
+    ((events md:melodic-sequence) element)
   :function (let* ((pitch (cpitch events))
 		   (sd (scaledegree pitch *hicaz-a4*)))
 	      (if (not (null sd))
@@ -276,7 +276,7 @@ return that degree"
 		  1)))
 
 (define-viewpoint (sd-ussak-a4-total derived (cpitch))
-    (events element)
+    ((events md:melodic-sequence) element)
   :function (let* ((pitch (cpitch events))
 		   (sd (scaledegree pitch *ussak-a4*)))
 	      (if (not (null sd))
@@ -288,7 +288,7 @@ return that degree"
 ;; the rest are untouched.
 ;;
 (define-viewpoint (sd-hicaz-a3-5 derived (cpitch))
-    (events element)
+    ((events md:melodic-sequence) element)
   :function (let* ((pitch (cpitch events))
 		   (sd (first-scaledegree pitch
 					  (list *hicaz-a4*
@@ -299,7 +299,7 @@ return that degree"
 		  pitch)))
 
 (define-viewpoint (sd-ussak-a3-5 derived (cpitch))
-    (events element)
+    ((events md:melodic-sequence) element)
   :function (let* ((pitch (cpitch events))
 		   (sd (first-scaledegree pitch
 					  (list *ussak-a4*
@@ -314,7 +314,7 @@ return that degree"
 ;; others represented with off scale symbol (1).
 ;;
 (define-viewpoint (sd-hicaz-a3-5-total derived (cpitch))
-    (events element)
+    ((events md:melodic-sequence) element)
   :function (let* ((pitch (cpitch events))
 		   (sd (first-scaledegree pitch
 					  (list *hicaz-a4*
@@ -326,7 +326,7 @@ return that degree"
 
 
 (define-viewpoint (sd-ussak-a3-5-total derived (cpitch))
-    (events element)
+    ((events md:melodic-sequence) element)
   :function (let* ((pitch (cpitch events))
 		   (sd (first-scaledegree pitch
 					  (list *ussak-a4*
@@ -341,7 +341,7 @@ return that degree"
 ;; left untouched.
 ;;
 (define-viewpoint (sd-hicaz-octave derived (cpitch))
-    (events element)
+    ((events md:melodic-sequence) element)
   :function (let* ((pitch (cpitch events))
 		   (sd (scaledegree-octave (mod pitch *octave*)
 					   *hicaz-bottom*)))
@@ -351,7 +351,7 @@ return that degree"
 
 
 (define-viewpoint (sd-ussak-octave derived (cpitch))
-    (events element)
+    ((events md:melodic-sequence) element)
   :function (let* ((pitch (cpitch events))
 		   (sd (scaledegree-octave (mod pitch *octave*)
 					   *ussak-bottom*)))
@@ -363,7 +363,7 @@ return that degree"
 ;; left untouched.
 ;;
 (define-viewpoint (sd-hicaz-octave-total derived (cpitch))
-    (events element)
+    ((events md:melodic-sequence) element)
   :function (let* ((pitch (cpitch events))
 		   (sd (scaledegree-octave (mod pitch *octave*)
 					   *hicaz-bottom*)))
@@ -372,7 +372,7 @@ return that degree"
 		  1)))
 
 (define-viewpoint (sd-ussak-octave-total derived (cpitch))
-    (events element)
+    ((events md:melodic-sequence) element)
   :function (let* ((pitch (cpitch events))
 		   (sd (scaledegree-octave (mod pitch *octave*)
 					   *ussak-bottom*)))
@@ -390,7 +390,7 @@ return that degree"
 ;;
 ;; This is very inefficient - use sd-makam-a4 below.
 (define-viewpoint (sd-makam-a4-desc derived (cpitch))
-    (events element)
+    ((events md:melodic-sequence) element)
   :function (let* ((last (last-element events))
 		   (comp (md:get-composition (md:get-identifier last)))
 		   (desc (md:description comp)))
@@ -401,7 +401,7 @@ return that degree"
 ;; A quicker version on Makam scale degree, which relies on the
 ;; mode viewpoint being used to indicate the current Makam scale.
 (define-viewpoint (sd-makam-a4 derived (cpitch))
-    (events element)
+    ((events md:melodic-sequence) element)
   :function (if (eq (mode events) 0)
 		 (sd-hicaz-a4 events)
 		 (sd-ussak-a4 events)))
@@ -427,7 +427,7 @@ return that degree"
 ;; A 'general' scale degree viewpoint - a horrible hack that uses the
 ;; dataset id to select a Western or Turkish scale degree viewpoint.
 (define-viewpoint (sdeg derived (cpitch))
-    (events element)
+    ((events md:melodic-sequence) element)
   :function (let* ((last (last-element events))
 		   (set-id (md:get-dataset-index (md:get-identifier last))))
 	      (if (< set-id 400)
@@ -436,7 +436,7 @@ return that degree"
 
 ;; Scale degree interval
 (define-viewpoint (sdint derived (cpitch))
-    (events element) 
+    ((events md:melodic-sequence) element) 
   :function (multiple-value-bind (e1 e2)
                 (values-list (last events 2))
               (if (or (null e1) (null e2)) +undefined+

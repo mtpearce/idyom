@@ -1,19 +1,38 @@
 ;;;; ======================================================================
 ;;;; File:       pitch.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
-;;;; Created:    <2013-01-24 15:00:00 jeremy>
-;;;; Time-stamp: <2014-03-05 14:15:16 marcusp>
+;;;; Created:    <2005-11-29 10:41:20 marcusp>
+;;;; Time-stamp: <2014-09-25 10:56:02 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
 
 (defvar *octave* 12)
 
-;; Morphetic pitch
+;; Keysig ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;  Chromatic interval of tonic from C (e.g. C major gives 0, F minor
+;;  gives 5, F major also 5, Bb minor 1).
+(define-viewpoint (referent derived (keysig))
+    ((events md:melodic-sequence) element) 
+  :function (let ((keysig (keysig events))
+                  (mode (mode events)))
+              ;(declare (type (integer -7 7) keysig) (type (integer 0 11) mode))
+              (if (undefined-p keysig mode) +undefined+
+                  (cond ((and (numberp keysig) (> keysig 0))
+                         (mod (+ (* keysig 7) mode) 12))
+                        ((and (numberp keysig) (< keysig 0))
+                         (mod (+ (* (- keysig) 5) mode) 12))
+                        ((numberp mode) mode)
+			(t +undefined+)))) 
+  :function* (viewpoint-alphabet (get-viewpoint 'keysig)))
+
+
+;; Morphetic pitch ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; mpitch-class: 0-7, representing the diatonic pitch set.
 (define-viewpoint (mpitch-class derived (mpitch))
-    (events element) 
+    ((events md:melodic-sequence) element) 
   :function (let ((mpitch (mpitch events)))
               (cond ((undefined-p mpitch) +undefined+)
                     (t (mod mpitch 7))))
@@ -21,11 +40,11 @@
                             (viewpoint-alphabet (get-viewpoint 'mpitch))))
 
 
-;; Chromatic Pitch 
+;; Chromatic Pitch ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; cpint: Chromatic pitch interval
 (define-viewpoint (cpint derived (cpitch))
-    (events element) 
+    ((events md:melodic-sequence) element) 
   :function (multiple-value-bind (e1 e2)
                 (values-list (last events 2))
               (if (or (null e1) (null e2)) +undefined+
@@ -37,7 +56,7 @@
 
 ;; cpint-size: Absolute value for cpint.
 (define-viewpoint (cpint-size derived (cpitch))
-    (events element) 
+    ((events md:melodic-sequence) element) 
   :function (let ((cpint (cpint events)))
               (cond ((undefined-p cpint) +undefined+)
                     (t (abs cpint))))
@@ -51,7 +70,7 @@
 ;; (equivalent to d, r and u respectively in
 ;; [http://en.wikipedia.org/wiki/Parsons_code Parson’s code]).
 (define-viewpoint (contour derived (cpitch))
-    (events element) 
+    ((events md:melodic-sequence) element) 
   :function (let ((cpint (cpint events)))
               (cond ((undefined-p cpint) +undefined+)
                     (t (signum cpint))))
@@ -65,9 +84,9 @@
 ;; Returns 1 if contour is unchanged from preceding contour, 0 if it
 ;; is different.
 (define-viewpoint (newcontour derived (cpitch))
-    (events element) 
+    ((events md:melodic-sequence) element) 
   :function (let ((contour2 (contour events))
-                  (contour1 (contour (reverse (cdr (reverse events))))))
+                  (contour1 (contour (butlast events 1))))
               (cond ((undefined-p contour2 contour1)
                      +undefined+)
                     ((= contour1 contour2) 1)
@@ -77,7 +96,7 @@
 
 ;; Pitch modulo 12 (so C = 0, D = 2 etc.)
 (define-viewpoint (cpitch-class derived (cpitch))
-    (events element) 
+    ((events md:melodic-sequence) element) 
   :function (let ((cpitch (cpitch events)))
               (cond ((undefined-p cpitch) +undefined+)
                     (t (mod cpitch *octave*))))
@@ -90,7 +109,7 @@
 ;; originally calculated as cpcint-size and then redefined when
 ;; cpcint-size was added. This makes it more consistent with cpint.)
 (define-viewpoint (cpcint derived (cpitch))
-    (events element) 
+    ((events md:melodic-sequence) element) 
   :function (let* ((cpint (cpint events)))
               (if (or (null cpint) (undefined-p cpint)) +undefined+ 
                   (if (minusp cpint) 
@@ -107,7 +126,7 @@
 
 ;; Absolute value for cpcint.
 (define-viewpoint (cpcint-size derived (cpitch))
-    (events element) 
+    ((events md:melodic-sequence) element) 
   :function (let ((cpcint (cpcint events)))
               (cond ((undefined-p cpcint) +undefined+)
                     (t (abs cpcint))))
@@ -116,7 +135,7 @@
 
 ;; cpcint-size modulo 2.
 (define-viewpoint (cpcint-2 derived (cpitch))
-    (events element) 
+    ((events md:melodic-sequence) element) 
   :function (multiple-value-bind (e1 e2)
                 (values-list (last events 2))
               (if (or (null e1) (null e2)) +undefined+
@@ -128,7 +147,7 @@
 
 ;; cpcint-size modulo 3.
 (define-viewpoint (cpcint-3 derived (cpitch))
-    (events element) 
+    ((events md:melodic-sequence) element) 
   :function (multiple-value-bind (e1 e2)
                 (values-list (last events 2))
               (if (or (null e1) (null e2)) +undefined+
@@ -140,7 +159,7 @@
 
 ;; cpcint-size modulo 4.
 (define-viewpoint (cpcint-4 derived (cpitch))
-    (events element) 
+    ((events md:melodic-sequence) element) 
   :function (multiple-value-bind (e1 e2)
                 (values-list (last events 2))
               (if (or (null e1) (null e2)) +undefined+
@@ -152,7 +171,7 @@
   
 ;; cpcint-size modulo 5.
 (define-viewpoint (cpcint-5 derived (cpitch))
-    (events element) 
+    ((events md:melodic-sequence) element) 
   :function (multiple-value-bind (e1 e2)
                 (values-list (last events 2))
               (if (or (null e1) (null e2)) +undefined+
@@ -164,7 +183,7 @@
 
 ;; cpcint-size modulo 6.
 (define-viewpoint (cpcint-6 derived (cpitch))
-    (events element) 
+    ((events md:melodic-sequence) element) 
   :function (multiple-value-bind (e1 e2)
                 (values-list (last events 2))
               (if (or (null e1) (null e2)) +undefined+
@@ -174,28 +193,9 @@
   ;; TODO: function* 
   )
 
-;; Keysig
-
-;;  Chromatic interval of tonic from C (e.g. C major gives 0, F minor
-;;  gives 5, F major also 5, Bb minor 1).
-(define-viewpoint (referent derived (keysig))
-    (events element) 
-  :function (let ((keysig (keysig events))
-                  (mode (mode events)))
-              ;(declare (type (integer -7 7) keysig) (type (integer 0 11) mode))
-              (if (undefined-p keysig mode) +undefined+
-                  (cond ((and (numberp keysig) (> keysig 0))
-                         (mod (+ (* keysig 7) mode) 12))
-                        ((and (numberp keysig) (< keysig 0))
-                         (mod (+ (* (- keysig) 5) mode) 12))
-                        ((numberp mode) mode)
-			(t +undefined+)))) 
-  :function* (viewpoint-alphabet (get-viewpoint 'keysig)))
-
-
 ;;  Chromatic interval from tonic (0 = tonic, 4 mediant, 7 dominant, etc.)
 (define-viewpoint (cpintfref derived (cpitch))
-    (events element) 
+    ((events md:melodic-sequence) element) 
   :function (let ((cpitch (cpitch events))
                   (referent (referent events)))
               (cond ((undefined-p cpitch referent) +undefined+)
@@ -207,7 +207,7 @@
 
 ;; Chromatic interval from first event in piece.
 (define-viewpoint (cpintfip derived (cpitch))
-    (events element) 
+    ((events md:melodic-sequence) element) 
   :function (if (< (length events) 2) +undefined+ 
                 ;; (if (= (length events) 1) 0
                 (let ((cpitch1 (cpitch (list (car events))))
@@ -218,7 +218,7 @@
 
 ;; Chromatic interval from first event in phrase.
 (define-viewpoint (cpintfiph derived (cpitch))
-    (events element) 
+    ((events md:melodic-sequence) element) 
   :function (if (= (fiph events) 1) +undefined+ 
                 (let ((e1 (strip-until-true (get-viewpoint 'fiph) events)))
                   (if (null e1) +undefined+
@@ -232,7 +232,7 @@
 ;; Chromatic interval from event at time 0 in bar (undefined if event
 ;; is itself at time 0 or if there is nothing at time 0).
 (define-viewpoint (cpintfib derived (cpitch))
-    (events element) 
+    ((events md:melodic-sequence) element) 
   :function (if (= (fib events) 1) +undefined+ ;; 0
                 (let ((e1 (strip-until-true (get-viewpoint 'fib) events)))
                   (if (null e1) +undefined+
@@ -245,25 +245,22 @@
 
 
 ;; Octave number, where middle C (and the 11 notes above) is 5 (based
-;; on chromatic pitch, so the same as (but 1 higher) amuse:octave, but
-;; different from amuse:diatonic-pitch octave, which takes spelling
-;; into account).
+;; on chromatic pitch)
 (define-viewpoint (octave derived (cpitch))
-    (events element) 
+    ((events md:melodic-sequence) element) 
   :function (let ((cpitch (cpitch events)))
               (cond ((undefined-p cpitch) +undefined+)
                     (t (floor cpitch *octave*))))
   ;; TODO: function* 
   )
 
-
-;; Apparently based on something from the Bach chorales. 0 if lower
-;; than F# above middle C (probably including the complete range of
-;; Bach basses), 1 if between that F# and the D above it (no idea) and
-;; 2 if above that D (probably rare for altos in chorales, otherwise,
-;; top voice only).
+;; Based on pitch tessitura of the Soprano voice of the Bach chorales
+;; (see Pearce, 2005, p. 206). 0 if more than one standard deviation
+;; below the mean pitch (F# above middle C), 2 if more than one
+;; standard deviation above the mean pitch (the D above middle C) and
+;; 2 if between these pitches.
 (define-viewpoint (tessitura derived (cpitch))
-    (events element) 
+    ((events md:melodic-sequence) element) 
   :function (let ((cpitch (cpitch events)))    
               (cond ((undefined-p cpitch) +undefined+)
                     ((< cpitch 66) 0) ; from chorales 
@@ -275,4 +272,3 @@
                               (1 (not (<= 66 e 74)))
                               (2 (<= e 74))))
                         (viewpoint-alphabet (get-viewpoint 'cpitch))))
-
