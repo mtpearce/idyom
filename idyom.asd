@@ -2,7 +2,7 @@
 ;;;; File:       IDyOM.asd
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-05-04 21:29:04 marcusp>
-;;;; Time-stamp: <2014-09-25 11:20:58 marcusp>
+;;;; Time-stamp: <2014-09-25 11:30:10 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -71,7 +71,8 @@
                        (:file "pitch")
 		       (:file "scales")
 		       (:file "temporal")
-		       (:file "misc")
+                       (:file "phrase")
+		       (:file "threaded")
 		       (:file "implication-realisation")))
              ;; useful extensions for modelling (not part of the representation scheme)
 	     (:file "extensions")))
