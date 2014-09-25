@@ -2,7 +2,7 @@
 ;;;; File:       generation.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-08-21 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-09-07 13:01:14 marcusp>                           
+;;;; Time-stamp: <2014-09-25 19:04:01 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -191,25 +191,27 @@
 
 (defun dataset-generation (dataset-id basic-attributes attributes base-id
                            &key
-                           (method :metropolis)
-                           (context-length nil)
-                           (iterations 100) 
-                           pretraining-ids
-                           description 
-                           (output-file-path "/tmp"))
+                             (method :metropolis)
+                             (context-length nil)
+                             (iterations 100) 
+                             pretraining-ids
+                             description 
+                             (use-ltms-cache? t)
+                             (output-file-path nil))
   (declare (ignorable description output-file-path))
   (initialise-prediction-cache dataset-id attributes)
   (let* ((dataset (md:get-event-sequences (list dataset-id)))
          (pretraining-set (get-pretraining-set pretraining-ids))
          (viewpoints (get-viewpoints attributes))
-         (basic-viewpoints (get-basic-viewpoints basic-attributes dataset))
+         (basic-viewpoints (get-basic-viewpoints basic-attributes 
+                                                 (append dataset pretraining-set)))
          (resampling-set (generate-resampling-set dataset base-id))
          (training-set (get-training-set dataset resampling-set))
          (training-set (append pretraining-set training-set))
          (test-set (get-test-set dataset resampling-set))
          (ltms (get-long-term-models viewpoints training-set pretraining-ids
                                      dataset-id (format nil "~Agen" base-id)
-                                     nil))
+                                     nil use-ltms-cache?))
          (mvs (make-mvs basic-viewpoints viewpoints ltms))
          (context-length (if (and (null context-length) (eql method :random))
                              (get-context-length (car test-set))
@@ -224,7 +226,8 @@
     ;(write-prediction-cache-to-file dataset-id attributes)
     ;(print (viewpoints:viewpoint-sequence (viewpoints:get-viewpoint 'cpitch) sequence))
     ;(mtp-admin:export-data sequence :ps "/tmp")
-    (mtp-admin:export-data sequence :mid output-file-path)
+    (when output-file-path
+      (mtp-admin:export-data sequence :mid output-file-path))
     sequence))
 
 (defun get-pretraining-set (dataset-ids)
@@ -258,16 +261,18 @@
 (defun select-from-distribution (distribution)
   (let ((r (random 1.0))
         (cum-prob 0.0))
-    ;;(format t "~&R: ~A; Sum: ~A~%"
-    ;;        r (reduce #'+ distribution :key #'cadr))
+    (when mvs::*debug*
+      (format t "~&R: ~A; Sum: ~A~%"
+              r (reduce #'+ distribution :key #'cadr)))
     (dolist (ep distribution (values-list (car (last distribution))))
       ;; FIXME: Distributions do not sum to 1, therefore this can
       ;; possibly return nil. As a hack we'll always return the final
       ;; element, but this is distorting the statistics.
-      ;;(format t "~&EP: ~A; CP: ~A~%" ep cum-prob)
-      (incf cum-prob (cadr ep))
-      (when (>= cum-prob r)
-        (return (car ep))))))
+      (when mvs::*debug* (format t "~&EP: ~A; CP: ~A~%" ep cum-prob))
+      (destructuring-bind (attribute-value probability) ep
+        (incf cum-prob probability)
+        (when (>= cum-prob r)
+          (return (values attribute-value probability)))))))
 ;;         (ranges (distribution->ranges distribution)))
 ;;     (dotimes (i (length distribution))
 ;;       (format t "~&~A ~A ~A ~A ~A~%" 
@@ -376,9 +381,10 @@
   (let* ((cpitch-sequence (viewpoint-sequence cpitch sequence))
          (cached-prediction (cached-prediction cpitch-sequence))
          (prediction (complete-prediction m sequence cached-prediction)))
-    ;(format t "~&Original length: ~A; Cached length: ~A; Final length: ~A~%" 
-    ;        (length cpitch-sequence) (length cached-prediction) 
-    ;        (length prediction))
+    (when mvs::*debug*
+      (format t "~&Original length: ~A; Cached length: ~A; Final length: ~A~%" 
+              (length cpitch-sequence) (length cached-prediction) 
+              (length prediction)))
     (cache-predictions prediction)
     prediction))
 
@@ -389,7 +395,7 @@
            (mvs:model-sequence m sequence :construct? nil :predict? t 
                                :predict-from from-index
                                :construct-from from-index))))
-    ;(format t "~&Cache Length: ~A" from)
+    ;;(format t "~&Cache Length: ~A" from)
     (append cached-prediction (get-sequence prediction))))
         
 (defun get-sequence (sequence-prediction)
@@ -435,10 +441,11 @@
              (old-cpitch (get-attribute (nth index sequence) 'cpitch))
              (new-cpitch (get-attribute (nth index new-sequence) 'cpitch)))
         (unless (eql old-cpitch new-cpitch)
-          ;(format t "~&Old cpitch: ~A; New cpitch: ~A" 
-          ;        old-cpitch new-cpitch)
-          ;(format t "~&new-sequence: ~A; old-sequence: ~A~%" 
-          ;        (length new-sequence) (length sequence))
+          (when mvs::*debug*
+            (format t "~&Old cpitch: ~A; New cpitch: ~A" 
+                    old-cpitch new-cpitch)
+            (format t "~&new-sequence: ~A; old-sequence: ~A~%" 
+                    (length new-sequence) (length sequence)))
           (let* ((new-predictions
                   (sampling-predict-sequence m new-sequence cpitch))
                  (old-ep (nth 1 (assoc old-cpitch distribution :test #'=)))
@@ -553,7 +560,8 @@
          (ltm-locations
           (make-sequence 'vector viewpoint-count :initial-element *root*))
          (stm-locations
-          (make-sequence 'vector viewpoint-count :initial-element *root*)))
+          (make-sequence 'vector viewpoint-count :initial-element *root*))
+         (last-attribute-predictions nil))
     (dotimes (event-index event-count)
       (let* ((subsequence (subseq sequence 0 (1+ event-index)))
              (current-event (nth event-index sequence)) 
@@ -568,21 +576,35 @@
                              :stm-locations stm-locations 
                              :construct? nil :predict? t)
           (declare (ignore d1 d2))
+          (when mvs::*debug*
+            (dolist (set (reverse stm-prediction-sets))
+              (format t "stm: ~a ~a~%"
+                      (viewpoint-name (prediction-sets:prediction-viewpoint
+                                       set))
+                      (prediction-sets:prediction-set set)))
+            (dolist (set (reverse ltm-prediction-sets))
+             (format t "ltm: ~a ~a~%"
+                     (viewpoint-name (prediction-sets:prediction-viewpoint
+                                      set))
+                     (prediction-sets:prediction-set set))))
           (if (< event-index context-length)
               (push current-event new-sequence)
               (unless (and (null ltm-prediction-sets)
                            (null stm-prediction-sets))
               ;; 2. choose symbol from distribution (for each basic viewpoint)
               ;; 3. generate event and append to sequence
-                (format t "~2&~2,0@TActual Event ~A: ~A~%"
-                        event-index event-array)
+                (when mvs::*debug*
+                  (format t "~2&~2,0@TActual Event ~A: ~A~%"
+                          event-index event-array))
                 (let* ((basic-viewpoints (mvs:mvs-basic m))
                        (predictions (mvs:combine-predictions basic-viewpoints 
                                                              ltm-prediction-sets
                                                              stm-prediction-sets
-                                                             subsequence))
-                       (new-event (generate-event m current-event predictions)))
-                  (push new-event new-sequence))))))
+                                                             subsequence)))
+                  (multiple-value-bind (new-event attribute-predictions)
+                      (generate-event m current-event predictions)
+                    (setf last-attribute-predictions attribute-predictions)
+                    (push new-event new-sequence)))))))
       ;; 4. add new event to models without predicting 
       (let* ((subsequence (reverse new-sequence))
              ;(current-event (nth event-index subsequence)) 
@@ -590,8 +612,9 @@
              (event-array (mvs:get-event-array m subsequence)))
         (mvs::old-set-model-alphabets m event-array subsequence 
                                       (mvs:mvs-basic m))
-        (when (>= event-index context-length)
-          (format t "~&~2,0@TGenerated Event ~A: ~A~%" event-index event-array))
+        (when mvs::*debug* 
+          (when (>= event-index context-length)
+            (format t "~&~2,0@TGenerated Event ~A: ~A~%" event-index event-array)))
         (multiple-value-bind (ltm-next-locations stm-next-locations d3 d4)
             (mvs:model-event m event-array subsequence
                              :construct? t :predict? nil
@@ -606,22 +629,33 @@
     ;                   :ltm-args (list (coerce ltm-locations 'list)))
     ;(format t "~&~2,0@Tinitialise-vrtual-nodes")
     ;(mvs:operate-on-models m #'initialise-virtual-nodes)
-    (reverse new-sequence)))
+    (values (reverse new-sequence) last-attribute-predictions)))
 
 (defmethod generate-event ((m mvs) event predictions)
   (let ((predictions (select-from-distributions predictions)))
-    (dolist (p predictions event)
-      (setf 
+    (dolist (p predictions (values event predictions))
+      (setf
        (slot-value event (find-symbol (symbol-name (car p)) (find-package :music-data)))
        (nth 2 p)))))
 
 (defun select-from-distributions (predictions)
-  (mapcar #'(lambda (x) 
-              (list (viewpoint-type (prediction-sets:prediction-viewpoint x))
-                    (prediction-sets:prediction-element x)
-                    (select-max-from-distribution 
-                     (prediction-sets:prediction-set x))))
-                    ;(select-from-distribution 
-                    ; (prediction-sets:prediction-set x))))
-          predictions))
-    
+  (let ((selected-attributes
+         (mapcar #'(lambda (x)
+                     (multiple-value-bind (attribute-value probability)
+                         ;; (select-max-from-distribution
+                         ;;  (prediction-sets:prediction-set x))))
+                         (select-from-distribution
+                          (prediction-sets:prediction-set x))
+                       (list (viewpoint-type (prediction-sets:prediction-viewpoint x))
+                             (prediction-sets:prediction-element x)
+                             attribute-value
+                             probability
+                             (- (log probability 2))
+                             (prediction-sets:shannon-entropy
+                              (prediction-sets:prediction-set x))
+                             (prediction-sets:prediction-set x))))
+                 predictions)))
+    (when mvs::*debug*
+      (format t "~{~{viewpoint: ~A, original: ~A, generated: ~A, p: ~A, h: ~A, H: ~A~%~2Tdistribution: ~A~&~}~}"
+              selected-attributes))
+    selected-attributes))
