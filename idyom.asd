@@ -2,7 +2,7 @@
 ;;;; File:       IDyOM.asd
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-05-04 21:29:04 marcusp>
-;;;; Time-stamp: <2014-09-07 13:31:01 marcusp>
+;;;; Time-stamp: <2014-09-25 11:20:58 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -12,7 +12,7 @@
 
 (defsystem idyom
   :name "IDyOM"
-  :version "2.0"
+  :version "1.0"
   :author "Marcus Pearce"
   :licence "GPL (see COPYING file for details)"
   :description "Information Dynamics of Music"
@@ -65,17 +65,16 @@
 	     (:file "methods")
 	     (:file "functions")
 	     (:file "macros")
-	     (:file "basic-viewpoints")
-	     (:file "extensions")
-	     ;; Derived viewpoints
-	     (:module derived-viewpoints
-		      :serial t
+             (:module melody :serial t
 		      :components
-		      ((:file "pitch")
+		      ((:file "basic-viewpoints")
+                       (:file "pitch")
 		       (:file "scales")
 		       (:file "temporal")
 		       (:file "misc")
-		       (:file "implication-realisation")))))
+		       (:file "implication-realisation")))
+             ;; useful extensions for modelling (not part of the representation scheme)
+	     (:file "extensions")))
    ;; PPM Statistical Models
    (:module ppm-star
 	    :serial t
