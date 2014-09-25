@@ -2,7 +2,7 @@
 ;;;; File:       extensions.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2008-10-31 13:08:09 marcusp>
-;;;; Time-stamp: <2014-03-04 22:03:14 marcusp>
+;;;; Time-stamp: <2014-09-18 13:32:32 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints) 
@@ -79,6 +79,10 @@ values of the final event in <events>."
       ;;(format t "~&type = ~A; alphabet = ~A~%" (viewpoint-type v) alphabet) ; 
       (setf (viewpoint-alphabet v) (nreverse alphabet)))))
           
+
+(defmethod alphabet->events ((v viewpoint) (events md:music-composition))
+  (alphabet->events v (coerce events 'list)))
+
 (defmethod alphabet->events ((b basic) events)
   (let ((alphabet (viewpoint-alphabet b))
         (event (car (last events)))
@@ -140,11 +144,4 @@ values of the final event in <events>."
                          alphabet))))
       (apply #'get-events (viewpoint-typeset l)))))
 
-(defun strip-until-true (test-viewpoint events)
-  "Return the longest prefix of the list EVENTS such that
-TEST-VIEWPOINT returns true (1 rather than 0)."
-  (cond ((null events) '())
-        ((undefined-p (viewpoint-element test-viewpoint events))
-         (strip-until-true test-viewpoint (butlast events)))
-        ((= (viewpoint-element test-viewpoint events) 1) events)
-        (t (strip-until-true test-viewpoint (butlast events)))))
+

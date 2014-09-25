@@ -8,6 +8,16 @@
 (defmethod viewpoint-sequence ((v viewpoint) (m md:music-composition))
   (viewpoint-sequence v (coerce m 'list)))
 
+(defmethod viewpoint-sequence ((v viewpoint) (m md:music-sequence))
+  (labels ((events->viewpoint (events sequence)
+             (if (= (length events) 0) sequence
+                 (let ((element (viewpoint-element v events)))
+                   (if (undefined-p element)
+                       (events->viewpoint (utils:butlast-n events) sequence)
+                       (events->viewpoint (utils:butlast-n events)
+                                          (cons element sequence)))))))
+    (events->viewpoint m '())))
+
 (defmethod viewpoint-sequence ((v viewpoint) (event-list list))
   (labels ((events->viewpoint (events sequence)
              (if (null events) sequence
@@ -22,6 +32,14 @@
 
 (defmethod viewpoint-element ((v viewpoint) (m md:music-composition))
   (viewpoint-element v (coerce m 'list)))
+
+(defmethod viewpoint-element ((v viewpoint) (m md:music-sequence))
+  (funcall (type-of v) m))
+
+(defmethod viewpoint-element ((l linked) (m md:music-sequence))
+  (let ((viewpoints (viewpoint-links l)))
+    (mapcar #'(lambda (a) (funcall (type-of a) m))
+            viewpoints)))
 
 (defmethod viewpoint-element ((v viewpoint) (event-list list))
   (funcall (type-of v) event-list))
@@ -103,7 +121,7 @@
     (dotimes (i (length element-list) bs)
       (let ((el (nth i element-list-rev)))
         (unless (undefined-p el)
-          (push (basic-element v b el (butlast event-list i)) bs))))))
+          (push (basic-element v b el (utils:butlast-n event-list i)) bs))))))
 
 (defmethod basic-sequence ((from basic) (to basic) element-list event-list)
   (declare (ignore from to event-list))
@@ -140,3 +158,25 @@
   (every #'(lambda (x) (not (null x))) 
          (mapcar #'inverse-viewpoint-function-defined-p 
                  (viewpoint-links l))))
+
+
+;;; Strip-until-true
+
+(defmethod strip-until-true ((test-viewpoint test) (events md:music-composition))
+  (strip-until-true test (coerce events 'list)))
+
+(defmethod strip-until-true ((test-viewpoint test) (events md:music-sequence))
+  (let ((new-events (strip-until-true test-viewpoint (coerce events 'list)))
+        (copy (utils:copy-instance events)))
+    (sequence:adjust-sequence 
+     copy (length new-events)
+     :initial-contents new-events)))
+
+(defmethod strip-until-true ((test-viewpoint test) (events list))
+  "Return the longest prefix of the list EVENTS such that
+TEST-VIEWPOINT returns true (1 rather than 0)."
+  (cond ((null events) '())
+        ((undefined-p (viewpoint-element test-viewpoint events))
+         (strip-until-true test-viewpoint (butlast events)))
+        ((= (viewpoint-element test-viewpoint events) 1) events)
+        (t (strip-until-true test-viewpoint (butlast events)))))
