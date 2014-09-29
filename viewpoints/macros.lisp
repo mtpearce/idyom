@@ -20,7 +20,8 @@
         (declare (ignorable events))
         ,function)
       ,(when f*
-             `(defgeneric ,name (,element ,events))
+             `(defgeneric ,(intern (concatenate 'string (symbol-name name) "*")) 
+                  (,element ,events))
              `(defmethod ,(intern (concatenate 'string (symbol-name name) "*"))
                   (,element ,events)
                 (declare (ignorable events element))
