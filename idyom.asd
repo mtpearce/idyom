@@ -2,7 +2,7 @@
 ;;;; File:       IDyOM.asd
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-05-04 21:29:04 marcusp>
-;;;; Time-stamp: <2014-09-25 11:30:10 marcusp>
+;;;; Time-stamp: <2014-09-27 14:28:56 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -12,10 +12,10 @@
 
 (defsystem idyom
   :name "IDyOM"
-  :version "1.0"
+  :version "1.1"
   :author "Marcus Pearce"
   :licence "GPL (see COPYING file for details)"
-  :description "Information Dynamics of Music"
+  :description "Information Dynamics of Music (see README for details)"
   :depends-on (clsql cl-ppcre midi closer-mop psgraph)
   :serial t
   :components
@@ -74,9 +74,10 @@
                        (:file "phrase")
 		       (:file "threaded")
 		       (:file "implication-realisation")))
-             ;; useful extensions for modelling (not part of the representation scheme)
+             ;; useful extensions for modelling 
+             ;; (not strictly part of the representation scheme)
 	     (:file "extensions")))
-   ;; PPM Statistical Models
+   ;; PPM* Statistical Models
    (:module ppm-star
 	    :serial t
 	    :components
@@ -85,6 +86,7 @@
 	     (:file "ppm-star")
 	     (:file "ppm-io")
 	     (:file "ppm-ui")))
+   ;; Prediction using multiple viewpoint systems (MVS)
    (:module mvs
             :serial t 
             :components

@@ -1,5 +1,5 @@
 IDyOM: Information Dynamics of Music
-Version 1.0
+Version 1.1
 
 Copyright 2001-2014, Marcus Pearce (marcus.pearce@qmul.ac.uk)
 
@@ -16,7 +16,8 @@ https://code.soundsoftware.ac.uk/projects/idyom-project/wiki
 The design of the system and its underlying principles are documented
 in Marcus Pearce's PhD thesis "The Construction and Evaluation of
 Statistical Models of Melodic Structure in Music Perception and
-Composition" (2005) included here as 'thesis.pdf'
+Composition" (2005) included here as 'thesis.pdf'. Please cite this 
+thesis in any publications using this software.
 
 ==Requirements==
 
@@ -28,6 +29,18 @@ Sqlite     http://www.sqlite.org/
 See the wiki for further details on installation.
 
 ==News==
+
+2014-09-27:
+v1.1: new features include:
+* an extended and improved representation of music objects
+* a time protocol for music objects
+* extraction of melodies from polyphonic pieces using skyline algorithm
+* some generalisation of features in the generation code
+* greater efficiency in accessing music-objects from the database
+* allow specialisation of viewpoints on user-defined classes
+* a caching parameter to control whether LTM resampling sets are cached
+* some fixes to Lilypond export (thanks to J Forth)
+* installation directories are created if need be (thanks to J Forth)
 
 2014-06-04:
 v1.0: first public release, I am grateful to Jeremy Gow and 
