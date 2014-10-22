@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2014-09-18 16:43:33 marcusp>
+;;;; Time-stamp: <2014-10-22 21:46:52 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -44,25 +44,35 @@
 
 (defclass music-temporal-object (music-object anchored-time-interval) ())
 
-(defclass music-sequence (list-slot-sequence music-temporal-object) ()) ; sequence of music objects ordered in time 
-(defclass music-slice (list-slot-sequence music-temporal-object) ())    ; set of music objects overlapping in time, ordered by voice
+(defclass music-sequence (list-slot-sequence music-temporal-object) ()) ; a sequence of music objects ordered in time 
+(defclass music-composition (music-sequence) ())                        ; a composition is an unconstrained sequence of music objects
+(defclass melodic-sequence (music-sequence) ())                         ; a sequence of non-overlapping notes
+(defclass harmonic-sequence (music-sequence) ())                        ; a sequence of harmonic slices
 
-(defclass music-composition (music-sequence) ())         ; a composition is an unconstrained sequence of music objects
-(defclass melodic-sequence (music-sequence) ())          ; a sequence of non-overlapping notes
-(defclass harmonic-sequence (music-sequence) ())         ; a sequence of harmonic slices
+(defclass key-signature ()
+  ((keysig :initarg :keysig :accessor key-signature)
+   (mode :initarg :mode :accessor mode)))
 
-(defclass music-event (music-temporal-object) 
+(defclass time-signature ()
+  ((barlength :initarg :barlength :accessor barlength)
+   (pulses :initarg :pulses :accessor pulses)))
+
+(defclass music-tempo ()
+  ((tempo :initarg :tempo :accessor tempo)))
+  
+(defclass music-environment (key-signature time-signature tempo) ())
+
+(defclass music-phrase ()
+  ((phrase :initarg :phrase :accessor phrase)))
+
+(defclass music-slice (list-slot-sequence music-temporal-object music-environment music-phrase) ())  ; set of music objects overlapping in time, ordered by voice
+
+(defclass music-event (music-temporal-object music-environment music-phrase)
   ((bioi :initarg :bioi :accessor bioi)
    (deltast :initarg :deltast :accessor deltast)
    (cpitch :initarg :cpitch :accessor chromatic-pitch)
    (mpitch :initarg :mpitch :accessor morphetic-pitch)
    (accidental :initarg :accidental :accessor accidental)
-   (keysig :initarg :keysig :accessor key-signature)
-   (mode :initarg :mode :accessor mode)
-   (barlength :initarg :barlength :accessor barlength)
-   (pulses :initarg :pulses :accessor pulses)
-   (phrase :initarg :phrase :accessor phrase)
-   (tempo :initarg :tempo :accessor tempo)
    (dyn :initarg :dyn :accessor dynamics)
    (ornament :initarg :ornament :accessor ornament)
    (comma :initarg :comma :accessor comma)
@@ -148,34 +158,11 @@
 
 (defgeneric set-attribute (event attribute value))
 (defmethod set-attribute ((e music-event) attribute value)
-  (setf (slot-value e (music-symbol attribute))
-	value))
+  (setf (slot-value e (music-symbol attribute)) value))
 
 (defgeneric copy-event (music-event))
 (defmethod copy-event ((e music-event))
-  (make-instance 'music-event
-                 :id (copy-identifier (get-identifier e))
-                 :timebase (timebase e)
-                 ;;:description (description e)
-                 ;;:midc (midc e)
-                 :onset (onset e)
-		 :duration (duration e)
-                 :deltast (deltast e)
-                 :bioi (bioi e)
-                 :cpitch (chromatic-pitch e)
-                 :mpitch (morphetic-pitch e)
-                 :keysig (key-signature e)
-                 :accidental (accidental e)
-                 :mode (mode e)
-                 :barlength (barlength e)
-                 :pulses (pulses e)
-                 :phrase (phrase e)
-                 :dyn (dynamics e)
-                 :tempo (tempo e)
-                 :ornament (ornament e)
-                 :comma (comma e)
-                 :articulation (articulation e)
-                 :voice (voice e)))
+  (utils:copy-instance e))
 
 (defun count-compositions (dataset-id)
   ;;(length (get-dataset (lookup-dataset dataset-id))))
@@ -187,6 +174,7 @@
       ;; (description (get-composition (lookup-composition dataset-id composition-id)))))
       (car (clsql:query (format nil "SELECT description FROM mtp_dataset WHERE (dataset_id = ~A);" dataset-id) :flatp t))
       (car (clsql:query (format nil "SELECT description FROM mtp_composition WHERE (dataset_id = ~A AND composition_id = ~A);" dataset-id composition-id) :flatp t))))
+
 
 ;;; Getting music objects from the database
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -280,6 +268,11 @@ full expansion (cf. Conklin, 2002)."
               (slice (make-instance 'music-slice 
                                     :onset onset 
                                     :duration (apply #'max (mapcar #'duration matching-events))
+                                    :tempo (tempo (car matching-events))
+                                    :barlength (barlength (car matching-events))
+                                    :pulses (pulses (car matching-events))
+                                    :keysig (key-signature (car matching-events))
+                                    :mode (mode (car matching-events))
                                     :midc (midc composition)
                                     :id (copy-identifier (get-identifier composition))
                                     :description (description composition)
@@ -362,7 +355,7 @@ the highest pitch sounding at that onset position."
             (md:set-attribute top 'bioi (- (onset top) (onset previous-event))))
           (when (before previous-event top)
             (md:set-attribute top 'deltast (- (onset top) (onset (end-time previous-event))))))
-        (print (list top (chromatic-pitch top) (length slice)))
+        ;; (print (list top (chromatic-pitch top) (length slice)))
         (setf previous-event top)
         (push top result)))))
 
