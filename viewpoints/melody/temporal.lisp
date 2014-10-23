@@ -2,7 +2,7 @@
 ;;;; File:       temporal.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2005-11-29 10:41:20 marcusp>
-;;;; Time-stamp: <2014-09-25 10:59:29 marcusp>
+;;;; Time-stamp: <2014-10-23 18:02:00 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
@@ -12,7 +12,7 @@
 ;; Denominator of the time signature
 
 (define-viewpoint (beatunit derived (barlength pulses))
-    ((events md:melodic-sequence) element) 
+    ((events md:music-sequence) element) 
   :function (let ((barlength (barlength events))
 		  (pulses (pulses events))
 		  (timebase (md:timebase (last-element events))))
@@ -27,7 +27,7 @@
 ;;; Dur ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define-viewpoint (dur-ratio derived (dur))
-    ((events md:melodic-sequence) element) 
+    ((events md:music-sequence) element) 
   :function (multiple-value-bind (e1 e2)
                 (values-list (last events 2))
               (if (or (null e1) (null e2)) +undefined+
@@ -76,7 +76,7 @@
 
 ;; Like bioi, but undefined for first event in sequence
 (define-viewpoint (ioi derived (onset))
-    ((events md:melodic-sequence) element) 
+    ((events md:music-sequence) element) 
   :function (multiple-value-bind (e1 e2)
                 (values-list (last events 2))
               (if (or (null e1) (null e2)) +undefined+
@@ -88,7 +88,7 @@
 
 ;; ioi divided by the previous ioi (requires at least 3 events).
 (define-viewpoint (ioi-ratio derived (onset))
-    ((events md:melodic-sequence) element) 
+    ((events md:music-sequence) element) 
   :function (multiple-value-bind (e1 e2 e3)
                 (values-list (last events 3))
               (if (or (null e1) (null e2) (null e3)) +undefined+
@@ -102,7 +102,7 @@
 
 ;; Whether ioi gets larger, smaller or stays the same between consecutive events
 (define-viewpoint (ioi-contour derived (onset))
-    ((events md:melodic-sequence) element) 
+    ((events md:music-sequence) element) 
   :function (let ((ioi-ratio (ioi-ratio events)))
               (if (undefined-p ioi-ratio) +undefined+
                   (signum (- ioi-ratio 1))))
@@ -118,7 +118,7 @@
 
 ;; Time offset from beginning of bar.
 (define-viewpoint (posinbar derived (onset))
-    ((events md:melodic-sequence) element) 
+    ((events md:music-sequence) element) 
   :function (let ((onset (onset events))
                   (barlength (barlength events)))
               (cond ((undefined-p onset barlength) +undefined+)
@@ -131,7 +131,7 @@
 
 ;; First In Bar (Is this the first note in the current bar?)
 (define-viewpoint (fib test (onset))
-    ((events md:melodic-sequence) element) 
+    ((events md:music-sequence) element) 
   :function (let ((posinbar (posinbar events)))
               (cond ((undefined-p posinbar) +undefined+)
                     ((= posinbar 0) 1)
@@ -141,7 +141,7 @@
 
 ;; does this note fall on a crotchet beat from the first note in the piece?
 (define-viewpoint (crotchet derived (onset))
-    ((events md:melodic-sequence) element) 
+    ((events md:music-sequence) element) 
   :function (let ((e1 (car events))
                   (e2 (car (last events))))
               (if (or (null e1) (null e2)) +undefined+
@@ -157,7 +157,7 @@
 ;;
 ;; Is this note on tactus pulse?
 (define-viewpoint (tactus test (onset))
-    ((events md:melodic-sequence) element) 
+    ((events md:music-sequence) element) 
   :function (let ((event (last events)))
               (if (null event) +undefined+
                   (let ((barlength (barlength event))
@@ -288,7 +288,7 @@
 
 ;; Division-level metrical accent
 (define-viewpoint (metaccent-div derived (onset))
-    ((events md:melodic-sequence) element)
+    ((events md:music-sequence) element)
   :function (let ((event (last events)))
               (if (null event) +undefined+
 		  ;; Temporal properties of this event
@@ -305,7 +305,7 @@
 
 ;; Multiple-level metrical accent
 (define-viewpoint (metaccent-mult derived (onset))
-    ((events md:melodic-sequence) element)
+    ((events md:music-sequence) element)
   :function (let ((event (last events)))
               (if (null event) +undefined+
 		  ;; Temporal properties of this event
@@ -322,7 +322,7 @@
 
 ;; Metrical accent
 (define-viewpoint (metaccent derived (onset))
-    ((events md:melodic-sequence) element)
+    ((events md:music-sequence) element)
   :function (let ((event (last events)))
               (if (null event) +undefined+
 		  ;; Temporal properties of this event
@@ -340,7 +340,7 @@
 
 ;; Metric accent interval
 (define-viewpoint (met-interval derived (onset))
-    ((events md:melodic-sequence) element) 
+    ((events md:music-sequence) element) 
   :function (multiple-value-bind (e1 e2)
                 (values-list (last events 2))
               (if (or (null e1) (null e2)) +undefined+
@@ -353,7 +353,7 @@
 ;; Metrical accent contour: -1 for a descending accent, 0 constant, 1
 ;; ascending
 (define-viewpoint (met-contour derived (onset))
-    ((events md:melodic-sequence) element) 
+    ((events md:music-sequence) element) 
   :function (let ((metint (met-interval events)))
               (cond ((undefined-p metint) +undefined+)
                     (t (signum metint))))

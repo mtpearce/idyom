@@ -2,7 +2,7 @@
 ;;;; File:       pitch.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2005-11-29 10:41:20 marcusp>
-;;;; Time-stamp: <2014-09-25 10:56:02 marcusp>
+;;;; Time-stamp: <2014-10-23 18:02:28 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
@@ -14,7 +14,7 @@
 ;;  Chromatic interval of tonic from C (e.g. C major gives 0, F minor
 ;;  gives 5, F major also 5, Bb minor 1).
 (define-viewpoint (referent derived (keysig))
-    ((events md:melodic-sequence) element) 
+    ((events md:music-sequence) element) 
   :function (let ((keysig (keysig events))
                   (mode (mode events)))
               ;(declare (type (integer -7 7) keysig) (type (integer 0 11) mode))

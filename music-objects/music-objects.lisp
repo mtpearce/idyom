@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2014-10-22 21:46:52 marcusp>
+;;;; Time-stamp: <2014-10-23 18:13:41 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -57,7 +57,7 @@
   ((barlength :initarg :barlength :accessor barlength)
    (pulses :initarg :pulses :accessor pulses)))
 
-(defclass music-tempo ()
+(defclass tempo ()
   ((tempo :initarg :tempo :accessor tempo)))
   
 (defclass music-environment (key-signature time-signature tempo) ())
