@@ -31,7 +31,8 @@ symbol if they are lists else nil."
         (make-instance 
          (find-symbol (symbol-name attribute) (find-package :viewpoints)))
         (let* ((links (mapcar #'get-viewpoint (flatten attribute)))
-               (typeset (merge-typesets links)))
+               (typeset (merge-typesets links))
+               (links (stable-sort links #'(lambda (x y) (string< (viewpoint-name x) (viewpoint-name y))))))
           (make-instance 'linked :links links :typeset typeset)))))
 
 (defun attribute-equal (a1 a2) 
