@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2014-11-21 15:45:50 marcusp>
+;;;; Time-stamp: <2014-11-21 18:26:10 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -65,9 +65,11 @@
 (defclass music-phrase ()
   ((phrase :initarg :phrase :accessor phrase)))
 
-(defclass music-slice (list-slot-sequence music-temporal-object music-environment music-phrase) ())  ; set of music objects overlapping in time, ordered by voice
+(defclass music-element (music-temporal-object music-environment music-phrase) ())
 
-(defclass music-event (music-temporal-object music-environment music-phrase)
+(defclass music-slice (list-slot-sequence music-element) ())  ; set of music objects overlapping in time, ordered by voice
+
+(defclass music-event (music-element)
   ((bioi :initarg :bioi :accessor bioi)
    (deltast :initarg :deltast :accessor deltast)
    (cpitch :initarg :cpitch :accessor chromatic-pitch)
@@ -152,16 +154,16 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defgeneric get-attribute (event attribute))
-(defmethod get-attribute ((e music-event) attribute)
+(defmethod get-attribute ((e music-element) attribute)
   "Returns the value for slot <attribute> in event object <e>."
   (slot-value e (music-symbol attribute)))
 
 (defgeneric set-attribute (event attribute value))
-(defmethod set-attribute ((e music-event) attribute value)
+(defmethod set-attribute ((e music-element) attribute value)
   (setf (slot-value e (music-symbol attribute)) value))
 
 (defgeneric copy-event (music-event))
-(defmethod copy-event ((e music-event))
+(defmethod copy-event ((e music-element))
   (utils:copy-instance e))
 
 (defun count-compositions (dataset-id)
