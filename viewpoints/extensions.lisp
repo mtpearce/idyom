@@ -2,7 +2,7 @@
 ;;;; File:       extensions.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2008-10-31 13:08:09 marcusp>
-;;;; Time-stamp: <2014-09-18 13:32:32 marcusp>
+;;;; Time-stamp: <2014-11-21 18:21:24 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints) 
@@ -20,7 +20,9 @@
   "Initialises the alphabets of the basic types specified in
 *basic-types* to those elements which appear in <dataset>."
   (dolist (attribute *basic-types*)
-    (set-alphabet-from-dataset (get-viewpoint attribute) dataset)))
+    (handler-case ;; not all basic viewpoints are present in all textures (e.g., articulation is not present in :harmony).
+        (set-alphabet-from-dataset (get-viewpoint attribute) dataset)
+      (error nil nil)))) 
 
 (defun set-onset-alphabet (context)
   (setf (viewpoint-alphabet (get-viewpoint 'onset)) (onset-alphabet context)))
