@@ -95,16 +95,4 @@ the original viewpoints are included."
 	  (push vp vps)))))
 
 
-(defun composition-viewpoint (dataset-id composition-id viewpoint)
-  "Show viewpoint sequence for composition."
-  (viewpoints:viewpoint-sequence 
-   (viewpoints:get-viewpoint viewpoint)
-   (md:get-event-sequence dataset-id composition-id)))
-
-(defun dataset-viewpoint (dataset-id viewpoint)
-  "Show viewpoint sequences for dataset."
-  (viewpoints:viewpoint-sequences
-   (viewpoints:get-viewpoint viewpoint)
-   (md:get-event-sequences (list dataset-id))))
-
 
