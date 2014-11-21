@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-09-12 19:43:34 marcusp>                           
+;;;; Time-stamp: <2014-11-21 15:44:11 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -31,6 +31,8 @@
                          resampling-indices (models :both+)
                          (ltmo mvs::*ltm-params*)
                          (stmo mvs::*stm-params*)
+                         (voices nil)
+                         (texture :melody)
                          (use-resampling-set-cache? t)
                          (use-ltms-cache? t))
   "IDyOM top level: returns the average cross-entropy of a model with
@@ -56,8 +58,8 @@
          (mvs::*stm-update-exclusion* (getf stmo :update-exclusion))
          (mvs::*stm-escape* (getf stmo :escape))
          ;; data
-         (dataset (get-event-sequences (list dataset-id)))
-         (pretraining-set (get-event-sequences pretraining-ids))
+         (dataset (md:get-music-objects (list dataset-id) nil :voices voices :texture texture))
+         (pretraining-set (md:get-music-objects pretraining-ids nil :voices voices :texture texture))
          ;; viewpoints
          (sources (get-viewpoints source-viewpoints))
          (targets

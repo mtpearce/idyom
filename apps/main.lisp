@@ -2,7 +2,7 @@
 ;;;; File:       main.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2010-11-01 15:19:57 marcusp>
-;;;; Time-stamp: <2014-07-17 15:11:13 marcusp>
+;;;; Time-stamp: <2014-11-21 15:49:14 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:idyom)
@@ -48,23 +48,26 @@
 ;;;
 (defun idyom (dataset-id target-viewpoints source-viewpoints
               &key
-          ;; Dataset IDs for LTM pretraining
+                ;; Dataset IDs for LTM pretraining
                 pretraining-ids
-          ;; Resampling
-                (k 10) ; Number of cross-validation folds (:full = LOO CV)
+                ;; Resampling
+                (k 10) ; Number of cross-validation folds (:full = leave-one-out CV)
                 resampling-indices ; Evaluate only certain resampling subsets
-          ;; Model options
+                ;; Model options
                 (models :both+)
                 (ltmo mvs::*ltm-params*) (stmo mvs::*stm-params*)
-          ;; Viewpoint selection
+                ;; Viewpoint selection
                 (basis :default)
                 (dp nil) (max-links 2)
                 (vp-white '(:any))
                 (vp-black nil)
-          ;; Output
+                ;; Number of voices and texture (e.g., :melody :harmony)
+                (voices nil)
+                (texture :melody)
+                ;; Output
                 (detail 3)
                 (output-path nil)
-          ;; Caching
+                ;; Caching
                 (use-resampling-set-cache? t)
                 (use-ltms-cache? t))
   "IDyOM top level: computes information profiles for basic
@@ -95,6 +98,7 @@
                                  :pretraining-ids pretraining-ids
                                  :k k :resampling-indices resampling-indices
                                  :models models :ltmo ltmo :stmo stmo
+                                 :voices voices :texture texture
                                  :use-resampling-set-cache? use-resampling-set-cache?
                                  :use-ltms-cache? use-ltms-cache?)
     (when output-path
