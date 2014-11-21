@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2014-10-23 18:13:41 marcusp>
+;;;; Time-stamp: <2014-11-21 15:45:50 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -179,17 +179,17 @@
 ;;; Getting music objects from the database
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun get-music-objects (dataset-indices composition-indices &key voices (type :melody))
+(defun get-music-objects (dataset-indices composition-indices &key voices (texture :melody))
   "Return music objects from the database corresponding to
   DATASET-INDICES, COMPOSITION-INDICES which may be single numeric IDs
   or lists of IDs. COMPOSITION-INDICES is only considered if
-  DATASET-INDICES is a single ID. TYPE determines whether the returned
+  DATASET-INDICES is a single ID. TEXTURE determines whether the returned
   object is a melody (using the Skyline algorithm if necessary) or a
   sequence of harmonic slices using full expansion (cf. Conklin,
   2002). The voices specified by VOICES are used. If VOICES is nil,
   the melody corresponding to the voice of the first event is
   extracted or the harmony corresponding to all voices is used."
-  (cond ((eq type :melody)
+  (cond ((eq texture :melody)
          (if (numberp dataset-indices)
              (cond ((null composition-indices)
                     (get-event-sequences dataset-indices :voices voices))
@@ -198,7 +198,7 @@
                    (t 
                     (mapcar #'(lambda (c) (get-event-sequence dataset-indices c :voices voices)) composition-indices)))
              (get-event-sequences dataset-indices :voices voices)))
-        ((eq type :harmony)
+        ((eq texture :harmony)
          (if (numberp dataset-indices)
              (cond ((null composition-indices)
                     (get-harmonic-sequences dataset-indices :voices voices))
@@ -208,7 +208,7 @@
                     (mapcar #'(lambda (c) (get-harmonic-sequence dataset-indices c :voices voices)) composition-indices)))
              (get-harmonic-sequences dataset-indices :voices voices)))
         (t 
-         (print "Unrecognised type of music object. Options are :melody or :harmony."))))
+         (print "Unrecognised texture for the music object. Current options are :melody or :harmony."))))
 
 
 ;; harmonic sequences
