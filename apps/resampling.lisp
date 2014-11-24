@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-11-24 19:22:37 marcusp>                           
+;;;; Time-stamp: <2014-11-24 19:44:23 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -16,11 +16,11 @@
 
 (defparameter *model-dir* 
   (ensure-directories-exist
-   (merge-pathnames "data/models/" apps:*root-dir*)))
+   (merge-pathnames "data/models/" (utils:ensure-directory apps:*root-dir*))))
 
 (defparameter *resampling-dir*
   (ensure-directories-exist
-   (merge-pathnames "data/resampling/" apps:*root-dir*)))
+   (merge-pathnames "data/resampling/" (utils:ensure-directory apps:*root-dir*))))
 
 ;;;===========================================================================
 ;;; Dataset Prediction 
@@ -225,7 +225,8 @@ dataset-id)."
                             (quote-string (md:get-description
                                            dataset-id
                                            composition-id)))
-                      (dolist (attribute viewpoints:*basic-types*)
+                      ;; TODO - this needs to be specific to each type of music-object (music-event, music-slice etc.)
+                      (dolist (attribute viewpoints:*basic-types*) 
                         (let ((value (md:get-attribute event attribute)))
                           (when (member attribute '(:dur :bioi :deltast :onset) :test #'eq)
                             (setf value (* value (/ timebase 96))))

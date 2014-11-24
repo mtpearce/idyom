@@ -2,7 +2,7 @@
 ;;;; File:       main.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2010-11-01 15:19:57 marcusp>
-;;;; Time-stamp: <2014-11-21 15:49:14 marcusp>
+;;;; Time-stamp: <2014-11-24 19:44:38 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:idyom)
@@ -105,7 +105,7 @@
       (resampling:format-information-content predictions 
                                              (ensure-directories-exist
                                               (merge-pathnames
-                                               filename output-path))
+                                               filename (utils:ensure-directory output-path)))
                                              dataset-id detail))
     (resampling:output-information-content predictions detail)))
 

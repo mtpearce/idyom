@@ -2,7 +2,7 @@
 ;;;; File:       apps.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2005-11-27 16:27:35 marcusp>
-;;;; Time-stamp: <2014-07-17 15:17:46 marcusp>
+;;;; Time-stamp: <2014-11-24 19:45:03 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:apps) 
@@ -24,7 +24,7 @@
   ;; *ep-cache-dir* 
   (setf mvs:*ep-cache-dir* (ensure-directories-exist
                             (merge-pathnames "data/cache/"
-                                             *root-dir*))))
+                                             (utils:ensure-directory *root-dir*)))))
 
 ;;; A way of generating filenames to store results, cached data etc.
 (defun dataset-modelling-filename (dataset-id basic-attributes attributes

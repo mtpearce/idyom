@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2014-09-17 19:36:27 marcusp>
+;;;; Time-stamp: <2014-11-24 19:47:37 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -320,6 +320,22 @@
    (make-pathname :host (pathname-host *default-pathname-defaults*)
                   :directory (pathname-directory
                               *default-pathname-defaults*))))
+
+(defun ensure-directory (directory-name)
+  (labels ((directory-p (pathname)
+             (and (not (present-p (pathname-type pathname)))
+                  (not (present-p (pathname-name pathname)))))
+           (present-p (x)
+             (and x (not (eq x :unspecific)))))
+    (let ((pathname (pathname directory-name)))
+      (if (not (directory-p directory-name))
+          (make-pathname :directory (append (or (pathname-directory pathname) 
+                                                (list :relative))
+                                            (list (file-namestring pathname)))
+                         :name nil
+                         :type nil
+                         :defaults pathname)
+          pathname))))
 
 ;;;===========================================================================
 ;;; Objects
