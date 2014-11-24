@@ -2,7 +2,7 @@
 ;;;; File:       params.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-06-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-02-07 19:31:30 marcusp>                           
+;;;; Time-stamp: <2014-11-22 13:04:09 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:mvs)
@@ -27,10 +27,10 @@
 (defparameter *stm-params* (memory-store-params mvs::*stm-order-bound* mvs::*stm-mixtures* mvs::*stm-update-exclusion* mvs::*stm-escape*))
 
 (defparameter *marginalise-using-current-event* 2
-  "A list of basic viewpoints which assume their full alphabets in
-prediction rather than being marginalised out based on their value in
-the current event: 1 = just basic viewpoint being predicted, 2 = all
-basic viewpoints.")
+  "Specifies the list of basic viewpoints which assume their full
+alphabets in prediction rather than being marginalised out based on
+their value in the current event. See mvs:set-model-alphabets for
+details. Default = 2, all basic viewpoints.")
 
 (defparameter *models* :both+) ; :ltm, :ltm+, :stm, :both, :both+ 
 
@@ -42,6 +42,3 @@ basic viewpoints.")
 (defparameter *viewpoint-combination* 'geometric-combination)
 (defparameter *ltm-stm-bias* 7)
 (defparameter *viewpoint-bias* 2)
-  
-
-

@@ -2,7 +2,7 @@
 ;;;; File:       multiple-viewpoint-system.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-27 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-09-07 13:55:50 marcusp>                           
+;;;; Time-stamp: <2014-11-22 12:31:49 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -174,25 +174,24 @@ all of the elements of the basic viewpoints in their
 typesets. <unconstrained> is a list specifying those viewpoints that
 assume their full alphabet (rather than just the value of the current
 event); it takes the following values: 
-
-0 - viewpoints derived from basic viewpoints in typeset of current viewpoint 
-1 - viewpoints derived from basic viewpoint in the multiple viewpoint system
-2 or NIL - any viewpoints 
-a list   - a specified list of viewpoints 
+-1 = current viewpoint
+0  = viewpoints derived from basic viewpoints in typeset of current viewpoint 
+1  = viewpoints derived from basic viewpoint in the multiple viewpoint system
+2  = viewpoints derived from all basic viewpoints
+a list = a specified list of viewpoints 
 
 See also VIEWPOINTS:SET-ALPHABET-FROM-CONTEXT."
   (let ((unconstrained 
          (case unconstrained
-           ;(-1 viewpoint currently being predicted) 
-           ;; viewpoints derived from basic viewpoints in typeset of
-           ;; current viewpoint
-           (0 (mapcar #'viewpoints:get-viewpoint 
-                      (viewpoints:viewpoint-typeset viewpoint)))
-           ;; viewpoints derived from basic viewpoints in MVS 
+           ;; -1 = only the viewpoint currently being predicted
+           (-1 viewpoint)
+           ;; 0 = basic viewpoints in typeset of current viewpoint (and their derived viewpoints)
+           (0 (mapcar #'viewpoints:get-viewpoint (viewpoints:viewpoint-typeset viewpoint)))
+           ;; 1 = basic viewpoints in MVS (and their derived viewpoints)
            (1 (mvs-basic m)) 
-           ;; all basic viewpoints (and their derived viewpoints) 
+           ;; 2 = all basic viewpoints (and their derived viewpoints) 
            (2 (mapcar #'viewpoints:get-viewpoint viewpoints:*basic-types*))
-           ;; specified list           
+           ;; 3 = a specified list of basic viewpoints         
            (t unconstrained))))
     (unless (or (viewpoints:basic-p viewpoint) (undefined-p event)) 
       (viewpoints:set-alphabet-from-context viewpoint events unconstrained))

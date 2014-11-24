@@ -2,7 +2,7 @@
 ;;;; File:       extensions.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2008-10-31 13:08:09 marcusp>
-;;;; Time-stamp: <2014-11-21 18:21:24 marcusp>
+;;;; Time-stamp: <2014-11-24 19:32:34 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints) 
@@ -45,13 +45,14 @@
                                     (t nil))))))
       (setf (viewpoint-alphabet v) sorted-alphabet))))
 
-(defmethod set-alphabet-from-context ((v viewpoint) events unconstrained)
-  "Sets the alphabet of derived viewpoint <derived> based on the set
-of sequences created by concatenating the alphabet of basic viewpoint
-<basic> onto a sequence of events <events>. <unconstrainted> is a list
-of basic viewpoints being predicted which assume their full alphabets,
-otherwise the basic alphabets are determined on the basis of the
-values of the final event in <events>."
+(defmethod set-alphabet-from-context ((v derived) events unconstrained)
+  "Sets the alphabet of derived viewpoint <v> based on the set of
+sequences created by concatenating the alphabet of the basic viewpoint
+from which <v> is derived onto a sequence of events
+<events>. <unconstrained> is a list of basic viewpoints being
+predicted which assume their full alphabets, otherwise the basic
+alphabets are determined on the basis of the values of the final event
+in <events>."
   (flet ((get-alphabets (attributes context)
            (let ((alphabets '()))
              (when (consp unconstrained)
@@ -64,22 +65,22 @@ values of the final event in <events>."
                              alphabets))
                    (push (list (md:get-attribute (car (last events)) a))
                          alphabets))))))
-    (let* ((alphabet '())
+    (let* ((derived-alphabet '())
            (attributes (viewpoint-typeset v))
            (e (md:copy-event (car (last events))))
            (context (butlast events))
-           (derived-alphabet 
+           (basic-alphabet 
             (apply #'utils:cartesian-product 
                    (get-alphabets attributes context))))
-      (dolist (d derived-alphabet)
+      (dolist (d basic-alphabet)
         (mapc #'(lambda (element attribute) 
                   (md:set-attribute e attribute element))
               d attributes)
         (let ((ve (viewpoint-element v (append context (list e)))))
-          (unless (or (undefined-p ve) (member ve alphabet :test #'equal))
-            (push ve alphabet))))
-      ;;(format t "~&type = ~A; alphabet = ~A~%" (viewpoint-type v) alphabet) ; 
-      (setf (viewpoint-alphabet v) (nreverse alphabet)))))
+          (unless (or (undefined-p ve) (member ve derived-alphabet :test #'equal))
+            (push ve derived-alphabet))))
+      ;;(format t "~&type = ~A; alphabet = ~A~%" (viewpoint-type v) derived-alphabet) ; 
+      (setf (viewpoint-alphabet v) (nreverse derived-alphabet)))))
           
 
 (defmethod alphabet->events ((v viewpoint) (events md:music-composition))

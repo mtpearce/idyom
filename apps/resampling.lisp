@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-11-21 15:44:11 marcusp>                           
+;;;; Time-stamp: <2014-11-24 19:22:37 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -58,8 +58,8 @@
          (mvs::*stm-update-exclusion* (getf stmo :update-exclusion))
          (mvs::*stm-escape* (getf stmo :escape))
          ;; data
-         (dataset (md:get-music-objects (list dataset-id) nil :voices voices :texture texture))
-         (pretraining-set (md:get-music-objects pretraining-ids nil :voices voices :texture texture))
+         (dataset (md:get-event-sequences (list dataset-id))) ;;(md:get-music-objects (list dataset-id) nil :voices voices :texture texture))
+         (pretraining-set (md:get-event-sequences pretraining-ids)) ;; (md:get-music-objects pretraining-ids nil :voices voices :texture texture))
          ;; viewpoints
          (sources (get-viewpoints source-viewpoints))
          (targets
