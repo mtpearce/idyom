@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2014-11-21 18:26:10 marcusp>
+;;;; Time-stamp: <2014-11-25 19:00:19 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -162,9 +162,22 @@
 (defmethod set-attribute ((e music-element) attribute value)
   (setf (slot-value e (music-symbol attribute)) value))
 
+(defmethod set-attribute ((ms music-slice) attribute value)
+  (if (string= (symbol-name attribute) "H-CPITCH")
+      (let ((i 0))
+        (sequence:dosequence (e ms)
+          (set-attribute e 'cpitch (nth i value))
+          (incf i)))
+      (call-next-method)))
+
 (defgeneric copy-event (music-event))
 (defmethod copy-event ((e music-element))
   (utils:copy-instance e))
+(defmethod copy-event ((ms music-slice))
+  (let ((ms-copy (utils:copy-instance ms)))
+    (setf (%list-slot-sequence-data ms-copy)
+          (mapcar #'md:copy-event (coerce ms 'list)))
+    ms-copy))
 
 (defun count-compositions (dataset-id)
   ;;(length (get-dataset (lookup-dataset dataset-id))))
