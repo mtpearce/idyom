@@ -2,7 +2,7 @@
 ;;;; File:       extensions.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2008-10-31 13:08:09 marcusp>
-;;;; Time-stamp: <2014-11-25 19:03:14 marcusp>
+;;;; Time-stamp: <2014-11-27 11:16:43 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints) 
@@ -17,9 +17,9 @@
   (get-viewpoints attributes))
 
 (defun initialise-basic-viewpoints (dataset)
-  "Initialises the alphabets of the basic types specified in
+  "Initialises the alphabets of the relevant basic types specified in
 *basic-types* to those elements which appear in <dataset>."
-  (dolist (attribute *basic-types*)
+  (dolist (attribute (get-basic-types nil)) ;; (elt (car dataset) 0)))
     (handler-case ;; not all basic viewpoints are present in all textures (e.g., articulation is not present in :harmony).
         (set-alphabet-from-dataset (get-viewpoint attribute) dataset)
       (error nil nil)))) 
@@ -45,7 +45,7 @@
                                     (t nil))))))
       (setf (viewpoint-alphabet v) sorted-alphabet))))
 
-(defmethod set-alphabet-from-context ((v derived) events unconstrained)
+(defmethod set-alphabet-from-context ((v viewpoint) events unconstrained)
   "Sets the alphabet of derived viewpoint <v> based on the set of
 sequences created by concatenating the alphabet of the basic viewpoint
 from which <v> is derived onto a sequence of events

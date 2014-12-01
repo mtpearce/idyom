@@ -2,7 +2,7 @@
 ;;;; File:       multiple-viewpoint-system.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-27 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-11-22 12:31:49 marcusp>                           
+;;;; Time-stamp: <2014-11-26 12:51:53 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -190,7 +190,7 @@ See also VIEWPOINTS:SET-ALPHABET-FROM-CONTEXT."
            ;; 1 = basic viewpoints in MVS (and their derived viewpoints)
            (1 (mvs-basic m)) 
            ;; 2 = all basic viewpoints (and their derived viewpoints) 
-           (2 (mapcar #'viewpoints:get-viewpoint viewpoints:*basic-types*))
+           (2 (mapcar #'viewpoints:get-viewpoint (viewpoints:get-basic-types event)))
            ;; 3 = a specified list of basic viewpoints         
            (t unconstrained))))
     (unless (or (viewpoints:basic-p viewpoint) (undefined-p event)) 

@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-12-01 18:43:52 marcusp>                           
+;;;; Time-stamp: <2014-12-01 18:45:08 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -228,7 +228,7 @@ dataset-id)."
                                            dataset-id
                                            composition-id)))
                       ;; TODO - this needs to be specific to each type of music-object (music-event, music-slice etc.)
-                      (dolist (attribute viewpoints:*basic-types*)
+                      (dolist (attribute (viewpoints:get-basic-types event))
                         (let ((value (md:get-attribute event attribute)))
                           (when (member attribute '(:dur :bioi :deltast :onset) :test #'eq)
                             (setf value (* value (/ timebase 96))))

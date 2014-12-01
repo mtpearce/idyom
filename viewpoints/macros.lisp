@@ -29,7 +29,7 @@
 
 (defmacro define-basic-viewpoint (name ((events class)) function)
   `(progn 
-     (register-basic-type ',name)
+     (register-basic-type ',name '(elt ,events 0))
      (define-viewpoint (,name basic (,name))
          ((,events ,class) element)
        :function ,function

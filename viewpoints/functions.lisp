@@ -2,10 +2,22 @@
 
 (defconstant +undefined+ '@ "The undefined symbol.")
 
-(defvar *basic-types* nil)
+(defvar *basic-types* nil) ;;(make-hash-table))
 
-(defun register-basic-type (type) 
+(defun register-basic-type (type event) 
+  (declare (ignore event))
   (pushnew (intern (symbol-name type) :keyword) *basic-types*))
+  ;; (let ((types (gethash (type-of event) *basic-types*))
+  ;;       (symbol (intern (symbol-name type) :keyword)))
+  ;;   (unless (member symbol types)
+  ;;     (setf (gethash  (type-of event) *basic-types*)
+  ;;           (cons symbol types)))))
+
+(defun get-basic-types (event)
+  "Return the basic types matching the event-type."
+  (declare (ignore event))
+  *basic-types*)
+  ;;(gethash (type-of event) *basic-types*))
 
 (defun undefined-p (&rest viewpoint-elements)
   "Returns true if any of the supplied viewpoint elements are eql to
