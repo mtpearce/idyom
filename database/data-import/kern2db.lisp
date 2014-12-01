@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-06-04 16:07:42 marcusp>                           
+;;;; Time-stamp: <2014-12-01 17:37:11 marcusp>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -102,7 +102,7 @@
 
 (defparameter *default-timebase* 96)    ;basic time units in a semibreve 
 (defparameter *middle-c* '(60 35))      ;pitch mapping for middle c
-(defparameter *voices* '(1))            ;voices we want to convert 
+(defparameter *voices* nil)            ;voices we want to convert (nil = all voices)
 (defparameter *default-onset* 0)        ;initial onset  
 (defparameter *default-pause* 1)        ;initial pause off
 
@@ -337,9 +337,10 @@
                                                 (count 1))
   "Sends each spine in a list to be processed individually according to its
    type and conses the results together." 
+  (print (list "process-spines-according-to-type" count))
   (let ((spine (car spines)))
     (cond ((null spines) '())
-          ((member count voices)
+          ((or (null voices) (member count voices))
            (cond ((kern-spine-p spine)
                   (cons (process-kern-spine (cdr spine))
                         (process-spines-according-to-type (cdr spines)
