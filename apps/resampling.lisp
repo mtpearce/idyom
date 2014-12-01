@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-11-24 20:01:08 marcusp>                           
+;;;; Time-stamp: <2014-12-01 18:43:52 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -90,7 +90,9 @@
                (test-set (monodies-to-lists (get-test-set dataset resampling-set)))
                (ltms (get-long-term-models sources training-set
                                            pretraining-ids dataset-id
-                                           resampling-id k use-ltms-cache?))
+                                           resampling-id k 
+                                           voices texture
+                                           use-ltms-cache?))
                (mvs (make-mvs targets sources ltms))
                (predictions
                 (mvs:model-dataset mvs test-set :construct? t :predict? t)))
@@ -226,7 +228,7 @@ dataset-id)."
                                            dataset-id
                                            composition-id)))
                       ;; TODO - this needs to be specific to each type of music-object (music-event, music-slice etc.)
-                      (dolist (attribute viewpoints:*basic-types*) 
+                      (dolist (attribute viewpoints:*basic-types*)
                         (let ((value (md:get-attribute event attribute)))
                           (when (member attribute '(:dur :bioi :deltast :onset) :test #'eq)
                             (setf value (* value (/ timebase 96))))
@@ -280,7 +282,9 @@ dataset-id)."
 
 (defun get-long-term-models (viewpoints training-set pretraining-ids
                              training-id resampling-id
-                             resampling-count use-cache?)
+                             resampling-count 
+                             voices texture
+                             use-cache?)
   "Returns a vector of long-term models -- one for each viewpoint in
 <viewpoints> -- trained on <training-set> and initialised with the
 supplied keyword parameters. If <use-cache?> is T, models are written
@@ -292,7 +296,8 @@ anew each time."
                  (let ((filename
                         (get-model-filename viewpoint pretraining-ids
                                             training-id resampling-id
-                                            resampling-count))
+                                            resampling-count 
+                                            voices texture))
                        (training-set
                         (viewpoint-sequences viewpoint training-set))
                        (alphabet (viewpoint-alphabet viewpoint)))
@@ -305,7 +310,7 @@ anew each time."
     (mapcar constructor-fun viewpoints)))
 
 (defun get-model-filename (viewpoint pretraining-ids training-id resampling-id
-                           resampling-count)
+                           resampling-count voices texture)
   "Returns the filename in *model-directory* containing the ppm model
 for <viewpoint> in <dataset-id>."
   (string-append (namestring *model-dir*)
@@ -328,6 +333,8 @@ for <viewpoint> in <dataset-id>."
                                               (1+ resampling-id)
                                               resampling-id)
                                 resampling-count)))
+                 (format nil "_~(~A~)" texture)
+                 (format nil "~{-~A~}" voices)
                  ".ppm"))
 
 
