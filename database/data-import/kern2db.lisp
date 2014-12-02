@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-12-02 15:05:16 marcusp>                           
+;;;; Time-stamp: <2014-12-02 15:06:50 marcusp>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -337,7 +337,6 @@
                                                 (count 1))
   "Sends each spine in a list to be processed individually according to its
    type and conses the results together." 
-  (print (list "process-spines-according-to-type" count))
   (let ((spine (car spines)))
     (cond ((null spines) '())
           ((or (null voices) (member count voices))
