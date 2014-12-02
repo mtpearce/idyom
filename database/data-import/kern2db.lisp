@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-12-02 15:01:34 marcusp>                           
+;;;; Time-stamp: <2014-12-02 15:05:16 marcusp>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -614,9 +614,10 @@
   "Process a voice token."
   (let* ((spine-id (cadr (assoc 'spine-id environment)))
          (voice-entry (assoc spine-id *voice-alist* :test #'=)))
-    (setf *voice-alist*
-          (update-alist *voice-alist* 
-                        (list spine-id (cons voice-token (cadr voice-entry)))))
+    (unless (member voice-token (cadr voice-entry) :test #'string=)
+      (setf *voice-alist*
+            (update-alist *voice-alist* 
+                          (list spine-id (cons voice-token (cadr voice-entry))))))
     spine-id))
 
 (defun keysig (keysig-token &optional environment)
