@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-12-01 17:37:11 marcusp>                           
+;;;; Time-stamp: <2014-12-02 15:01:34 marcusp>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -342,7 +342,7 @@
     (cond ((null spines) '())
           ((or (null voices) (member count voices))
            (cond ((kern-spine-p spine)
-                  (cons (process-kern-spine (cdr spine))
+                  (cons (process-kern-spine (cdr spine) count)
                         (process-spines-according-to-type (cdr spines)
                                                           voices
                                                           (1+ count))))
@@ -366,7 +366,7 @@
                    :test #'string=))
       (push representation *unrecognised-representations*)))
 
-(defun process-kern-spine (spine)
+(defun process-kern-spine (spine spine-id)
   "Converts kern spines into CHARM readable format."
   (let ((environment-alist
          (list (list 'onset *default-onset*)
@@ -379,6 +379,7 @@
                (list 'tempo *default-tempo*)
                (list 'correct-onsets *default-onset*)
                (list 'deltast *default-onset*)
+               (list 'spine-id spine-id)
                (list 'phrase 0)
                (list 'voice 1))))
     (process-kern-tokens spine '() environment-alist)))
@@ -610,16 +611,13 @@
   (cadr (assoc 'onset environment)))
 
 (defun voice (voice-token &optional environment)
-  "Process an voice token."
-  (declare (ignore environment))
-  (let ((voice-entry (assoc voice-token *voice-alist*
-                                  :test #'string=)))
-    (if (null voice-entry)
-        (setf *voice-alist*
-              (update-alist *voice-alist* 
-                            (list voice-token
-                                  (+ (length *voice-alist*) 1)))))
-    (cadr (assoc voice-token *voice-alist* :test #'string=))))
+  "Process a voice token."
+  (let* ((spine-id (cadr (assoc 'spine-id environment)))
+         (voice-entry (assoc spine-id *voice-alist* :test #'=)))
+    (setf *voice-alist*
+          (update-alist *voice-alist* 
+                        (list spine-id (cons voice-token (cadr voice-entry)))))
+    spine-id))
 
 (defun keysig (keysig-token &optional environment)
   "Process a key signature token."
