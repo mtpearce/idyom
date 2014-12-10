@@ -2,7 +2,7 @@
 ;;;; File:       apps.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2005-11-27 16:27:35 marcusp>
-;;;; Time-stamp: <2014-11-24 19:45:03 marcusp>
+;;;; Time-stamp: <2014-12-09 15:38:54 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:apps) 
@@ -29,9 +29,10 @@
 ;;; A way of generating filenames to store results, cached data etc.
 (defun dataset-modelling-filename (dataset-id basic-attributes attributes
                                    &key (extension "")
-                                   pretraining-ids (k 10) (models :both+)
-                                   resampling-indices
-				   (ltmo mvs::*ltm-params*) (stmo mvs::*stm-params*))
+                                     pretraining-ids (k 10) (models :both+)
+                                     resampling-indices
+                                     (texture :melody) voices
+                                     (ltmo mvs::*ltm-params*) (stmo mvs::*stm-params*))
   (labels ((format-list (list token)
              (when list
                (let ((flist (format nil (format nil "~~{~~A~A~~}" token) (flatten-links list))))
@@ -45,6 +46,7 @@
                                  (format-list attributes "_")
                                  (format-list pretraining-ids "_")
                                  (format-list resampling-indices "_")
+                                 texture (format-list voices "_")
                                  k models
 				 (getf ltmo :order-bound) (getf ltmo :mixtures)
 				 (getf ltmo :update-exclusion) (getf ltmo :escape)

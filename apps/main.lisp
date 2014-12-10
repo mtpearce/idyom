@@ -2,7 +2,7 @@
 ;;;; File:       main.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2010-11-01 15:19:57 marcusp>
-;;;; Time-stamp: <2014-11-24 19:44:38 marcusp>
+;;;; Time-stamp: <2014-12-09 15:44:09 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:idyom)
@@ -90,6 +90,7 @@
                       dataset-id target-viewpoints viewpoint-systems
                       :dp dp :pretraining-ids pretraining-ids
                       :k k :resampling-indices resampling-indices
+                      :texture texture :voices voices
                       :models models :ltmo ltmo :stmo stmo)))
       (setf source-viewpoints selected)))
   ;; Derive target viewpoint IC profile from source viewpoints

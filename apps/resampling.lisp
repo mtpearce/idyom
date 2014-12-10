@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-12-01 18:45:08 marcusp>                           
+;;;; Time-stamp: <2014-12-09 15:39:23 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -78,6 +78,7 @@
                                                     :extension ".dat"
                                                     :pretraining-ids pretraining-ids
                                                     :k k :resampling-indices resampling-indices
+                                                    :texture texture :voices voices
                                                     :models models :ltmo ltmo :stmo stmo))
          ;; the result
          (sequence-predictions))

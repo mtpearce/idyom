@@ -2,7 +2,7 @@
 ;;;; File:       viewpoint-selection.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-10-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-07-17 15:15:25 marcusp>                           
+;;;; Time-stamp: <2014-12-09 15:40:58 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoint-selection)
@@ -13,14 +13,16 @@
 
 (defun dataset-viewpoint-selection (dataset-id basic-attributes attributes
                                     &key pretraining-ids (k 10) resampling-indices (models :both+) 
-				    (ltmo mvs::*ltm-params*) (stmo mvs::*stm-params*)
-				    (dp nil) ; decimal-places of interest
-				    (method :hill-climber)) ; search method: best-first or hill-climber
+                                      (ltmo mvs::*ltm-params*) (stmo mvs::*stm-params*)
+                                      (texture :melody) voices
+                                      (dp nil) ; decimal-places of interest
+                                      (method :hill-climber)) ; search method: best-first or hill-climber
   (let ((cache-filename (apps:dataset-modelling-filename dataset-id basic-attributes
                                                          nil ; we don't mind which derived viewpoints are used
                                                          :extension ".cache"
                                                          :pretraining-ids pretraining-ids
                                                          :resampling-indices resampling-indices
+                                                         :texture texture :voices voices
                                                          :k k
                                                          :models models)))
     (viewpoint-selection:initialise-vs-cache)
