@@ -1,7 +1,7 @@
 IDyOM: Information Dynamics of Music
-Version 1.1
+Version 1.2
 
-Copyright 2001-2014, Marcus Pearce (marcus.pearce@qmul.ac.uk)
+Copyright 2001-2015, Marcus Pearce (marcus.pearce@qmul.ac.uk)
 
 This program is distributed under the terms of the GNU General Public
 License.  See COPYING for details.
@@ -29,6 +29,12 @@ Sqlite     http://www.sqlite.org/
 See the wiki for further details on installation.
 
 ==News==
+
+2014-12-31
+v1.2: small enhancements including:
+* remove verbose output during data import
+* linked viewpoint creation is now agnostic to order of constituent viewpoints
+* user may omit trailing forward slash when specifying directories
 
 2014-09-27:
 v1.1: new features include:
