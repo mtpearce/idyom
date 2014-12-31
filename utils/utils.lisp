@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2014-11-24 19:47:37 marcusp>
+;;;; Time-stamp: <2014-12-31 13:16:12 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -171,6 +171,10 @@
                (find-duplicates (set-difference (rest list) matches)
                                 :test test :key key))
              (find-duplicates (rest list) :test test :key key)))))
+
+(defun rotate (list n)
+  (let ((n (mod n (length list))))
+    (append (nthcdr n list) (subseq list 0 n))))
 
 
 ;;;===========================================================================
