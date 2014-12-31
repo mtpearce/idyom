@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2014-12-31 13:16:12 marcusp>
+;;;; Time-stamp: <2014-12-31 19:21:48 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -42,6 +42,19 @@
 
 (defun quotient (x y)
   (car (multiple-value-list (truncate (/ x y)))))
+
+(defun factorial (n)
+  "Calculates the factorial of <n>." 
+  (if (= n 0) 1) (* n (factorial (- n 1))))
+
+(defun n-permutations (n r)
+  "Returns the no. of permutations of <n> different items taken <r> at a time."
+  (/ (factorial n) (factorial (- n r))))
+
+(defun n-combinations (n r)
+  "Returns the no. of combinations of <n> different items taken <r> at a time."
+  (/ (factorial n) (* (factorial r) (factorial (- n r)))))
+
 
 
 ;;;===========================================================================
@@ -176,6 +189,14 @@
   (let ((n (mod n (length list))))
     (append (nthcdr n list) (subseq list 0 n))))
 
+(defun permutations (list)
+  (if (null list) 
+      (list nil)
+      (mapcan #'(lambda (x)
+                  (mapcar #'(lambda (y) 
+                              (cons x y))
+                          (permutations (remove x list :count 1)))) 
+              list)))
 
 ;;;===========================================================================
 ;;; Nested lists
