@@ -2,7 +2,7 @@
 ;;;; File:       viewpoint-selection.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-10-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-12-09 15:40:58 marcusp>                           
+;;;; Time-stamp: <2015-02-11 15:39:55 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoint-selection)
@@ -40,7 +40,7 @@
                                                       :models models
 						      :ltmo ltmo :stmo stmo)
 				  1)))
-			(progn (format t "~&Cross-entropy for ~a is ~a" derived-attributes ic)
+			(progn (format t "~&Mean information content for ~a is ~a" derived-attributes ic)
 			       ic)))
                   (viewpoint-selection:store-vs-cache cache-filename :cl-user))))
            (selected-state

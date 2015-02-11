@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-12-09 15:39:23 marcusp>                           
+;;;; Time-stamp: <2015-02-11 15:40:31 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -35,13 +35,14 @@
                          (texture :melody)
                          (use-resampling-set-cache? t)
                          (use-ltms-cache? t))
-  "IDyOM top level: returns the average cross-entropy of a model with
-   the supplied parameters on <testing-sequence> where the long-term
-   model has been trained on <training-sequence> and both
-   <testing-sequence> and <training-sequence> are composed from
-   <alphabet>. If <models> is 'ltm only a long-term model is used,
-   else if it is 'stm only a short-term model is used and otherwise
-   both models are used and their predictions combined. The parameters
+  "IDyOM top level: returns the mean information content for
+   <dataset-id> given a model with the supplied parameters on
+   <testing-sequence> where the long-term model has been trained on
+   <training-sequence> and both <testing-sequence> and
+   <training-sequence> are composed from <alphabet>. If <models> is
+   'ltm only a long-term model is used, else if it is 'stm only a
+   short-term model is used and otherwise both models are used and
+   their predictions combined. The parameters
    <use-resampling-set-cache?> and <use-ltms-cache?> enable or disable
    respectively the caching of resampling-sets and LTMs."
   (let* (;; Check model memory parameters
