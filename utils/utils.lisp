@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2014-12-31 19:21:48 marcusp>
+;;;; Time-stamp: <2015-02-11 15:33:43 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -63,11 +63,13 @@
 
 (defun last-element (sequence)
   "Returns the last element of a sequence."
-  (elt (reverse sequence) 0))
+  (when sequence
+    (elt (reverse sequence) 0)))
 
 (defun penultimate-element (sequence) 
   "Returns the penultimate element of a sequence."
-  (elt (reverse sequence) 1))
+  (when sequence
+    (elt (reverse sequence) 1)))
 
 (defun last-n (sequence &optional (n 1))
   "Return the last n elements of a sequence."
