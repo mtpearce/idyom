@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2015-01-27 13:28:43 marcusp>                           
+;;;; Time-stamp: <2015-02-18 09:54:50 marcusp>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -521,7 +521,18 @@
   (update-alist note1 
                 (list :dur (+ (cadr (assoc :dur note1))
                               (cadr (assoc :dur note2))))
-                (list :phrase (cadr (assoc :phrase note2)))))
+                (list :phrase 
+                      (let ((p1 (cadr (assoc :phrase note1)))
+                            (p2 (cadr (assoc :phrase note2))))
+                        (cond ((and (= p1 1) (= p2 0))
+                               1)
+                              ((and (= p1 0) (= p2 -1))
+                               -1)
+                              ((and (= p1 0) (= p2 0))
+                               0)
+                              (t 
+                               (print "Warning: unexpected phrase token within tied note.")
+                               -1))))))
                 
 (defun update-environment (environment token type)
   "Updates and returns <environment> given a <token> of type <type>."
