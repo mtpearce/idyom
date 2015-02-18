@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2015-02-18 09:54:50 marcusp>                           
+;;;; Time-stamp: <2015-02-18 10:06:16 marcusp>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -316,7 +316,9 @@
 
 (defun process-kern-data (spine-list)
   "Converts the recorded kern data into a CHARM readable format." 
-  (setf *voices* (sort (remove-duplicates *voices* :test #'=)  #'<))
+  (if (null *voices*)
+      (setf *voices* (utils:generate-integers 1 (length spine-list)))
+      (setf *voices* (sort (remove-duplicates *voices* :test #'=)  #'<)))
   (merge-spines (process-spines-according-to-type spine-list)))
 
 (defun merge-spines (spine-list &optional (sort-type :onset))
