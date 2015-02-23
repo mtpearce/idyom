@@ -2,7 +2,7 @@
 ;;;; File:       main.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2010-11-01 15:19:57 marcusp>
-;;;; Time-stamp: <2014-12-09 15:44:09 marcusp>
+;;;; Time-stamp: <2015-02-23 16:53:13 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:idyom)
@@ -58,7 +58,7 @@
                 (ltmo mvs::*ltm-params*) (stmo mvs::*stm-params*)
                 ;; Viewpoint selection
                 (basis :default)
-                (dp nil) (max-links 2)
+                (dp nil) (max-links 2) (min-links 2)
                 (vp-white '(:any))
                 (vp-black nil)
                 ;; Number of voices and texture (e.g., :melody :harmony)
@@ -84,7 +84,7 @@
             models dataset-id target-viewpoints)
     (let* (; Generate candidate viewpoint systems
 	   (sel-basis (find-selection-basis target-viewpoints basis))
-	   (viewpoint-systems (generate-viewpoint-systems sel-basis max-links vp-white vp-black))
+	   (viewpoint-systems (generate-viewpoint-systems sel-basis max-links min-links vp-white vp-black))
            ; Select viewpoint system
 	   (selected (viewpoint-selection:dataset-viewpoint-selection
                       dataset-id target-viewpoints viewpoint-systems
@@ -136,10 +136,11 @@
 ;; E.g. (generate-viewpoint-systems '(:cpitch :cpint :bioi :bioi-ratio) 3 '(:pitch (:pitch :pitch :ioi)) nil)
 ;; => (:CPITCH :CPINT (:CPITCH :CPINT :BIOI-RATIO) (:CPITCH :CPINT :BIOI))
 ;;
-(defun generate-viewpoint-systems (basis-vps max-links white black)
+(defun generate-viewpoint-systems (basis-vps max-links min-links white black)
       (format t "Generating candidate viewpoints from: ~A~%Max. links ~A, whitelist ~A, blacklist ~A~%" basis-vps max-links white black)
       (let* ((links (remove-if #'(lambda (x) (or (null x) (< (length x) 2) 
-						 (> (length x) max-links)))
+						 (> (length x) max-links)
+                                                 (< (length x) min-links)))
 			       (utils:powerset basis-vps)))
 	     (slinks (sort links #'(lambda (x y) (< (length x) (length y)))))
 	     (candidates (append basis-vps slinks))
