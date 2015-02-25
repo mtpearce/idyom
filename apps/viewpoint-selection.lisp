@@ -2,7 +2,7 @@
 ;;;; File:       viewpoint-selection.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-10-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2015-02-11 15:39:55 marcusp>                           
+;;;; Time-stamp: <2015-02-24 11:48:58 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoint-selection)
@@ -31,7 +31,7 @@
             #'(lambda (derived-attributes)
                 (prog1
                     (when (verify-viewpoint-system basic-attributes derived-attributes)
-		      (format t "~&Evaluating ~a ..." derived-attributes)
+		      ;;(format t "~&Evaluating ~a ..." derived-attributes)
                       (let* ((ic (resampling:output-information-content  
 				  (resampling:idyom-resample dataset-id basic-attributes derived-attributes                                              
                                                       :pretraining-ids pretraining-ids
@@ -40,7 +40,7 @@
                                                       :models models
 						      :ltmo ltmo :stmo stmo)
 				  1)))
-			(progn (format t "~&Mean information content for ~a is ~a" derived-attributes ic)
+			(progn (format t "~&Mean information content for ~a~&is ~a" derived-attributes ic)
 			       ic)))
                   (viewpoint-selection:store-vs-cache cache-filename :cl-user))))
            (selected-state
@@ -297,4 +297,4 @@
   (format t "~&   ~A ~1,73T    ~A" (record-state record) (record-weight record)))
 
 (defun print-record2 (record)
-  (format t "~&~%Selected system ~A, mean IC = ~A~%" (record-state record) (record-weight record)))
+  (format t "~&~%Selected system ~A, ~&mean IC = ~A~%~%" (record-state record) (record-weight record)))
