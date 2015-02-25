@@ -2,7 +2,7 @@
 ;;;; File:       main.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2010-11-01 15:19:57 marcusp>
-;;;; Time-stamp: <2015-02-23 16:53:13 marcusp>
+;;;; Time-stamp: <2015-02-24 11:52:24 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:idyom)
@@ -27,7 +27,7 @@
     ))
 
 (defvar *cpitch-viewpoints-short*
-  '(:cpitch :cpitch-class :cpint :cpint-size :contour :newcontour))
+  '(:cpitch :cpint :contour :cpintfref))
 
 (defvar *bioi-viewpoints*
   '(:bioi           ; inter-onset interval
