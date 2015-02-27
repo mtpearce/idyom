@@ -2,11 +2,12 @@
 ;;;; File:       import-script.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2008-11-03 11:24:51 marcusp>
-;;;; Time-stamp: <2015-02-27 11:37:18 marcusp>
+;;;; Time-stamp: <2015-02-27 11:39:58 marcusp>
 ;;;; ======================================================================
 
-;; This is the script I use to import data into the amuse-mtp
-;; backend. It is not supposed to be general purpose.
+;; This is the script I use to import data into the database. It is
+;; not intended to be general purpose but is provided as an
+;; illustrative example.
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defvar *datasets* '())
