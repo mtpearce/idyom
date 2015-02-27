@@ -2,7 +2,7 @@
 ;;;; File:       tobias2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2007-04-19 11:15:57 marcusp>
-;;;; Time-stamp: <2014-06-04 16:07:49 marcusp>
+;;;; Time-stamp: <2015-02-27 11:35:42 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:tobias2db) 
@@ -12,7 +12,7 @@
 (defvar *middle-c* 60 "Chromatic integer mapping for c_4")
 
 (defmethod import-data ((type (eql :tobias)) path description id)
-  (mtp-admin:insert-dataset (tobias2db path description) id))
+  (database:insert-dataset (tobias2db path description) id))
 
 (defun tobias2db (path description) 
   (let ((data (get-data path)))

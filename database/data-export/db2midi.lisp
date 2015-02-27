@@ -2,7 +2,7 @@
 ;;;; File:       db2midi.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2005-06-09 11:01:51 marcusp>
-;;;; Time-stamp: <2014-07-17 20:30:12 marcusp>
+;;;; Time-stamp: <2015-02-27 11:34:42 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:db2midi)
@@ -15,24 +15,24 @@
 (defvar *default-velocity* 100)
 (defvar *default-program* 0)
 
-(defmethod export-data ((d mtp-admin:mtp-dataset) (type (eql :mid)) path)
-  (let ((*timebase* (mtp-admin::dataset-timebase d))
-        (*midc*     (mtp-admin::dataset-midc d)))
-    (dolist (c (mtp-admin::dataset-compositions d))
+(defmethod export-data ((d database:mtp-dataset) (type (eql :mid)) path)
+  (let ((*timebase* (database::dataset-timebase d))
+        (*midc*     (database::dataset-midc d)))
+    (dolist (c (database::dataset-compositions d))
       (export-data c type path))))
 
-(defmethod export-data ((c mtp-admin:mtp-composition) (type (eql :mid)) path)
+(defmethod export-data ((c database:mtp-composition) (type (eql :mid)) path)
   ;; FIXME: *midc* is never set if export-data is called with a
   ;; composition directly.
-  (let* ((title (mtp-admin::composition-description c))
+  (let* ((title (database::composition-description c))
          (file (concatenate 'string path "/" title ".mid"))
-         (*timebase* (mtp-admin::composition-timebase c)))
-    (events->midi (mtp-admin::composition-events c) file)))
+         (*timebase* (database::composition-timebase c)))
+    (events->midi (database::composition-events c) file)))
 
 (defmethod export-data ((event-list list) (type (eql :mid)) path)
   (let* ((first-event (car event-list))
 	 (first-id (identifier first-event))
-         (title (mtp-admin:get-description (dataset-id first-id)
+         (title (database:get-description (dataset-id first-id)
 					   (composition-id first-id)))
          (file (concatenate 'string path "/" title ".mid")))
     (events->midi event-list file)))
@@ -41,13 +41,13 @@
   (floor (* 1000000 (/ 60 bpm))))
 
 (defun event-lists->midi (event-lists file &key (format 1) (program *default-program*))
-  (let* ((tempo (mtp-admin:get-attribute (car (car event-lists)) :tempo))
+  (let* ((tempo (database:get-attribute (car (car event-lists)) :tempo))
          (tempo-msg (make-instance 'midi:tempo-message :time 0
                                    :status #xff
                                    :tempo (bpm->usecs 
                                            (if tempo tempo *default-tempo*))))
          (tracks (mapcar #'(lambda (x) 
-                             (let* ((channel (mtp-admin:get-attribute (car x) :voice))
+                             (let* ((channel (database:get-attribute (car x) :voice))
                                     (channel-msg (make-instance 'midi:program-change-message :time 0 
                                                                 :status (+ #xc0 channel) 
                                                                 :program program)))
@@ -61,11 +61,11 @@
     (midi:write-midi-file midifile file)))
 
 (defun events->midi (events file &key (format 1) (program *default-program*))
-  (let* ((channel (mtp-admin:get-attribute (car events) :voice))
+  (let* ((channel (database:get-attribute (car events) :voice))
          (channel-msg (make-instance 'midi:program-change-message :time 0 
                                      :status (+ #xc0 channel) 
                                      :program program))
-         (tempo (mtp-admin:get-attribute (car events) :tempo))
+         (tempo (database:get-attribute (car events) :tempo))
          (tempo-msg (make-instance 'midi:tempo-message :time 0
                                    :status #xff
                                    :tempo (bpm->usecs 
@@ -81,12 +81,12 @@
     midifile))
 
 (defun event->midi (event)
-  (let* ((non-onset (mtp-admin:get-attribute event :onset))
-         (noff-onset (+ non-onset (mtp-admin:get-attribute event :dur)))
-         (channel (mtp-admin:get-attribute event :voice))
+  (let* ((non-onset (database:get-attribute event :onset))
+         (noff-onset (+ non-onset (database:get-attribute event :dur)))
+         (channel (database:get-attribute event :voice))
          (keynum  (round (+ (- 60 *midc*)
-                            (mtp-admin:get-attribute event :cpitch))))
-         (velocity (mtp-admin:get-attribute event :dyn)))
+                            (database:get-attribute event :cpitch))))
+         (velocity (database:get-attribute event :dyn)))
     (list (make-instance 'midi:note-on-message
                          :time (* non-onset *tick-multiplier*)
                          :status (+ #x90 channel)

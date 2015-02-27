@@ -2,10 +2,10 @@
 ;;;; File:       generics.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2004-10-28 11:56:59 marcusp>
-;;;; Time-stamp: <2014-06-04 16:06:55 marcusp>
+;;;; Time-stamp: <2015-02-27 11:17:20 marcusp>
 ;;;; ======================================================================
 
-(cl:in-package #:mtp-admin)
+(cl:in-package #:database)
 
 (defgeneric export-data (object type path))
 (defgeneric import-data (type path description id))

@@ -2,7 +2,7 @@
 ;;;; File:       midi2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2007-03-21 09:47:26 marcusp>
-;;;; Time-stamp: <2014-05-09 18:43:27 marcusp>
+;;;; Time-stamp: <2015-02-27 11:35:36 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:midi2db) 
@@ -12,7 +12,7 @@
 (defvar *default-midifile-extension* "mid")
 
 (defmethod import-data ((type (eql :mid)) path description id)
-  (mtp-admin:insert-dataset (midi2db path description) id))
+  (database:insert-dataset (midi2db path description) id))
 
 (defun midi2db (path description) 
   (let ((data (get-data path)))

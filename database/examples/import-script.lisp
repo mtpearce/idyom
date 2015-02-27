@@ -2,7 +2,7 @@
 ;;;; File:       import-script.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2008-11-03 11:24:51 marcusp>
-;;;; Time-stamp: <2014-06-04 16:07:23 marcusp>
+;;;; Time-stamp: <2015-02-27 11:37:18 marcusp>
 ;;;; ======================================================================
 
 ;; This is the script I use to import data into the amuse-mtp
@@ -146,13 +146,13 @@
 ;;  :mid)
 
 (defun populate-database ()
-  (mtp-admin:initialise-database)
+  (database:initialise-database)
   (let ((dataset-id 0))
     (mapc #'(lambda (d)
               (let ((path (first d))
                     (description (second d))
                     (type (third d)))
-                (mtp-admin:import-data type path description dataset-id)
+                (database:import-data type path description dataset-id)
                 (incf dataset-id)))
           (reverse *datasets*))
     ;(import-bass-arias dataset-id)
@@ -162,7 +162,7 @@
 (defun import-bass-arias (id)
   (let* ((base-dir "/home/marcusp/research/projects/vostroost/data/Arias/")
          (data-dir (concatenate 'string base-dir "Bass/"))
-         (filenames (mtp-admin::read-object-from-file 
+         (filenames (database::read-object-from-file 
                      (concatenate 'string base-dir "bass-arias.lisp")))
          (header (list "Bass arias from Bach's cantatas." 96 60)))
     (%import-arias id data-dir filenames header)))
@@ -170,7 +170,7 @@
 (defun import-soprano-arias (id)
   (let* ((base-dir "/home/marcusp/research/projects/vostroost/data/Arias/")
          (data-dir (concatenate 'string base-dir "Soprano/"))
-         (filenames (mtp-admin::read-object-from-file 
+         (filenames (database::read-object-from-file 
                      (concatenate 'string base-dir "soprano-arias.lisp")))
          (header (list "Soprano arias from Bach's cantatas." 96 60)))
     (%import-arias id data-dir filenames header)))
@@ -183,4 +183,4 @@
              (filepath (concatenate 'string data-dir filename))
              (kern2db::*voices* (list spine)))
         (push (fourth (kern2db::kern2db filepath f)) data)))
-    (mtp-admin:insert-dataset (append header (reverse data)) id)))
+    (database:insert-dataset (append header (reverse data)) id)))

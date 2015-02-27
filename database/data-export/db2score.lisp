@@ -2,7 +2,7 @@
 ;;;; File:       db2score.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2005-11-25 17:08:20 marcusp>
-;;;; Time-stamp: <2014-07-17 14:50:39 marcusp>
+;;;; Time-stamp: <2015-02-27 11:34:59 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:db2lilypond) 
@@ -12,11 +12,11 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
 (defmacro define-lilypond-exporter (format backend)
   `(progn 
-    (defmethod export-data ((d mtp-admin:mtp-dataset) (type (eql ,format)) path)
-      (dolist (c (mtp-admin::dataset-compositions d))
+    (defmethod export-data ((d database:mtp-dataset) (type (eql ,format)) path)
+      (dolist (c (database::dataset-compositions d))
         (export-data c type path)))
-    (defmethod export-data ((c mtp-admin:mtp-composition) (type (eql ,format)) path)
-      (let* ((title (mtp-admin::composition-description c))
+    (defmethod export-data ((c database:mtp-composition) (type (eql ,format)) path)
+      (let* ((title (database::composition-description c))
              (ly-file (concatenate 'string path "/" title ".ly")))
         (export-data c :ly path)
         (let ((current-dir (utils:pwd))
@@ -27,7 +27,7 @@
           (utils:cd current-dir)))
       nil)
     (defmethod export-data ((event-list list) (type (eql ,format)) path)
-      (let* ((title (mtp-admin::composition-description (car event-list)))
+      (let* ((title (database::composition-description (car event-list)))
              (ly-file (concatenate 'string path "/" title ".ly")))
         (export-data event-list :ly path)
         (let ((current-dir (utils:pwd))

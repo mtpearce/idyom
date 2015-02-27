@@ -2,7 +2,7 @@
 ;;;; File:       db2cmn.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-08-17 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-07-17 18:19:40 marcusp>                           
+;;;; Time-stamp: <2015-02-27 11:34:10 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cm) 
@@ -129,37 +129,37 @@ else for minor. Returns a CM/CMN key."
 (defvar *timebase* 96)
 (defvar *midc* 6000) 
 
-(defmethod export-data ((d mtp-admin:mtp-dataset) (type (eql :cmn)) path)
-  (let ((*timebase* (mtp-admin::dataset-timebase d))
-        (*midc*     (mtp-admin::dataset-midc d)))
-    (dolist (c (mtp-admin::dataset-compositions d))
+(defmethod export-data ((d database:mtp-dataset) (type (eql :cmn)) path)
+  (let ((*timebase* (database::dataset-timebase d))
+        (*midc*     (database::dataset-midc d)))
+    (dolist (c (database::dataset-compositions d))
       (export-data c type path))))
 
-(defmethod export-data ((c mtp-admin:mtp-composition) (type (eql :cmn)) path)
-  (let* ((title (mtp-admin::composition-description c))
+(defmethod export-data ((c database:mtp-composition) (type (eql :cmn)) path)
+  (let* ((title (database::composition-description c))
          (file (concatenate 'string path "/" title ".cmn"))
-         (*timebase* (mtp-admin::composition-timebase c)))
-    (write-composition (mtp-admin::composition-events c) type file)))
+         (*timebase* (database::composition-timebase c)))
+    (write-composition (database::composition-events c) type file)))
 
 (defmethod export-data ((event-list list) (type (eql :cmn)) path)
-  (let* ((title (mtp-admin::composition-description (car event-list)))
+  (let* ((title (database::composition-description (car event-list)))
          (file (concatenate 'string path "/" title ".cmn")))
     (write-composition event-list type file)))
 
-(defmethod export-data ((d mtp-admin:mtp-dataset) (type (eql :eps)) path)
-  (let ((*timebase* (mtp-admin::dataset-timebase d))
-        (*midc*     (mtp-admin::dataset-midc d)))
-    (dolist (c (mtp-admin::dataset-compositions d))
+(defmethod export-data ((d database:mtp-dataset) (type (eql :eps)) path)
+  (let ((*timebase* (database::dataset-timebase d))
+        (*midc*     (database::dataset-midc d)))
+    (dolist (c (database::dataset-compositions d))
       (export-data c type path))))
 
-(defmethod export-data ((c mtp-admin:mtp-composition) (type (eql :eps)) path)
-  (let* ((title (mtp-admin::composition-description c))
+(defmethod export-data ((c database:mtp-composition) (type (eql :eps)) path)
+  (let* ((title (database::composition-description c))
          (file (concatenate 'string path "/" title ".eps"))
-         (*timebase* (mtp-admin::composition-timebase c)))
-    (write-composition (mtp-admin::composition-events c) type file)))
+         (*timebase* (database::composition-timebase c)))
+    (write-composition (database::composition-events c) type file)))
 
 (defmethod export-data ((event-list list) (type (eql :eps)) path)
-  (let* ((title (mtp-admin:get-attribute (car event-list) 
+  (let* ((title (database:get-attribute (car event-list) 
                                          :composition-description))
          (file (concatenate 'string path "/" title ".eps")))
     (write-composition event-list type file)))
