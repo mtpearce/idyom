@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2015-03-25 16:31:35 marcusp>                           
+;;;; Time-stamp: <2015-03-25 23:09:12 marcusp>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -99,10 +99,11 @@
 (defvar *voice-alist* '())
 (defvar *unrecognised-representations* '())
 (defvar *unrecognised-tokens* '())
+(defvar *voices* '())
 
 (defparameter *default-timebase* 96)    ;basic time units in a semibreve 
 (defparameter *middle-c* '(60 35))      ;pitch mapping for middle c
-(defparameter *voices* nil)            ;voices we want to convert (nil = all voices)
+(defparameter *spines* '(1))            ;spines that we want to convert (nil = all spines)
 (defparameter *default-onset* 0)        ;initial onset  
 (defparameter *default-pause* 1)        ;initial pause off
 
@@ -316,10 +317,10 @@
 
 (defun process-kern-data (spine-list)
   "Converts the recorded kern data into a CHARM readable format." 
-  (if (null *voices*)
+  (if (null *spines*)
       (setf *voices* (utils:generate-integers 1 (length spine-list)))
-      (setf *voices* (sort (remove-duplicates *voices* :test #'=)  #'<)))
-  (merge-spines (process-spines-according-to-type spine-list)))
+      (setf *voices* (sort (remove-duplicates *spines* :test #'=)  #'<)))
+  (merge-spines (process-spines-according-to-type spine-list *voices*)))
 
 (defun merge-spines (spine-list &optional (sort-type :onset))
   "Merges all the spines in spine-list into one dataset, sorting them
@@ -336,8 +337,7 @@
                                      #'sort-predicate)))))
     (sort-events (reverse spine-list) '())))
 
-(defun process-spines-according-to-type (spines &optional (voices *voices*)
-                                                (count 1))
+(defun process-spines-according-to-type (spines voices &optional (count 1))
   "Sends each spine in a list to be processed individually according to its
    type and conses the results together." 
   (let ((spine (car spines)))

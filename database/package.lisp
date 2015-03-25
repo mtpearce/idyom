@@ -2,7 +2,7 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                           
-;;;; Time-stamp: <2015-03-25 16:25:21 marcusp>                           
+;;;; Time-stamp: <2015-03-25 23:09:57 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -32,6 +32,7 @@
 
 (defpackage #:kern2db
   (:use #:common-lisp #:idyom-db #:cl-ppcre)
+  (:export "*SPINES*")
   (:documentation "Importing Kern data into the database."))
 
 (defpackage #:midi2db
