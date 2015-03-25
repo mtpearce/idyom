@@ -2,7 +2,7 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                           
-;;;; Time-stamp: <2015-03-25 23:09:57 marcusp>                           
+;;;; Time-stamp: <2015-03-25 23:12:41 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -43,7 +43,7 @@
   (:use #:common-lisp #:idyom-db)
   (:documentation "Import Darrell Conklin's lisp format to the database"))
 
-(defpackage #:tobias2db
+(defpackage #:text2db
   (:use #:common-lisp #:idyom-db)
   (:documentation "Import tabular pitch values where each row is a
 melody and each column a pitch into the database"))

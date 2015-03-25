@@ -1,20 +1,23 @@
 ;;;; ======================================================================
-;;;; File:       tobias2db.lisp
+;;;; File:       text2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2007-04-19 11:15:57 marcusp>
-;;;; Time-stamp: <2015-03-25 16:33:09 marcusp>
+;;;; Time-stamp: <2015-03-25 23:13:35 marcusp>
 ;;;; ======================================================================
 
-(cl:in-package #:tobias2db) 
+(cl:in-package #:text2db) 
 
 (defparameter *duration* 24)
 (defvar *timebase* 96 "Basic time units per semibreve")
 (defvar *middle-c* 60 "Chromatic integer mapping for c_4")
 
-(defmethod import-data ((type (eql :tobias)) path description id)
-  (idyom-db:insert-dataset (tobias2db path description) id))
+(defmethod import-data ((type (eql :text)) path description id)
+  (idyom-db:insert-dataset (text2db path description) id))
 
-(defun tobias2db (path description) 
+(defmethod import-data ((type (eql :txt)) path description id)
+  (idyom-db:insert-dataset (text2db path description) id))
+
+(defun text2db (path description) 
   (let ((data (get-data path)))
     (append (list description *timebase* *middle-c*) data)))
 
