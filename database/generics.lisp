@@ -2,10 +2,10 @@
 ;;;; File:       generics.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2004-10-28 11:56:59 marcusp>
-;;;; Time-stamp: <2015-02-27 11:17:20 marcusp>
+;;;; Time-stamp: <2015-03-25 16:26:15 marcusp>
 ;;;; ======================================================================
 
-(cl:in-package #:database)
+(cl:in-package #:idyom-db)
 
 (defgeneric export-data (object type path))
 (defgeneric import-data (type path description id))

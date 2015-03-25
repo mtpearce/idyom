@@ -2,7 +2,7 @@
 ;;;; File:       generation.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-08-21 18:54:17 marcusp>                           
-;;;; Time-stamp: <2015-02-27 11:37:47 marcusp>                           
+;;;; Time-stamp: <2015-03-25 16:35:37 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -225,9 +225,9 @@
             (otherwise (metropolis-sampling mvs (car test-set) iterations)))))
     ;(write-prediction-cache-to-file dataset-id attributes)
     ;(print (viewpoints:viewpoint-sequence (viewpoints:get-viewpoint 'cpitch) sequence))
-    ;(database:export-data sequence :ps "/tmp")
+    ;(idyom-db:export-data sequence :ps "/tmp")
     (when output-file-path
-      (database:export-data sequence :mid output-file-path))
+      (idyom-db:export-data sequence :mid output-file-path))
     sequence))
 
 (defun get-pretraining-set (dataset-ids)

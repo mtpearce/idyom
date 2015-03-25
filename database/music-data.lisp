@@ -2,7 +2,7 @@
 ;;;; File:       music-data.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2015-02-27 11:19:19 marcusp>                           
+;;;; Time-stamp: <2015-03-25 16:29:22 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -17,7 +17,7 @@
 ;;;;
 ;;;; ======================================================================
 
-(cl:in-package #:database)
+(cl:in-package #:idyom-db)
 
 (defclass thread-safe-db-obj (clsql-sys:standard-db-object)
   nil
@@ -487,7 +487,7 @@ a list containing the dataset-id is returned."))
 (defmethod set-attribute ((e mtp-event) attribute value)
   "Sets the value for slot <attribute> in event object <e>."
   (let* ((accessor-name (string-upcase (symbol-name attribute)))
-         (accessor-symbol (find-symbol accessor-name (find-package :database))))
+         (accessor-symbol (find-symbol accessor-name (find-package :idyom-db))))
     (setf (slot-value e accessor-symbol) value)))
 
 (defmethod get-attribute ((e mtp-event) attribute)
@@ -498,7 +498,7 @@ a list containing the dataset-id is returned."))
 	  (if (string= (subseq (reverse accessor-name) 0 2) "DI")
 	      accessor-name
 	      (concatenate 'string "EVENT-" accessor-name)))
-         (accessor-symbol (find-symbol accessor-name (find-package :database))))
+         (accessor-symbol (find-symbol accessor-name (find-package :idyom-db))))
     (funcall accessor-symbol e)))
 
 (defmethod copy-event ((l list))

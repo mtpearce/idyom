@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2015-02-27 11:35:31 marcusp>                           
+;;;; Time-stamp: <2015-03-25 16:31:35 marcusp>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -118,7 +118,7 @@
 ;;;==================
 
 (defmethod import-data ((type (eql :krn)) path description id)
-  (database:insert-dataset (kern2db path description) id))
+  (idyom-db:insert-dataset (kern2db path description) id))
 
 (defun kern2db (file-or-dir-name description
                 &key (timesig *default-timesig*)

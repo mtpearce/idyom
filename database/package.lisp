@@ -2,7 +2,7 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                           
-;;;; Time-stamp: <2015-02-27 11:33:15 marcusp>                           
+;;;; Time-stamp: <2015-03-25 16:25:21 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -11,9 +11,8 @@
 ;;; REPRESENTATION OF MUSIC OBJECTS
 ;;; ======================================================================
 
-(defpackage #:database
+(defpackage #:idyom-db
   (:use #:common-lisp #:clsql)
-  (:nicknames #:db)
   (:export "MTP-EVENT" "MTP-COMPOSITION" "MTP-DATASET"
            "CONNECT-TO-DATABASE" "INITIALISE-DATABASE"
            "IMPORT-DATA" "EXPORT-DATA" "INSERT-DATASET" "DELETE-DATASET" 
@@ -32,19 +31,19 @@
 ;;; ======================================================================
 
 (defpackage #:kern2db
-  (:use #:common-lisp #:database #:cl-ppcre)
+  (:use #:common-lisp #:idyom-db #:cl-ppcre)
   (:documentation "Importing Kern data into the database."))
 
 (defpackage #:midi2db
-  (:use #:common-lisp #:database #:midi)
+  (:use #:common-lisp #:idyom-db #:midi)
   (:documentation "Importing MIDI data into the database."))
 
 (defpackage #:conklin2db
-  (:use #:common-lisp #:database)
+  (:use #:common-lisp #:idyom-db)
   (:documentation "Import Darrell Conklin's lisp format to the database"))
 
 (defpackage #:tobias2db
-  (:use #:common-lisp #:database)
+  (:use #:common-lisp #:idyom-db)
   (:documentation "Import tabular pitch values where each row is a
 melody and each column a pitch into the database"))
 
@@ -53,15 +52,15 @@ melody and each column a pitch into the database"))
 ;;; ======================================================================
 
 (defpackage #:db2midi
-  (:use #:common-lisp #:database #:midi)
+  (:use #:common-lisp #:idyom-db #:midi)
   (:documentation "Exporting music objects as midi files."))
 
 (defpackage #:db2lilypond
-  (:use #:common-lisp #:database)
+  (:use #:common-lisp #:idyom-db)
   (:documentation "Exporting music objects as lilypond scores and
 thence to postscript and pdf."))
 
 ;; (defpackage #:db2cmn
-;;   (:use #:common-lisp #:database #:cmn #:cm)
+;;   (:use #:common-lisp #:idyom-db #:cmn #:cm)
 ;;   (:documentation "Exports data from the database in CMN format."))
 

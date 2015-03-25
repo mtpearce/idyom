@@ -2,7 +2,7 @@
 ;;;; File:       conklin2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-06-28 18:54:17 marcusp>                           
-;;;; Time-stamp: <2015-02-27 11:35:22 marcusp>                           
+;;;; Time-stamp: <2015-03-25 16:31:20 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:conklin2db)
@@ -15,7 +15,7 @@
 
 (defmethod import-data ((type (eql :conklin)) path description id)
   (setf *description* description)
-  (database:insert-dataset (conklin2db path) id))
+  (idyom-db:insert-dataset (conklin2db path) id))
 
 (defun conklin2db (input-file)
   (setf *timebase-ratio* (/ *timebase* *original-timebase*))

@@ -2,7 +2,7 @@
 ;;;; File:       db2lilypond.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2005-06-07 10:13:24 marcusp>
-;;;; Time-stamp: <2015-02-27 11:36:20 marcusp>
+;;;; Time-stamp: <2015-03-25 16:35:06 marcusp>
 ;;;; ======================================================================
 ;;;; 
 ;;;; TODO 
@@ -27,24 +27,24 @@
 (defvar *new-timesig* 0)
 (defvar *tuplet* nil)
 
-(defmethod export-data ((d database:mtp-dataset) (type (eql :ly)) path)
-  (let ((*timebase* (database::dataset-timebase d))
-        (*midc*     (database::dataset-midc d)))
-    (dolist (c (database::dataset-compositions d))
+(defmethod export-data ((d idyom-db:mtp-dataset) (type (eql :ly)) path)
+  (let ((*timebase* (idyom-db::dataset-timebase d))
+        (*midc*     (idyom-db::dataset-midc d)))
+    (dolist (c (idyom-db::dataset-compositions d))
       (export-data c type path))))
 
-(defmethod export-data ((c database:mtp-composition) (type (eql :ly)) path)
+(defmethod export-data ((c idyom-db:mtp-composition) (type (eql :ly)) path)
   ;; FIXME: *midc* is never set if export-data is called with a
   ;; composition directly.
-  (let* ((title (database::composition-description c))
+  (let* ((title (idyom-db::composition-description c))
          (file (concatenate 'string path "/" title ".ly"))
-         (*timebase* (database::composition-timebase c)))
+         (*timebase* (idyom-db::composition-timebase c)))
     (with-open-file (s file :direction :output :if-exists :supersede 
                        :if-does-not-exist :create)
-      (write-composition s (database::composition-events c) title))))
+      (write-composition s (idyom-db::composition-events c) title))))
 
 (defmethod export-data ((event-list list) (type (eql :ly)) path)
-  (let* ((title (database::composition-description (car event-list)))
+  (let* ((title (idyom-db::composition-description (car event-list)))
          (file (concatenate 'string path "/" title ".ly")))
     (with-open-file (s file :direction :output :if-exists :supersede 
                        :if-does-not-exist :create)
@@ -72,8 +72,8 @@
          (*current-mode* nil)
          (*tuplet* nil)
          (*new-timesig* 0)
-         (onset1 (database:get-attribute (car events) :onset))
-         (barlength1 (database:get-attribute (car events) :barlength))
+         (onset1 (idyom-db:get-attribute (car events) :onset))
+         (barlength1 (idyom-db:get-attribute (car events) :barlength))
          (write-rest? nil))
     (when (> onset1 0)
       (format s "~&  \\partial ~A~%" ; FIXME: Fails when (- 96 (mod 1092 96)). 
@@ -91,9 +91,9 @@
     (format s "~&  \\bar \"|.\"~%")))
   
 (defun tied-p (event)
-  (let* ((onset (database:get-attribute event :onset))
-         (note-off  (+ onset (database:get-attribute event :dur)))
-         (barlength (database:get-attribute event :barlength))
+  (let* ((onset (idyom-db:get-attribute event :onset))
+         (note-off  (+ onset (idyom-db:get-attribute event :dur)))
+         (barlength (idyom-db:get-attribute event :barlength))
          (barlength (if (null barlength) *default-barlength* barlength))
          (nbars (floor (- onset *new-timesig*) barlength))
          (barline (+ (* (1+ nbars) barlength) *new-timesig*)))
@@ -101,19 +101,19 @@
       t)))
 
 (defun split-tied-event (event)
-  (let* ((onset (database:get-attribute event :onset))
-         (note-off  (+ onset (database:get-attribute event :dur)))
-         (barlength (database:get-attribute event :barlength))
+  (let* ((onset (idyom-db:get-attribute event :onset))
+         (note-off  (+ onset (idyom-db:get-attribute event :dur)))
+         (barlength (idyom-db:get-attribute event :barlength))
          (barline (+ (* (1+ (floor (- onset *new-timesig*) barlength)) barlength)
                      *new-timesig*))
-         (e1 (database:copy-event event))
-         (e2 (database:copy-event event)))
-    (database:set-attribute e1 :dur (- barline onset))
-    (database:set-attribute e2 :deltast 0)
-    (database:set-attribute e2 :onset barline)
-    (database:set-attribute e2 :dur (- note-off barline))
-    (when (= (database:get-attribute event :phrase) -1)
-      (database:set-attribute e1 :phrase 0))
+         (e1 (idyom-db:copy-event event))
+         (e2 (idyom-db:copy-event event)))
+    (idyom-db:set-attribute e1 :dur (- barline onset))
+    (idyom-db:set-attribute e2 :deltast 0)
+    (idyom-db:set-attribute e2 :onset barline)
+    (idyom-db:set-attribute e2 :dur (- note-off barline))
+    (when (= (idyom-db:get-attribute event :phrase) -1)
+      (idyom-db:set-attribute e1 :phrase 0))
     (values e1 e2)))
 
 (defun write-event (s event &optional (write-rest? t))
@@ -122,15 +122,15 @@
       (write-string "  " s))
   (when (keysig-change-p event)
     (write-keysig s event)
-    (setf *current-keysig* (database:get-attribute event :keysig)
-          *current-mode*   (database:get-attribute event :mode)))
+    (setf *current-keysig* (idyom-db:get-attribute event :keysig)
+          *current-mode*   (idyom-db:get-attribute event :mode)))
   (when (timesig-change-p event)
     (write-timesig s event)
-    (setf *current-pulses*      (database:get-attribute event :pulses)
-          *current-barlength*   (database:get-attribute event :barlength))
+    (setf *current-pulses*      (idyom-db:get-attribute event :pulses)
+          *current-barlength*   (idyom-db:get-attribute event :barlength))
     (when write-rest?
-      (setf *new-timesig*         (database:get-attribute event :onset))))
-  (let* ((dur (database:get-attribute event :dur))
+      (setf *new-timesig*         (idyom-db:get-attribute event :onset))))
+  (let* ((dur (idyom-db:get-attribute event :dur))
          (durations (get-duration dur)))
     (cond ((and (triplet-p dur) (null *tuplet*))
            (format s "~&  \\set tupletSpannerDuration = #(ly:make-moment 1 ~A)~%"
@@ -143,24 +143,24 @@
            (setf *tuplet* nil)))
     (dolist (d durations)
       (write-note s event d))
-    (when (= (database:get-attribute event :phrase) -1)
+    (when (= (idyom-db:get-attribute event :phrase) -1)
       (write-string "\\fermata" s))))
 
 (defun timesig-change-p (event)
-  (not (and (eql (database:get-attribute event :pulses) *current-pulses*)
-            (eql (database:get-attribute event :barlength) *current-barlength*))))
+  (not (and (eql (idyom-db:get-attribute event :pulses) *current-pulses*)
+            (eql (idyom-db:get-attribute event :barlength) *current-barlength*))))
 
 (defun keysig-change-p (event)
-  (not (and (eql (database:get-attribute event :keysig) *current-keysig*)
-            (eql (database:get-attribute event :mode) *current-mode*))))
+  (not (and (eql (idyom-db:get-attribute event :keysig) *current-keysig*)
+            (eql (idyom-db:get-attribute event :mode) *current-mode*))))
 
 (defun write-note (s event duration)
   (multiple-value-bind (octave pitch-class)
-      (floor (round (- (database:get-attribute event :cpitch)
+      (floor (round (- (idyom-db:get-attribute event :cpitch)
                        (- *midc* 12)))
              12)
     (let* ((octave-token (if (plusp octave) "'" ","))
-           (pitches (if (< (database:get-attribute event :keysig) 0)
+           (pitches (if (< (idyom-db:get-attribute event :keysig) 0)
                         '("c" "df" "d" "ef" "e" "f" "gf" "g" "af" "a" "bf" "b")
                         '("c" "cs" "d" "ds" "e" "f" "fs" "g" "gs" "a" "as" "b")))
            (pitch (nth pitch-class pitches)))
@@ -170,7 +170,7 @@
       (write-string duration s))))
 
 (defun write-rest (s event)
-  (let ((deltast (database:get-attribute event :deltast)))
+  (let ((deltast (idyom-db:get-attribute event :deltast)))
     (when (> deltast 0)
       (dolist (d (get-duration deltast))
         (format s "r~A " d)))))
@@ -227,13 +227,13 @@
   (standard-duration-p (/ *timebase* (/ (* dur 3) 2))))
 
 (defun write-timesig (s event)
-  (let ((pulses (database:get-attribute event :pulses))
-        (barlength (database:get-attribute event :barlength)))
+  (let ((pulses (idyom-db:get-attribute event :pulses))
+        (barlength (idyom-db:get-attribute event :barlength)))
     (format s "~&  \\time ~A/~A~%" pulses (/ *timebase* (/ barlength pulses)))))
 
 (defun write-keysig (s event) 
-  (let ((keysig (database:get-attribute event :keysig))
-        (mode (database:get-attribute event :mode)))
+  (let ((keysig (idyom-db:get-attribute event :keysig))
+        (mode (idyom-db:get-attribute event :mode)))
     (format s "~&  \\key ~A ~A~%" 
             (sharps->key keysig mode)
             (case mode (0 "\\major") (9 "\\minor")))))

@@ -2,7 +2,7 @@
 ;;;; File:       import-script.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2008-11-03 11:24:51 marcusp>
-;;;; Time-stamp: <2015-02-27 11:39:58 marcusp>
+;;;; Time-stamp: <2015-03-25 16:31:05 marcusp>
 ;;;; ======================================================================
 
 ;; This is the script I use to import data into the database. It is
@@ -147,13 +147,13 @@
 ;;  :mid)
 
 (defun populate-database ()
-  (database:initialise-database)
+  (idyom-db:initialise-database)
   (let ((dataset-id 0))
     (mapc #'(lambda (d)
               (let ((path (first d))
                     (description (second d))
                     (type (third d)))
-                (database:import-data type path description dataset-id)
+                (idyom-db:import-data type path description dataset-id)
                 (incf dataset-id)))
           (reverse *datasets*))
     ;(import-bass-arias dataset-id)
@@ -163,7 +163,7 @@
 (defun import-bass-arias (id)
   (let* ((base-dir "/home/marcusp/research/projects/vostroost/data/Arias/")
          (data-dir (concatenate 'string base-dir "Bass/"))
-         (filenames (database::read-object-from-file 
+         (filenames (idyom-db::read-object-from-file 
                      (concatenate 'string base-dir "bass-arias.lisp")))
          (header (list "Bass arias from Bach's cantatas." 96 60)))
     (%import-arias id data-dir filenames header)))
@@ -171,7 +171,7 @@
 (defun import-soprano-arias (id)
   (let* ((base-dir "/home/marcusp/research/projects/vostroost/data/Arias/")
          (data-dir (concatenate 'string base-dir "Soprano/"))
-         (filenames (database::read-object-from-file 
+         (filenames (idyom-db::read-object-from-file 
                      (concatenate 'string base-dir "soprano-arias.lisp")))
          (header (list "Soprano arias from Bach's cantatas." 96 60)))
     (%import-arias id data-dir filenames header)))
@@ -184,4 +184,4 @@
              (filepath (concatenate 'string data-dir filename))
              (kern2db::*voices* (list spine)))
         (push (fourth (kern2db::kern2db filepath f)) data)))
-    (database:insert-dataset (append header (reverse data)) id)))
+    (idyom-db:insert-dataset (append header (reverse data)) id)))
