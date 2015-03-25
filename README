@@ -1,5 +1,5 @@
 IDyOM: Information Dynamics of Music
-Version 1.2
+Version 1.3
 
 Copyright 2001-2015, Marcus Pearce (marcus.pearce@qmul.ac.uk)
 
@@ -29,6 +29,16 @@ Sqlite     http://www.sqlite.org/
 See the wiki for further details on installation.
 
 ==News==
+
+2015-03-25
+v1.3: new features and enhancements include:
+* package mtp-admin renamed to idyom-db
+* clearer printing of information during viewpoint selection
+* add min-links to allow specifying a minimum number of constituent viewpoints in a link
+* improvements to handling of voices/spines in Kern import
+* ensure that phrase boundaries are correct before tied notes in Kern import
+* fix last-element and penultimate-element for empty sequences
+* add utility functions for permutations and rotation
 
 2014-12-31
 v1.2: small enhancements including:
