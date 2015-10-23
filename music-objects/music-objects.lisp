@@ -1,4 +1,5 @@
 ;;;; ======================================================================
+
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
@@ -48,6 +49,8 @@
 (defclass music-composition (music-sequence) ())                        ; a composition is an unconstrained sequence of music objects
 (defclass melodic-sequence (music-sequence) ())                         ; a sequence of non-overlapping notes
 (defclass harmonic-sequence (music-sequence) ())                        ; a sequence of harmonic slices
+(defclass grid-sequence (music-sequence)                                ; a sequence of grid events
+  ((resolution :initarg :resolution :accessor resolution)))
 
 (defclass key-signature ()
   ((keysig :initarg :keysig :accessor key-signature)
@@ -81,6 +84,11 @@
    (articulation :initarg :articulation :accessor articulation)
    (voice :initarg :voice :accessor voice)))
 
+(defclass grid-event (music-element)
+  ((isonset :initarg :isonset :accessor isonset)
+   (pos :initarg :pos :accessor pos)
+   (etime :initarg :etime :accessor etime)
+   (cpitch :initarg :cpitch :accessor chromatic-pitch))) ; cpitch is NIL when the event isn't an onset
 
 ;;; Identifiers 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -194,7 +202,8 @@
 ;;; Getting music objects from the database
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun get-music-objects (dataset-indices composition-indices &key voices (texture :melody))
+(defun get-music-objects (dataset-indices composition-indices 
+			  &key voices (texture :melody) (resolution 16))
   "Return music objects from the database corresponding to
   DATASET-INDICES, COMPOSITION-INDICES which may be single numeric IDs
   or lists of IDs. COMPOSITION-INDICES is only considered if
@@ -222,9 +231,91 @@
                    (t 
                     (mapcar #'(lambda (c) (get-harmonic-sequence dataset-indices c :voices voices)) composition-indices)))
              (get-harmonic-sequences dataset-indices :voices voices)))
+        ((eq texture :grid)
+         (if (numberp dataset-indices)
+             (cond ((null composition-indices)
+                    (get-grid-sequences dataset-indices 
+					:voices voices 
+					:resolution resolution))
+                   ((numberp composition-indices)
+                    (get-grid-sequence dataset-indices composition-indices 
+				       :voices voices
+				       :resolution resolution))
+                   (t 
+                    (mapcar #'(lambda (c) (get-grid-sequence dataset-indices c :voices voices)) composition-indices)))
+             (get-grid-sequences dataset-indices :voices voices :resolution resolution)))
         (t 
-         (print "Unrecognised texture for the music object. Current options are :melody or :harmony."))))
+         (print "Unrecognised texture for the music object. Current options are :melody, :grid or :harmony."))))
 
+;; grid sequences
+
+;; Needs to be monody as well?
+(defun get-grid-sequence (dataset-index composition-index &key voices resolution)
+  (composition->grid
+    (get-composition (lookup-composition dataset-index composition-index))
+    :voices voices :resolution resolution))
+
+(defun get-grid-sequences (dataset-ids &key voices resolution)
+  (let ((compositions '()))
+    (dolist (dataset-id dataset-ids (nreverse compositions))
+      (let ((d (get-dataset (lookup-dataset dataset-id))))
+	(sequence:dosequence (c d)
+	  (push (composition->grid c :voices voices :resolution resolution) compositions))))))
+
+(defun composition->grid (composition &key voices resolution)
+    "Extract a grid from a composition using the resolution specified by
+the resolution argument."
+    (let* ((timebase (timebase composition))
+	   (grid-sequence (make-instance 'grid-sequence
+                              :onset 0
+                              :duration (duration composition)
+                              :midc (midc composition)
+                              :id (copy-identifier (get-identifier composition))
+                              :description (description composition)
+                              :timebase (timebase composition)
+			      :resolution resolution))
+           (sorted-composition (sort composition #'< :key #'md:onset))
+           (event-list (coerce sorted-composition 'list))
+           (event-list (if (null voices)
+                           event-list
+                           (remove-if #'(lambda (x) (not (member x voices))) event-list :key #'md:voice)))
+           (data (remove-duplicates (mapcar #'(lambda (x) (list (onset x) (chromatic-pitch x) (duration x))) event-list))) ; get a list of onset, pitch and duration
+	   (events nil))
+      ; Create grid events
+      (do ((index 0 (1+ index)))
+	  ((>= index (length data)) data)
+	(let* ((datum (nth index data))
+	       (previous-datum (when (> index 0) (nth (- index 1) data)))
+	       (grid-onset (rescale (first datum) resolution timebase))
+	       (previous-grid-onset (when previous-datum (rescale (first previous-datum) resolution timebase)))
+	       (cpitch (second datum))
+	       (grid-duration (rescale (third datum) resolution timebase))
+	       (previous-grid-duration (or (when previous-datum (rescale (third previous-datum) resolution timebase)) 0))
+	       (grid-ioi (if (eql index 0)
+			     grid-onset
+			     (- grid-onset previous-grid-onset)))
+	       (rest-duration (- grid-ioi previous-grid-duration)))
+	  ;(format t "Onset ~S Pitch ~S Duration ~S IOI ~S~%" grid-onset (second datum) grid-duration grid-ioi)
+	  (dotimes (p (+ rest-duration grid-duration))
+	    (let* ((grid-position (+ (- grid-onset rest-duration) p))
+		   (event (make-instance 'grid-event
+					:isonset (eql grid-position grid-onset)
+					:pos grid-position
+					:cpitch (when (and (>= grid-position grid-onset)
+							   (< grid-position (+ grid-onset grid-duration))) cpitch)
+					:etime (rescale grid-position timebase resolution))))
+	      ;(format t "~S ~S~%" p grid-position)
+	      (push event events)))))
+      (sequence:adjust-sequence 
+       grid-sequence (length events)
+       :initial-contents (sort events #'< :key #'etime))
+      grid-sequence))
+
+(defun rescale (time resolution timebase)
+  "Convert time from units on timebase scale to units on resolution scale. Show a warning when the resulting time is not a whole number."
+  (let ((rescaled-time (* time (/ resolution timebase))))
+    (when (not (equalp (mod rescaled-time 1) 0)) (format t "WARNING: converting ~F (timebase ~D) to resolution ~D resulted in a fractional number (~F) ~%" time timebase resolution rescaled-time))
+    rescaled-time))
 
 ;; harmonic sequences
 
