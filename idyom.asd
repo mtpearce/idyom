@@ -74,6 +74,10 @@
                        (:file "phrase")
 		       (:file "threaded")
 		       (:file "implication-realisation")))
+             (:module grid :serial t
+		      :components
+		      ((:file "basic-viewpoints")
+		       (:file "metrical")))
              ;; useful extensions for modelling 
              ;; (not strictly part of the representation scheme)
 	     (:file "extensions")))

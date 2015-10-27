@@ -7,9 +7,17 @@
   (:documentation "Returns a list of viewpoint elements associated
 with each suffix of SEQUENCE."))
 
+(defgeneric metrical-viewpoint-sequence (viewpoint sequence interpretation)
+  (:documentation "Returns a list of viewpoint elements associated
+with each suffix of SEQUENCE under a certain metrical interpretation."))
+
 (defgeneric viewpoint-element (viewpoint sequence)
   (:documentation "Returns the viewpoint element associated with SEQUENCE 
 and VIEWPOINT."))
+
+(defgeneric metrical-viewpoint-element (viewpoint sequence interpretation)
+  (:documentation "Returns the viewpoint element associated with SEQUENCE 
+and VIEWPOINT under a certain metrical interpretation."))
 
 (defgeneric viewpoint-alphabet (viewpoint))
 (defgeneric viewpoint-typeset(viewpoint))

@@ -3,6 +3,8 @@
   (:export #:+undefined+ #:undefined-p #:get-basic-types #:register-basic-type
            #:get-viewpoint #:get-viewpoints  
            #:viewpoint-element #:viewpoint-sequence  #:viewpoint-sequences 
+	   #:metrical-viewpoint-element #:metrical-viewpoint-sequence 
+	   #:metrical-viewpoint-sequences
            #:viewpoint-alphabet #:viewpoint-typeset  #:viewpoint-links 
            #:set-alphabet-from-context #:set-alphabet-from-dataset
            #:alphabet->events #:get-basic-viewpoints

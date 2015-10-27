@@ -86,9 +86,15 @@
 
 (defclass grid-event (music-element)
   ((isonset :initarg :isonset :accessor isonset)
-   (pos :initarg :pos :accessor pos)
-   (etime :initarg :etime :accessor etime)
+   (pos :initarg :pos :accessor pos) ; pos(ition) is the time of the event expressed in grid-units (which are determined by the resolution)
+   (etime :initarg :etime :accessor etime) ; etime is the event time expressed in IDyOM's time units
    (cpitch :initarg :cpitch :accessor chromatic-pitch))) ; cpitch is NIL when the event isn't an onset
+
+
+(defclass metrical-interpretation ()
+  ((meter-phase :initarg :phase :accessor meter-phase)
+   (meter-label :initarg :meter :accessor meter-label)
+   (meter-period :initarg :period :accessor meter-period)))
 
 ;;; Identifiers 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

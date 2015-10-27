@@ -5,6 +5,11 @@
 (defmethod viewpoint-sequences ((v viewpoint) sequences)
   (mapcar #'(lambda (s) (viewpoint-sequence v s)) sequences))
 
+(defmethod metrical-viewpoint-sequences ((v viewpoint) sequences)
+  (mapcar #'(lambda (s) (let ((sequence (car s))
+			      (meter (cdr s)))
+			  (metrical-viewpoint-sequence v sequence meter))) sequences))
+
 (defmethod viewpoint-sequence ((v viewpoint) (m md:music-composition))
   (viewpoint-sequence v (coerce m 'list)))
 
@@ -27,6 +32,29 @@
                        (events->viewpoint (butlast events)
                                           (cons element sequence)))))))
     (events->viewpoint event-list '())))
+
+; For metrical viewpoints and grid-sequences 
+
+(defmethod metrical-viewpoint-sequence ((v viewpoint) (m md:grid-sequence) (i md:metrical-interpretation))
+  (labels ((events->viewpoint (events sequence interpretation)
+	     (if (null events) sequence
+		 (let ((element (metrical-viewpoint-element v events interpretation))) ; transform a single event into a viewpoint element
+		   (if (undefined-p element) ; Viewpoint undefined?
+		       (events->viewpoint (utils:butlast-n events) sequence interpretation) ; Then leave sequence untouched and pop off the last event
+		       (events->viewpoint (utils:butlast-n events) ; otherwise 
+					 (cons element sequence) interpretation)))))) ; cons the element on the sequence 
+    (events->viewpoint m '() i)))
+
+(defmethod metrical-viewpoint-sequence ((v viewpoint) (event-list list) (i md:metrical-interpretation))
+  (labels ((events->viewpoint (events sequence interpretation)
+	     (if (null events) sequence
+		 (let ((element (metrical-viewpoint-element v events interpretation))) ; transform a single event into a viewpoint element
+		   (if (undefined-p element) ; Viewpoint undefined?
+		       (events->viewpoint (butlast events) sequence interpretation) ; Then leave sequence untouched and pop off the last event
+		       (events->viewpoint (butlast events) ; otherwise 
+					 (cons element sequence) interpretation)))))) ; cons the element on the sequence 
+    (events->viewpoint event-list '() i)))
+		       
 
 ;;; viewpoint-element 
 
@@ -52,6 +80,12 @@
     (mapcar #'(lambda (a) (funcall (type-of a) event-list))
             viewpoints)))
 
+(defmethod metrical-viewpoint-element ((v metrical) (grid md:music-composition) (interpretation md:metrical-interpretation))
+  (metrical-viewpoint-element v (coerce grid 'list) interpretation))
+
+(defmethod metrical-viewpoint-element ((v metrical) (event-list list) (interpretation md:metrical-interpretation))
+  (funcall (type-of v) event-list interpretation))
+
 ;;; Viewpoint methods 
 
 (defmethod viewpoint-alphabet ((v viewpoint)) (%viewpoint-alphabet v))
@@ -70,6 +104,7 @@
 (defmethod test-p ((v viewpoint)) (typep v 'test))
 (defmethod linked-p ((v viewpoint)) (typep v 'linked))
 (defmethod threaded-p ((v viewpoint)) (typep v 'threaded))
+(defmethod metrical-p ((v viewpoint)) (typep v 'metrical))
 
 (defmethod viewpoint-name ((v viewpoint))
   (let* ((links (viewpoint-links v))
