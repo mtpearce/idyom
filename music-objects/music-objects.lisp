@@ -91,9 +91,8 @@
    (cpitch :initarg :cpitch :accessor chromatic-pitch))) ; cpitch is NIL when the event isn't an onset
 
 
-(defclass metrical-interpretation ()
+(defclass metrical-interpretation (time-signature)
   ((meter-phase :initarg :phase :accessor meter-phase)
-   (meter-label :initarg :meter :accessor meter-label)
    (meter-period :initarg :period :accessor meter-period)))
 
 ;;; Identifiers 
@@ -205,6 +204,18 @@
       (car (clsql:query (format nil "SELECT description FROM mtp_composition WHERE (dataset_id = ~A AND composition_id = ~A);" dataset-id composition-id) :flatp t))))
 
 
+;;; Comparing music objects
+
+(defgeneric same-time-signature? (music-object-a music-object-b))
+(defmethod same-time-signature? ((ts-a time-signature) (ts-b time-signature))
+  (and (equalp (barlength ts-a) (barlength ts-b))
+       (equalp (pulses ts-a) (pulses ts-b))))
+
+(defgeneric has-time-signature? (music-object))
+(defmethod has-time-signature? ((ts time-signature))
+  (and (slot-boundp ts 'barlength)
+       (slot-boundp ts 'pulses)))
+
 ;;; Getting music objects from the database
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -285,7 +296,7 @@ the resolution argument."
            (event-list (if (null voices)
                            event-list
                            (remove-if #'(lambda (x) (not (member x voices))) event-list :key #'md:voice)))
-           (data (remove-duplicates (mapcar #'(lambda (x) (list (onset x) (chromatic-pitch x) (duration x))) event-list))) ; get a list of onset, pitch and duration
+           (data (remove-duplicates (mapcar #'(lambda (x) (list (onset x) (chromatic-pitch x) (duration x) (barlength x) (pulses x))) event-list))) ; get a list of onset, pitch and duration
 	   (events nil))
       ; Create grid events
       (do ((index 0 (1+ index)))
@@ -300,7 +311,9 @@ the resolution argument."
 	       (grid-ioi (if (eql index 0)
 			     grid-onset
 			     (- grid-onset previous-grid-onset)))
-	       (rest-duration (- grid-ioi previous-grid-duration)))
+	       (rest-duration (- grid-ioi previous-grid-duration))
+	       (barlength (fourth datum))
+	       (pulses (fifth datum)))
 	  ;(format t "Onset ~S Pitch ~S Duration ~S IOI ~S~%" grid-onset (second datum) grid-duration grid-ioi)
 	  (dotimes (p (+ rest-duration grid-duration))
 	    (let* ((grid-position (+ (- grid-onset rest-duration) p))
@@ -309,7 +322,9 @@ the resolution argument."
 					:pos grid-position
 					:cpitch (when (and (>= grid-position grid-onset)
 							   (< grid-position (+ grid-onset grid-duration))) cpitch)
-					:etime (rescale grid-position timebase resolution))))
+					:etime (rescale grid-position timebase resolution)
+					:barlength barlength
+					:pulses pulses)))
 	      ;(format t "~S ~S~%" p grid-position)
 	      (push event events)))))
       (sequence:adjust-sequence 
