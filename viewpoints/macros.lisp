@@ -27,7 +27,6 @@
 		(declare (ignorable events element))
 		,f*)))))
 
-
 (defmacro define-metrical-viewpoint ((name superclass typeset)
 				     ((events class) 
 				      (interpretation interpretation-class) 
@@ -42,11 +41,19 @@
        (defgeneric ,name (,events ,interpretation)) ; Generic function with same name as viewpoint class that takes events
        (defmethod ,name ((,events ,class) (,interpretation ,interpretation-class)) ; Implementation that takes events of provided class
 	 (declare (ignorable events))
-	 (let ((events (coerce ,events 'list)))
-	   ,function))
+	 (let ((event (last-element ,events)))
+	   (if (and (md:has-time-signature? event)
+		    (not (md:same-time-signature? event ,interpretation))) ; If the event has a time signature and it doesn't match the provided time signature
+	       +undefined+ ; the metrical viewpoint is undefined
+	       (let ((events (coerce ,events 'list)))
+		 ,function))))
        (defmethod ,name ((,events list) (,interpretation ,interpretation-class))
 	 (declare (ignorable events))
-	 ,function)
+	 (let ((event (last-element events)))
+	   (if (and (md:has-time-signature? event)
+		    (not (md:same-time-signature? event ,interpretation)))
+	       +undefined+
+	       ,function)))
        ,(when f*
 	   `(defgeneric ,(intern (concatenate 'string (symbol-name name) "*")) ; Create a symbol with the name of the viewpoint and a *?
 		(,element ,events ,interpretation))

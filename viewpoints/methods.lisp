@@ -35,7 +35,7 @@
 
 ; For metrical viewpoints and grid-sequences 
 
-(defmethod metrical-viewpoint-sequence ((v viewpoint) (m md:grid-sequence) (i md:metrical-interpretation))
+(defmethod metrical-viewpoint-sequence ((v metrical) (m md:grid-sequence) (i md:metrical-interpretation))
   (labels ((events->viewpoint (events sequence interpretation)
 	     (if (null events) sequence
 		 (let ((element (metrical-viewpoint-element v events interpretation))) ; transform a single event into a viewpoint element
@@ -45,7 +45,7 @@
 					 (cons element sequence) interpretation)))))) ; cons the element on the sequence 
     (events->viewpoint m '() i)))
 
-(defmethod metrical-viewpoint-sequence ((v viewpoint) (event-list list) (i md:metrical-interpretation))
+(defmethod metrical-viewpoint-sequence ((v metrical) (event-list list) (i md:metrical-interpretation))
   (labels ((events->viewpoint (events sequence interpretation)
 	     (if (null events) sequence
 		 (let ((element (metrical-viewpoint-element v events interpretation))) ; transform a single event into a viewpoint element
