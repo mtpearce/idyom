@@ -87,7 +87,6 @@
 (defclass grid-event (music-element)
   ((isonset :initarg :isonset :accessor isonset)
    (pos :initarg :pos :accessor pos) ; pos(ition) is the time of the event expressed in grid-units (which are determined by the resolution)
-   (etime :initarg :etime :accessor etime) ; etime is the event time expressed in IDyOM's time units
    (cpitch :initarg :cpitch :accessor chromatic-pitch))) ; cpitch is NIL when the event isn't an onset
 
 
@@ -322,14 +321,15 @@ the resolution argument."
 					:pos grid-position
 					:cpitch (when (and (>= grid-position grid-onset)
 							   (< grid-position (+ grid-onset grid-duration))) cpitch)
-					:etime (rescale grid-position timebase resolution)
+					:onset (rescale grid-position timebase resolution) ; Onset is derived form anchored-time-interval
+					:duration (/ timebase resolution) ; So is duration
 					:barlength barlength
 					:pulses pulses)))
 	      ;(format t "~S ~S~%" p grid-position)
 	      (push event events)))))
       (sequence:adjust-sequence 
        grid-sequence (length events)
-       :initial-contents (sort events #'< :key #'etime))
+       :initial-contents (sort events #'< :key #'onset))
       grid-sequence))
 
 (defun rescale (time resolution timebase)
