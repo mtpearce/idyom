@@ -295,7 +295,7 @@ the resolution argument."
            (event-list (if (null voices)
                            event-list
                            (remove-if #'(lambda (x) (not (member x voices))) event-list :key #'md:voice)))
-           (data (remove-duplicates (mapcar #'(lambda (x) (list (onset x) (chromatic-pitch x) (duration x) (barlength x) (pulses x))) event-list))) ; get a list of onset, pitch and duration
+           (data (remove-duplicates (mapcar #'(lambda (x) (list (onset x) (chromatic-pitch x) (duration x) (barlength x) (pulses x) (get-identifier x))) event-list))) ; get a list of onset, pitch and duration
 	   (events nil))
       ; Create grid events
       (do ((index 0 (1+ index)))
@@ -312,7 +312,8 @@ the resolution argument."
 			     (- grid-onset previous-grid-onset)))
 	       (rest-duration (- grid-ioi previous-grid-duration))
 	       (barlength (fourth datum))
-	       (pulses (fifth datum)))
+	       (pulses (fifth datum))
+	       (event-id (sixth datum)))
 	  ;(format t "Onset ~S Pitch ~S Duration ~S IOI ~S~%" grid-onset (second datum) grid-duration grid-ioi)
 	  (dotimes (p (+ rest-duration grid-duration))
 	    (let* ((grid-position (+ (- grid-onset rest-duration) p))
@@ -324,10 +325,11 @@ the resolution argument."
 					:onset (rescale grid-position timebase resolution) ; Onset is derived form anchored-time-interval
 					:duration (/ timebase resolution) ; So is duration
 					:barlength barlength
-					:pulses pulses)))
+					:pulses pulses
+					:id (copy-identifier event-id))))
 	      ;(format t "~S ~S~%" p grid-position)
 	      (push event events)))))
-      (sequence:adjust-sequence 
+       (sequence:adjust-sequence 
        grid-sequence (length events)
        :initial-contents (sort events #'< :key #'onset))
       grid-sequence))
