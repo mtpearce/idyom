@@ -33,6 +33,7 @@
                          (stmo mvs::*stm-params*)
                          (voices nil)
                          (texture :melody)
+			 (resolution nil)
                          (use-resampling-set-cache? t)
                          (use-ltms-cache? t))
   "IDyOM top level: returns the mean information content for
@@ -60,7 +61,7 @@
          (mvs::*stm-escape* (getf stmo :escape))
          ;; data
          (dataset (md:get-music-objects (if (listp dataset-id) dataset-id (list dataset-id))
-                                        nil :voices voices :texture texture))
+                                        nil :voices voices :texture texture :resolution resolution))
          (pretraining-set (md:get-music-objects pretraining-ids nil :voices voices :texture texture))
          ;; viewpoints
          (sources (get-viewpoints source-viewpoints))
@@ -94,8 +95,10 @@
                (ltms (get-long-term-models sources training-set
                                            pretraining-ids dataset-id
                                            resampling-id k 
-                                           voices texture
-                                           use-ltms-cache?))
+                                           :voices voices
+					   :texture texture
+					   :resolution resolution
+					   :use-cache? use-ltms-cache?))
                (mvs (make-mvs targets sources ltms))
                (predictions
                 (mvs:model-dataset mvs test-set :construct? t :predict? t)))
@@ -286,7 +289,7 @@ dataset-id)."
 (defun get-long-term-models (viewpoints training-set pretraining-ids
                              training-id resampling-id
                              resampling-count 
-                             voices texture
+                             &key voices texture (resolution nil)
                              use-cache?)
   "Returns a vector of long-term models -- one for each viewpoint in
 <viewpoints> -- trained on <training-set> and initialised with the
@@ -300,7 +303,7 @@ anew each time."
                         (get-model-filename viewpoint pretraining-ids
                                             training-id resampling-id
                                             resampling-count 
-                                            voices texture))
+                                            voices texture resolution))
                        (training-set
                         (viewpoint-sequences viewpoint training-set))
                        (alphabet (viewpoint-alphabet viewpoint)))
@@ -313,7 +316,7 @@ anew each time."
     (mapcar constructor-fun viewpoints)))
 
 (defun get-model-filename (viewpoint pretraining-ids training-id resampling-id
-                           resampling-count voices texture)
+                           resampling-count voices texture resolution)
   "Returns the filename in *model-directory* containing the ppm model
 for <viewpoint> in <dataset-id>."
   (string-append (namestring *model-dir*)
@@ -336,7 +339,13 @@ for <viewpoint> in <dataset-id>."
                                               (1+ resampling-id)
                                               resampling-id)
                                 resampling-count)))
-                 (format nil "_~(~A~)" texture)
+                 (format nil "_~(~A~)~A" 
+			 texture
+			 (cond ((and (not (null resolution))
+				     (equalp texture :grid))
+				(format nil "-~A" resolution))
+			       (t
+				"")))
                  (format nil "~{-~A~}" voices)
                  ".ppm"))
 

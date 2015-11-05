@@ -64,6 +64,7 @@
                 ;; Number of voices and texture (e.g., :melody :harmony)
                 (voices nil)
                 (texture :melody)
+		(resolution nil)
                 ;; Output
                 (detail 3)
                 (output-path nil)
@@ -99,7 +100,7 @@
                                  :pretraining-ids pretraining-ids
                                  :k k :resampling-indices resampling-indices
                                  :models models :ltmo ltmo :stmo stmo
-                                 :voices voices :texture texture
+                                 :voices voices :texture texture :resolution resolution
                                  :use-resampling-set-cache? use-resampling-set-cache?
                                  :use-ltms-cache? use-ltms-cache?)
     (when output-path
