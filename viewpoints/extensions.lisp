@@ -14,6 +14,9 @@
 (defun get-basic-viewpoints (attributes dataset)
   (initialise-basic-viewpoints dataset)
   (set-onset-alphabet nil)
+  ; Only applicable for :grid textures
+  (when (equal (type-of (first dataset)) 'md:grid-sequence)
+    (set-pos-alphabet nil))
   (get-viewpoints attributes))
 
 (defun initialise-basic-viewpoints (dataset)
@@ -26,6 +29,9 @@
 
 (defun set-onset-alphabet (context)
   (setf (viewpoint-alphabet (get-viewpoint 'onset)) (onset-alphabet context)))
+
+(defun set-pos-alphabet (context)
+  (setf (viewpoint-alphabet (get-viewpoint 'pos)) (pos-alphabet context)))
 
 (defmethod set-alphabet-from-dataset ((v viewpoint) dataset)
   "Initialises the alphabet of viewpoint <v> in <dataset>."
@@ -59,10 +65,11 @@ in <events>."
                (setq unconstrained (mapcar #'viewpoint-type unconstrained)))
              (dolist (a attributes (reverse alphabets))
                (if (or (null unconstrained) (member a unconstrained))
-                   (if (eql a 'onset)
-                       (push (onset-alphabet context) alphabets)
-                       (push (viewpoint-alphabet (get-viewpoint a)) 
-                             alphabets))
+                   (cond 
+		     ((eql a 'onset) (push (onset-alphabet context) alphabets))
+		     ((eql a 'pos) (push (pos-alphabet context) alphabets))
+                     (t  (push (viewpoint-alphabet (get-viewpoint a)) 
+                             alphabets)))
                    (push (list (md:get-attribute (car (last events)) a))
                          alphabets))))))
     (let* ((derived-alphabet '())
@@ -107,6 +114,16 @@ in <events>."
                   e))
             onset-alphabet)))
  
+(defmethod alphabet->events ((p pos) events)
+  (let* ((event (car (last events)))
+         (previous-events (butlast events))
+         (pos-alphabet (pos-alphabet previous-events)))
+    (mapcar #'(lambda (viewpoint-element)
+                (let ((e (md:copy-event event)))
+                  (md:set-attribute e 'pos viewpoint-element)
+                  e))
+            pos-alphabet)))
+
 (defun onset-alphabet (previous-events)
   ;; Based on DELTAST alphabet
   ;;   (let ((deltast-alphabet (viewpoint-alphabet (get-viewpoint 'deltast))))
@@ -122,6 +139,13 @@ in <events>."
                (onset (md:get-attribute last-event 'onset)))
           (mapcar #'(lambda (a) (+ onset a)) bioi-alphabet)))))
 
+(defun pos-alphabet (previous-events)
+    (if (null previous-events) '(0)
+	(let* ((last-event (car (reverse previous-events)))
+	       (pos (md:get-attribute last-event 'pos)))
+	  (list (1+ pos)))))
+	
+
 (defmethod alphabet->events ((d derived) events)
   ;;TODO: make this work for all elements in typeset 
   (let ((typeset (get-viewpoint (car (viewpoint-typeset d)))))
@@ -131,8 +155,10 @@ in <events>."
   (let ((event (car (last events)))
         (previous-events (butlast events)))
     (labels ((get-alphabet (attribute)
-               (if (eql attribute 'onset) (onset-alphabet previous-events)
-                   (viewpoint-alphabet (get-viewpoint attribute))))
+               (cond
+		 ((eql attribute 'onset) (onset-alphabet previous-events))
+		 ((eql attribute 'pos) (pos-alphabet previous-events))
+		 (t (viewpoint-alphabet (get-viewpoint attribute)))))
              (get-alphabets (attributes)
                (mapcar #'(lambda (a) (get-alphabet a)) attributes))
              (get-events (&rest attributes)
