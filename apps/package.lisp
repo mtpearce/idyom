@@ -17,6 +17,11 @@
   (:export "IDYOM" "CONKLIN90" "CONKWIT95" "PEARCE05")
   (:documentation "Main access to IDyOM functionality."))
 
+(defpackage #:inference
+  (:use #:cl)
+  (:export "INFER-METER")
+  (:documentation "Categorical inference functionality."))
+
 (defpackage #:resampling 
   (:use #:cl #:utils #:md #:viewpoints #:ppm #:mvs #:prediction-sets)
   (:export "IDYOM-RESAMPLE" "OUTPUT-INFORMATION-CONTENT" "FORMAT-INFORMATION-CONTENT"

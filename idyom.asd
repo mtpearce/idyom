@@ -108,4 +108,5 @@
              (:file "resampling")
              (:file "viewpoint-selection")
              (:file "main")
+             (:file "inference")
              (:file "generation")))))
