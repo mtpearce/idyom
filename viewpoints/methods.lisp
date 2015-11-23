@@ -2,88 +2,60 @@
 
 ;;; viewpoint-sequence
 
-(defmethod viewpoint-sequences ((v viewpoint) sequences)
-  (mapcar #'(lambda (s) (viewpoint-sequence v s)) sequences))
+(defmethod viewpoint-sequences ((v viewpoint) sequences &key (interpretation nil) &allow-other-keys)
+  (mapcar #'(lambda (s) (viewpoint-sequence v s :interpretation interpretation)) sequences))
 
-(defmethod metrical-viewpoint-sequences ((v viewpoint) sequences)
-  (mapcar #'(lambda (s) (let ((sequence (car s))
-			      (meter (cdr s)))
-			  (metrical-viewpoint-sequence v sequence meter))) sequences))
+(defmethod viewpoint-sequence ((v viewpoint) (m md:music-composition) &key (interpretation nil) &allow-other-keys)
+  (viewpoint-sequence v (coerce m 'list) :interpretation interpretation))
 
-(defmethod viewpoint-sequence ((v viewpoint) (m md:music-composition))
-  (viewpoint-sequence v (coerce m 'list)))
-
-(defmethod viewpoint-sequence ((v viewpoint) (m md:music-sequence))
+(defmethod viewpoint-sequence ((v viewpoint) (m md:music-sequence) &key (interpretation nil) &allow-other-keys)
   (labels ((events->viewpoint (events sequence)
              (if (= (length events) 0) sequence
-                 (let ((element (viewpoint-element v events)))
+                 (let ((element (viewpoint-element v events :interpretation interpretation)))
                    (if (undefined-p element)
                        (events->viewpoint (utils:butlast-n events) sequence)
                        (events->viewpoint (utils:butlast-n events)
                                           (cons element sequence)))))))
     (events->viewpoint m '())))
 
-(defmethod viewpoint-sequence ((v viewpoint) (event-list list))
+(defmethod viewpoint-sequence ((v viewpoint) (event-list list) &key (interpretation nil) &allow-other-keys)
   (labels ((events->viewpoint (events sequence)
              (if (null events) sequence
-                 (let ((element (viewpoint-element v events)))
+                 (let ((element (viewpoint-element v events :interpretation interpretation)))
                    (if (undefined-p element)
                        (events->viewpoint (butlast events) sequence)
                        (events->viewpoint (butlast events)
                                           (cons element sequence)))))))
     (events->viewpoint event-list '())))
 
-; For metrical viewpoints and grid-sequences 
-
-(defmethod metrical-viewpoint-sequence ((v metrical) (m md:grid-sequence) (i md:metrical-interpretation))
-  (labels ((events->viewpoint (events sequence interpretation)
-	     (if (null events) sequence
-		 (let ((element (metrical-viewpoint-element v events interpretation))) ; transform a single event into a viewpoint element
-		   (if (undefined-p element) ; Viewpoint undefined?
-		       (events->viewpoint (utils:butlast-n events) sequence interpretation) ; Then leave sequence untouched and pop off the last event
-		       (events->viewpoint (utils:butlast-n events) ; otherwise 
-					 (cons element sequence) interpretation)))))) ; cons the element on the sequence 
-    (events->viewpoint m '() i)))
-
-(defmethod metrical-viewpoint-sequence ((v metrical) (event-list list) (i md:metrical-interpretation))
-  (labels ((events->viewpoint (events sequence interpretation)
-	     (if (null events) sequence
-		 (let ((element (metrical-viewpoint-element v events interpretation))) ; transform a single event into a viewpoint element
-		   (if (undefined-p element) ; Viewpoint undefined?
-		       (events->viewpoint (butlast events) sequence interpretation) ; Then leave sequence untouched and pop off the last event
-		       (events->viewpoint (butlast events) ; otherwise 
-					 (cons element sequence) interpretation)))))) ; cons the element on the sequence 
-    (events->viewpoint event-list '() i)))
-		       
-
 ;;; viewpoint-element 
 
-(defmethod viewpoint-element ((v viewpoint) (m md:music-composition))
-  (viewpoint-element v (coerce m 'list)))
+(defmethod viewpoint-element ((v viewpoint) (m md:music-composition) &key (interpretation nil) &allow-other-keys)
+  (viewpoint-element v (coerce m 'list)) :interpretation interpretation)
 
-(defmethod viewpoint-element ((v viewpoint) (m md:music-sequence))
+(defmethod viewpoint-element ((v viewpoint) (m md:music-sequence) &key &allow-other-keys)
   (funcall (type-of v) m))
 
-(defmethod viewpoint-element ((l linked) (m md:music-sequence))
+(defmethod viewpoint-element ((l linked) (m md:music-sequence) &key (interpretation nil) &allow-other-keys)
   (let ((viewpoints (viewpoint-links l)))
-    (mapcar #'(lambda (a) (funcall (type-of a) m))
+    (mapcar #'(lambda (a) (viewpoint-element a m :interpretation interpretation))
             viewpoints)))
 
-(defmethod viewpoint-element ((v viewpoint) (event-list list))
+(defmethod viewpoint-element ((v metrical) (m md:music-sequence) &key interpretation &allow-other-keys)
+  (funcall (type-of v) m interpretation))
+
+(defmethod viewpoint-element ((v viewpoint) (event-list list) &key &allow-other-keys)
   (funcall (type-of v) event-list))
 
-(defmethod viewpoint-element ((th threaded) (event-list list))
+(defmethod viewpoint-element ((th threaded) (event-list list) &key &allow-other-keys)
   (funcall (type-of th) event-list))
 
-(defmethod viewpoint-element ((l linked) (event-list list))
+(defmethod viewpoint-element ((l linked) (event-list list) &key (interpretation nil) &allow-other-keys)
   (let ((viewpoints (viewpoint-links l)))
-    (mapcar #'(lambda (a) (funcall (type-of a) event-list))
+    (mapcar #'(lambda (a) (viewpoint-element a event-list :interpretation interpretation))
             viewpoints)))
 
-(defmethod metrical-viewpoint-element ((v metrical) (grid md:music-composition) (interpretation md:metrical-interpretation))
-  (metrical-viewpoint-element v (coerce grid 'list) interpretation))
-
-(defmethod metrical-viewpoint-element ((v metrical) (event-list list) (interpretation md:metrical-interpretation))
+(defmethod viewpoint-element ((v metrical) (event-list list) &key interpretation &allow-other-keys)
   (funcall (type-of v) event-list interpretation))
 
 ;;; Viewpoint methods 
@@ -150,30 +122,37 @@
 
 ;;; Inverse viewpoint methods
 
-(defmethod basic-sequence ((v viewpoint) (b basic) element-list event-list)
+(defmethod basic-sequence ((v viewpoint) (b basic) element-list event-list &key (interpretation nil) &allow-other-keys)
   (let ((element-list-rev (reverse element-list))
         (bs '()))
     (dotimes (i (length element-list) bs)
       (let ((el (nth i element-list-rev)))
         (unless (undefined-p el)
-          (push (basic-element v b el (utils:butlast-n event-list i)) bs))))))
+          (push (basic-element v b el (utils:butlast-n event-list i) :interpretation interpretation) bs))))))
 
-(defmethod basic-sequence ((from basic) (to basic) element-list event-list)
+(defmethod basic-sequence ((from basic) (to basic) element-list event-list &key &allow-other-keys)
   (declare (ignore from to event-list))
   element-list)
  
-(defmethod basic-element ((from basic) (to basic) element event-list)
+(defmethod basic-element ((from basic) (to basic) element event-list &key &allow-other-keys)
   (declare (ignore from to event-list))
   (list element))
  
-(defmethod basic-element ((v viewpoint) (b basic) element event-list)
+(defmethod basic-element ((v viewpoint) (b basic) element event-list &key &allow-other-keys)
   (declare (ignore b))
   (unless (undefined-p element)
     (let ((inverse-function (inverse-viewpoint-function v)))
       (when inverse-function 
         (funcall inverse-function element event-list)))))
 
-(defmethod basic-element ((l linked) (b basic) element event-list)
+(defmethod basic-element ((v metrical) (b basic) element event-list &key interpretation &allow-other-keys)
+  (declare (ignore b))
+  (unless (undefined-p element)
+    (let ((inverse-function (inverse-viewpoint-function v)))
+      (when inverse-function 
+        (funcall inverse-function element event-list interpretation)))))
+
+(defmethod basic-element ((l linked) (b basic) element event-list &key &allow-other-keys)
   (reduce #'(lambda (&rest x) 
               (when x (intersection (car x) (cadr x))))
           (mapcan #'(lambda (v e)
