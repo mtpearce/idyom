@@ -268,19 +268,19 @@
 ;; grid sequences
 
 ;; Needs to be monody as well?
-(defun get-grid-sequence (dataset-index composition-index &key voices resolution)
+(defun get-grid-sequence (dataset-index composition-index &key voices resolution (hide-meter nil))
   (composition->grid
     (get-composition (lookup-composition dataset-index composition-index))
-    :voices voices :resolution resolution))
+    :voices voices :resolution resolution :hide-meter hide-meter))
 
-(defun get-grid-sequences (dataset-ids &key voices resolution)
+(defun get-grid-sequences (dataset-ids &key voices resolution (hide-meter nil))
   (let ((compositions '()))
     (dolist (dataset-id dataset-ids (nreverse compositions))
       (let ((d (get-dataset (lookup-dataset dataset-id))))
 	(sequence:dosequence (c d)
-	  (push (composition->grid c :voices voices :resolution resolution) compositions))))))
+	  (push (composition->grid c :voices voices :resolution resolution :hide-meter hide-meter) compositions))))))
 
-(defun composition->grid (composition &key voices resolution)
+(defun composition->grid (composition &key voices resolution (hide-meter nil))
     "Extract a grid from a composition using the resolution specified by
 the resolution argument."
     (let* ((timebase (timebase composition))
@@ -326,8 +326,8 @@ the resolution argument."
 							   (< grid-position (+ grid-onset grid-duration))) cpitch)
 					:onset (rescale grid-position timebase resolution) ; Onset is derived form anchored-time-interval
 					:duration (/ timebase resolution) ; So is duration
-					:barlength barlength
-					:pulses pulses
+					 :barlength (unless hide-meter barlength)
+					 :pulses (unless hide-meter pulses)
 					:id (copy-identifier event-id))))
 	      ;(format t "~S ~S~%" p grid-position)
 	      (push event events)))))
