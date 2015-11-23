@@ -177,7 +177,7 @@
 ;;; Strip-until-true
 
 (defmethod strip-until-true ((test-viewpoint test) (events md:music-composition))
-  (strip-until-true test (coerce events 'list)))
+  (strip-until-true test-viewpoint (coerce events 'list)))
 
 (defmethod strip-until-true ((test-viewpoint test) (events md:music-sequence))
   (let ((new-events (strip-until-true test-viewpoint (coerce events 'list)))
