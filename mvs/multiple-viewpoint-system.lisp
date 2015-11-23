@@ -114,7 +114,7 @@
   "Returns the number of viewpoints modelled by <m>."
   (array-dimension (mvs-viewpoints m) 0))
 
-(defmethod get-event-array ((m mvs) sequence)
+(defmethod get-event-array ((m mvs) sequence &key (interpretation nil) &allow-other-keys)
   "Given a list of basic events <sequence> returns a vector of
    of viewpoint elements one for each of the viewpoints modelled by
    multiple-viewpoint-system <m>."
@@ -123,7 +123,7 @@
          (event-array (make-array viewpoint-count)))
     (dotimes (i viewpoint-count event-array)
       (setf (aref event-array i)
-            (viewpoint-element (aref viewpoints i) sequence)))))
+            (viewpoint-element (aref viewpoints i) sequence :interpretation interpretation)))))
 
 (defmethod operate-on-models ((m mvs) operation &key (models 'both) 
                               ltm-args stm-args)
@@ -167,7 +167,7 @@ all basic viewpoints are considered to be unconstrained."
       (set-alphabet stm (viewpoint-alphabet viewpoint)))))
 
 (defmethod set-model-alphabets ((m mvs) event events viewpoint ltm stm 
-                                unconstrained)
+                                unconstrained &key (interpretation nil))
   "Sets the alphabets of all non-basic viewpoints and models in
 multiple viewpoint system <m> such that they are capable of predicting
 all of the elements of the basic viewpoints in their
@@ -194,11 +194,12 @@ See also VIEWPOINTS:SET-ALPHABET-FROM-CONTEXT."
            ;; 3 = a specified list of basic viewpoints         
            (t unconstrained))))
     (unless (or (viewpoints:basic-p viewpoint) (undefined-p event)) 
-      (viewpoints:set-alphabet-from-context viewpoint events unconstrained))
+      (viewpoints:set-alphabet-from-context viewpoint events unconstrained :interpretation interpretation))
     (viewpoints::set-onset-alphabet (butlast events))
+    (viewpoints::set-pos-alphabet (butlast events))
     ;(format t "~&Viewpoint: ~A; Event: ~A; Alphabet length: ~A~%" 
     ;        (viewpoint-type viewpoint) event 
-    ;        (length (viewpoint-alphabet viewpoint)))
+    ;        (length (viewpoint-alphabet vioewpoint)))
     ;(format t "~&~A: ~A" (viewpoint-name viewpoint) 
     ;        (viewpoint-alphabet viewpoint))
     (set-alphabet ltm (viewpoint-alphabet viewpoint))
@@ -295,7 +296,7 @@ the supplied parameters."
 ;;; Model Construction and Prediction 
 ;;;========================================================================
 
-(defmethod model-dataset ((m mvs) dataset &key construct? predict?)
+(defmethod model-dataset ((m mvs) dataset &key construct? predict? (interpretation nil))
   "Models a dataset <dataset> (a vector of sequence vectors) given the
 multiple-viewpoint system <m>."
   (labels ((model-d (dataset sequence-index prediction-sets)
@@ -303,7 +304,8 @@ multiple-viewpoint system <m>."
              (if (null dataset) (reverse prediction-sets)
                  (let ((prediction-set (model-sequence m (car dataset) 
                                                        :construct? construct?
-                                                       :predict? predict?)))
+                                                       :predict? predict?
+						       :interpretation interpretation)))
                    (unless (= sequence-index 1)
                      (operate-on-models m #'increment-sequence-front))
                    (operate-on-models m #'reinitialise-ppm :models 'stm)
@@ -312,7 +314,7 @@ multiple-viewpoint system <m>."
     (dataset-prediction-sets m (model-d dataset (length dataset) '()))))
 
 (defmethod model-sequence ((m mvs) sequence &key construct? predict? 
-                           (construct-from 0) (predict-from 0))
+                           (construct-from 0) (predict-from 0) (interpretation nil))
   "Models a sequence <sequence> consisting of a vector of
 event-vectors given the multiple-viewpoint system <m>. The indices of
 the component models into the set of sequences must be set to the
@@ -327,7 +329,7 @@ appropriate sequence index before this method is called."
     (dotimes (event-index event-count)
       (when *debug* (format t "~&Event ~A~%" event-index))
       (let* ((events (subseq sequence 0 (1+ event-index)))
-             (event-array (get-event-array m events))
+             (event-array (get-event-array m events :interpretation interpretation))
              (construct? (if (< event-index construct-from) nil construct?))
              (predict? (if (< event-index predict-from) nil predict?)))
 ;;         (set-model-alphabets m event-array events 
@@ -336,14 +338,15 @@ appropriate sequence index before this method is called."
                               ltm-prediction-sets stm-prediction-sets)
             (model-event m event-array events :ltm-locations ltm-locations 
                          :stm-locations stm-locations 
-                         :construct? construct? :predict? predict?)
+                         :construct? construct? :predict? predict?
+			 :interpretation interpretation)
           (setf ltm-locations ltm-next-locations
                 stm-locations stm-next-locations)
           (operate-on-models m #'increment-event-front)
           (when (>= event-index predict-from)
             (let ((combined 
                    (combine-predictions m ltm-prediction-sets 
-                                        stm-prediction-sets events)))
+                                        stm-prediction-sets events :interpretation interpretation)))
               (unless (null combined) 
                 (push combined prediction-sets)))))))
     (when construct?
@@ -352,7 +355,7 @@ appropriate sequence index before this method is called."
       (operate-on-models m #'initialise-virtual-nodes))
     (sequence-prediction-sets m sequence (reverse prediction-sets))))
 
-(defmethod model-event ((m mvs) event-array events &key ltm-locations
+(defmethod model-event ((m mvs) event-array events &key (interpretation nil) ltm-locations
                         stm-locations construct? predict?)
   "Models a vector of events <event-array> appearing at a vector of
 locations (<ltm-locations> and <stm-locations>) in the ltm and stm of
@@ -369,7 +372,7 @@ multiple viewpoint system <m>."
              (ltm-location (aref ltm-locations i))
              (stm-location (aref stm-locations i)))
         (set-model-alphabets m event-array events viewpoint ltm stm 
-                             *marginalise-using-current-event*)
+                             *marginalise-using-current-event* :interpretation interpretation)
         (unless (undefined-p event)
           (when (and *debug* predict?) (format t "~&LTM: ~S" (viewpoints:viewpoint-name viewpoint)))
           (multiple-value-bind (ltm-next-location ltm-distribution ltm-order)
@@ -417,16 +420,16 @@ multiple viewpoint system <m>."
 ;;; Combining event predictions
 ;;;========================================================================
 
-(defun combine-predictions (mvs ltm-prediction-sets stm-prediction-sets events)
+(defun combine-predictions (mvs ltm-prediction-sets stm-prediction-sets events &key (interpretation nil))
   (case *models*
     ((or :ltm :ltm+)
-     (combine-viewpoint-predictions mvs ltm-prediction-sets events :ltm))
+     (combine-viewpoint-predictions mvs ltm-prediction-sets events :ltm :interpretation interpretation))
     (:stm 
-     (combine-viewpoint-predictions mvs stm-prediction-sets events :stm))
+     (combine-viewpoint-predictions mvs stm-prediction-sets events :stm :interpretation interpretation))
     (otherwise
      (combine-ltm-stm-predictions
-      (combine-viewpoint-predictions mvs ltm-prediction-sets events :ltm)
-      (combine-viewpoint-predictions mvs stm-prediction-sets events :stm)))))
+      (combine-viewpoint-predictions mvs ltm-prediction-sets events :ltm :interpretation interpretation)
+      (combine-viewpoint-predictions mvs stm-prediction-sets events :stm :interpretation interpretation)))))
 
 (defun combine-viewpoint-distributions (dists model) 
   (combine-distributions dists *viewpoint-combination* *viewpoint-bias* model))
@@ -438,7 +441,7 @@ multiple viewpoint system <m>."
   (mapcar #'(lambda (l s) (combine-ltm-stm-distributions (list l s)))
           ltm-predictions stm-predictions))
 
-(defun combine-viewpoint-predictions (mvs prediction-sets events model)
+(defun combine-viewpoint-predictions (mvs prediction-sets events model &key (interpretation nil))
   ;;(format t "~&Viewpoint Combination: ~A ~A~%" model prediction-sets)
   (flet ((basic-prediction-set (prediction-sets basic-viewpoint)
            (find-if #'(lambda (p) (viewpoints:viewpoint-equal p basic-viewpoint))
@@ -479,7 +482,7 @@ multiple viewpoint system <m>."
               (push 
                (combine-viewpoint-distributions
                 (mapcar #'(lambda (v)
-                            (make-custom-event-prediction basic-viewpoint v events :flat))
+                            (make-custom-event-prediction basic-viewpoint v events :flat :interpretation interpretation))
                         derived-viewpoints)
                 model)
                distributions)
@@ -505,7 +508,7 @@ multiple viewpoint system <m>."
       ;; (format t "~&Combined viewpoint distributions = ~A~%" (mapcar #'prediction-sets:prediction-set (reverse distributions)))
       (reverse distributions))))
 
-(defun make-custom-event-prediction (basic-viewpoint viewpoint events type)
+(defun make-custom-event-prediction (basic-viewpoint viewpoint events type &key (interpretation nil))
   "TYPE can be :FLAT or :EMPTY."
   (make-event-prediction
    :basic-viewpoint basic-viewpoint
@@ -513,13 +516,13 @@ multiple viewpoint system <m>."
    :viewpoint viewpoint
    :weights nil
    :event (car (last events))
-   :element (viewpoint-element basic-viewpoint events)
+   :element (viewpoint-element basic-viewpoint events :interpretation interpretation)
    :set (case type
           (:flat (prediction-sets:flat-distribution (viewpoints:viewpoint-alphabet basic-viewpoint)))
           (:empty nil))))
           
 
-(defun derived->basic (derived-prediction-set basic-viewpoint events)
+(defun derived->basic (derived-prediction-set basic-viewpoint events &key (interpretation nil))
   "Given a prediction set <derived-prediction-set> for a derived
 viewpoint returns a probability distribution over the alphabet of
 <basic-viewpoint> (which is in the typeset of the derived viewpoint)
@@ -539,7 +542,7 @@ given a sequence of events <sequence>."
                  (p (nth 1 ep))
                  (basic-elements 
                   (viewpoints:basic-element derived-viewpoint basic-viewpoint 
-                                            e events))
+                                            e events :interpretation interpretation))
                  (p (unless (or (null basic-elements) (undefined-p e)) 
                       (/ p (length basic-elements)))))
             ;;(when *debug*
@@ -550,7 +553,7 @@ given a sequence of events <sequence>."
                   (incf (gethash be basic-distribution) p)
                   (setf (gethash be basic-distribution) p)))))
         ;; no inverse viewpoint function defined so compute mapping
-        (let ((mapping (mapping derived-viewpoint basic-viewpoint events)))
+        (let ((mapping (mapping derived-viewpoint basic-viewpoint events :interpretation interpretation)))
           (when *debug* (format t "~&mapping = ~A~%" mapping))
           (dolist (map mapping)
             (let* ((derived-element (car map))
@@ -562,7 +565,7 @@ given a sequence of events <sequence>."
                 (if (gethash be basic-distribution)
                     (incf (gethash be basic-distribution) basic-probability)
                     (setf (gethash be basic-distribution) basic-probability)))))))
-    (let ((viewpoint-element (viewpoint-element basic-viewpoint events))
+    (let ((viewpoint-element (viewpoint-element basic-viewpoint events :interpretation interpretation))
           (distribution 
            (normalise-distribution 
             (remove nil (mapcar #'(lambda (a) (list a (gethash a basic-distribution)))
@@ -579,7 +582,7 @@ given a sequence of events <sequence>."
        :element viewpoint-element
        :set distribution))))
 
-(defun mapping (derived-viewpoint basic-viewpoint events)
+(defun mapping (derived-viewpoint basic-viewpoint events &key (interpretation nil))
   "Returns an alist whose keys are the elements of the alphabet of
 <derived-viewpoint> and whose values are lists containing those
 elements of the alphabet of <basic-viewpoint> which map to the
@@ -593,8 +596,8 @@ of single event continuations over the basic alphabet."
         (dolist (continuation continuations)
           (let* ((temp-comp (append (butlast events) (list continuation)))
                  (viewpoint-element
-                  (viewpoint-element derived-viewpoint temp-comp))
-                 (basic-element (viewpoint-element basic-viewpoint temp-comp)))
+                  (viewpoint-element derived-viewpoint temp-comp :interpretation interpretation))
+                 (basic-element (viewpoint-element basic-viewpoint temp-comp :interpretation interpretation)))
             (when (viewpoints:viewpoint-element-equal basic-viewpoint
                                            derived-viewpoint
                                            viewpoint-element

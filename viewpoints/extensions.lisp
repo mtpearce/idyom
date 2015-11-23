@@ -8,7 +8,7 @@
 (cl:in-package #:viewpoints) 
 
 (defgeneric set-alphabet-from-dataset (viewpoint dataset))
-(defgeneric set-alphabet-from-context (viewpoint events unconstrained))
+(defgeneric set-alphabet-from-context (viewpoint events unconstrained &key interpretation))
 (defgeneric alphabet->events (viewpoint events))
 
 (defun get-basic-viewpoints (attributes dataset)
@@ -51,7 +51,7 @@
                                     (t nil))))))
       (setf (viewpoint-alphabet v) sorted-alphabet))))
 
-(defmethod set-alphabet-from-context ((v viewpoint) events unconstrained)
+(defmethod set-alphabet-from-context ((v viewpoint) events unconstrained &key (interpretation nil))
   "Sets the alphabet of derived viewpoint <v> based on the set of
 sequences created by concatenating the alphabet of the basic viewpoint
 from which <v> is derived onto a sequence of events
@@ -83,7 +83,7 @@ in <events>."
         (mapc #'(lambda (element attribute) 
                   (md:set-attribute e attribute element))
               d attributes)
-        (let ((ve (viewpoint-element v (append context (list e)))))
+        (let ((ve (viewpoint-element v (append context (list e)) :interpretation interpretation)))
           (unless (or (undefined-p ve) (member ve derived-alphabet :test #'equal))
             (push ve derived-alphabet))))
       ;;(format t "~&type = ~A; alphabet = ~A~%" (viewpoint-type v) derived-alphabet) ; 

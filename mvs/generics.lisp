@@ -18,10 +18,10 @@
 (cl:in-package #:multiple-viewpoint-system)
 
 (defgeneric count-viewpoints (mvs))
-(defgeneric get-event-array (mvs sequence))
+(defgeneric get-event-array (mvs sequence &key &allow-other-keys))
 (defgeneric operate-on-models (mvs operation &key models ltm-args stm-args))
 (defgeneric set-model-alphabets (mvs event events viewpoint ltm stm 
-                                     unconstrained))
+                                     unconstrained &key interpretation))
 (defgeneric get-basic-viewpoint (mvs derived-viewpoint))
 (defgeneric sequence-prediction-sets (mvs events event-prediction-sets))
 (defgeneric dataset-prediction-sets (mvs sequence-prediction-sets))
