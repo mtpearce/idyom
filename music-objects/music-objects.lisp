@@ -316,30 +316,36 @@ the resolution argument."
 	       (barlength (fourth datum))
 	       (pulses (fifth datum))
 	       (event-id (sixth datum)))
-	  ;(format t "Onset ~S Pitch ~S Duration ~S IOI ~S~%" grid-onset (second datum) grid-duration grid-ioi)
-	  (dotimes (p (+ rest-duration grid-duration))
+	  ;(format t "Onset ~S Pitch ~S Duration ~S IOI ~S~%" grid-onset (second datum) grid-duration grid-ioi) 
+	  (dotimes (p (+ (floor rest-duration) (floor grid-duration)))
 	    (let* ((grid-position (+ (- grid-onset rest-duration) p))
 		   (event (make-instance 'grid-event
-					:isonset (eql grid-position grid-onset)
-					:pos grid-position
-					:cpitch (when (and (>= grid-position grid-onset)
-							   (< grid-position (+ grid-onset grid-duration))) cpitch)
-					:onset (rescale grid-position timebase resolution) ; Onset is derived form anchored-time-interval
-					:duration (/ timebase resolution) ; So is duration
+					 :isonset (eql grid-position grid-onset)
+					 :pos (unless (fractional? grid-position) grid-position)
+					 :cpitch (when (and (>= grid-position grid-onset)
+							    (< grid-position (+ grid-onset grid-duration))) cpitch)
+					 :onset (rescale grid-position timebase resolution) ; Onset is derived form anchored-time-interval
+					 :duration (/ timebase resolution) ; So is duration
 					 :barlength (unless hide-meter barlength)
 					 :pulses (unless hide-meter pulses)
-					:id (copy-identifier event-id))))
-	      ;(format t "~S ~S~%" p grid-position)
+					 :id (copy-identifier event-id)
+					 :timebase timebase)))
+					;(format t "~S ~S~%" p grid-position)
 	      (push event events)))))
-       (sequence:adjust-sequence 
-       grid-sequence (length events)
-       :initial-contents (sort events #'< :key #'onset))
-      grid-sequence))
+      (if (reduce (lambda (x y) (and x y)) events :key (lambda (e) (pos e)))
+	  (sequence:adjust-sequence grid-sequence 
+				    (length events)
+				    :initial-contents (sort events #'< :key #'onset))
+	  grid-sequence)))
+
+(defun fractional? (n)
+  (not (equalp (mod n 1) 0)))
 
 (defun rescale (time resolution timebase)
   "Convert time from units on timebase scale to units on resolution scale. Show a warning when the resulting time is not a whole number."
-  (let ((rescaled-time (* time (/ resolution timebase))))
-    (when (not (equalp (mod rescaled-time 1) 0)) (format t "WARNING: converting ~F (timebase ~D) to resolution ~D resulted in a fractional number (~F) ~%" time timebase resolution rescaled-time))
+  (let* ((rescaled-time (* time (/ resolution timebase)))
+	 (fractional (fractional? rescaled-time)))
+    (when fractional (format t "WARNING: converting ~F (timebase ~D) to resolution ~D resulted in a fractional number (~F) ~%" time timebase resolution rescaled-time))
     rescaled-time))
 
 ;; harmonic sequences
