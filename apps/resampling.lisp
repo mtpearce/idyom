@@ -289,8 +289,10 @@ dataset-id)."
 (defun get-long-term-models (viewpoints training-set pretraining-ids
                              training-id resampling-id
                              resampling-count 
-                             &key voices texture (resolution nil)
-                             use-cache?)
+                             &key voices texture 
+			       (interpretation nil)
+			       (resolution nil)
+			       use-cache?)
   "Returns a vector of long-term models -- one for each viewpoint in
 <viewpoints> -- trained on <training-set> and initialised with the
 supplied keyword parameters. If <use-cache?> is T, models are written
@@ -303,20 +305,22 @@ anew each time."
                         (get-model-filename viewpoint pretraining-ids
                                             training-id resampling-id
                                             resampling-count 
-                                            voices texture resolution))
+                                            voices texture 
+					    resolution interpretation))
                        (training-set
-                        (viewpoint-sequences viewpoint training-set))
+                        (viewpoint-sequences viewpoint training-set 
+					     :interpretation interpretation))
                        (alphabet (viewpoint-alphabet viewpoint)))
                    (get-model filename alphabet training-set)))
              #'(lambda (viewpoint)
                  (let ((training-set
-                        (viewpoint-sequences viewpoint training-set))
+                        (viewpoint-sequences viewpoint training-set :interpretation interpretation))
                        (alphabet (viewpoint-alphabet viewpoint)))
                    (build-model training-set alphabet))))))
     (mapcar constructor-fun viewpoints)))
 
 (defun get-model-filename (viewpoint pretraining-ids training-id resampling-id
-                           resampling-count voices texture resolution)
+                           resampling-count voices texture resolution interpretation)
   "Returns the filename in *model-directory* containing the ppm model
 for <viewpoint> in <dataset-id>."
   (string-append (namestring *model-dir*)
@@ -339,6 +343,11 @@ for <viewpoint> in <dataset-id>."
                                               (1+ resampling-id)
                                               resampling-id)
                                 resampling-count)))
+		 (if (null interpretation) 
+		     "_NIL" 
+		     (multiple-value-bind (beats division) 
+			 (inference::meter->time-signature interpretation)
+		       (format nil "_~A-~A" beats division)))
                  (format nil "_~(~A~)~A" 
 			 texture
 			 (cond ((and (not (null resolution))

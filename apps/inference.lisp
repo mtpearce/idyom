@@ -5,7 +5,8 @@
 (defun infer-meter (dataset-id target-viewpoints source-viewpoints test-sequence
 		    &key (voices nil) (texture :grid) 
 		      (resolution 16) (repetitions 1)
-		      (write-to-python? nil))
+		      (write-to-python? nil)
+		      (use-cache? t))
   (let* ((training-set
 	  (md:get-music-objects 
 	   (if (listp dataset-id) dataset-id (list dataset-id))	nil 
@@ -27,7 +28,10 @@
 							 targets
 							 sources
 							 test-sequence
-							 :resolution resolution))
+							 :resolution resolution
+							 :voices voices
+							 :texture texture
+							 :use-cache? use-cache?))
 	 ;; Extract the likelihoods
 	 (likelihoods (meter-predictions->probabilities meter-predictions))
 	 ;; Initialize the prior distribution
@@ -67,15 +71,21 @@
     results))
 
 (defun generate-meter-predictions (training-set meters targets sources test-sequence
-		    &key (resolution 16))
+		    &key (resolution 16) voices texture use-cache?)
   (format t "Generating predictions for the test sequence in all interpretations~%")
   (let* ((meter-predictions))
     ;; Train models for each meter
     (dolist (meter meters meter-predictions)
       (multiple-value-bind (beats division) (meter->time-signature meter)
 	(format t "Training interpretation model for ~D ~D~%" beats division))
-      (let* ((interpretation-models 
-	      (train-interpretation-models sources training-set meter)) ; The viewpoint models
+      (let* ((interpretation-models ; the viewpoint models
+	      (resampling:get-long-term-models sources training-set 
+					       nil nil nil nil
+					       :voices voices
+					       :texture texture
+					       :interpretation meter
+					       :resolution resolution
+					       :use-cache? use-cache?))
 	     (mvs (mvs:make-mvs targets sources interpretation-models)) 
 	     (period (md:period meter resolution)))
 	 ; Generate predictions for each phase
@@ -134,20 +144,6 @@ flat distribution. Different metres have different amounts of phases."
 		       prior))
 	  prior))
       prior)))
-
-(defun train-interpretation-models (viewpoints training-set interpretation)
-  "Construct a model for each viewpoint in <viewpoints>. 
-If any of the viewpoints is a function over interpretation, the model for
-that viewpoint will be based only on sequences whose annotation matches
-<interpretation>."
-  (let ((constructor-fun
-	 #'(lambda (viewpoint)
-	     (let ((training-set
-		    (viewpoints:viewpoint-sequences viewpoint training-set 
-						    :interpretation interpretation))
-		   (alphabet (viewpoints:viewpoint-alphabet viewpoint)))
-	       (mvs::build-model training-set alphabet)))))
-    (mapcar constructor-fun viewpoints)))
 
 (defun range (max &key (min 0) (step 1))
    (loop for n from min below max by step
