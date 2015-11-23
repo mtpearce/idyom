@@ -89,8 +89,7 @@
    (pos :initarg :pos :accessor pos) ; pos(ition) is the time of the event expressed in grid-units (which are determined by the resolution)
    (cpitch :initarg :cpitch :accessor chromatic-pitch))) ; cpitch is NIL when the event isn't an onset
 
-
-(defclass metrical-interpretation (time-signature)
+(defclass metrical-interpretation (time-signature music-object)
   ((meter-phase :initarg :phase :accessor meter-phase)
    (meter-period :initarg :period :accessor meter-period)))
 
@@ -202,6 +201,9 @@
       (car (clsql:query (format nil "SELECT description FROM mtp_dataset WHERE (dataset_id = ~A);" dataset-id) :flatp t))
       (car (clsql:query (format nil "SELECT description FROM mtp_composition WHERE (dataset_id = ~A AND composition_id = ~A);" dataset-id composition-id) :flatp t))))
 
+(defgeneric period (meter resolution))
+(defmethod period ((meter metrical-interpretation) resolution)
+  (rescale (barlength meter) resolution (timebase meter)))
 
 ;;; Comparing music objects
 
@@ -212,8 +214,8 @@
 
 (defgeneric has-time-signature? (music-object))
 (defmethod has-time-signature? ((ts time-signature))
-  (and (slot-boundp ts 'barlength)
-       (slot-boundp ts 'pulses)))
+  (and (not (null (barlength ts)))
+       (not (null (barlength ts)))))
 
 ;;; Getting music objects from the database
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
