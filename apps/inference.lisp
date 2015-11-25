@@ -130,7 +130,7 @@ flat distribution. Different metres have different amounts of phases."
     (dotimes (meter-index (length meter-keys))
       (let* ((meter (nth meter-index meters))
 	     (probability (nth meter-index probabilities))
-	     (period (md:period meter resolution))) body...)
+	     (period (md:meter-period meter)))
 	(dotimes (phase period)
 	  (setf (md:meter-phase meter) phase)
 	  (setf unnormalised-prior
