@@ -24,14 +24,14 @@
 	 ;; Generate a Nparams x Ntarget-viewpoints x Nevents datastructure
 	 ;; containing event-predictions
 	 (meter-predictions (generate-meter-predictions training-set dataset-id
-							 meters
-							 targets
-							 sources
-							 test-sequence
-							 :resolution resolution
-							 :voices voices
-							 :texture texture
-							 :use-cache? use-cache?))
+							meters
+							targets
+							sources
+							test-sequence
+							:resolution resolution
+							:voices voices
+							:texture texture
+							:use-cache? use-cache?))
 	 ;; Extract the likelihoods
 	 (likelihoods (meter-predictions->probabilities meter-predictions))
 	 ;; Initialize the prior distribution
@@ -108,10 +108,11 @@ note it's meter and add it to an alist
       (sequence:dosequence (event composition)
 	(when (not (or (null (md:barlength event)) (null (md:pulses event))))
 	  (let* ((meter (make-meter-key (md:barlength event) (md:pulses event) (md:timebase event)))
-		 (mcount (cdr (lookup-meter meter meter-counts))))
-	    (if mcount
-		(rplacd (lookup-meter meter meter-counts) (1+ mcount)) 
-		(setf meter-counts (acons meter 1 meter-counts)))))))
+		 (mcount (cdr (lookup-meter meter meter-counts)))
+		 (increment (/ (or mcount 1) (md:meter-period meter))))
+	    (if mcount ; use mcount as a check whether the key already exists
+		(rplacd (lookup-meter meter meter-counts) (+ mcount increment))
+		(setf meter-counts (acons meter increment meter-counts)))))))
     meter-counts))
 
 (defun initialise-prior-distribution (meter-counts resolution)
@@ -123,11 +124,13 @@ flat distribution. Different metres have different amounts of phases."
 	 (unnormalised-prior)
 	 (meter-keys (mapcar #'car meter-counts))
 	 (meters (mapcar #'(lambda (key) (meter-key->metrical-interpretation key resolution)) meter-keys))
-	 (probabilities (mapcar #'(lambda (meter-and-count) (/ (cdr meter-and-count) (apply '+ (mapcar #'cdr meter-counts)))) meter-counts))) ; Divide the count of each meter by the sum of the counts
+	 (probabilities (mapcar #'(lambda (meter-and-count) 
+				      (/ (cdr meter-and-count)
+					 (apply '+ (mapcar #'cdr meter-counts)))) meter-counts))) ; Divide the count of each meter by the sum of the counts
     (dotimes (meter-index (length meter-keys))
       (let* ((meter (nth meter-index meters))
 	     (probability (nth meter-index probabilities))
-	     (period (md:period meter resolution)))
+	     (period (md:period meter resolution))) body...)
 	(dotimes (phase period)
 	  (setf (md:meter-phase meter) phase)
 	  (setf unnormalised-prior
