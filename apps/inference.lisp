@@ -23,7 +23,7 @@
 	 (test-sequence (reduce #'append test-sequence))
 	 ;; Generate a Nparams x Ntarget-viewpoints x Nevents datastructure
 	 ;; containing event-predictions
-	 (meter-predictions (generate-meter-predictions training-set 
+	 (meter-predictions (generate-meter-predictions training-set dataset-id
 							 meters
 							 targets
 							 sources
@@ -70,7 +70,7 @@
 	(rplacd result (nreverse (cdr result)))))
     results))
 
-(defun generate-meter-predictions (training-set meters targets sources test-sequence
+(defun generate-meter-predictions (training-set training-id meters targets sources test-sequence
 		    &key (resolution 16) voices texture use-cache?)
   (format t "Generating predictions for the test sequence in all interpretations~%")
   (let* ((meter-predictions))
@@ -80,7 +80,7 @@
 	(format t "Training interpretation model for ~D ~D~%" beats division))
       (let* ((interpretation-models ; the viewpoint models
 	      (resampling:get-long-term-models sources training-set 
-					       nil nil nil nil
+					       nil training-id nil nil
 					       :voices voices
 					       :texture texture
 					       :interpretation meter
