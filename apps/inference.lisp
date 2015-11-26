@@ -7,23 +7,25 @@
 		      (resolution 16) (repetitions 1)
 		      (write-to-python? nil)
 		      (use-cache? t))
-  (let* ((training-set
-	  (md:get-music-objects 
-	   (if (listp dataset-id) dataset-id (list dataset-id))	nil 
-					:voices voices 
-					:texture texture 
-					:resolution resolution))
+  (let* ((training-set-promise
+	  (promises:make-promise :function (md:get-music-objects 
+				   (if (listp dataset-id) dataset-id (list dataset-id))	
+				   nil 
+				   :voices voices 
+				   :texture texture 
+				   :resolution resolution)
+			:id dataset-id))
 	 (sources (viewpoints:get-viewpoints source-viewpoints))
-	 (targets (viewpoints:get-basic-viewpoints target-viewpoints training-set))
+	 (targets (viewpoints:get-basic-viewpoints target-viewpoints training-set-promise))
 	 ;; Obtain event counts per meter
-	 (meter-counts (train-interpretation-priors training-set resolution))
+	 (meter-counts (train-interpretation-priors training-set-promise resolution))
 	 ;; Extract a list of meters
 	 (meters (mapcar #'(lambda (meter-count) (md:meter-key->metrical-interpretation (car meter-count) resolution)) meter-counts))
 	 (test-sequence (loop for x in (range repetitions) collecting (copy-list test-sequence)))
 	 (test-sequence (reduce #'append test-sequence))
 	 ;; Generate a Nparams x Ntarget-viewpoints x Nevents datastructure
 	 ;; containing event-predictions
-	 (meter-predictions (generate-meter-predictions training-set dataset-id
+	 (meter-predictions (generate-meter-predictions training-set-promise
 							meters
 							targets
 							sources
@@ -70,7 +72,7 @@
 	(rplacd result (nreverse (cdr result)))))
     results))
 
-(defun generate-meter-predictions (training-set training-id meters targets sources test-sequence
+(defun generate-meter-predictions (training-set-promise meters targets sources test-sequence
 		    &key (resolution 16) voices texture use-cache?)
   (format t "Generating predictions for the test sequence in all interpretations~%")
   (let* ((meter-predictions))
@@ -79,8 +81,10 @@
       (multiple-value-bind (beats division) (meter->time-signature meter)
 	(format t "Training interpretation model for ~D ~D~%" beats division))
       (let* ((interpretation-models ; the viewpoint models
-	      (resampling:get-long-term-models sources training-set 
-					       nil training-id nil nil
+	      (resampling:get-long-term-models sources training-set-promise
+					       nil
+					       (promises:get-identifier training-set-promise) 
+					       nil nil
 					       :voices voices
 					       :texture texture
 					       :interpretation meter
@@ -98,12 +102,13 @@
 		  (acons (md:meter-key meter) predictions meter-predictions))))))
     meter-predictions))
 
-(defun train-interpretation-priors (training-set resolution)
+(defun train-interpretation-priors (training-set-promise resolution)
   "Take a training set consisting of music-sequences. Go over each event,
 note it's meter and add it to an alist
  of counts."
   (format t "Counting meters in training set~%")
-  (let ((meter-counts)) ; The meter counts
+  (let ((training-set (promises:retrieve training-set-promise))
+	(meter-counts)) ; The meter counts
     (dolist (composition training-set)
       (sequence:dosequence (event composition)
 	(when (not (or (null (md:barlength event)) (null (md:pulses event))))

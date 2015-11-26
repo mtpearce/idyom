@@ -3,7 +3,10 @@
 ;;; viewpoint-sequence
 
 (defmethod viewpoint-sequences ((v viewpoint) sequences &key (interpretation nil) &allow-other-keys)
-  (mapcar #'(lambda (s) (viewpoint-sequence v s :interpretation interpretation)) sequences))
+  (let ((sequences (if (eql (type-of sequences) 'promises:promise) 
+		       (promises:retrieve sequences)
+		       sequences)))
+    (mapcar #'(lambda (s) (viewpoint-sequence v s :interpretation interpretation)) sequences)))
 
 (defmethod viewpoint-sequence ((v viewpoint) (m md:music-composition) &key (interpretation nil) &allow-other-keys)
   (viewpoint-sequence v (coerce m 'list) :interpretation interpretation))

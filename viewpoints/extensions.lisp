@@ -15,8 +15,11 @@
   (initialise-basic-viewpoints dataset)
   (set-onset-alphabet nil)
   ; Only applicable for :grid textures
-  (when (equal (type-of (first dataset)) 'md:grid-sequence)
-    (set-pos-alphabet nil))
+  (let ((dataset (if (eql (type-of dataset) 'promises:promise)
+		     (promises:retrieve dataset)
+		     dataset)))
+    (when (equal (type-of (first dataset)) 'md:grid-sequence)
+      (set-pos-alphabet nil)))
   (get-viewpoints attributes))
 
 (defun initialise-basic-viewpoints (dataset)
@@ -35,21 +38,22 @@
 
 (defmethod set-alphabet-from-dataset ((v viewpoint) dataset)
   "Initialises the alphabet of viewpoint <v> in <dataset>."
-  (let ((alphabet '()))
-    (dolist (composition dataset)
-      (let ((viewpoint-sequence (viewpoint-sequence v composition)))
-        (dolist (viewpoint-element viewpoint-sequence)
-          (unless (or (undefined-p viewpoint-element)
-                      (member viewpoint-element alphabet :test #'equal))
-            (push viewpoint-element alphabet)))))
-    (let ((sorted-alphabet
-           (sort alphabet #'(lambda (x y)
-                              (cond ((and (numberp x) (numberp y))
-                                     (< x y))
-                                    ((and (listp x) (listp y))
-                                     (< (car x) (car y)))
-                                    (t nil))))))
-      (setf (viewpoint-alphabet v) sorted-alphabet))))
+  (let ((dataset (if (eql (type-of dataset) 'promises:promise) (promises:retrieve dataset) dataset)))
+    (let ((alphabet '()))
+      (dolist (composition dataset)
+	(let ((viewpoint-sequence (viewpoint-sequence v composition)))
+	  (dolist (viewpoint-element viewpoint-sequence)
+	    (unless (or (undefined-p viewpoint-element)
+			(member viewpoint-element alphabet :test #'equal))
+	      (push viewpoint-element alphabet)))))
+      (let ((sorted-alphabet
+	     (sort alphabet #'(lambda (x y)
+				(cond ((and (numberp x) (numberp y))
+				       (< x y))
+				      ((and (listp x) (listp y))
+				       (< (car x) (car y)))
+				      (t nil))))))
+	(setf (viewpoint-alphabet v) sorted-alphabet)))))
 
 (defmethod set-alphabet-from-context ((v viewpoint) events unconstrained &key (interpretation nil))
   "Sets the alphabet of derived viewpoint <v> based on the set of
