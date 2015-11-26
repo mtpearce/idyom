@@ -24,4 +24,11 @@
            "COLLECT-GARBAGE" "SHELL-COMMAND")
   (:documentation "Utility functions of general use."))
 
+(defpackage #:promises
+  (:use #:cl)
+  (:export "MAKE-PROMISE" "PROMISE" "RETRIEVE" "GET-IDENTIFIER")
+  (:documentation "Objects for postponing calling resource intensive functions until
+their result is required because of cache misses."))
+
+
 

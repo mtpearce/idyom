@@ -24,7 +24,8 @@
 	    :serial t
             :components 
             ((:file "package")
-             (:file "utils")))
+             (:file "utils")
+	     (:file "promises")))
    ;; Database for storage and retrieval of music
    (:module database
 	    :serial t
