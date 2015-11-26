@@ -18,7 +18,7 @@
 	 (sources (viewpoints:get-viewpoints source-viewpoints))
 	 (targets (viewpoints:get-basic-viewpoints target-viewpoints training-set-promise))
 	 ;; Obtain event counts per meter
-	 (meter-counts (train-interpretation-priors training-set-promise resolution))
+	 (meter-counts (count-meters training-set-promise resolution))
 	 ;; Extract a list of meters
 	 (meters (mapcar #'(lambda (meter-count) (md:meter-key->metrical-interpretation (car meter-count) resolution)) meter-counts))
 	 (test-sequence (loop for x in (range repetitions) collecting (copy-list test-sequence)))
@@ -102,7 +102,7 @@
 		  (acons (md:meter-key meter) predictions meter-predictions))))))
     meter-predictions))
 
-(defun train-interpretation-priors (training-set-promise resolution)
+(defun count-meters (training-set-promise resolution)
   "Take a training set consisting of music-sequences. Go over each event,
 note it's meter and add it to an alist
  of counts."
