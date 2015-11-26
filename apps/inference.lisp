@@ -2,6 +2,10 @@
 
 (cl:in-package #:inference)
 
+(defparameter *counts-dir* 
+  (ensure-directories-exist
+   (merge-pathnames "data/counts/" (utils:ensure-directory apps:*root-dir*))))
+
 (defun infer-meter (dataset-id target-viewpoints source-viewpoints test-sequence
 		    &key (voices nil) (texture :grid) 
 		      (resolution 16) (repetitions 1)
@@ -106,20 +110,23 @@
   "Take a training set consisting of music-sequences. Go over each event,
 note it's meter and add it to an alist
  of counts."
-  (format t "Counting meters in training set~%")
-  (let ((training-set (promises:retrieve training-set-promise))
-	(meter-counts)) ; The meter counts
-    (dolist (composition training-set)
-      (sequence:dosequence (event composition)
-	(when (not (or (null (md:barlength event)) (null (md:pulses event))))
-	  (let* ((meter (md:make-metrical-interpretation event resolution))
-		 (meter-key (md:meter-key meter))
-		 (mcount (cdr (lookup-meter meter-key meter-counts)))
-		 (increment (/ (or mcount 1) (md:meter-period meter))))
-	    (if mcount ; use mcount as a check whether the key already exists
+  (let ((filename (format nil "~A~A-~A" *counts-dir* (promises:get-identifier training-set-promise) resolution)))
+    (unless (utils:file-exists filename)
+      (let ((training-set (promises:retrieve training-set-promise))
+	    (meter-counts)) ; The meter counts
+	(dolist (composition training-set)
+	  (sequence:dosequence (event composition)
+	    (when (not (or (null (md:barlength event)) (null (md:pulses event))))
+	      (let* ((meter (md:make-metrical-interpretation event resolution))
+		     (meter-key (md:meter-key meter))
+		     (mcount (cdr (lookup-meter meter-key meter-counts)))
+		     (increment (/ (or mcount 1) (md:meter-period meter))))
+		(if mcount ; use mcount as a check whether the key already exists
 		(rplacd (lookup-meter meter-key meter-counts) (+ mcount increment))
 		(setf meter-counts (acons meter-key increment meter-counts)))))))
-    meter-counts))
+	(utils:write-object-to-file meter-counts filename)
+	(format t "Written meter counts to ~A.~%" filename)))
+    (utils:read-object-from-file filename)))
 
 (defun initialise-prior-distribution (meter-counts resolution)
   "Generate a probability distribution using the counts in <meter-counts>. 
