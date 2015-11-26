@@ -240,7 +240,7 @@
 (defgeneric has-time-signature? (music-object))
 (defmethod has-time-signature? ((ts time-signature))
   (and (not (null (barlength ts)))
-       (not (null (barlength ts)))))
+       (not (null (pulses ts)))))
 
 ;;; Getting music objects from the database
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
