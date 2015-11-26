@@ -20,7 +20,9 @@
 				   :resolution resolution)
 			:id dataset-id))
 	 (sources (viewpoints:get-viewpoints source-viewpoints))
-	 (targets (viewpoints:get-basic-viewpoints target-viewpoints training-set-promise))
+	 (targets (viewpoints:get-basic-viewpoints target-viewpoints 
+						   training-set-promise
+						   :texture texture))
 	 ;; Obtain event counts per meter
 	 (meter-counts (count-meters training-set-promise resolution))
 	 ;; Extract a list of meters

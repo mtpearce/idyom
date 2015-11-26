@@ -7,19 +7,20 @@
 
 (cl:in-package #:viewpoints) 
 
+(defparameter *alphabet-dir* 
+  (ensure-directories-exist
+   (merge-pathnames "data/alphabets/" (utils:ensure-directory apps:*root-dir*))))
+
 (defgeneric set-alphabet-from-dataset (viewpoint dataset))
 (defgeneric set-alphabet-from-context (viewpoint events unconstrained &key interpretation))
 (defgeneric alphabet->events (viewpoint events))
 
-(defun get-basic-viewpoints (attributes dataset)
+(defun get-basic-viewpoints (attributes dataset &key (texture :melody))
   (initialise-basic-viewpoints dataset)
   (set-onset-alphabet nil)
   ; Only applicable for :grid textures
-  (let ((dataset (if (eql (type-of dataset) 'promises:promise)
-		     (promises:retrieve dataset)
-		     dataset)))
-    (when (equal (type-of (first dataset)) 'md:grid-sequence)
-      (set-pos-alphabet nil)))
+  (when (eql texture :grid)
+    (set-pos-alphabet nil))
   (get-viewpoints attributes))
 
 (defun initialise-basic-viewpoints (dataset)
@@ -38,23 +39,27 @@
 
 (defmethod set-alphabet-from-dataset ((v viewpoint) dataset)
   "Initialises the alphabet of viewpoint <v> in <dataset>."
-  (let ((dataset (if (eql (type-of dataset) 'promises:promise) (promises:retrieve dataset) dataset)))
-    (let ((alphabet '()))
-      (dolist (composition dataset)
-	(let ((viewpoint-sequence (viewpoint-sequence v composition)))
-	  (dolist (viewpoint-element viewpoint-sequence)
-	    (unless (or (undefined-p viewpoint-element)
-			(member viewpoint-element alphabet :test #'equal))
-	      (push viewpoint-element alphabet)))))
-      (let ((sorted-alphabet
-	     (sort alphabet #'(lambda (x y)
-				(cond ((and (numberp x) (numberp y))
-				       (< x y))
-				      ((and (listp x) (listp y))
-				       (< (car x) (car y)))
-				      (t nil))))))
-	(setf (viewpoint-alphabet v) sorted-alphabet)))))
-
+  (let ((filename (format nil "~A~A-~A" *alphabet-dir* (symbol-name (type-of v)) (promises:get-identifier dataset))))
+    (unless (utils:file-exists filename)
+      (let ((alphabet '())
+	    (dataset (if (eql (type-of dataset) 'promises:promise) (promises:retrieve dataset) dataset)))
+	(dolist (composition dataset)
+	  (let ((viewpoint-sequence (viewpoint-sequence v composition)))
+	    (dolist (viewpoint-element viewpoint-sequence)
+	      (unless (or (undefined-p viewpoint-element)
+			  (member viewpoint-element alphabet :test #'equal))
+		(push viewpoint-element alphabet)))))
+	(let ((sorted-alphabet
+	       (sort alphabet #'(lambda (x y)
+				  (cond ((and (numberp x) (numberp y))
+					 (< x y))
+					((and (listp x) (listp y))
+					 (< (car x) (car y)))
+					(t nil))))))
+	  (utils:write-object-to-file sorted-alphabet filename)
+	  (format t "Written alphabet for ~A to file ~A.~%" (symbol-name (type-of v)) filename))))
+    (setf (viewpoint-alphabet v) (utils:read-object-from-file filename))))
+  
 (defmethod set-alphabet-from-context ((v viewpoint) events unconstrained &key (interpretation nil))
   "Sets the alphabet of derived viewpoint <v> based on the set of
 sequences created by concatenating the alphabet of the basic viewpoint
