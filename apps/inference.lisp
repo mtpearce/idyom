@@ -16,9 +16,9 @@
 	 (sources (viewpoints:get-viewpoints source-viewpoints))
 	 (targets (viewpoints:get-basic-viewpoints target-viewpoints training-set))
 	 ;; Obtain event counts per meter
-	 (meter-counts (train-interpretation-priors training-set))
+	 (meter-counts (train-interpretation-priors training-set resolution))
 	 ;; Extract a list of meters
-	 (meters (mapcar #'(lambda (meter-count) (meter-key->metrical-interpretation (car meter-count) resolution)) meter-counts))
+	 (meters (mapcar #'(lambda (meter-count) (md:meter-key->metrical-interpretation (car meter-count) resolution)) meter-counts))
 	 (test-sequence (loop for x in (range repetitions) collecting (copy-list test-sequence)))
 	 (test-sequence (reduce #'append test-sequence))
 	 ;; Generate a Nparams x Ntarget-viewpoints x Nevents datastructure
@@ -87,7 +87,7 @@
 					       :resolution resolution
 					       :use-cache? use-cache?))
 	     (mvs (mvs:make-mvs targets sources interpretation-models)) 
-	     (period (md:period meter resolution)))
+	     (period (md:meter-period meter)))
 	 ; Generate predictions for each phase
 	(format t "Modelling test sequence for all phases~%")
 	(dotimes (phase period)
@@ -95,10 +95,10 @@
 	  (let ((predictions
 		 (mvs:model-sequence mvs (coerce test-sequence 'list) :construct? nil :predict? t :interpretation meter)))
 	    (setf meter-predictions 
-		  (acons (metrical-interpretation->meter-key meter) predictions meter-predictions))))))
+		  (acons (md:meter-key meter) predictions meter-predictions))))))
     meter-predictions))
 
-(defun train-interpretation-priors (training-set)
+(defun train-interpretation-priors (training-set resolution)
   "Take a training set consisting of music-sequences. Go over each event,
 note it's meter and add it to an alist
  of counts."
@@ -107,12 +107,13 @@ note it's meter and add it to an alist
     (dolist (composition training-set)
       (sequence:dosequence (event composition)
 	(when (not (or (null (md:barlength event)) (null (md:pulses event))))
-	  (let* ((meter (make-meter-key (md:barlength event) (md:pulses event) (md:timebase event)))
-		 (mcount (cdr (lookup-meter meter meter-counts)))
+	  (let* ((meter (md:make-metrical-interpretation event resolution))
+		 (meter-key (md:meter-key meter))
+		 (mcount (cdr (lookup-meter meter-key meter-counts)))
 		 (increment (/ (or mcount 1) (md:meter-period meter))))
 	    (if mcount ; use mcount as a check whether the key already exists
-		(rplacd (lookup-meter meter meter-counts) (+ mcount increment))
-		(setf meter-counts (acons meter increment meter-counts)))))))
+		(rplacd (lookup-meter meter-key meter-counts) (+ mcount increment))
+		(setf meter-counts (acons meter-key increment meter-counts)))))))
     meter-counts))
 
 (defun initialise-prior-distribution (meter-counts resolution)
@@ -123,7 +124,7 @@ flat distribution. Different metres have different amounts of phases."
   (let* ((prior)
 	 (unnormalised-prior)
 	 (meter-keys (mapcar #'car meter-counts))
-	 (meters (mapcar #'(lambda (key) (meter-key->metrical-interpretation key resolution)) meter-keys))
+	 (meters (mapcar #'(lambda (key) (md:meter-key->metrical-interpretation key resolution)) meter-keys))
 	 (probabilities (mapcar #'(lambda (meter-and-count) 
 				      (/ (cdr meter-and-count)
 					 (apply '+ (mapcar #'cdr meter-counts)))) meter-counts))) ; Divide the count of each meter by the sum of the counts
@@ -134,7 +135,7 @@ flat distribution. Different metres have different amounts of phases."
 	(dotimes (phase period)
 	  (setf (md:meter-phase meter) phase)
 	  (setf unnormalised-prior
-		(acons (metrical-interpretation->meter-key meter) 
+		(acons (md:meter-key meter) 
 		       probability 
 		       unnormalised-prior)))))
     ;; Normalise
@@ -261,26 +262,6 @@ the probabilities over time and divide by the list length."
 	 (beat-divisor (/ timebase beat-duration)))
     (values pulses beat-divisor phase)))
 
-(defun metrical-interpretation->meter-key (metrical-interpretation)
-  (format nil "(~A ~A ~A ~A)" 
-	  (md:barlength metrical-interpretation)
-	  (md:pulses metrical-interpretation)
-	  (md:meter-phase metrical-interpretation)
-	  (md:timebase metrical-interpretation)))
-
-(defun make-meter-key (barlength pulses timebase)
-  (format nil "(~A ~A 0 ~A)" barlength pulses timebase))
-
-(defun meter-key->metrical-interpretation (meter-key resolution)
-  (multiple-value-bind (values)
-      (read-from-string meter-key)
-    (make-instance 'md:metrical-interpretation
-		   :barlength (first values)
-		   :pulses (second values)
-		   :phase (third values)
-		   :period (md:rescale (first values) resolution (fourth values))
-		   :timebase (fourth values))))
-
 (defun lookup-meter (meter counts)
   (assoc meter counts :test #'string-equal))
 	
@@ -293,7 +274,7 @@ the probabilities over time and divide by the list length."
     (let ((params (mapcar #'car distributions)))
       (dolist (param params)
 	(multiple-value-bind (beat division phase)
-	    (meter->time-signature (meter-key->metrical-interpretation param resolution))
+	    (meter->time-signature (md:meter-key->metrical-interpretation param resolution))
 	  (format stream "'~D ~D (phase ~D)':[" beat division phase))
 	(format stream "~{~D,~}" (cdr (assoc param distributions :test #'string-equal)))
 	(format stream "],")))

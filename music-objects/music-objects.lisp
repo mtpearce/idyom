@@ -91,7 +91,7 @@
 
 (defclass metrical-interpretation (time-signature music-object)
   ((meter-phase :initarg :phase :accessor meter-phase)
-   (meter-period :initarg :period :accessor meter-period)))
+   (resolution :initarg :resolution :accessor resolution)))
 
 ;;; Identifiers 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -201,9 +201,34 @@
       (car (clsql:query (format nil "SELECT description FROM mtp_dataset WHERE (dataset_id = ~A);" dataset-id) :flatp t))
       (car (clsql:query (format nil "SELECT description FROM mtp_composition WHERE (dataset_id = ~A AND composition_id = ~A);" dataset-id composition-id) :flatp t))))
 
-(defgeneric period (meter resolution))
-(defmethod period ((meter metrical-interpretation) resolution)
-  (rescale (barlength meter) resolution (timebase meter)))
+(defgeneric make-metrical-interpretation (time-signature resolution &key phase))
+(defmethod make-metrical-interpretation ((ts time-signature) resolution &key (phase 0))
+  (make-instance 'metrical-interpretation 
+		 :barlength (barlength ts)
+		 :pulses (pulses ts)
+		 :phase phase 
+		 :timebase (timebase ts)
+		 :resolution resolution))
+  
+
+(defgeneric meter-key (metrical-interpretation))
+(defmethod meter-key ((m metrical-interpretation))
+  (format nil "(~A ~A ~A ~A)" 
+	  (barlength m) (pulses m) (meter-phase m) (timebase m)))
+
+(defun meter-key->metrical-interpretation (meter-key resolution)
+  (multiple-value-bind (values)
+      (read-from-string meter-key)
+    (make-instance 'md:metrical-interpretation
+		   :barlength (first values)
+		   :pulses (second values)
+		   :phase (third values)
+		   :resolution resolution
+		   :timebase (fourth values))))
+
+(defgeneric meter-period (meter))
+(defmethod meter-period ((m metrical-interpretation))
+  (rescale (barlength m) (resolution m) (timebase m)))
 
 ;;; Comparing music objects
 
@@ -332,6 +357,7 @@ the resolution argument."
 					 :timebase timebase)))
 					;(format t "~S ~S~%" p grid-position)
 	      (push event events)))))
+      ; Only add the events to the sequence if none of them is zero
       (if (reduce (lambda (x y) (and x y)) events :key (lambda (e) (pos e)))
 	  (sequence:adjust-sequence grid-sequence 
 				    (length events)
