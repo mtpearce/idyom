@@ -306,12 +306,8 @@ anew each time."
                                             training-id resampling-id
                                             resampling-count 
                                             voices texture 
-					    resolution interpretation))
-                       (training-set
-                        (viewpoint-sequences viewpoint training-set 
-					     :interpretation interpretation))
-                       (alphabet (viewpoint-alphabet viewpoint)))
-                   (get-model filename alphabet training-set)))
+					    resolution interpretation)))
+                   (get-model filename training-set viewpoint :interpretation interpretation)))
              #'(lambda (viewpoint)
                  (let ((training-set
                         (viewpoint-sequences viewpoint training-set :interpretation interpretation))

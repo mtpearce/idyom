@@ -47,14 +47,17 @@
                           #'label->string 
                           t nil #'eq nil)))))
 
-(defun get-model (filename alphabet dataset &key (order-bound nil)
+(defun get-model (filename training-set viewpoint &key (interpretation nil) (order-bound nil)
                            (mixtures t) (escape :c) (update-exclusion nil))
   "Returns a PPM model initialised with the supplied parameters. If
    <filename> exists the model is read from the designated file otherwise
    it is constructed from the database and written to <filename>." 
   (unless (utils:file-exists filename)
-    (let ((model (make-ppm alphabet)))
-      (model-dataset model dataset :construct? t :predict? nil)
+    (let* ((viewpoint-sequences (viewpoints:viewpoint-sequences viewpoint training-set 
+						    :interpretation interpretation))
+	  (alphabet (viewpoints:viewpoint-alphabet viewpoint))
+	  (model (make-ppm alphabet)))
+      (model-dataset model viewpoint-sequences :construct? t :predict? nil)
       (write-model-to-file model filename)
       (format t "~&Written PPM* model to ~A.~%" filename)))
   (read-model-from-file filename :order-bound order-bound :mixtures mixtures
