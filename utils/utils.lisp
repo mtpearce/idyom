@@ -326,6 +326,20 @@
 ;;; Pathnames
 ;;;===========================================================================
 
+;;;
+;;; All users should define the path *idyom-root* as a 'working
+;;; directory' for IDyOM, e.g. using (setq "path") in their .sbclrc
+;;;
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  ;; *root-dir* provides a location for IDyOM's caches etc.
+  (defvar *root-dir* 
+    (if (boundp 'common-lisp-user::*idyom-root*)
+	;; Use *idyom-root* if defined
+	common-lisp-user::*idyom-root*
+	;; Else use home directory
+        (ensure-directories-exist
+         (merge-pathnames "idyom/" (user-homedir-pathname))))))
+
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (unless (find-package 'sb-posix) 
     (require 'sb-posix)))

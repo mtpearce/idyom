@@ -9,7 +9,7 @@
 
 (defparameter *alphabet-dir* 
   (ensure-directories-exist
-   (merge-pathnames "data/alphabets/" (utils:ensure-directory apps:*root-dir*))))
+   (merge-pathnames "data/alphabets/" (utils:ensure-directory utils:*root-dir*))))
 
 (defgeneric set-alphabet-from-dataset (viewpoint dataset))
 (defgeneric set-alphabet-from-context (viewpoint events unconstrained &key interpretation))

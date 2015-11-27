@@ -4,7 +4,7 @@
 
 (defparameter *counts-dir* 
   (ensure-directories-exist
-   (merge-pathnames "data/counts/" (utils:ensure-directory apps:*root-dir*))))
+   (merge-pathnames "data/counts/" (utils:ensure-directory utils:*root-dir*))))
 
 (defun infer-meter (dataset-id target-viewpoints source-viewpoints test-sequence
 		    &key (voices nil) (texture :grid) 

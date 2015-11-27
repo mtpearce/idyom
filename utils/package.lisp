@@ -21,7 +21,8 @@
            "ALIST->HASH-TABLE" "HASH-TABLE->ALIST" "HASH-TABLE->SORTED-ALIST"
            "READ-OBJECT-FROM-FILE" "FILE-EXISTS" "WRITE-OBJECT-TO-FILE"
            "CD" "PWD" "ENSURE-DIRECTORY"
-           "COLLECT-GARBAGE" "SHELL-COMMAND")
+           "COLLECT-GARBAGE" "SHELL-COMMAND"
+	   "*ROOT-DIR*")
   (:documentation "Utility functions of general use."))
 
 (defpackage #:promises

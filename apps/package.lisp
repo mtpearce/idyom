@@ -9,7 +9,7 @@
 
 (defpackage #:apps
   (:use #:cl #:utils #:md #:mvs)
-  (:export "*ROOT-DIR*" "POPULATE-DATABASE" "DATASET-MODELLING-FILENAME")
+  (:export "POPULATE-DATABASE" "DATASET-MODELLING-FILENAME")
   (:documentation "Miscellaneous variables & utils for applications."))
 
 (defpackage #:idyom
