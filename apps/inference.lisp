@@ -124,8 +124,8 @@ note it's meter and add it to an alist
 		     (mcount (cdr (lookup-meter meter-key meter-counts)))
 		     (increment (/ 1 (md:meter-period meter))))
 		(if mcount ; use mcount as a check whether the key already exists
-		(rplacd (lookup-meter meter-key meter-counts) (+ mcount increment))
-		(setf meter-counts (acons meter-key increment meter-counts)))))))
+		    (rplacd (lookup-meter meter-key meter-counts) (+ mcount increment))
+		    (setf meter-counts (acons meter-key increment meter-counts)))))))
 	(utils:write-object-to-file meter-counts filename)
 	(format t "Written meter counts to ~A.~%" filename)))
     (utils:read-object-from-file filename)))
@@ -215,7 +215,7 @@ the probabilities over time and divide by the list length."
   (let ((interpretations (mapcar #'car meter-predictions))
 	(output))
     (dolist (meter interpretations) ; FOR EACH: meter
-      (let ((sequence-predictions (cdr (assoc meter meter-predictions :test #'string-equal)))
+      (let ((sequence-predictions (lookup-key meter meter-predictions))
 	    (sequence-probabilities))
 	(dolist (predictions sequence-predictions) ; FOR EACH: viewpoint prediction
 	  (let* ((event-predictions (prediction-sets:prediction-set predictions))
@@ -268,13 +268,10 @@ the probabilities over time and divide by the list length."
     (format t "\\end{tabular}")))
 
 (defun meter->time-signature (metrical-interpretation)
-  (let* ((barlength (md:barlength metrical-interpretation))
-	 (pulses (md:pulses metrical-interpretation))
-	 (timebase (md:timebase metrical-interpretation))
-	 (phase (md:meter-phase metrical-interpretation))
-	 (beat-duration (/ barlength pulses))
-	 (beat-divisor (/ timebase beat-duration)))
-    (values pulses beat-divisor phase)))
+  (let ((phase (md:meter-phase metrical-interpretation))
+	(pulses (md:pulses metrical-interpretation))
+	(beat-division (md:beat-division metrical-interpretation)))
+    (values pulses beat-division phase)))
 
 (defun lookup-meter (meter counts)
   (assoc meter counts :test #'string-equal))

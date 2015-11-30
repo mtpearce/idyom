@@ -226,6 +226,13 @@
 		   :resolution resolution
 		   :timebase (fourth values))))
 
+(defgeneric beat-division (meter))
+(defmethod beat-division ((m metrical-interpretation))
+  (let* ((beat-duration (/ (barlength m)
+			  (pulses m)))
+	(beat-division (/ (timebase m) beat-duration)))
+    beat-division))
+
 (defgeneric meter-period (meter))
 (defmethod meter-period ((m metrical-interpretation))
   (rescale (barlength m) (resolution m) (timebase m)))
