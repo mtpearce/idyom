@@ -341,9 +341,9 @@ for <viewpoint> in <dataset-id>."
                                 resampling-count)))
 		 (if (null interpretation) 
 		     "_NIL" 
-		     (multiple-value-bind (beats division) 
-			 (inference::meter->time-signature interpretation)
-		       (format nil "_~A-~A" beats division)))
+		     (let ((barlength (md:barlength interpretation))
+			   (pulses (md:pulses interpretation)))
+		       (format nil "_~A-~A" barlength pulses)))
                  (format nil "_~(~A~)~A" 
 			 texture
 			 (cond ((and (not (null resolution))
