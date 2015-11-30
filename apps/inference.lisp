@@ -122,7 +122,7 @@ note it's meter and add it to an alist
 	      (let* ((meter (md:make-metrical-interpretation event resolution))
 		     (meter-key (md:meter-key meter))
 		     (mcount (cdr (lookup-meter meter-key meter-counts)))
-		     (increment (/ (or mcount 1) (md:meter-period meter))))
+		     (increment (/ 1 (md:meter-period meter))))
 		(if mcount ; use mcount as a check whether the key already exists
 		(rplacd (lookup-meter meter-key meter-counts) (+ mcount increment))
 		(setf meter-counts (acons meter-key increment meter-counts)))))))
