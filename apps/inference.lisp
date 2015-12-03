@@ -214,17 +214,16 @@ the probabilities over time and divide by the list length."
     output))
 
 (defun meter-predictions->probabilities (meter-predictions)
-  (let ((interpretations (mapcar #'car meter-predictions))
-	(output))
-    (dolist (meter interpretations) ; FOR EACH: meter
-      (let ((sequence-predictions (lookup-key meter meter-predictions))
-	    (sequence-probabilities))
-	(dolist (predictions sequence-predictions) ; FOR EACH: viewpoint prediction
-	  (let* ((event-predictions (prediction-sets:prediction-set predictions))
-		 (probabilities (mapcar #'probability event-predictions)))
-	    (push probabilities sequence-probabilities)))
-	(setf output (acons meter (nreverse sequence-probabilities) output))))
-    output))
+  (mapcar #'(lambda (item) 
+	      (let ((meter (car item))
+		    (predictions (cdr item))) ; Predictions is a list of prediction set objects for each viewpoint
+		(cons meter
+		      (mapcar #'(lambda (prediction)
+			    (let ((eps (prediction-sets:prediction-set prediction)))
+			      (mapcar (lambda (ep) 
+					(cadr (prediction-sets:event-prediction ep))) eps)))
+			predictions))))
+	  meter-predictions))
 
 (defun ioi-list->grid-events (ioi-list &key 
 					 (source-resolution 8) 
