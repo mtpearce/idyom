@@ -103,11 +103,11 @@
 	 ; Generate predictions for each phase
 	(format t "Modelling test sequence for all phases~%")
 	(dotimes (phase period)
-	  (setf (md:meter-phase meter) phase)
-	  (let ((predictions
-		 (mvs:model-sequence mvs (coerce test-sequence 'list) :construct? nil :predict? t :interpretation meter)))
+	  (let* ((m (md:make-metrical-interpretation meter resolution :phase phase))
+		 (predictions
+		  (mvs:model-sequence mvs (coerce test-sequence 'list) :construct? nil :predict? t :interpretation m)))
 	    (setf meter-predictions 
-		  (acons (md:meter-key meter) predictions meter-predictions))))))
+		  (acons (md:meter-key m) predictions meter-predictions))))))
     meter-predictions))
 
 (defun count-meters (training-set-promise resolution)
