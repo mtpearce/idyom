@@ -307,7 +307,7 @@ anew each time."
                                             resampling-count 
                                             voices texture 
 					    resolution interpretation)))
-                   (get-model filename training-set viewpoint :interpretation interpretation)))
+		   (get-model filename training-set viewpoint :interpretation interpretation)))
              #'(lambda (viewpoint)
                  (let ((training-set
                         (viewpoint-sequences viewpoint training-set :interpretation interpretation))

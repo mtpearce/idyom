@@ -27,9 +27,11 @@
 	 (meter-counts (count-meters training-set-promise resolution))
 	 ;; Extract a list of meters
 	 (meters (mapcar #'(lambda (meter-count) (md:meter-key->metrical-interpretation (car meter-count) resolution)) meter-counts))
+	 ; Repeat the test sequence a specified number of times
 	 (test-sequence (loop for x in (range repetitions) collecting (copy-list test-sequence)))
+	 ; Concatenate sublists
 	 (test-sequence (reduce #'append test-sequence))
-	 ;; Generate a Nparams x Ntarget-viewpoints x Nevents datastructure
+	 ;; Generate a Nparams x Ntarget-viewpoints x Nevents matrix
 	 ;; containing event-predictions
 	 (meter-predictions (generate-meter-predictions training-set-promise
 							meters
@@ -294,3 +296,5 @@ the probabilities over time and divide by the list length."
 ;; Some rhythms convenient for testing
 (defvar agbekor (ioi-list->grid-events '(2 2 1 2 2 2 1) :target-resolution 16))
 (defvar shave-and-a-haircut (ioi-list->grid-events '(2 1 1 2 4 2 4) :target-resolution 16))
+(defvar son-clave (ioi-list->grid-events '(3 3 4 2 2) :target-resolution 16))
+
