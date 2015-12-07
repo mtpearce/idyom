@@ -11,24 +11,28 @@
   (ensure-directories-exist
    (merge-pathnames "data/alphabets/" (utils:ensure-directory utils:*root-dir*))))
 
+(defvar grid-basic-viewpoints '(:isonset :pos))
+
 (defgeneric set-alphabet-from-dataset (viewpoint dataset))
 (defgeneric set-alphabet-from-context (viewpoint events unconstrained &key interpretation))
 (defgeneric alphabet->events (viewpoint events))
 
 (defun get-basic-viewpoints (attributes dataset &key (texture :melody))
-  (initialise-basic-viewpoints dataset)
+  (initialise-basic-viewpoints dataset texture)
   (set-onset-alphabet nil)
   ; Only applicable for :grid textures
   (when (eql texture :grid)
     (set-pos-alphabet nil))
   (get-viewpoints attributes))
 
-(defun initialise-basic-viewpoints (dataset)
+(defun initialise-basic-viewpoints (dataset texture)
   "Initialises the alphabets of the relevant basic types specified in
 *basic-types* to those elements which appear in <dataset>."
   (dolist (attribute (get-basic-types nil)) ;; (elt (car dataset) 0)))
     (handler-case ;; not all basic viewpoints are present in all textures (e.g., articulation is not present in :harmony).
-        (set-alphabet-from-dataset (get-viewpoint attribute) dataset)
+        (unless (and (eql texture :grid) 
+		     (not (member attribute grid-basic-viewpoints)))
+	  (set-alphabet-from-dataset (get-viewpoint attribute) dataset))
       (error nil nil)))) 
 
 (defun set-onset-alphabet (context)
