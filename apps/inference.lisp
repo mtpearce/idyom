@@ -225,23 +225,48 @@ the probabilities over time and divide by the list length."
 			predictions))))
 	  meter-predictions))
 
+(defun grid->grid-events (grid &key (resolution 16)
+				 (interpretation nil)
+				 (timebase 96))
+  (loop for isonset in grid for position to (length grid)
+     collecting (make-grid-event (if (eql isonset 1) t nil)
+				 position 
+				 :interpretation interpretation
+				 :resolution resolution
+				 :timebase timebase)))
+
 (defun ioi-list->grid-events (ioi-list &key 
 					 (source-resolution 8) 
 					 (target-resolution 16) 
-					 (timebase 96))
+					 (timebase 96)
+					 (interpretation nil)
+					 (phase 0))
   (setf ioi-list (mapcar #'(lambda (ioi) (md:rescale ioi target-resolution source-resolution)) ioi-list))
   (let ((onset-times (cons 0 (cumsum ioi-list))))
-    (loop for position in (range (car (last onset-times)))
-	 collecting (make-instance 'md::grid-event
-			    :isonset (if (member position onset-times) t nil)
-			    :pos position
-			    :cpitch nil
-			    :onset (md:rescale position timebase target-resolution)
-			    :duration (/ timebase target-resolution)
-			    :barlength nil
-			    :pulses nil
-			    :id (md:make-event-id 0 0 0)
-			    :timebase timebase))))
+    (loop for position in (range (+ phase (car (last onset-times))))
+	 collecting (make-grid-event (if (member (- position phase) onset-times) t nil) 
+				     position 
+				     :interpretation interpretation
+				     :resolution target-resolution
+				     :timebase timebase))))
+    
+(defun make-grid-event (isonset position &key
+					   (timebase 96)
+					   (resolution 16) 
+					   (interpretation nil))
+  (make-instance 'md::grid-event
+		 :isonset isonset
+		 :pos position
+		 :cpitch nil
+		 :onset (md:rescale position timebase resolution)
+		 :duration (/ timebase resolution)
+		 :barlength (when interpretation
+			      (md:barlength interpretation))
+		 :pulses (when interpretation
+			   (md:pulses interpretation))
+		 :id (md:make-event-id 0 0 0)
+		 :timebase timebase))
+
 
 (defun grid-events->latex-solution-array (grid viewpoint-list &key (interpretation nil) (highlight 0))
   (let* ((viewpoints (viewpoints:get-viewpoints viewpoint-list))
