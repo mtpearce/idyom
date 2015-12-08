@@ -84,10 +84,9 @@
    (articulation :initarg :articulation :accessor articulation)
    (voice :initarg :voice :accessor voice)))
 
-(defclass grid-event (music-element)
-  ((isonset :initarg :isonset :accessor isonset)
-   (pos :initarg :pos :accessor pos) ; pos(ition) is the time of the event expressed in grid-units (which are determined by the resolution)
-   (cpitch :initarg :cpitch :accessor chromatic-pitch))) ; cpitch is NIL when the event isn't an onset
+(defclass grid-event (music-event)
+  ((is-onset :initarg :is-onset :accessor is-onset)
+   (pos :initarg :pos :accessor pos))) ; pos(ition) is the time of the event expressed in grid-units (which are determined by the resolution)
 
 (defclass metrical-interpretation (time-signature music-object)
   ((meter-phase :initarg :phase :accessor meter-phase)
@@ -341,47 +340,33 @@ the resolution argument."
            (event-list (if (null voices)
                            event-list
                            (remove-if #'(lambda (x) (not (member x voices))) event-list :key #'md:voice)))
-           (data (remove-duplicates (mapcar #'(lambda (x) (list (onset x) (chromatic-pitch x) (duration x) (barlength x) (pulses x) (get-identifier x))) event-list))) ; get a list of onset, pitch and duration
-	   (events nil))
+           (data (remove-duplicates event-list))
       ; Create grid events
-      (do ((index 0 (1+ index)))
-	  ((>= index (length data)) data)
-	(let* ((datum (nth index data))
-	       (previous-datum (when (> index 0) (nth (- index 1) data)))
-	       (grid-onset (rescale (first datum) resolution timebase))
-	       (previous-grid-onset (when previous-datum (rescale (first previous-datum) resolution timebase)))
-	       (cpitch (second datum))
-	       (grid-duration (rescale (third datum) resolution timebase))
-	       (previous-grid-duration (or (when previous-datum (rescale (third previous-datum) resolution timebase)) 0))
-	       (grid-ioi (if (eql index 0)
-			     grid-onset
-			     (- grid-onset previous-grid-onset)))
-	       (rest-duration (- grid-ioi previous-grid-duration))
-	       (barlength (fourth datum))
-	       (pulses (fifth datum))
-	       (event-id (sixth datum)))
-	  ;(format t "Onset ~S Pitch ~S Duration ~S IOI ~S~%" grid-onset (second datum) grid-duration grid-ioi) 
-	  (dotimes (p (+ (floor rest-duration) (floor grid-duration)))
-	    (let* ((grid-position (+ (- grid-onset rest-duration) p))
-		   (event (make-instance 'grid-event
-					 :isonset (eql grid-position grid-onset)
-					 :pos (unless (fractional? grid-position) grid-position)
-					 :cpitch (when (and (>= grid-position grid-onset)
-							    (< grid-position (+ grid-onset grid-duration))) cpitch)
-					 :onset (rescale grid-position timebase resolution) ; Onset is derived form anchored-time-interval
-					 :duration (/ timebase resolution) ; So is duration
-					 :barlength (unless hide-meter barlength)
-					 :pulses (unless hide-meter pulses)
-					 :id (copy-identifier event-id)
-					 :timebase timebase)))
-					;(format t "~S ~S~%" p grid-position)
-	      (push event events)))))
-      ; Only add the events to the sequence if none of them is zero
-      (if (reduce (lambda (x y) (and x y)) events :key (lambda (e) (pos e)))
-	  (sequence:adjust-sequence grid-sequence 
-				    (length events)
-				    :initial-contents (sort events #'< :key #'onset))
-	  grid-sequence)))
+	   (grid-slices
+	    (let ((position 0))
+	      (loop for event in data collecting
+		   (let ((event-position (rescale (onset event) resolution timebase))
+			 (duration (rescale (duration event) resolution timebase))
+			 (last-position position))
+		     (setf position (+ event-position duration))
+		     (when (or (fractional? event-position) (fractional? duration))
+		       (return-from composition->grid nil))
+		     (loop for p from last-position to position collecting
+			  (let ((is-onset (eql p last-position)))
+			    (make-instance 'grid-event
+					   :pos p
+					   :is-onset is-onset
+					   :cpitch (when is-onset (chromatic-pitch event))
+					   :onset (when is-onset (onset event))
+					   :duration (when is-onset (duration event))
+					   :barlength (unless hide-meter (barlength event))
+					   :pulses (unless hide-meter (pulses event))
+					   :id (copy-identifier (get-identifier event))
+					   :timebase timebase)))))))
+	     (grid-events (apply #'append grid-slices)))
+      (sequence:adjust-sequence grid-sequence
+				(length grid-events)
+				:initial-contents grid-events)))
 
 (defun fractional? (n)
   (not (equalp (mod n 1) 0)))

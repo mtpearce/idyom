@@ -214,8 +214,8 @@ the probabilities over time and divide by the list length."
 (defun grid->grid-events (grid &key (resolution 16)
 				 (interpretation nil)
 				 (timebase 96))
-  (loop for isonset in grid for position to (length grid)
-     collecting (make-grid-event (if (eql isonset 1) t nil)
+  (loop for is-onset in grid for position to (length grid)
+     collecting (make-grid-event (if (eql is-onset 1) t nil)
 				 position 
 				 :interpretation interpretation
 				 :resolution resolution
@@ -236,12 +236,12 @@ the probabilities over time and divide by the list length."
 				     :resolution target-resolution
 				     :timebase timebase))))
     
-(defun make-grid-event (isonset position &key
+(defun make-grid-event (is-onset position &key
 					   (timebase 96)
 					   (resolution 16) 
 					   (interpretation nil))
   (make-instance 'md::grid-event
-		 :isonset isonset
+		 :is-onset is-onset
 		 :pos position
 		 :cpitch nil
 		 :onset (md:rescale position timebase resolution)
@@ -257,14 +257,14 @@ the probabilities over time and divide by the list length."
 (defun grid-events->latex-solution-array (grid viewpoint-list &key (interpretation nil) (highlight 0))
   (let* ((viewpoints (viewpoints:get-viewpoints viewpoint-list))
 	 (m (mvs:make-mvs nil viewpoints nil))
-	 (isonset-vp (viewpoints:get-viewpoint 'isonset))
+	 (is-onset-vp (viewpoints:get-viewpoint 'is-onset))
 	 (pos-vp (viewpoints:get-viewpoint 'pos)))
     (format t "\\begin{tabular}{~{~D~}}~%" (mapcar (lambda (x) "l") (range (length grid))))
     (dolist (event grid)
       (let ((position (funcall (type-of pos-vp) (list event)))
-	    (isonset (funcall (type-of isonset-vp) (list event))))
+	    (is-onset (funcall (type-of is-onset-vp) (list event))))
 	(when (< position highlight) (format t "\\textcolor{red}{"))
-	(if isonset (format t "$\\bullet$") (format t "$\\circ$"))
+	(if is-onset (format t "$\\bullet$") (format t "$\\circ$"))
 	(when (< position highlight) (format t "}"))
 	(when (< position (- (length grid) 1)) (format t " & "))))
     (format t "\\\\~%")

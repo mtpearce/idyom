@@ -11,7 +11,7 @@
   (ensure-directories-exist
    (merge-pathnames "data/alphabets/" (utils:ensure-directory utils:*root-dir*))))
 
-(defvar grid-basic-viewpoints '(:isonset :pos))
+(defvar grid-basic-viewpoints '(:is-onset :pos))
 
 (defgeneric set-alphabet-from-dataset (viewpoint dataset))
 (defgeneric set-alphabet-from-context (viewpoint events unconstrained &key interpretation))
