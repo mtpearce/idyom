@@ -9,7 +9,7 @@
 (defun infer-meter (dataset-id target-viewpoints source-viewpoints test-sequence
 		    &key (voices nil) (texture :grid) 
 		      (resolution 16) (repetitions 1)
-		      (write-to-python? nil)
+		      (python-results-file nil)
 		      (use-cache? t))
   (let* ((training-set-promise
 	  (promises:make-promise :function (md:get-music-objects 
@@ -32,8 +32,8 @@
 	 ; Concatenate sublists
 	 (test-sequence (reduce #'append test-sequence))
 	 ;; Generate a Nparams x Ntarget-viewpoints x Nevents matrix
-	 ;; containing event-predictions
-	 (meter-predictions (generate-meter-predictions training-set-promise
+	 ;; containing event-likelihoods
+	 (likelihoods (generate-meter-predictions training-set-promise
 							meters
 							targets
 							sources
@@ -42,16 +42,25 @@
 							:voices voices
 							:texture texture
 							:use-cache? use-cache?))
-	 ;; Extract the likelihoods
-	 (likelihoods (meter-predictions->probabilities meter-predictions))
 	 ;; Initialize the prior distribution
 	 (prior-distribution (initialise-prior-distribution meter-counts resolution))
 	 ;; Convert to a Nparams x Nevents data structure where each column is 
 	 ;; a probability distribution over params
-	 (posterior-per-position (generate-meter-posterior prior-distribution likelihoods (length test-sequence)))
-	 (posterior (sum-over-time posterior-per-position)))
-    (when write-to-python? (write-python-output posterior-per-position resolution))
-    (sort posterior #'> :key (lambda (x) (cdr x)))))
+	 (results (generate-meter-posterior prior-distribution likelihoods (length test-sequence))))
+    (when python-results-file 
+      (write-python-output prior-distribution 
+			   likelihoods 
+			   results 
+			   resolution
+			   python-results-file))
+    results))
+
+(defun key-label->python (key &optional (resolution 16))
+    "Translate the keys used here to the keys used in the python implementation"
+    (multiple-value-bind 
+	  (beat division phase)
+	(meter->time-signature (md:meter-key->metrical-interpretation key resolution))
+      (format nil "((~D,~D), ~D)" beat division phase)))
 
 (defun generate-meter-posterior (prior-distribution likelihoods n) 
   (format t "Performing Bayesian inference using predictions and the prior~%")
@@ -105,9 +114,12 @@
 	(dotimes (phase period)
 	  (let* ((m (md:make-metrical-interpretation meter resolution :phase phase))
 		 (predictions
-		  (mvs:model-sequence mvs (coerce test-sequence 'list) :construct? nil :predict? t :interpretation m)))
+		  (mvs:model-sequence mvs (coerce test-sequence 'list) :construct? nil :predict? t :interpretation m))
+		 (likelihoods (prediction-sets:event-predictions (first predictions))))
 	    (setf meter-predictions 
-		  (acons (md:meter-key m) predictions meter-predictions))))))
+		  (acons (md:meter-key m) 
+			 (list (mapcar 'cadr likelihoods))
+			 meter-predictions))))))
     meter-predictions))
 
 (defun count-meters (training-set-promise resolution)
@@ -199,32 +211,6 @@ the probabilities over time and divide by the list length."
 (defun get-prior-likelihood (meter likelihoods)
   (lookup-key meter likelihoods))
 	  
-(defun meter-predictions->information-contents (meter-predictions)
-  (let ((interpretations (mapcar #'car meter-predictions))
-	(output))
-    (dolist (meter interpretations) ; FOR EACH: meter
-      (let ((sequence-predictions (lookup-key meter meter-predictions))
-	    (sequence-ics))
-	(dolist (predictions sequence-predictions) ; FOR EACH: viewpoint prediction
-	  (let* ((event-predictions (prediction-sets:prediction-set predictions))
-		 (probabilities (mapcar #'probability event-predictions))
-		 (viewpoint-ics (mapcar #'(lambda (p) (- (log p 2))) probabilities)))
-	    (push viewpoint-ics sequence-ics)))
-	(setf output (acons meter (nreverse sequence-ics) output))))
-    output))
-
-(defun meter-predictions->probabilities (meter-predictions)
-  (mapcar #'(lambda (item) 
-	      (let ((meter (car item))
-		    (predictions (cdr item))) ; Predictions is a list of prediction set objects for each viewpoint
-		(cons meter
-		      (mapcar #'(lambda (prediction)
-			    (let ((eps (prediction-sets:prediction-set prediction)))
-			      (mapcar (lambda (ep) 
-					(cadr (prediction-sets:event-prediction ep))) eps)))
-			predictions))))
-	  meter-predictions))
-
 (defun grid->grid-events (grid &key (resolution 16)
 				 (interpretation nil)
 				 (timebase 96))
@@ -302,20 +288,57 @@ the probabilities over time and divide by the list length."
 (defun lookup-meter (meter counts)
   (assoc meter counts :test #'string-equal))
 	
-(defun probability (event-prediction) 
-  (cadr (prediction-sets:event-prediction event-prediction)))
+(defun write-python-output (prior likelihoods results resolution path)
+  (let ((prior-dict
+	 (alist->pydict prior
+			:dict-name "prior"
+			:key-format-fn #'key-label->python))
+	(likelihoods-dict
+	 (alist->pydict likelihoods
+			:dict-name "likelihoods"
+			:key-format-fn #'key-label->python
+			:value-format-fn (lambda (predictions-sets) (list->pylist (first predictions-sets)))))
+	(results-dict 
+	 (alist->pydict results 
+			:dict-name "posterior" 
+			:key-format-fn (lambda (key) 
+					 (multiple-value-bind 
+					       (beat division phase)
+					     (meter->time-signature (md:meter-key->metrical-interpretation key resolution))
+					   (format nil "'~D ~D (phase ~D)'" beat division phase)))
+			:value-format-fn (lambda (value)
+					   (format nil "[~{~D, ~}]" value)))))
+    (with-open-file (stream path :direction :output :if-exists :supersede)
+      (format stream "~A~%~A~%~A~%" prior-dict likelihoods-dict results-dict))))
 
-(defun write-python-output (distributions resolution)
-  (with-open-file (stream "/home/bastiaan/Projects/exposure/exposure/idyom_output.py" :direction :output :if-exists :supersede)
-    (format stream "posterior = {")
-    (let ((params (mapcar #'car distributions)))
-      (dolist (param params)
-	(multiple-value-bind (beat division phase)
-	    (meter->time-signature (md:meter-key->metrical-interpretation param resolution))
-	  (format stream "'~D ~D (phase ~D)':[" beat division phase))
-	(format stream "~{~D,~}" (cdr (assoc param distributions :test #'string-equal)))
-	(format stream "],")))
-    (format stream "}")))
+(defun alist->pydict (alist &key (file nil) (dict-name "d") (key-format-fn (lambda (x) x))
+			      (value-format-fn (lambda (x) x)))
+  (let ((pydict (format nil "~A = {~A}" dict-name
+			(alist->pydict-items alist key-format-fn value-format-fn))))
+    (when file (with-open-file (stream file :direction :output :if-exists :supersede)
+		 (format stream pydict)))
+    pydict))
+
+(defun alist->pydict-items (alist key-format-fn value-format-fn)
+  (let* ((item (pop alist))
+	 (other-items 
+	  (when alist (alist->pydict-items alist key-format-fn value-format-fn)))
+	 (key (car item))
+	 (value (cdr item)))
+    (format nil "~A:~A, ~A" 
+	    (funcall key-format-fn key) 
+	    (funcall value-format-fn value)
+	    other-items)))
+			  
+
+(defun alist-value-map (alist fn)
+  (let* ((item (pop alist))
+	 (key (car item))
+	 (value (cdr item)))
+    (acons (funcall fn key) value (alist-value-map alist fn))))
+
+(defun list->pylist (list)
+  (format nil "[~{~D, ~}]" list))
 
 ;; Some rhythms convenient for testing
 (defvar agbekor (ioi-list->grid-events '(2 2 1 2 2 2 1) :target-resolution 16))
