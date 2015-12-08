@@ -341,7 +341,7 @@ the probabilities over time and divide by the list length."
   (format nil "[~{~D, ~}]" list))
 
 ;; Some rhythms convenient for testing
-(defvar agbekor (ioi-list->grid-events '(2 2 1 2 2 2 1) :target-resolution 16))
-(defvar shave-and-a-haircut (ioi-list->grid-events '(2 1 1 2 4 2 4) :target-resolution 16))
-(defvar son-clave (ioi-list->grid-events '(3 3 4 2 2) :target-resolution 16))
+(defparameter agbekor (ioi-list->grid-events '(2 2 1 2 2 2 1) :target-resolution 16))
+(defparameter shave-and-a-haircut (ioi-list->grid-events '(2 1 1 2 4 2 4) :target-resolution 16))
+(defparameter son-clave (ioi-list->grid-events '(3 3 4 2 2) :target-resolution 16))
 
