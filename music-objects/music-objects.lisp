@@ -209,8 +209,20 @@
 		 :phase phase 
 		 :timebase (timebase ts)
 		 :resolution resolution))
-  
 
+(defun time-signature->metrical-interpretation (numerator denominator 
+						&key 
+						  (phase 0)
+						  (resolution 16)
+						  (timebase 96))
+  (make-instance 'metrical-interpretation 
+		 :barlength (* (/ numerator denominator) timebase)
+		 :pulses numerator
+		 :phase phase
+		 :timebase timebase
+		 :resolution resolution))
+  
+  
 (defgeneric meter-key (metrical-interpretation))
 (defmethod meter-key ((m metrical-interpretation))
   (format nil "(~A ~A ~A ~A)" 
