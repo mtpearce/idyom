@@ -30,11 +30,9 @@
   "Initialises the alphabets of the relevant basic types specified in
 *basic-types* to those elements which appear in <dataset>."
   (dolist (attribute (get-basic-types nil)) ;; (elt (car dataset) 0)))
-    (handler-case ;; not all basic viewpoints are present in all textures (e.g., articulation is not present in :harmony).
-        (unless (and (eql texture :grid) 
-		     (not (member attribute grid-basic-viewpoints)))
-	  (set-alphabet-from-dataset (get-viewpoint attribute) dataset))
-      (error nil nil)))) 
+    (unless (and (eql texture :grid) 
+		 (not (member attribute grid-basic-viewpoints)))
+      (set-alphabet-from-dataset (get-viewpoint attribute) dataset))))
 
 (defun set-onset-alphabet (context texture)
   (setf (viewpoint-alphabet (get-viewpoint 'onset)) (onset-alphabet context texture)))
