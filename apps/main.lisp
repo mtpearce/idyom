@@ -64,7 +64,7 @@
                 ;; Number of voices and texture (e.g., :melody :harmony)
                 (voices nil)
                 (texture :melody)
-		(resolution nil)
+		(resolution 16)
                 ;; Output
                 (detail 3)
                 (output-path nil)

@@ -21,11 +21,11 @@
 	 ,function)
        ,(when f*
 	      `(defgeneric ,(intern (concatenate 'string (symbol-name name) "*")) ; Create a symbol with the name of the viewpoint and a *?
-		  (,element ,events))
+		   (,element ,events))
 	      `(defmethod ,(intern (concatenate 'string (symbol-name name) "*"))
-		  (,element ,events)
-		(declare (ignorable events element))
-		,f*)))))
+		   (,element ,events)
+		 (declare (ignorable events element))
+		 ,f*)))))
 
 (defmacro define-metrical-viewpoint ((name superclass typeset)
 				     ((events class) 
