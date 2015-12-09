@@ -66,7 +66,11 @@
          ;; viewpoints
          (sources (get-viewpoints source-viewpoints))
          (targets
-          (viewpoints:get-basic-viewpoints target-viewpoints (append dataset pretraining-set)))
+          (viewpoints:get-basic-viewpoints target-viewpoints 
+					   (promises:make-promise 
+					    :function (append dataset pretraining-set) 
+					    :id dataset-id)
+					   texture))
          ;; resampling sets
          (k (if (eq k :full) (length dataset) k))
          (resampling-sets (get-resampling-sets dataset-id :k k
