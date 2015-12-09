@@ -85,7 +85,8 @@
    (voice :initarg :voice :accessor voice)))
 
 (defclass grid-event (music-event)
-  ((is-onset :initarg :is-onset :accessor is-onset)
+  ((resolution :initarg :resolution :accessor resolution)
+   (is-onset :initarg :is-onset :accessor is-onset)
    (pos :initarg :pos :accessor pos))) ; pos(ition) is the time of the event expressed in grid-units (which are determined by the resolution)
 
 (defclass metrical-interpretation (time-signature music-object)
@@ -362,6 +363,7 @@ the resolution argument."
 					   :barlength (unless hide-meter (barlength event))
 					   :pulses (unless hide-meter (pulses event))
 					   :id (copy-identifier (get-identifier event))
+					   :resolution resolution
 					   :timebase timebase)))))))
 	     (grid-events (apply #'append grid-slices)))
       (sequence:adjust-sequence grid-sequence

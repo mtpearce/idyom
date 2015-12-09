@@ -244,12 +244,13 @@ the probabilities over time and divide by the list length."
 		 :is-onset is-onset
 		 :pos position
 		 :cpitch nil
-		 :onset (md:rescale position timebase resolution)
+		 :onset (when is-onset (md:rescale position timebase resolution))
 		 :duration (/ timebase resolution)
 		 :barlength (when interpretation
 			      (md:barlength interpretation))
 		 :pulses (when interpretation
 			   (md:pulses interpretation))
+		 :resolution resolution
 		 :id (md:make-event-id 0 0 0)
 		 :timebase timebase))
 
