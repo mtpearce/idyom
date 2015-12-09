@@ -342,8 +342,16 @@ the probabilities over time and divide by the list length."
 (defun list->pylist (list)
   (format nil "[~{~D, ~}]" list))
 
+
+(defun repeat-list (list repetitions)
+  (apply #'append (loop for x to repetitions collecting (copy-list list))))
+
+(defun make-rhythm (iois &key (r 16))
+  (lambda (repetitions &key (r r)) 
+    (ioi-list->grid-events (repeat-list iois repetitions) :target-resolution r)))
+
 ;; Some rhythms convenient for testing
-(defparameter agbekor (ioi-list->grid-events '(2 2 1 2 2 2 1) :target-resolution 16))
-(defparameter shave-and-a-haircut (ioi-list->grid-events '(2 1 1 2 4 2 4) :target-resolution 16))
-(defparameter son-clave (ioi-list->grid-events '(3 3 4 2 2) :target-resolution 16))
+(defparameter agbekor (make-rhythm '(2 2 1 2 2 2 1) :r 16))
+(defparameter shave-and-a-haircut (make-rhythm '(2 1 1 2 4 2 4) :r 16))
+(defparameter son-clave (make-rhythm '(3 3 4 2 2) :r 16))
 
