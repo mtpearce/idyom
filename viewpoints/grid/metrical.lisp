@@ -17,3 +17,20 @@
 	       (remove-if #'(lambda (e) (not (equalp element (mod (- (pos e) phase) period))))
 			  (viewpoint-alphabet (get-viewpoint 'position))))) ; Infinite? (+ phase (* X period))
 
+;; Metrical accent
+(define-metrical-viewpoint (metrical-accent metrical (pos))
+    ((events md:grid-sequence) 
+     (interpretation md:metrical-interpretation) element)
+  :function (let ((event (last events)))
+              (if (null event) +undefined+
+                  (let ((pulses (md:pulses interpretation))
+			(barlength (md:barlength interpretation))
+			(phase (md:meter-phase interpretation))
+			(position (pos events))
+			(resolution (md:resolution (last-element events)))
+			(timebase (md:timebase (last-element events))))
+		    (let ((phase-corrected-time
+			   (* (/ timebase resolution) (- position phase))))
+		      (+ (metrical-accent-multiple 
+			  phase-corrected-time pulses barlength timebase)
+			 (metrical-accent-division phase-corrected-time pulses barlength)))))))

@@ -74,11 +74,13 @@
 		       (:file "temporal")
                        (:file "phrase")
 		       (:file "threaded")
-		       (:file "implication-realisation")))
+		       (:file "implication-realisation")
+		       (:file "metrical")))
              (:module grid :serial t
 		      :components
 		      ((:file "basic-viewpoints")
-		       (:file "metrical")))
+		       (:file "metrical")
+		       (:file "temporal")))
              ;; useful extensions for modelling 
              ;; (not strictly part of the representation scheme)
 	     (:file "extensions")))
