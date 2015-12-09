@@ -322,7 +322,9 @@ the probabilities over time and divide by the list length."
 (defun alist->pydict-items (alist key-format-fn value-format-fn)
   (let* ((item (pop alist))
 	 (other-items 
-	  (when alist (alist->pydict-items alist key-format-fn value-format-fn)))
+	  (if alist 
+	      (alist->pydict-items alist key-format-fn value-format-fn)
+	      ""))
 	 (key (car item))
 	 (value (cdr item)))
     (format nil "~A:~A, ~A" 
