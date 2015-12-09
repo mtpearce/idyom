@@ -57,7 +57,7 @@
 						    :interpretation interpretation))
 	  (alphabet (viewpoints:viewpoint-alphabet viewpoint))
 	  (model (make-ppm alphabet)))
-      (model-dataset model viewpoint-sequences :construct? t :predict? nil)
+      (ppm-model-dataset model viewpoint-sequences :construct? t :predict? nil)
       (write-model-to-file model filename)
       (format t "~&Written PPM* model to ~A.~%" filename)))
   (read-model-from-file filename :order-bound order-bound :mixtures mixtures

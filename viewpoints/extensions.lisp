@@ -11,15 +11,16 @@
   (ensure-directories-exist
    (merge-pathnames "data/alphabets/" (utils:ensure-directory utils:*root-dir*))))
 
-(defvar grid-basic-viewpoints '(:is-onset :pos))
+(defvar grid-basic-viewpoints '(:is-onset :pos :onset :dur :cpitch :resolution))
 
 (defgeneric set-alphabet-from-dataset (viewpoint dataset))
-(defgeneric set-alphabet-from-context (viewpoint events unconstrained &key interpretation))
-(defgeneric alphabet->events (viewpoint events))
+(defgeneric set-alphabet-from-context (viewpoint events unconstrained 
+				       &key interpretation texture))
+(defgeneric alphabet->events (viewpoint events texture))
 
-(defun get-basic-viewpoints (attributes dataset &key (texture :melody))
+(defun get-basic-viewpoints (attributes dataset texture)
   (initialise-basic-viewpoints dataset texture)
-  (set-onset-alphabet nil)
+  (set-onset-alphabet nil texture)
   ; Only applicable for :grid textures
   (when (eql texture :grid)
     (set-pos-alphabet nil))
@@ -35,8 +36,8 @@
 	  (set-alphabet-from-dataset (get-viewpoint attribute) dataset))
       (error nil nil)))) 
 
-(defun set-onset-alphabet (context)
-  (setf (viewpoint-alphabet (get-viewpoint 'onset)) (onset-alphabet context)))
+(defun set-onset-alphabet (context texture)
+  (setf (viewpoint-alphabet (get-viewpoint 'onset)) (onset-alphabet context texture)))
 
 (defun set-pos-alphabet (context)
   (setf (viewpoint-alphabet (get-viewpoint 'pos)) (pos-alphabet context)))
@@ -64,7 +65,10 @@
 	  (format t "Written alphabet for ~A to file ~A.~%" (symbol-name (type-of v)) filename))))
     (setf (viewpoint-alphabet v) (utils:read-object-from-file filename))))
   
-(defmethod set-alphabet-from-context ((v viewpoint) events unconstrained &key (interpretation nil))
+(defmethod set-alphabet-from-context ((v viewpoint) events unconstrained 
+				      &key 
+					(interpretation nil) 
+					(texture :melody))
   "Sets the alphabet of derived viewpoint <v> based on the set of
 sequences created by concatenating the alphabet of the basic viewpoint
 from which <v> is derived onto a sequence of events
@@ -79,7 +83,7 @@ in <events>."
              (dolist (a attributes (reverse alphabets))
                (if (or (null unconstrained) (member a unconstrained))
                    (cond 
-		     ((eql a 'onset) (push (onset-alphabet context) alphabets))
+		     ((eql a 'onset) (push (onset-alphabet context texture) alphabets))
 		     ((eql a 'pos) (push (pos-alphabet context) alphabets))
                      (t  (push (viewpoint-alphabet (get-viewpoint a)) 
                              alphabets)))
@@ -103,10 +107,10 @@ in <events>."
       (setf (viewpoint-alphabet v) (nreverse derived-alphabet)))))
           
 
-(defmethod alphabet->events ((v viewpoint) (events md:music-composition))
-  (alphabet->events v (coerce events 'list)))
+(defmethod alphabet->events ((v viewpoint) (events md:music-composition) texture)
+  (alphabet->events v (coerce events 'list) texture))
 
-(defmethod alphabet->events ((b basic) events)
+(defmethod alphabet->events ((b basic) events texture)
   (let ((alphabet (viewpoint-alphabet b))
         (event (car (last events)))
         ;(previous-events (butlast events))
@@ -117,17 +121,17 @@ in <events>."
                   e))
             alphabet)))
 
-(defmethod alphabet->events ((o onset) events)
+(defmethod alphabet->events ((o onset) events texture)
   (let* ((event (car (last events)))
          (previous-events (butlast events))
-         (onset-alphabet (onset-alphabet previous-events)))
+         (onset-alphabet (onset-alphabet previous-events texture)))
     (mapcar #'(lambda (viewpoint-element)
                 (let ((e (md:copy-event event)))
                   (md:set-attribute e 'onset viewpoint-element)
                   e))
             onset-alphabet)))
  
-(defmethod alphabet->events ((p pos) events)
+(defmethod alphabet->events ((p pos) events texture)
   (let* ((event (car (last events)))
          (previous-events (butlast events))
          (pos-alphabet (pos-alphabet previous-events)))
@@ -137,7 +141,7 @@ in <events>."
                   e))
             pos-alphabet)))
 
-(defun onset-alphabet (previous-events)
+(defun onset-alphabet (previous-events texture)
   ;; Based on DELTAST alphabet
   ;;   (let ((deltast-alphabet (viewpoint-alphabet (get-viewpoint 'deltast))))
   ;;     (if (null previous-events) deltast-alphabet
@@ -146,11 +150,23 @@ in <events>."
   ;;                          (md:get-attribute last-event :dur))))
   ;;           (mapcar #'(lambda (a) (+ onset a)) deltast-alphabet)))))
   ;; Based on BIOI alphabet 
-  (let ((bioi-alphabet (remove nil (viewpoint-alphabet (get-viewpoint 'bioi)))))
-    (if (null previous-events) bioi-alphabet
-        (let* ((last-event (car (reverse previous-events)))
-               (onset (md:get-attribute last-event 'onset)))
-          (mapcar #'(lambda (a) (+ onset a)) bioi-alphabet)))))
+  (cond 
+    ((eql texture :melody)
+     (let ((bioi-alphabet (remove nil (viewpoint-alphabet (get-viewpoint 'bioi)))))
+      (if (null previous-events) bioi-alphabet
+	  (let* ((last-event (car (reverse previous-events)))
+		 (onset (md:get-attribute last-event 'onset)))
+	    (mapcar #'(lambda (a) (+ onset a)) bioi-alphabet)))))
+    ((eql texture :grid)
+     (if (null previous-events) '(0)
+	 (let* ((last-event (car (reverse previous-events)))
+		(last-position (md:get-attribute last-event 'pos))
+		(resolution (md:get-attribute last-event 'resolution))
+		(timebase (md:get-attribute last-event 'timebase))
+		(position (* (1+ last-position) (/ timebase resolution))))
+	  (list nil position))))))
+
+     
 
 (defun pos-alphabet (previous-events)
     (if (null previous-events) '(0)
@@ -159,17 +175,17 @@ in <events>."
 	  (list (1+ pos)))))
 	
 
-(defmethod alphabet->events ((d derived) events)
+(defmethod alphabet->events ((d derived) events texture)
   ;;TODO: make this work for all elements in typeset 
   (let ((typeset (get-viewpoint (car (viewpoint-typeset d)))))
-    (alphabet->events typeset events)))
+    (alphabet->events typeset events texture)))
                     
-(defmethod alphabet->events ((l linked) events)
+(defmethod alphabet->events ((l linked) events texture)
   (let ((event (car (last events)))
         (previous-events (butlast events)))
     (labels ((get-alphabet (attribute)
                (cond
-		 ((eql attribute 'onset) (onset-alphabet previous-events))
+		 ((eql attribute 'onset) (onset-alphabet previous-events texture))
 		 ((eql attribute 'pos) (pos-alphabet previous-events))
 		 (t (viewpoint-alphabet (get-viewpoint attribute)))))
              (get-alphabets (attributes)

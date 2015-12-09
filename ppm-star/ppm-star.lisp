@@ -503,7 +503,7 @@
 ;; Model Construction and Prediction 
 ;;;===========================================================================
 
-(defmethod model-dataset ((m ppm) dataset &key construct? predict? initialise?)
+(defmethod ppm-model-dataset ((m ppm) dataset &key construct? predict? initialise?)
   "Models a dataset <dataset> (a vector of sequence vectors) given
    PPM model <m>. If <construct?> is non-nil the dataset is added to the
    model and if <predict?> is non-nil a distribution over (ppm-alphabet m)
@@ -511,7 +511,7 @@
   (labels ((model-d (dataset sequence-index prediction-sets)
              (if (null dataset) (reverse prediction-sets)
                  (let ((prediction-set
-                        (model-sequence m (car dataset) :construct? construct? 
+                        (ppm-model-sequence m (car dataset) :construct? construct? 
                                         :predict? predict?))
                        (index-s (index-s (ppm-front m))))
                    (unless (= sequence-index 1) (increment-sequence-front m))
@@ -522,7 +522,7 @@
                                   prediction-sets))))))
     (model-d dataset (length dataset) '())))
                    
-(defmethod model-sequence ((m ppm) sequence &key construct? predict?)
+(defmethod ppm-model-sequence ((m ppm) sequence &key construct? predict?)
   "Models a sequence <sequence> (a vector of symbols) given PPM
    model <m>. If <construct?> is non-nil the sequence is added to the
    model and if <predict?> is non-nil a distribution over (ppm-alphabet m)

@@ -101,7 +101,7 @@
 					   :use-cache? use-ltms-cache?))
                (mvs (make-mvs targets sources ltms))
                (predictions
-                (mvs:model-dataset mvs test-set :construct? t :predict? t)))
+                (mvs:model-dataset mvs test-set texture :construct? t :predict? t)))
           (push predictions sequence-predictions)))
       (incf resampling-id))))
 

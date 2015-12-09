@@ -21,7 +21,7 @@
 (defgeneric get-event-array (mvs sequence &key &allow-other-keys))
 (defgeneric operate-on-models (mvs operation &key models ltm-args stm-args))
 (defgeneric set-model-alphabets (mvs event events viewpoint ltm stm 
-                                     unconstrained &key interpretation))
+                                     unconstrained texture &key interpretation))
 (defgeneric get-basic-viewpoint (mvs derived-viewpoint))
 (defgeneric sequence-prediction-sets (mvs events event-prediction-sets))
 (defgeneric dataset-prediction-sets (mvs sequence-prediction-sets))
@@ -29,5 +29,9 @@
                                 ltm-update-exclusion ltm-escape stm-order-bound
                                 stm-mixtures stm-update-exclusion stm-escape))
 
-(defgeneric model-event (model event events &key construct? predict? 
+(defgeneric model-dataset (model dataset texture &key construct? predict? 
+                         &allow-other-keys))
+(defgeneric model-sequence (model sequence texture &key construct? predict? 
+                         &allow-other-keys))
+(defgeneric model-event (model event events texture &key construct? predict? 
                          &allow-other-keys))

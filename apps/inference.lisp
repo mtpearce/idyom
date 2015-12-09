@@ -22,7 +22,7 @@
 	 (sources (viewpoints:get-viewpoints source-viewpoints))
 	 (targets (viewpoints:get-basic-viewpoints target-viewpoints 
 						   training-set-promise
-						   :texture texture))
+						   texture))
 	 ;; Obtain event counts per meter
 	 (meter-counts (count-meters training-set-promise resolution))
 	 ;; Extract a list of meters
@@ -114,7 +114,7 @@
 	(dotimes (phase period)
 	  (let* ((m (md:make-metrical-interpretation meter resolution :phase phase))
 		 (predictions
-		  (mvs:model-sequence mvs (coerce test-sequence 'list) :construct? nil :predict? t :interpretation m))
+		  (mvs:model-sequence mvs (coerce test-sequence 'list) texture :construct? nil :predict? t :interpretation m))
 		 (likelihoods (prediction-sets:event-predictions (first predictions))))
 	    (setf meter-predictions 
 		  (acons (md:meter-key m) 

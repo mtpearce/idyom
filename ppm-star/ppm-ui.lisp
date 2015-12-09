@@ -72,7 +72,7 @@
 (defun build-model (sequences alphabet) 
   (let ((model (ppm:make-ppm alphabet :escape :c :mixtures t 
                              :update-exclusion nil :order-bound nil)))
-    (ppm:model-dataset model sequences :construct? t :predict? nil)
+    (ppm:ppm-model-dataset model sequences :construct? t :predict? nil)
     model))
 
 (defun ngram-frequencies (model order)

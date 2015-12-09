@@ -7,9 +7,9 @@
 
 (cl:in-package #:ppm)
 
-(defgeneric model-dataset (model dataset &key construct? predict? 
+(defgeneric ppm-model-dataset (model dataset &key construct? predict? 
                            &allow-other-keys))
-(defgeneric model-sequence (model sequence &key construct? predict?
+(defgeneric ppm-model-sequence (model sequence &key construct? predict?
                             &allow-other-keys))
 (defgeneric ppm-model-event (model event &key construct? predict? 
                                &allow-other-keys))
