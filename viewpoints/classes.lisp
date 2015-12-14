@@ -43,7 +43,7 @@ viewpoints."))
   (:documentation "A threaded viewpoint represents an attribute whose
 values are only defined at designated points in a sequence."))
 
-(defclass metrical (basic)
+(defclass metrical (derived)
   ()
   (:documentation "A metrical viewpoint represents an attribute is a function
 over the basic event structure and a metrical interpretation."))
