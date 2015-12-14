@@ -202,12 +202,13 @@
       (car (clsql:query (format nil "SELECT description FROM mtp_composition WHERE (dataset_id = ~A AND composition_id = ~A);" dataset-id composition-id) :flatp t))))
 
 (defgeneric make-metrical-interpretation (time-signature resolution &key phase))
-(defmethod make-metrical-interpretation ((ts time-signature) resolution &key (phase 0))
+(defmethod make-metrical-interpretation ((ts time-signature) resolution 
+					 &key (timebase 96) (phase 0))
   (make-instance 'metrical-interpretation 
 		 :barlength (barlength ts)
 		 :pulses (pulses ts)
 		 :phase phase 
-		 :timebase (timebase ts)
+		 :timebase (or (timebase ts) timebase)
 		 :resolution resolution))
 
 (defun time-signature->metrical-interpretation (numerator denominator 
