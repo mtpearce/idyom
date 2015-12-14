@@ -425,13 +425,13 @@ multiple viewpoint system <m>."
 (defun combine-predictions (mvs ltm-prediction-sets stm-prediction-sets events texture &key (interpretation nil))
   (case *models*
     ((or :ltm :ltm+)
-     (combine-viewpoint-predictions mvs ltm-prediction-sets events texture :ltm :interpretation interpretation))
+     (combine-viewpoint-predictions mvs ltm-prediction-sets events :ltm texture :interpretation interpretation))
     (:stm 
-     (combine-viewpoint-predictions mvs stm-prediction-sets events texture :stm :interpretation interpretation))
+     (combine-viewpoint-predictions mvs stm-prediction-sets events :stm texture :interpretation interpretation))
     (otherwise
      (combine-ltm-stm-predictions
-      (combine-viewpoint-predictions mvs ltm-prediction-sets events texture :ltm :interpretation interpretation)
-      (combine-viewpoint-predictions mvs stm-prediction-sets events texture :stm :interpretation interpretation)))))
+      (combine-viewpoint-predictions mvs ltm-prediction-sets events :ltm texture :interpretation interpretation)
+      (combine-viewpoint-predictions mvs stm-prediction-sets events :stm texture :interpretation interpretation)))))
 
 (defun combine-viewpoint-distributions (dists model) 
   (combine-distributions dists *viewpoint-combination* *viewpoint-bias* model))
