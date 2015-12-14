@@ -12,6 +12,9 @@
    (merge-pathnames "data/alphabets/" (utils:ensure-directory utils:*root-dir*))))
 
 (defvar grid-basic-viewpoints '(:is-onset :pos :onset :dur :cpitch :resolution))
+(defvar melody-basic-viewpoints '(:ARTICULATION :COMMA :VOICE :ORNAMENT :DYN :PHRASE
+ :BIOI :DELTAST :ACCIDENTAL :MPITCH :CPITCH :BARLENGTH :PULSES :TEMPO :MODE
+ :KEYSIG :DUR :ONSET))
 
 (defgeneric set-alphabet-from-dataset (viewpoint dataset))
 (defgeneric set-alphabet-from-context (viewpoint events unconstrained 
@@ -30,8 +33,10 @@
   "Initialises the alphabets of the relevant basic types specified in
 *basic-types* to those elements which appear in <dataset>."
   (dolist (attribute (get-basic-types nil)) ;; (elt (car dataset) 0)))
-    (unless (and (eql texture :grid) 
-		 (not (member attribute grid-basic-viewpoints)))
+    (unless (or (and (eql texture :grid) 
+		     (not (member attribute grid-basic-viewpoints)))
+		(and (eql texture :melody)
+		     (not (member attribute melody-basic-viewpoints))))
       (set-alphabet-from-dataset (get-viewpoint attribute) dataset))))
 
 (defun set-onset-alphabet (context texture)
