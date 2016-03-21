@@ -2,6 +2,8 @@
 
 (cl:in-package #:inference)
 
+(defparameter *verbose* nil)
+
 (defparameter *counts-dir* 
   (ensure-directories-exist
    (merge-pathnames "data/counts/" (utils:ensure-directory utils:*root-dir*))))
@@ -63,7 +65,7 @@
       (format nil "((~D,~D), ~D)" beat division phase)))
 
 (defun generate-meter-posterior (prior-distribution likelihoods n) 
-  (format t "Performing Bayesian inference using predictions and the prior~%")
+  (when *verbose* (format t "Performing Bayesian inference using predictions and the prior~%"))
   (let ((params (mapcar #'car prior-distribution))
 	(results))
     ;; Iterate over positions in the test sequence to infer meter
@@ -91,12 +93,12 @@
 
 (defun generate-meter-predictions (training-set-promise meters targets sources test-sequence
 		    &key (resolution 16) voices texture use-cache?)
-  (format t "Generating predictions for the test sequence in all interpretations~%")
+  (when *verbose* (format t "Generating predictions for the test sequence in all interpretations~%"))
   (let* ((meter-predictions))
     ;; Train models for each meter
     (dolist (meter meters meter-predictions)
       (multiple-value-bind (beats division) (meter->time-signature meter)
-	(format t "Training interpretation model for ~D ~D~%" beats division))
+	(when *verbose* (format t "Training interpretation model for ~D ~D~%" beats division)))
       (let* ((interpretation-models ; the viewpoint models
 	      (resampling:get-long-term-models sources training-set-promise
 					       nil
@@ -110,7 +112,7 @@
 	     (mvs (mvs:make-mvs targets sources interpretation-models)) 
 	     (period (md:meter-period meter)))
 	 ; Generate predictions for each phase
-	(format t "Modelling test sequence for all phases~%")
+	(when *verbose* (format t "Modelling test sequence for all phases~%"))
 	(dotimes (phase period)
 	  (let* ((m (md:make-metrical-interpretation meter resolution :phase phase))
 		 (predictions
@@ -141,14 +143,14 @@ note it's meter and add it to an alist
 		    (rplacd (lookup-meter meter-key meter-counts) (+ mcount increment))
 		    (setf meter-counts (acons meter-key increment meter-counts)))))))
 	(utils:write-object-to-file meter-counts filename)
-	(format t "Written meter counts to ~A.~%" filename)))
+	(when *verbose* (format t "Written meter counts to ~A.~%" filename))))
     (utils:read-object-from-file filename)))
 
 (defun initialise-prior-distribution (meter-counts resolution)
   "Generate a probability distribution using the counts in <meter-counts>. 
 An extra variable, phase, is added to the resulting distribution, which has a 
 flat distribution. Different metres have different amounts of phases."
-  (format t "Generating prior distribution~%")
+  (when *verbose* (format t "Generating prior distribution~%"))
   (let* ((prior)
 	 (unnormalised-prior)
 	 (meter-keys (mapcar #'car meter-counts))
