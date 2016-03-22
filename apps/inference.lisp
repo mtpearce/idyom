@@ -119,10 +119,8 @@
 			 meter-predictions))))))
     meter-predictions))
 
-(defun count-meters (training-set-promise resolution)
-  "Take a training set consisting of music-sequences. Go over each event,
-note it's meter and add it to an alist
- of counts."
+(defun count-meters-grid (training-set-promise resolution)
+  "Count occurrences of each meter in a list of grid representations of compositions."
   (let ((filename (format nil "~A~A-~A" *counts-dir* (promises:get-identifier training-set-promise) resolution)))
     (unless (utils:file-exists filename)
       (let ((training-set (promises:retrieve training-set-promise))
@@ -133,7 +131,31 @@ note it's meter and add it to an alist
 	      (let* ((meter (md:make-metrical-interpretation event resolution))
 		     (meter-key (md:meter-key meter))
 		     (mcount (cdr (lookup-meter meter-key meter-counts)))
-		     (increment (/ 1 (md:meter-period meter))))
+		     (increment (/ 1 (md:meter-period meter)))) 
+		(if mcount ; use mcount as a check whether the key already exists
+		    (rplacd (lookup-meter meter-key meter-counts) (+ mcount increment))
+		    (setf meter-counts (acons meter-key increment meter-counts)))))))
+	(utils:write-object-to-file meter-counts filename)
+	(when *verbose* (format t "Written meter counts to ~A.~%" filename))))
+    (utils:read-object-from-file filename)))
+
+(defun count-meters (training-set-promise &key (use-cache? t) (per-composition? nil))
+  "This function assumes the meter does not change during event sequences. Go over 
+eac sequence in the training set, calculate the number meter-observations by taking the 
+ceiling of the onset time of the last event over the meter's period."
+    (let ((filename (format nil "~A~A" *counts-dir* (promises:get-identifier training-set-promise))))
+    (unless (and (utils:file-exists filename) use-cache?)
+      (let ((training-set (promises:retrieve training-set-promise))
+	    (meter-counts))
+	(dolist (composition training-set)
+	  (let ((last-event (utils:last-element composition)))
+	    (let ((duration (+ (md:onset last-event)
+			       (md:duration last-event)))
+		  (meter (md:make-metrical-interpretation last-event nil)))
+	      (let* ((meter-key (md:meter-key meter))
+		     (mcount (cdr (lookup-meter meter-key meter-counts)))
+		     (increment (if per-composition? 
+				    1 (ceiling (/ duration (md:barlength meter))))))
 		(if mcount ; use mcount as a check whether the key already exists
 		    (rplacd (lookup-meter meter-key meter-counts) (+ mcount increment))
 		    (setf meter-counts (acons meter-key increment meter-counts)))))))
