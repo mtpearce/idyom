@@ -352,7 +352,7 @@ the resolution argument."
 			 (last-position position))
 		     (setf position (+ event-position duration))
 		     (when (or (fractional? event-position) (fractional? duration))
-		       (return-from composition->grid nil))
+		       (return-from composition->grid grid-sequence))
 		     (loop for p from last-position below position collecting
 			  (let ((is-onset (eql p event-position)))
 			    (make-instance 'grid-event
