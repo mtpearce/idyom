@@ -4,6 +4,7 @@
 
 (defparameter *verbose* nil)
 
+; Directory for caching meter counts
 (defparameter *counts-dir* 
   (ensure-directories-exist
    (merge-pathnames "data/counts/" (utils:ensure-directory utils:*root-dir*))))
@@ -60,7 +61,7 @@
 
 (defun generate-meter-posterior (prior-distribution likelihoods n) 
   (when *verbose* (format t "Performing Bayesian inference using predictions and the prior~%"))
-  (let ((params (mapcar #'car prior-distribution))
+  (let ((params (prediction-sets:distribution-symbols prior-distribution))
 	(results))
     ;; Iterate over positions in the test sequence to infer meter
     (dotimes (position n)
@@ -114,7 +115,7 @@
 		 (likelihoods (prediction-sets:event-predictions (first predictions))))
 	    (setf meter-predictions 
 		  (acons (md:meter-key m) 
-			 (list (mapcar 'cadr likelihoods))
+			 (list (prediction-sets:distribution-probabilities likelihoods))
 			 meter-predictions))))))
     meter-predictions))
 
@@ -141,17 +142,21 @@ note it's meter and add it to an alist
     (utils:read-object-from-file filename)))
 
 (defun initialise-prior-distribution (meter-counts resolution)
-  "Generate a probability distribution using the counts in <meter-counts>. 
-An extra variable, phase, is added to the resulting distribution, which has a 
-flat distribution. Different metres have different amounts of phases."
+  "Initialise a prior distribution over meter based on <meter-counts>.
+Rescale the distribution so the sum of prior meter likelihoods in each possible
+phase equals one. Return the rescaled distribution."
   (when *verbose* (format t "Generating prior distribution~%"))
   (let* ((prior)
 	 (unnormalised-prior)
-	 (meter-keys (mapcar #'car meter-counts))
-	 (meters (mapcar #'(lambda (key) (md:meter-key->metrical-interpretation key resolution)) meter-keys))
+	 (meter-keys (prediction-sets:distribution-symbols meter-counts))
+	 (meters (mapcar #'(lambda (key) 
+			     (md:meter-key->metrical-interpretation key resolution)) 
+			 meter-keys))
+	 ;; Obtain probability by dividing the count of each meter by the total count
 	 (probabilities (mapcar #'(lambda (meter-and-count) 
 				      (/ (cdr meter-and-count)
-					 (apply '+ (mapcar #'cdr meter-counts)))) meter-counts))) ; Divide the count of each meter by the sum of the counts
+					 (apply '+ (mapcar #'cdr meter-counts)))) 
+				meter-counts)))
     (dotimes (meter-index (length meter-keys))
       (let* ((meter (nth meter-index meters))
 	     (probability (nth meter-index probabilities))
@@ -164,7 +169,7 @@ flat distribution. Different metres have different amounts of phases."
 		       unnormalised-prior)))))
     ;; Normalise
     (let ((normalisation-factor (/ 1 (apply '+ (mapcar #'cdr unnormalised-prior)))))
-      (dolist (meter (mapcar #'car unnormalised-prior))
+      (dolist (meter (prediction-sets:distribution-symbols unnormalised-prior))
 	(let ((unnormalised-probability (cdr (assoc meter unnormalised-prior))))
 	  (setf prior 
 		(acons meter
@@ -183,7 +188,7 @@ flat distribution. Different metres have different amounts of phases."
   "Take an alist where each key is a distribution parameter and the
 corresponding value is a list of probabilities at a specific time. Sum 
 the probabilities over time and divide by the list length."
-  (let ((params (mapcar #'car distributions))
+  (let ((params (prediction-sets:distribution-symbols distributions))
 	(results))
     (dolist (param params)
       (let* ((probabilities (lookup-key param distributions))
