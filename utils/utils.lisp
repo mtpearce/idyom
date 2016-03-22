@@ -22,6 +22,13 @@
   (if (null numbers) 
       0
       (float (/ (reduce #'+ numbers) (length numbers)))))
+       
+(defun cumsum (&rest numbers)
+  "Returns a list of length |<numbers>| - 1 containing cumulative sums."
+  (let ((cs))
+    (dolist (item numbers)
+      (push (+ item (or (first cs) 0)) cs))
+    (nreverse cs)))
 
 (defun generate-integers (low high)
   "Returns a list containing all the integers between <low> and
@@ -54,6 +61,12 @@
 (defun n-combinations (n r)
   "Returns the no. of combinations of <n> different items taken <r> at a time."
   (/ (factorial n) (* (factorial r) (factorial (- n r)))))
+
+(defun range (max &key (min 0) (step 1))
+  "Returns a list of numbers from <min> (default=0) to <max> by steps of <step> (default=1)"
+   (loop for n from min below max by step
+      collect n))
+
 
 
 

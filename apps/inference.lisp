@@ -173,15 +173,6 @@ flat distribution. Different metres have different amounts of phases."
 	  prior))
       prior)))
 
-(defun range (max &key (min 0) (step 1))
-   (loop for n from min below max by step
-      collect n))
-       
-(defun cumsum (l)
-  (let ((cs))
-    (dolist (item l)
-      (push (+ item (or (first cs) 0)) cs))
-    (nreverse cs)))
 
 (defun sum-over-time (distributions)
   "Take an alist where each key is a distribution parameter and the
