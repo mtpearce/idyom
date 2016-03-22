@@ -378,7 +378,7 @@ the resolution argument."
   "Convert time from units on timebase scale to units on resolution scale. Show a warning when the resulting time is not a whole number."
   (let* ((rescaled-time (* time (/ resolution timebase)))
 	 (fractional (fractional? rescaled-time)))
-    (when fractional (format t "WARNING: converting ~F (timebase ~D) to resolution ~D resulted in a fractional number (~F) ~%" time timebase resolution rescaled-time))
+    (when fractional (warn (format nil "WARNING: converting ~F (timebase ~D) to resolution ~D resulted in a fractional number (~F) ~%" time timebase resolution rescaled-time)))
     rescaled-time))
 
 ;; harmonic sequences
