@@ -11,8 +11,8 @@
   (ensure-directories-exist
    (merge-pathnames "data/alphabets/" (utils:ensure-directory utils:*root-dir*))))
 
-(defvar grid-basic-viewpoints '(:is-onset :pos :onset :dur :cpitch :resolution))
-(defvar melody-basic-viewpoints '(:ARTICULATION :COMMA :VOICE :ORNAMENT :DYN :PHRASE
+(defparameter grid-basic-viewpoints '(:is-onset :pos :onset :resolution))
+(defparameter melody-basic-viewpoints '(:ARTICULATION :COMMA :VOICE :ORNAMENT :DYN :PHRASE
  :BIOI :DELTAST :ACCIDENTAL :MPITCH :CPITCH :BARLENGTH :PULSES :TEMPO :MODE
  :KEYSIG :DUR :ONSET))
 
