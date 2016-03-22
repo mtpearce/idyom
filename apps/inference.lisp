@@ -173,6 +173,11 @@ flat distribution. Different metres have different amounts of phases."
 	  prior))
       prior)))
 
+(defun composition-list-signature (composition-list)
+  "Return the hexdigest of the MD5SUM of the list of all composition indices in the list."
+  (let* ((identifiers (mapcar #'md:get-identifier composition-list))
+	 (composition-indices (mapcar #'md:get-composition-index identifiers)))
+    (utils:md5-sum-of-list composition-indices)))
 
 (defun sum-over-time (distributions)
   "Take an alist where each key is a distribution parameter and the

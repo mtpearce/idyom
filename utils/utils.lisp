@@ -334,6 +334,10 @@
 (defun gzip (filename)
   #-win32 (shell-command "gzip" (list filename)))
 
+(defun md5-sum-of-list (list)
+  "Returns the MD5SUM of the string representation of a list."
+  (format nil "~{~X~}" (coerce (sb-md5:md5sum-string (format nil "~{~D,~}" list)) 'list)))
+
 
 ;;;===========================================================================
 ;;; Pathnames

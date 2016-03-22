@@ -16,7 +16,7 @@
   :author "Marcus Pearce"
   :licence "GPL (see COPYING file for details)"
   :description "Information Dynamics of Music (see README for details)"
-  :depends-on (clsql cl-ppcre midi closer-mop psgraph)
+  :depends-on (clsql cl-ppcre midi closer-mop psgraph sb-md5)
   :serial t
   :components
   (;; General utilities  
