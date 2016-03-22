@@ -224,10 +224,14 @@
 		 :resolution resolution))
   
   
-(defgeneric meter-key (metrical-interpretation))
-(defmethod meter-key ((m metrical-interpretation))
+(defgeneric meter-key (metrical-interpretation &key &allow-other-keys))
+(defmethod meter-key ((m metrical-interpretation) &key &allow-other-keys)
   (format nil "(~A ~A ~A ~A)" 
-	  (barlength m) (pulses m) (meter-phase m) (timebase m)))
+	  (barlength m) (pulses m) (meter-phase m)  (timebase m)))
+
+(defmethod meter-key ((m time-signature) &key (phase 0))
+  (format nil "(~A ~A ~A ~A)" 
+	  (barlength m) (pulses m) phase  (timebase m)))
 
 (defun meter-key->metrical-interpretation (meter-key resolution)
   (multiple-value-bind (values)
