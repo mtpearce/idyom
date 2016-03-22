@@ -22,6 +22,12 @@
   (:export "INFER-METER")
   (:documentation "Categorical inference functionality."))
 
+(defpackage #:rhythms
+  (:use #:cl)
+  (:export "IOI-LIST->EVENT-SEQUENCE" "GRID->GRID-EVENTS"
+	   "AGBEKOR" "SHAVE-AND-A-HAIRCUT" "SON-CLAVE")
+  (:documentation "Utility functions for rhythms"))
+
 (defpackage #:resampling 
   (:use #:cl #:utils #:md #:viewpoints #:ppm #:mvs #:prediction-sets)
   (:export "IDYOM-RESAMPLE" "OUTPUT-INFORMATION-CONTENT" "FORMAT-INFORMATION-CONTENT"

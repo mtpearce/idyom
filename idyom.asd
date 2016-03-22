@@ -113,4 +113,5 @@
              (:file "viewpoint-selection")
              (:file "main")
              (:file "inference")
+	     (:file "rhythms")
              (:file "generation")))))
