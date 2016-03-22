@@ -35,7 +35,7 @@
 				(count-meters training-set :use-cache? nil))))
 	   ;; Extract a list of metrical interpretations
 	   (meters (mapcar #'(lambda (meter-count) 
-			       (md:meter-key->metrical-interpretation 
+			       (md:meter-string->metrical-interpretation 
 				(car meter-count) resolution)) 
 			   meter-counts))
 	   ;; Generate a Nparams x Ntarget-viewpoints x Nevents matrix for event-likelihoods
@@ -110,13 +110,14 @@
 		  (mvs:model-sequence mvs (coerce test-sequence 'list) texture :construct? nil :predict? t :interpretation m))
 		 (likelihoods (prediction-sets:event-predictions (first predictions))))
 	    (setf meter-predictions 
-		  (acons (md:meter-key m) 
+		  (acons (md:meter-string m) 
 			 (list (prediction-sets:distribution-probabilities likelihoods))
 			 meter-predictions))))))
     meter-predictions))
 
 (defun count-meters-grid (training-set-promise resolution)
-  "Count occurrences of each meter in a list of grid representations of compositions."
+  "Count occurrences of each meter in a list of grid representations of compositions.
+Return an ALIST with counts indexed by meter-strings."
   (let ((filename (format nil "~A~A-~A" *counts-dir* (promises:get-identifier training-set-promise) resolution)))
     (unless (utils:file-exists filename)
       (let ((training-set (promises:retrieve training-set-promise))
@@ -125,12 +126,12 @@
 	  (sequence:dosequence (event composition)
 	    (when (not (or (null (md:barlength event)) (null (md:pulses event))))
 	      (let* ((meter (md:make-metrical-interpretation event resolution))
-		     (meter-key (md:meter-key meter))
-		     (mcount (cdr (lookup-meter meter-key meter-counts)))
+		     (meter-string (md:meter-string meter))
+		     (mcount (cdr (lookup-meter meter-string meter-counts)))
 		     (increment (/ 1 (md:meter-period meter)))) 
 		(if mcount ; use mcount as a check whether the key already exists
-		    (rplacd (lookup-meter meter-key meter-counts) (+ mcount increment))
-		    (setf meter-counts (acons meter-key increment meter-counts)))))))
+		    (rplacd (lookup-meter meter-string meter-counts) (+ mcount increment))
+		    (setf meter-counts (acons meter-string increment meter-counts)))))))
 	(utils:write-object-to-file meter-counts filename)
 	(when *verbose* (format t "Written meter counts to ~A.~%" filename))))
     (utils:read-object-from-file filename)))
@@ -148,13 +149,13 @@ ceiling of the onset time of the last event over the meter's period."
 	    (let ((duration (+ (md:onset last-event)
 			       (md:duration last-event)))
 		  (meter (md:make-metrical-interpretation last-event nil)))
-	      (let* ((meter-key (md:meter-key meter))
-		     (mcount (cdr (lookup-meter meter-key meter-counts)))
+	      (let* ((meter-string (md:meter-string meter))
+		     (mcount (cdr (lookup-meter meter-string meter-counts)))
 		     (increment (if per-composition? 
 				    1 (ceiling (/ duration (md:barlength meter))))))
 		(if mcount ; use mcount as a check whether the key already exists
-		    (rplacd (lookup-meter meter-key meter-counts) (+ mcount increment))
-		    (setf meter-counts (acons meter-key increment meter-counts)))))))
+		    (rplacd (lookup-meter meter-string meter-counts) (+ mcount increment))
+		    (setf meter-counts (acons meter-string increment meter-counts)))))))
 	(utils:write-object-to-file meter-counts filename)
 	(when *verbose* (format t "Written meter counts to ~A.~%" filename))))
     (utils:read-object-from-file filename)))
@@ -166,23 +167,23 @@ phase equals one. Return the rescaled distribution."
   (when *verbose* (format t "Generating prior distribution~%"))
   (let* ((prior)
 	 (unnormalised-prior)
-	 (meter-keys (prediction-sets:distribution-symbols meter-counts))
+	 (meter-strings (prediction-sets:distribution-symbols meter-counts))
 	 (meters (mapcar #'(lambda (key) 
-			     (md:meter-key->metrical-interpretation key resolution)) 
-			 meter-keys))
+			     (md:meter-string->metrical-interpretation key resolution)) 
+			 meter-strings))
 	 ;; Obtain probability by dividing the count of each meter by the total count
 	 (probabilities (mapcar #'(lambda (meter-and-count) 
 				      (/ (cdr meter-and-count)
 					 (apply '+ (mapcar #'cdr meter-counts)))) 
 				meter-counts)))
-    (dotimes (meter-index (length meter-keys))
+    (dotimes (meter-index (length meter-strings))
       (let* ((meter (nth meter-index meters))
 	     (probability (nth meter-index probabilities))
 	     (period (md:meter-period meter)))
 	(dotimes (phase period)
 	  (setf (md:meter-phase meter) phase)
 	  (setf unnormalised-prior
-		(acons (md:meter-key meter) 
+		(acons (md:meter-string meter) 
 		       probability 
 		       unnormalised-prior)))))
     ;; Normalise
@@ -261,7 +262,7 @@ over metre."
     "Translate the keys used here into python tuples"
     (multiple-value-bind 
 	  (beat division phase)
-	(meter->time-signature (md:meter-key->metrical-interpretation key resolution))
+	(meter->time-signature (md:meter-string->metrical-interpretation key resolution))
       (format nil "((~D,~D), ~D)" beat division phase)))
 	
 (defun write-python-output (prior likelihoods results resolution path)
@@ -280,7 +281,7 @@ over metre."
 			:key-format-fn (lambda (key) 
 					 (multiple-value-bind 
 					       (beat division phase)
-					     (meter->time-signature (md:meter-key->metrical-interpretation key resolution))
+					     (meter->time-signature (md:meter-string->metrical-interpretation key resolution))
 					   (format nil "'~D ~D (phase ~D)'" beat division phase)))
 			:value-format-fn (lambda (value)
 					   (format nil "[~{~D, ~}]" value)))))
