@@ -9,55 +9,51 @@
   (ensure-directories-exist
    (merge-pathnames "data/counts/" (utils:ensure-directory utils:*root-dir*))))
 
-(defun infer-meter (dataset-id target-viewpoints source-viewpoints test-sequence
-		    &key (voices nil) (texture :grid) 
-		      (resolution 16) (repetitions 1)
-		      (python-results-file nil)
-		      (use-cache? t))
-  (let* ((training-set-promise
-	  (promises:make-promise :function (md:get-music-objects 
-				   (if (listp dataset-id) dataset-id (list dataset-id))	
-				   nil 
-				   :voices voices 
-				   :texture texture 
-				   :resolution resolution)
-			:id dataset-id))
-	 (sources (viewpoints:get-viewpoints source-viewpoints))
-	 (targets (viewpoints:get-basic-viewpoints target-viewpoints 
-						   training-set-promise
-						   texture))
-	 ;; Obtain event counts per meter
-	 (meter-counts (count-meters training-set-promise resolution))
-	 ;; Extract a list of meters
-	 (meters (mapcar #'(lambda (meter-count) (md:meter-key->metrical-interpretation (car meter-count) resolution)) meter-counts))
-	 ; Repeat the test sequence a specified number of times
-	 (test-sequence (loop for x in (range repetitions) collecting (copy-list test-sequence)))
-	 ; Concatenate sublists
-	 (test-sequence (reduce #'append test-sequence))
-	 ;; Generate a Nparams x Ntarget-viewpoints x Nevents matrix
-	 ;; containing event-likelihoods
-	 (likelihoods (generate-meter-predictions training-set-promise
-							meters
-							targets
-							sources
-							test-sequence
-							:resolution resolution
-							:voices voices
-							:texture texture
-							:use-cache? use-cache?))
-	 ;; Initialize the prior distribution
-	 (prior-distribution (initialise-prior-distribution meter-counts resolution))
-	 ;; Convert to a Nparams x Nevents data structure where each column is 
-	 ;; a probability distribution over params
-	 (results (generate-meter-posterior prior-distribution likelihoods (length test-sequence))))
-    (when python-results-file 
-      (write-python-output prior-distribution 
-			   likelihoods 
-			   results 
-			   resolution
-			   python-results-file))
-    results))
+(defgeneric infer-meter (training-set target-viewpoints source-viewpoints test-sequence
+			&key &allow-other-keys))
 
+(defmethod infer-meter ((training-set list) target-viewpoints source-viewpoints test-sequence
+			&rest kwargs &key &allow-other-keys)
+  (let ((training-set-promise 
+	 (promises:make-promise :function training-set 
+				:id (composition-list-signature training-set))))
+    (apply #'infer-meter (append (list training-set-promise target-viewpoints 
+					 source-viewpoints test-sequence)
+				   kwargs))))
+
+(defmethod infer-meter ((training-set promises:promise) 
+			target-viewpoints source-viewpoints test-sequence
+			&key (voices nil) (texture :grid) 
+			  (resolution 16) (python-results-file nil)
+			  (use-cache? t) &allow-other-keys)
+    (let* ((sources (viewpoints:get-viewpoints source-viewpoints))
+	   (targets (viewpoints:get-basic-viewpoints target-viewpoints training-set texture))
+	   ;; Obtain event counts per meter
+	   (meter-counts (cond ((eq texture :grid)
+				(count-meters-grid training-set resolution))
+			       ((member texture (list :melody :harmony)) 
+				(count-meters training-set :use-cache? nil))))
+	   ;; Extract a list of metrical interpretations
+	   (meters (mapcar #'(lambda (meter-count) 
+			       (md:meter-key->metrical-interpretation 
+				(car meter-count) resolution)) 
+			   meter-counts))
+	   ;; Generate a Nparams x Ntarget-viewpoints x Nevents matrix for event-likelihoods
+	   (likelihoods 
+	    (generate-meter-predictions training-set meters targets sources
+					test-sequence
+					:resolution resolution :voices voices
+					:texture texture :use-cache? use-cache?))
+	   ;; Initialize the prior distribution
+	   (prior-distribution (initialise-prior-distribution meter-counts resolution))
+	   ;; Convert to a Nparams x Nevents data structure where each column is 
+	   ;; a probability distribution over params
+	   (results (generate-meter-posterior prior-distribution likelihoods 
+					      (length test-sequence))))
+      (when python-results-file 
+	(write-python-output prior-distribution likelihoods results 
+			     resolution python-results-file))
+      results))
 
 (defun generate-meter-posterior (prior-distribution likelihoods n) 
   (when *verbose* (format t "Performing Bayesian inference using predictions and the prior~%"))
