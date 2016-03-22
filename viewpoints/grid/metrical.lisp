@@ -15,7 +15,7 @@
   :function* (let ((period (md:meter-period interpretation))
 		   (phase (md:meter-phase interpretation)))
 	       (remove-if #'(lambda (e) (not (equalp element (mod (- (pos e) phase) period))))
-			  (viewpoint-alphabet (get-viewpoint 'position))))) ; Infinite? (+ phase (* X period))
+			  (viewpoint-alphabet (get-viewpoint 'position)))))
 
 ;; Metrical accent
 (define-metrical-viewpoint (metrical-accent metrical (pos))
