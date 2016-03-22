@@ -25,7 +25,8 @@
             :components 
             ((:file "package")
              (:file "utils")
-	     (:file "promises")))
+	     (:file "promises")
+	     (:file "python")))
    ;; Database for storage and retrieval of music
    (:module database
 	    :serial t

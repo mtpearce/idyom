@@ -57,12 +57,6 @@
 			   python-results-file))
     results))
 
-(defun key-label->python (key &optional (resolution 16))
-    "Translate the keys used here to the keys used in the python implementation"
-    (multiple-value-bind 
-	  (beat division phase)
-	(meter->time-signature (md:meter-key->metrical-interpretation key resolution))
-      (format nil "((~D,~D), ~D)" beat division phase)))
 
 (defun generate-meter-posterior (prior-distribution likelihoods n) 
   (when *verbose* (format t "Performing Bayesian inference using predictions and the prior~%"))
@@ -290,19 +284,26 @@ the probabilities over time and divide by the list length."
 
 (defun lookup-meter (meter counts)
   (assoc meter counts :test #'string-equal))
+
+(defun key-label->python (key &optional (resolution 16))
+    "Translate the keys used here into python tuples"
+    (multiple-value-bind 
+	  (beat division phase)
+	(meter->time-signature (md:meter-key->metrical-interpretation key resolution))
+      (format nil "((~D,~D), ~D)" beat division phase)))
 	
 (defun write-python-output (prior likelihoods results resolution path)
   (let ((prior-dict
-	 (alist->pydict prior
+	 (python:alist->dict prior
 			:dict-name "prior"
 			:key-format-fn #'key-label->python))
 	(likelihoods-dict
-	 (alist->pydict likelihoods
+	 (python:alist->dict likelihoods
 			:dict-name "likelihoods"
 			:key-format-fn #'key-label->python
-			:value-format-fn (lambda (predictions-sets) (list->pylist (first predictions-sets)))))
+			:value-format-fn (lambda (prediction-sets) (python:list->list (first prediction-sets)))))
 	(results-dict 
-	 (alist->pydict results 
+	 (python:alist->dict results 
 			:dict-name "posterior" 
 			:key-format-fn (lambda (key) 
 					 (multiple-value-bind 
@@ -313,37 +314,6 @@ the probabilities over time and divide by the list length."
 					   (format nil "[~{~D, ~}]" value)))))
     (with-open-file (stream path :direction :output :if-exists :supersede)
       (format stream "~A~%~A~%~A~%" prior-dict likelihoods-dict results-dict))))
-
-(defun alist->pydict (alist &key (file nil) (dict-name "d") (key-format-fn (lambda (x) x))
-			      (value-format-fn (lambda (x) x)))
-  (let ((pydict (format nil "~A = {~A}" dict-name
-			(alist->pydict-items alist key-format-fn value-format-fn))))
-    (when file (with-open-file (stream file :direction :output :if-exists :supersede)
-		 (format stream pydict)))
-    pydict))
-
-(defun alist->pydict-items (alist key-format-fn value-format-fn)
-  (let* ((item (pop alist))
-	 (other-items 
-	  (if alist 
-	      (alist->pydict-items alist key-format-fn value-format-fn)
-	      ""))
-	 (key (car item))
-	 (value (cdr item)))
-    (format nil "~A:~A, ~A" 
-	    (funcall key-format-fn key) 
-	    (funcall value-format-fn value)
-	    other-items)))
-			  
-
-(defun alist-value-map (alist fn)
-  (let* ((item (pop alist))
-	 (key (car item))
-	 (value (cdr item)))
-    (acons (funcall fn key) value (alist-value-map alist fn))))
-
-(defun list->pylist (list)
-  (format nil "[~{~D, ~}]" list))
 
 
 (defun repeat-list (list repetitions)

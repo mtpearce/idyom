@@ -25,6 +25,11 @@
 	   "*ROOT-DIR*")
   (:documentation "Utility functions of general use."))
 
+(defpackage #:python
+  (:use #:cl)
+  (:export "ALIST->DICT" "PLIST->DICT" "LIST->LIST")
+  (:documentation "Utility functions for exporting python code."))
+
 (defpackage #:promises
   (:use #:cl)
   (:export "MAKE-PROMISE" "PROMISE" "RETRIEVE" "GET-IDENTIFIER")
