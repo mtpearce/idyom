@@ -17,16 +17,21 @@
   (:export "IDYOM" "CONKLIN90" "CONKWIT95" "PEARCE05")
   (:documentation "Main access to IDyOM functionality."))
 
-(defpackage #:inference
+(defpackage #:latex
   (:use #:cl)
-  (:export "INFER-METER")
-  (:documentation "Categorical inference functionality."))
+  (:export "LATEX-SOLUTION-ARRAY")
+  (:documentation "Utility functions for generating latex code."))
 
 (defpackage #:rhythms
   (:use #:cl)
   (:export "IOI-LIST->EVENT-SEQUENCE" "GRID->GRID-EVENTS"
 	   "AGBEKOR" "SHAVE-AND-A-HAIRCUT" "SON-CLAVE")
   (:documentation "Utility functions for rhythms"))
+
+(defpackage #:inference
+  (:use #:cl)
+  (:export "INFER-METER")
+  (:documentation "Categorical inference functionality."))
 
 (defpackage #:resampling 
   (:use #:cl #:utils #:md #:viewpoints #:ppm #:mvs #:prediction-sets)

@@ -230,32 +230,6 @@ over metre."
 (defun get-prior-likelihood (meter likelihoods)
   (lookup-key meter likelihoods))
 
-
-(defun grid-events->latex-solution-array (grid viewpoint-list &key (interpretation nil) (highlight 0))
-  (let* ((viewpoints (viewpoints:get-viewpoints viewpoint-list))
-	 (m (mvs:make-mvs nil viewpoints nil))
-	 (is-onset-vp (viewpoints:get-viewpoint 'is-onset))
-	 (pos-vp (viewpoints:get-viewpoint 'pos)))
-    (format t "\\begin{tabular}{~{~D~}}~%" (mapcar (lambda (x) "l") (range (length grid))))
-    (dolist (event grid)
-      (let ((position (funcall (type-of pos-vp) (list event)))
-	    (is-onset (funcall (type-of is-onset-vp) (list event))))
-	(when (< position highlight) (format t "\\textcolor{red}{"))
-	(if is-onset (format t "$\\bullet$") (format t "$\\circ$"))
-	(when (< position highlight) (format t "}"))
-	(when (< position (- (length grid) 1)) (format t " & "))))
-    (format t "\\\\~%")
-    (dotimes (vp-index (length viewpoints))
-      (dolist (event grid)
-	(let ((position (funcall (type-of pos-vp) (list event))))
-	  (when (< position highlight) (format t "\\textcolor{red}{"))
-	  (format t "~D" (aref (mvs:get-event-array m (list event) :interpretation interpretation)
-			       vp-index))
-	  (when (< position highlight) (format t "}"))
-	  (when (< position (- (length grid) 1)) (format t " & "))))
-      (format t "\\\\~%"))
-    (format t "\\end{tabular}")))
-
 (defun meter->time-signature (metrical-interpretation)
   (let ((phase (md:meter-phase metrical-interpretation))
 	(pulses (md:pulses metrical-interpretation))
