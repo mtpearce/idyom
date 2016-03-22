@@ -195,6 +195,28 @@ the probabilities over time and divide by the list length."
 	     (result (/ (apply #'+ probabilities) (length probabilities))))
 	(setf results (acons param result results))))
     results))
+
+(defun phase-metre->metre (distribution)
+  "Convert a distribution over metre and phase to a distribution
+over metre."
+  (flet ((remove-phase (param)
+	   (multiple-value-bind (values) 
+	       (read-from-string param)
+	     (format nil "(~A ~A)" (first values) (second values)))))
+    (let* ((params (prediction-sets:distribution-symbols distribution))
+	   (metres 
+	    (remove-duplicates (mapcar #'remove-phase params) 
+			       :test #'equal))
+	   (params-per-metre (loop for metre in metres collect 
+				  (cons metre (loop for param in params 
+						 when (equal (remove-phase param) metre)
+						 collect param)))))
+      (loop for metre-params in params-per-metre collect
+	   (let ((metre (car metre-params))
+		 (params (cdr metre-params)))
+	     (let ((probability (apply #'+ (loop for param in params collect 
+						(lookup-key param distribution)))))
+	       (cons metre (/ probability (length params)))))))))
   
 (defun lookup-key (key alist)
   (cdr (assoc key alist :test #'string-equal)))
