@@ -50,10 +50,7 @@
 	   ;; a probability distribution over params
 	   (results (generate-meter-posterior prior-distribution likelihoods 
 					      (length test-sequence))))
-      (when python-results-file 
-	(write-python-output prior-distribution likelihoods results 
-			     resolution python-results-file))
-      results))
+      (values prior-distribution likelihoods results)))
 
 (defun generate-meter-posterior (prior-distribution likelihoods n) 
   (when *verbose* (format t "Performing Bayesian inference using predictions and the prior~%"))
@@ -257,33 +254,3 @@ over metre."
 
 (defun lookup-meter (meter counts)
   (assoc meter counts :test #'string-equal))
-
-(defun key-label->python (key &optional (resolution 16))
-    "Translate the keys used here into python tuples"
-    (multiple-value-bind 
-	  (beat division phase)
-	(meter->time-signature (md:meter-string->metrical-interpretation key resolution))
-      (format nil "((~D,~D), ~D)" beat division phase)))
-	
-(defun write-python-output (prior likelihoods results resolution path)
-  (let ((prior-dict
-	 (python:alist->dict prior
-			:dict-name "prior"
-			:key-format-fn #'key-label->python))
-	(likelihoods-dict
-	 (python:alist->dict likelihoods
-			:dict-name "likelihoods"
-			:key-format-fn #'key-label->python
-			:value-format-fn (lambda (prediction-sets) (python:list->list (first prediction-sets)))))
-	(results-dict 
-	 (python:alist->dict results 
-			:dict-name "posterior" 
-			:key-format-fn (lambda (key) 
-					 (multiple-value-bind 
-					       (beat division phase)
-					     (meter->time-signature (md:meter-string->metrical-interpretation key resolution))
-					   (format nil "'~D ~D (phase ~D)'" beat division phase)))
-			:value-format-fn (lambda (value)
-					   (format nil "[~{~D, ~}]" value)))))
-    (with-open-file (stream path :direction :output :if-exists :supersede)
-      (format stream "~A~%~A~%~A~%" prior-dict likelihoods-dict results-dict))))
