@@ -24,8 +24,7 @@
 (defmethod infer-meter ((training-set promises:promise) 
 			target-viewpoints source-viewpoints test-sequence
 			&key (voices nil) (texture :grid) 
-			  (resolution 16) (python-results-file nil)
-			  (use-cache? t) &allow-other-keys)
+			  (resolution 16) (use-cache? t) &allow-other-keys)
     (let* ((sources (viewpoints:get-viewpoints source-viewpoints))
 	   (targets (viewpoints:get-basic-viewpoints target-viewpoints training-set texture))
 	   ;; Obtain event counts per meter
@@ -48,9 +47,19 @@
 	   (prior-distribution (initialise-prior-distribution meter-counts resolution))
 	   ;; Convert to a Nparams x Nevents data structure where each column is 
 	   ;; a probability distribution over params
-	   (results (generate-meter-posterior prior-distribution likelihoods 
-					      (length test-sequence))))
-      (values prior-distribution likelihoods results)))
+	   (posteriors (generate-meter-posterior prior-distribution likelihoods 
+					      (length test-sequence)))
+	   (information-contents 
+	    (loop for p below (length test-sequence) collecting
+		 (- (log (event-likelihood p likelihoods posteriors)
+			 2)))))
+      (values prior-distribution likelihoods posteriors information-contents)))
+
+(defun event-likelihood (position likelihoods posteriors)
+  (let ((interpretations (prediction-sets:distribution-symbols posteriors)))
+    (apply '+ (loop for interpretation in interpretations collecting
+		   (* (nth position (first (lookup-key interpretation likelihoods)))
+		      (nth position (lookup-key interpretation posteriors)))))))
 
 (defun generate-meter-posterior (prior-distribution likelihoods n) 
   (when *verbose* (format t "Performing Bayesian inference using predictions and the prior~%"))
