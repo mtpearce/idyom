@@ -228,10 +228,16 @@
 (defmethod meter-string ((m metrical-interpretation) &key &allow-other-keys)
   (format nil "(~A ~A ~A ~A)" 
 	  (barlength m) (pulses m) (meter-phase m)  (timebase m)))
-
 (defmethod meter-string ((m time-signature) &key (phase 0))
   (format nil "(~A ~A ~A ~A)" 
 	  (barlength m) (pulses m) phase  (timebase m)))
+
+(defgeneric category-string (time-signature))
+(defmethod category-string ((ts time-signature))
+  "Return a string representation containing the metrical category of a 
+time signature."
+  (format nil "(~A ~A)" 
+	  (barlength m) (pulses m)))
 
 (defun meter-string->metrical-interpretation (meter-string resolution)
   (multiple-value-bind (values)
