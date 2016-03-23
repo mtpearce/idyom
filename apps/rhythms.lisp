@@ -26,7 +26,7 @@
 					 (phase 0) &allow-other-keys)
   (setf ioi-list (mapcar #'(lambda (ioi) (md:rescale ioi target-resolution source-resolution)) ioi-list))
   (let ((onset-times (cons 0 (apply #'utils:cumsum ioi-list))))
-    (loop for position in (utils:range (+ phase (car (last onset-times))))
+    (loop for position in (utils:generate-integers 0 (+ phase (car (last onset-times))))
 	 collecting (make-grid-event (if (member (- position phase) onset-times) t nil) 
 				     position 
 				     :interpretation interpretation

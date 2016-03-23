@@ -62,13 +62,6 @@
   "Returns the no. of combinations of <n> different items taken <r> at a time."
   (/ (factorial n) (* (factorial r) (factorial (- n r)))))
 
-(defun range (max &key (min 0) (step 1))
-  "Returns a list of numbers from <min> (default=0) to <max> by steps of <step> (default=1)"
-   (loop for n from min below max by step
-      collect n))
-
-
-
 
 ;;;===========================================================================
 ;;; Sequences

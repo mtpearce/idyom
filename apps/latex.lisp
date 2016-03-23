@@ -38,5 +38,5 @@
 		      (if highlight (format nil "\\textcolor{red}{~A}" formatted-element) formatted-element))))
 	     (format nil "\\texttt{~A} & ~{~A ~^& ~}\\\\~%"
 		     (viewpoints:viewpoint-name (nth vp-index viewpoints))
-		     (mapcar #'draw-viewpoint-element (range (length events)))))))
-    (format nil "~{~A~}" (mapcar #'draw-viewpoint-row (range (length viewpoints))))))
+		     (mapcar #'draw-viewpoint-element (utils:generate-integers (length events)))))))
+    (format nil "~{~A~}" (mapcar #'draw-viewpoint-row (utils:generate-integers (length viewpoints))))))
