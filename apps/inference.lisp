@@ -44,7 +44,7 @@
 	   (prior-distribution (initialise-prior-distribution meter-counts resolution))
 	   ;; Convert to a Nparams x Nevents data structure where each column is 
 	   ;; a probability distribution over params
-	   (posteriors (generate-meter-posterior prior-distribution likelihoods 
+	   (posteriors (generate-meter-posteriors prior-distribution likelihoods 
 					      (length test-sequence)))
 	   (information-contents 
 	    (loop for p below (length test-sequence) collecting
@@ -59,10 +59,13 @@
 		   (* (nth position (lookup-key interpretation likelihoods))
 		      (nth position (lookup-key interpretation posteriors)))))))
 
-(defun generate-meter-posterior (prior-distribution likelihoods n) 
+(defun generate-meter-posteriors (prior-distribution likelihoods n) 
   (when *verbose* (format t "Performing Bayesian inference using predictions and the prior~%"))
-  (let ((params (prediction-sets:distribution-symbols prior-distribution))
-	(results))
+  (let* ((params (prediction-sets:distribution-symbols prior-distribution))
+	 ;; Initialise results with the prior
+	 (results (mapcar #'(lambda (param) 
+			      (cons param
+				    (list (lookup-key param prior-distribution)))) params)))
     ;; Iterate over positions in the test sequence to infer meter
     (dotimes (position n)
       (let ((evidence (apply #'+ 
