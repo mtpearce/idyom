@@ -28,7 +28,7 @@
     (let* ((sources (viewpoints:get-viewpoints source-viewpoints))
 	   (targets (viewpoints:get-basic-viewpoints target-viewpoints training-set texture))
 	   ;; Obtain event counts per meter
-	   (meter-counts (count-meters training-set resolution :use-cache? nil))
+	   (meter-counts (count-meters training-set texture resolution :use-cache? nil))
 	   ;; Extract a list of metrical interpretations
 	   (meters (mapcar #'(lambda (meter-count) 
 			       (md:meter-string->metrical-interpretation 
@@ -53,9 +53,10 @@
       (values prior-distribution likelihoods posteriors information-contents)))
 
 (defun event-likelihood (position likelihoods posteriors)
+  "Return the predictive likelihood of an event at position <position>"
   (let ((interpretations (prediction-sets:distribution-symbols posteriors)))
     (apply '+ (loop for interpretation in interpretations collecting
-		   (* (nth position (first (lookup-key interpretation likelihoods)))
+		   (* (nth position (lookup-key interpretation likelihoods))
 		      (nth position (lookup-key interpretation posteriors)))))))
 
 (defun generate-meter-posterior (prior-distribution likelihoods n) 
@@ -77,47 +78,45 @@
 	    ; Update the prior
 	    (rplacd (assoc meter prior-distribution :test #'string-equal) posterior)
 	    ; Store the result
-	    (if probabilities 
-		(push posterior (cdr probabilities))
-		(setf results (acons meter (list posterior) results)))))))
+	    (push posterior (cdr probabilities))))))
+    ;; Reverse the list of probabilities for each meter
     (dolist (param params)
       (let ((result (assoc param results :test #'string-equal)))
 	(rplacd result (nreverse (cdr result)))))
     results))
 
-(defun generate-meter-predictions (training-set-promise meters targets sources test-sequence
-		    &key (resolution 16) voices texture use-cache?)
-  (when *verbose* (format t "Generating predictions for the test sequence in all interpretations~%"))
-  (let* ((meter-predictions))
-    ;; Train models for each meter
-    (dolist (meter meters meter-predictions)
-      (multiple-value-bind (beats division) (meter->time-signature meter)
-	(when *verbose* (format t "Training interpretation model for ~D ~D~%" beats division)))
-      (let* ((interpretation-models ; the viewpoint models
-	      (resampling:get-long-term-models sources training-set-promise
-					       nil
-					       (promises:get-identifier training-set-promise) 
-					       nil nil
-					       :voices voices
-					       :texture texture
-					       :interpretation meter
-					       :resolution resolution
-					       :use-cache? use-cache?))
-	     (mvs (mvs:make-mvs targets sources interpretation-models)) 
-	     (period (md:meter-period meter)))
-	 ; Generate predictions for each phase
-	(when *verbose* (format t "Modelling test sequence for all phases~%"))
-	(dotimes (phase period)
-	  (let* ((m (md:make-metrical-interpretation meter resolution :phase phase))
-		 (predictions
-		  (mvs:model-sequence mvs (coerce test-sequence 'list) texture :construct? nil :predict? t :interpretation m))
-		 (likelihoods (prediction-sets:event-predictions (first predictions))))
-	    (setf meter-predictions 
-		  (acons (md:meter-string m) 
-			 (list (prediction-sets:distribution-probabilities likelihoods))
-			 meter-predictions))))))
-    meter-predictions))
 
+(defun generate-meter-predictions (training-set-promise categories targets sources test-sequence
+				   &key (resolution 16) voices texture use-cache?)
+  (when *verbose* 
+    (format t "Generating predictions for the test sequence in all interpretations~%"))
+  (flet ((create-interpretations (category)
+	   (let ((period (md:meter-period category)))
+	     (flet ((make-interpretation (phase)
+		      (md:make-metrical-interpretation category resolution :phase phase)))
+	       ;; Create an interpretation for this category in each phase
+	       (mapcar #'make-interpretation (utils:generate-integers 0 period)))))
+	 (model-sequence (mvs interpretation)
+	   (mvs:model-sequence mvs (coerce test-sequence 'list) texture :construct? nil 
+				:predict? t :interpretation interpretation))
+	 (make-mvs (category)
+	   (let ((ltms (resampling:get-long-term-models sources training-set-promise
+							nil (promises:get-identifier 
+							     training-set-promise) nil nil
+							:voices voices :texture texture
+							:interpretation category
+							:resolution resolution
+							:use-cache? use-cache?)))
+	     (mvs:make-mvs targets sources ltms))))
+    ;; Create a list of lists containing each category in each possible phase
+    (let ((interpretations (reduce 'append (mapcar #'create-interpretations categories))))
+      (let ((multiple-viewpoint-systems (mapcar #'make-mvs interpretations)))
+	(mapcar #'(lambda (interpretation mvs) 
+		    (cons (md:meter-string interpretation)
+			  (prediction-sets:distribution-probabilities
+			   (prediction-sets:event-predictions 
+			    (first (model-sequence mvs interpretation))))))
+		interpretations multiple-viewpoint-systems)))))
 
 (defgeneric count-meters (training-set texture resolution 
 			  &key &allow-other-keys))
@@ -249,7 +248,7 @@ over metre."
   (first (lookup-key meter meter-likelihoods)))
 
 (defun get-event-likelihood (meter position likelihoods)
-  (nth position (first (lookup-key meter likelihoods))))
+  (nth position (lookup-key meter likelihoods)))
 
 (defun get-prior-likelihood (meter likelihoods)
   (lookup-key meter likelihoods))
