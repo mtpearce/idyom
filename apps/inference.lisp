@@ -28,10 +28,7 @@
     (let* ((sources (viewpoints:get-viewpoints source-viewpoints))
 	   (targets (viewpoints:get-basic-viewpoints target-viewpoints training-set texture))
 	   ;; Obtain event counts per meter
-	   (meter-counts (cond ((eq texture :grid)
-				(count-meters-grid training-set resolution))
-			       ((member texture (list :melody :harmony)) 
-				(count-meters training-set :use-cache? nil))))
+	   (meter-counts (count-meters training-set resolution :use-cache? nil))
 	   ;; Extract a list of metrical interpretations
 	   (meters (mapcar #'(lambda (meter-count) 
 			       (md:meter-string->metrical-interpretation 
@@ -121,50 +118,52 @@
 			 meter-predictions))))))
     meter-predictions))
 
-(defun count-meters-grid (training-set-promise resolution)
-  "Count occurrences of each meter in a list of grid representations of compositions.
-Return an ALIST with counts indexed by meter-strings."
-  (let ((filename (format nil "~A~A-~A" *counts-dir* (promises:get-identifier training-set-promise) resolution)))
-    (unless (utils:file-exists filename)
-      (let ((training-set (promises:retrieve training-set-promise))
-	    (meter-counts)) ; The meter counts
-	(dolist (composition training-set)
-	  (sequence:dosequence (event composition)
-	    (when (not (or (null (md:barlength event)) (null (md:pulses event))))
-	      (let* ((meter (md:make-metrical-interpretation event resolution))
-		     (meter-string (md:meter-string meter))
-		     (mcount (cdr (lookup-meter meter-string meter-counts)))
-		     (increment (/ 1 (md:meter-period meter)))) 
-		(if mcount ; use mcount as a check whether the key already exists
-		    (rplacd (lookup-meter meter-string meter-counts) (+ mcount increment))
-		    (setf meter-counts (acons meter-string increment meter-counts)))))))
-	(utils:write-object-to-file meter-counts filename)
-	(when *verbose* (format t "Written meter counts to ~A.~%" filename))))
+
+(defgeneric count-meters (training-set texture resolution 
+			  &key &allow-other-keys))
+
+(defmethod count-meters ((training-set promises:promise) texture resolution
+			 &key (use-cache? t) (per-composition? nil))
+  (let ((filename (format nil "~A~A-~A" *counts-dir* 
+			  (promises:get-identifier training-set) resolution)))
+    (unless (and (utils:file-exists filename) use-cache?)
+      (let ((training-set (promises:retrieve training-set)))
+	(utils:write-object-to-file (count-meters training-set texture resolution    
+						  :per-composition? per-composition?)
+				    filename))
+      (when *verbose* (format t "Written meter counts to ~A.~%" filename)))
     (utils:read-object-from-file filename)))
 
-(defun count-meters (training-set-promise &key (use-cache? t) (per-composition? nil))
-  "This function assumes the meter does not change during event sequences. Go over 
-eac sequence in the training set, calculate the number meter-observations by taking the 
-ceiling of the onset time of the last event over the meter's period."
-    (let ((filename (format nil "~A~A" *counts-dir* (promises:get-identifier training-set-promise))))
-    (unless (and (utils:file-exists filename) use-cache?)
-      (let ((training-set (promises:retrieve training-set-promise))
-	    (meter-counts))
-	(dolist (composition training-set)
-	  (let ((last-event (utils:last-element composition)))
-	    (let ((duration (+ (md:onset last-event)
-			       (md:duration last-event)))
-		  (meter (md:make-metrical-interpretation last-event nil)))
-	      (let* ((meter-string (md:meter-string meter))
-		     (mcount (cdr (lookup-meter meter-string meter-counts)))
-		     (increment (if per-composition? 
-				    1 (ceiling (/ duration (md:barlength meter))))))
-		(if mcount ; use mcount as a check whether the key already exists
-		    (rplacd (lookup-meter meter-string meter-counts) (+ mcount increment))
-		    (setf meter-counts (acons meter-string increment meter-counts)))))))
-	(utils:write-object-to-file meter-counts filename)
-	(when *verbose* (format t "Written meter counts to ~A.~%" filename))))
-    (utils:read-object-from-file filename)))
+(defmethod count-meters ((training-set list) texture resolution
+			 &key (per-composition? nil))
+  "Find every occurring meter in a list of composition and count the number of bars in 
+each meter (unless <per-composition?> is true and the texture is not :grid, in that case
+the number of compositions per meter are counted and compositions are assumed not to 
+contain metrical changes). Return an ALIST with counts indexed by meter-strings."
+  (let ((meter-counts))
+    (dolist (composition training-set meter-counts)
+      (cond ((eq texture :grid)
+	     (sequence:dosequence (event composition)
+	       (when (not (or (null (md:barlength event)) (null (md:pulses event))))
+		 (let* ((meter (md:make-metrical-interpretation event resolution))
+			(meter-string (md:meter-string meter))
+			(mcount (cdr (lookup-meter meter-string meter-counts)))
+			(increment (/ 1 (md:meter-period meter)))) 
+		   (if mcount ; use mcount as a check whether the key already exists
+		       (rplacd (lookup-meter meter-string meter-counts) (+ mcount increment))
+		       (setf meter-counts (acons meter-string increment meter-counts)))))))
+	    ((member texture (list :melody :harmony))
+	     (let ((last-event (utils:last-element composition)))
+	       (let ((duration (+ (md:onset last-event)
+				  (md:duration last-event)))
+		     (meter (md:make-metrical-interpretation last-event nil)))
+		 (let* ((meter-string (md:meter-string meter))
+			(mcount (cdr (lookup-meter meter-string meter-counts)))
+			(increment (if per-composition? 
+				       1 (ceiling (/ duration (md:barlength meter))))))
+		   (if mcount ; use mcount as a check whether the key already exists
+		       (rplacd (lookup-meter meter-string meter-counts) (+ mcount increment))
+		       (setf meter-counts (acons meter-string increment meter-counts)))))))))))
 
 (defun initialise-prior-distribution (meter-counts resolution)
   "Initialise a prior distribution over meter based on <meter-counts>.
