@@ -115,6 +115,8 @@
     (let ((interpretations (reduce 'append (mapcar #'create-interpretations categories))))
       (let ((multiple-viewpoint-systems (mapcar #'make-mvs interpretations)))
 	(mapcar #'(lambda (interpretation mvs) 
+		    ;; FIXME: Only the predictions of the *first* target viewpoint are 
+		    ;; taken into account here! They should be combined.
 		    (cons (md:meter-string interpretation)
 			  (prediction-sets:distribution-probabilities
 			   (prediction-sets:event-predictions 
