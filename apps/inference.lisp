@@ -66,7 +66,8 @@
 	 ;; Initialise results with the prior
 	 (results (mapcar #'(lambda (param) 
 			      (cons param
-				    (lookup-key param prior-distribution))) params)))
+				    (copy-list 
+				     (lookup-key param prior-distribution)))) params)))
     ;; Iterate over positions in the test sequence to infer meter
     (dotimes (position n)
       (let ((evidence (apply #'+ 
