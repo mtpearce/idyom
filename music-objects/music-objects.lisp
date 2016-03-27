@@ -239,6 +239,16 @@ time signature."
   (format nil "(~A ~A)" 
 	  (barlength m) (pulses m)))
 
+(defgeneric create-interpretations (category resolution))
+(defmethod create-interpretations (category resolution)
+  "Return a list of interpretations derived from a category."
+  (let ((period (md:meter-period category)))
+    (flet ((make-interpretation (phase)
+	     (md:make-metrical-interpretation category resolution 
+					      :phase phase)))
+      ;; Create an interpretation for this category in each phase
+      (mapcar #'make-interpretation (utils:generate-integers 0 (1- period))))))
+
 (defun meter-string->metrical-interpretation (meter-string resolution)
   (multiple-value-bind (values)
       (read-from-string meter-string)

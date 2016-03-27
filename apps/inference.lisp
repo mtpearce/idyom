@@ -65,21 +65,19 @@
 	 ;; Initialise results with the prior
 	 (results (mapcar #'(lambda (param) 
 			      (cons param
-				    (list (lookup-key param prior-distribution)))) params)))
+				    (lookup-key param prior-distribution))) params)))
     ;; Iterate over positions in the test sequence to infer meter
     (dotimes (position n)
       (let ((evidence (apply #'+ 
 			     (mapcar #'(lambda (m) 
 					 (* (get-event-likelihood m position likelihoods)
-					    (get-prior-likelihood m prior-distribution))) 
+					    (first (lookup-key m results))))
 				     params))))
 	(dolist (meter params)
 	  (let* ((likelihood (get-event-likelihood meter position likelihoods))
-		 (prior (get-prior-likelihood meter prior-distribution))
+		 (prior (first (lookup-key meter results)))
 		 (posterior (/ (* likelihood prior) evidence))
 		 (probabilities (assoc meter results :test #'string-equal)))
-	    ; Update the prior
-	    (rplacd (assoc meter prior-distribution :test #'string-equal) posterior)
 	    ; Store the result
 	    (push posterior (cdr probabilities))))))
     ;; Reverse the list of probabilities for each meter
@@ -93,13 +91,7 @@
 				   &key (resolution 16) voices texture use-cache?)
   (when *verbose* 
     (format t "Generating predictions for the test sequence in all interpretations~%"))
-  (flet ((create-interpretations (category)
-	   (let ((period (md:meter-period category)))
-	     (flet ((make-interpretation (phase)
-		      (md:make-metrical-interpretation category resolution :phase phase)))
-	       ;; Create an interpretation for this category in each phase
-	       (mapcar #'make-interpretation (utils:generate-integers 0 period)))))
-	 (model-sequence (mvs interpretation)
+  (flet ((model-sequence (mvs interpretation)
 	   (mvs:model-sequence mvs (coerce test-sequence 'list) texture :construct? nil 
 				:predict? t :interpretation interpretation))
 	 (make-mvs (category)
@@ -112,7 +104,9 @@
 							:use-cache? use-cache?)))
 	     (mvs:make-mvs targets sources ltms))))
     ;; Create a list of lists containing each category in each possible phase
-    (let ((interpretations (reduce 'append (mapcar #'create-interpretations categories))))
+    (let ((interpretations 
+	   (apply 'append (mapcar #'(lambda (c) (md:create-interpretations c resolution))
+				   categories))))
       (let ((multiple-viewpoint-systems (mapcar #'make-mvs interpretations)))
 	(mapcar #'(lambda (interpretation mvs) 
 		    ;; FIXME: Only the predictions of the *first* target viewpoint are 
@@ -169,42 +163,29 @@ contain metrical changes). Return an ALIST with counts indexed by meter-strings.
 		       (rplacd (lookup-meter meter-string meter-counts) (+ mcount increment))
 		       (setf meter-counts (acons meter-string increment meter-counts)))))))))))
 
-(defun initialise-prior-distribution (meter-counts resolution)
-  "Initialise a prior distribution over meter based on <meter-counts>.
-Rescale the distribution so the sum of prior meter likelihoods in each possible
+(defun initialise-prior-distribution (category-counts resolution)
+  "Initialise a prior distribution over categories based on <category-counts>.
+Rescale the distribution so the sum of prior category likelihoods in each possible
 phase equals one. Return the rescaled distribution."
   (when *verbose* (format t "Generating prior distribution~%"))
-  (let* ((prior)
-	 (unnormalised-prior)
-	 (meter-strings (prediction-sets:distribution-symbols meter-counts))
-	 (meters (mapcar #'(lambda (key) 
-			     (md:meter-string->metrical-interpretation key resolution)) 
-			 meter-strings))
-	 ;; Obtain probability by dividing the count of each meter by the total count
-	 (probabilities (mapcar #'(lambda (meter-and-count) 
-				      (/ (cdr meter-and-count)
-					 (apply '+ (mapcar #'cdr meter-counts)))) 
-				meter-counts)))
-    (dotimes (meter-index (length meter-strings))
-      (let* ((meter (nth meter-index meters))
-	     (probability (nth meter-index probabilities))
-	     (period (md:meter-period meter)))
-	(dotimes (phase period)
-	  (setf (md:meter-phase meter) phase)
-	  (setf unnormalised-prior
-		(acons (md:meter-string meter) 
-		       probability 
-		       unnormalised-prior)))))
-    ;; Normalise
-    (let ((normalisation-factor (/ 1 (apply '+ (mapcar #'cdr unnormalised-prior)))))
-      (dolist (meter (prediction-sets:distribution-symbols unnormalised-prior))
-	(let ((unnormalised-probability (cdr (assoc meter unnormalised-prior))))
-	  (setf prior 
-		(acons meter
-		       (* unnormalised-probability normalisation-factor)
-		       prior))
-	  prior))
-      prior)))
+  (let ((counts (mapcar #'cdr category-counts))
+	(categories (mapcar #'(lambda (category-count) 
+				(md:meter-string->metrical-interpretation
+				 (car category-count) resolution))
+			    category-counts)))
+    (let ((observation-count (apply '+ counts)))
+      (let ((category-prior (mapcar #'(lambda (count) (/ count observation-count)) counts))
+	    (interpretations-per-category
+	     (mapcar (lambda (c) (md:create-interpretations c resolution))
+				     categories)))
+	(let ((interpretation-prior 
+	       (apply #'append (mapcar #'(lambda (interpretations p) 
+			   (mapcar #'(lambda (interpretation) 
+				       (cons (md:meter-string interpretation) (list p)))
+				   interpretations))
+		       interpretations-per-category category-prior))))
+	  ;; Flatten and re-normalise the distribution
+	  (prediction-sets:normalise-distribution interpretation-prior))))))
 
 (defun composition-list-signature (composition-list)
   "Return the hexdigest of the MD5SUM of the list of all composition indices in the list."
