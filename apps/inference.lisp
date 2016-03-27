@@ -55,9 +55,10 @@
 (defun event-likelihood (position likelihoods posteriors)
   "Return the predictive likelihood of an event at position <position>"
   (let ((interpretations (prediction-sets:distribution-symbols posteriors)))
-    (apply '+ (loop for interpretation in interpretations collecting
-		   (* (nth position (lookup-key interpretation likelihoods))
-		      (nth position (lookup-key interpretation posteriors)))))))
+    (apply '+ (mapcar #'(lambda (i) 
+			  (* (nth position (lookup-key i likelihoods))
+			     (nth position (lookup-key i posteriors))))
+		      interpretations))))
 
 (defun generate-meter-posteriors (prior-distribution likelihoods n) 
   (when *verbose* (format t "Performing Bayesian inference using predictions and the prior~%"))
