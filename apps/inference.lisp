@@ -106,18 +106,22 @@
 							:use-cache? use-cache?)))
 	     (mvs:make-mvs targets sources ltms))))
     ;; Create a list of lists containing each category in each possible phase
-    (let ((interpretations 
-	   (apply 'append (mapcar #'(lambda (c) (md:create-interpretations c resolution))
-				   categories))))
-      (let ((multiple-viewpoint-systems (mapcar #'make-mvs interpretations)))
-	(mapcar #'(lambda (interpretation model) 
-		    ;; FIXME: Only the predictions of the *first* target viewpoint are 
-		    ;; taken into account here! They should be combined.
-		    (cons (md:meter-string interpretation)
-			  (prediction-sets:distribution-probabilities
-			   (prediction-sets:event-predictions 
-			    (first (model-sequence model interpretation))))))
-		interpretations multiple-viewpoint-systems)))))
+    (let ((interpretations-per-category
+	   (mapcar #'(lambda (c) (md:create-interpretations c resolution)) categories)))
+      (apply #'append
+	     (mapcar 
+	      #'(lambda (category interpretations) 
+		  (let ((model (make-mvs category)))
+		    (mapcar 
+		     #'(lambda (interpretation)
+			 ;; FIXME: Only the predictions of the *first* target viewpoint are 
+			 ;; taken into account here! They should be combined.
+			 (cons (md:meter-string interpretation)
+			       (prediction-sets:distribution-probabilities
+				(prediction-sets:event-predictions 
+				 (first (model-sequence model interpretation))))))
+		     interpretations)))
+	      categories interpretations-per-category)))))
 
 (defgeneric count-meters (training-set texture resolution 
 			  &key &allow-other-keys))
