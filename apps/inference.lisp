@@ -76,12 +76,12 @@
 					    (first (lookup-key m results))))
 				     params))))
 	(dolist (meter params)
-	  (let* ((likelihood (get-event-likelihood meter position likelihoods))
-		 (prior (first (lookup-key meter results)))
-		 (posterior (/ (* likelihood prior) evidence))
-		 (probabilities (assoc meter results :test #'string-equal)))
+	  (let* ((posteriors (lookup-key meter results))
+		 (likelihood (get-event-likelihood meter position likelihoods))
+		 (prior (first posteriors))
+		 (posterior (/ (* likelihood prior) evidence)))
 	    ; Store the result
-	    (push posterior (cdr probabilities))))))
+	    (push posterior (cdr (assoc meter results :test #'string-equal)))))))
     ;; Reverse the list of probabilities for each meter
     (dolist (param params)
       (let ((result (assoc param results :test #'string-equal)))
@@ -93,8 +93,8 @@
 				   &key (resolution 16) voices texture use-cache?)
   (when *verbose* 
     (format t "Generating predictions for the test sequence in all interpretations~%"))
-  (flet ((model-sequence (mvs interpretation)
-	   (mvs:model-sequence mvs (coerce test-sequence 'list) texture :construct? nil 
+  (flet ((model-sequence (model interpretation)
+	   (mvs:model-sequence model (coerce test-sequence 'list) texture :construct? nil 
 				:predict? t :interpretation interpretation))
 	 (make-mvs (category)
 	   (let ((ltms (resampling:get-long-term-models sources training-set-promise
@@ -110,13 +110,13 @@
 	   (apply 'append (mapcar #'(lambda (c) (md:create-interpretations c resolution))
 				   categories))))
       (let ((multiple-viewpoint-systems (mapcar #'make-mvs interpretations)))
-	(mapcar #'(lambda (interpretation mvs) 
+	(mapcar #'(lambda (interpretation model) 
 		    ;; FIXME: Only the predictions of the *first* target viewpoint are 
 		    ;; taken into account here! They should be combined.
 		    (cons (md:meter-string interpretation)
 			  (prediction-sets:distribution-probabilities
 			   (prediction-sets:event-predictions 
-			    (first (model-sequence mvs interpretation))))))
+			    (first (model-sequence model interpretation))))))
 		interpretations multiple-viewpoint-systems)))))
 
 (defgeneric count-meters (training-set texture resolution 
