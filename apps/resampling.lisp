@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2016-04-14 10:45:39 marcusp>                           
+;;;; Time-stamp: <2016-04-14 17:02:11 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -117,8 +117,8 @@
   "Processes the output of IDYOM-RESAMPLE. <detail> is an integer
 specifying the desired level of detail."
   (let* ((event-ics (information-content-profiles resampling-predictions))
-         (melody-ics (mapcar #'mean event-ics))
-         (overall-ics (mean melody-ics)))
+         (melody-ics (mapcar #'(lambda (x) (apply #'utils:average x)) mean event-ics))
+         (overall-ics (apply #'utils:average melody-ics)))
     (case detail 
       (1 overall-ics)
       (2 (values overall-ics melody-ics))
@@ -168,8 +168,6 @@ dataset-id)."
 
 (defun probability (event-prediction) 
   (cadr (prediction-sets:event-prediction event-prediction)))
-
-(defun mean (numbers) (/ (apply #'+ numbers) (length numbers)))
 
 
 ;;;===========================================================================
