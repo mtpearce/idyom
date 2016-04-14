@@ -2,7 +2,7 @@
 ;;;; File:       apps.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2005-11-27 16:27:35 marcusp>
-;;;; Time-stamp: <2014-12-09 15:38:54 marcusp>
+;;;; Time-stamp: <2015-07-01 16:36:38 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:apps) 
@@ -41,7 +41,7 @@
              (mapcar #'(lambda (x) (if (atom x) x (format-list x "%"))) list)))
     (let* ((resampling-indices (if (and (numberp k) (= (length resampling-indices) k)) nil resampling-indices))
            (string (format nil "~(~{~A-~}~)" 
-                           (list dataset-id 
+                           (list (if (consp dataset-id) (format-list dataset-id "_") dataset-id)
                                  (format-list basic-attributes "_")
                                  (format-list attributes "_")
                                  (format-list pretraining-ids "_")

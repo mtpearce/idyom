@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2015-02-23 18:28:43 marcusp>                           
+;;;; Time-stamp: <2015-07-01 16:50:24 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -324,7 +324,10 @@ for <viewpoint> in <dataset-id>."
                       (subseq (apply #'string-append 
                                      (mapcar #'(lambda (x) (format nil "-~A" x))
                                              pretraining-ids)) 1)))
-                 (if (null training-id) "_NIL" (format nil "_~A" training-id))
+                 (cond ((null training-id) "_NIL-")
+                       ((consp training-id)
+                        (format nil "_~{~A~^-~}" training-id))
+                       (t (format nil "_~A" training-id)))
                  (cond ((and (null resampling-id) (null resampling-count))
                         "")
                        ((null resampling-count) 
