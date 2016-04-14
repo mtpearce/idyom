@@ -2,7 +2,7 @@
 ;;;; File:       generation.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-08-21 18:54:17 marcusp>                           
-;;;; Time-stamp: <2015-03-25 16:35:37 marcusp>                           
+;;;; Time-stamp: <2015-10-20 10:51:43 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -211,7 +211,7 @@
          (test-set (get-test-set dataset resampling-set))
          (ltms (get-long-term-models viewpoints training-set pretraining-ids
                                      dataset-id (format nil "~Agen" base-id)
-                                     nil use-ltms-cache?))
+                                     nil nil nil use-ltms-cache?))
          (mvs (make-mvs basic-viewpoints viewpoints ltms))
          (context-length (if (and (null context-length) (eql method :random))
                              (get-context-length (car test-set))
@@ -596,8 +596,7 @@
                 (when mvs::*debug*
                   (format t "~2&~2,0@TActual Event ~A: ~A~%"
                           event-index event-array))
-                (let* ((basic-viewpoints (mvs:mvs-basic m))
-                       (predictions (mvs:combine-predictions basic-viewpoints 
+                (let* ((predictions (mvs:combine-predictions m
                                                              ltm-prediction-sets
                                                              stm-prediction-sets
                                                              subsequence)))

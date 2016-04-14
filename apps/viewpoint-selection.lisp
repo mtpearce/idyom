@@ -2,7 +2,7 @@
 ;;;; File:       viewpoint-selection.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-10-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2015-02-24 11:48:58 marcusp>                           
+;;;; Time-stamp: <2015-10-12 04:35:48 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoint-selection)
