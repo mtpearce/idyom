@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2015-07-01 16:50:24 marcusp>                           
+;;;; Time-stamp: <2016-04-14 10:45:39 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -455,7 +455,7 @@ for <viewpoint> in <dataset-id>."
    from <list> without replacement; and the second  is <list> with
    those elements removed."
   (cond ((= n 0) (values (reverse result) (reverse (append list new-list))))
-        ((< (random 1.0) (/ n (length list)))
+        ((< (random 1.0 (make-random-seed t)) (/ n (length list)))
          (random-select (cdr list) (- n 1) (cons (car list) result) new-list))
         (t (random-select (cdr list) n result (cons (car list) new-list)))))
 
