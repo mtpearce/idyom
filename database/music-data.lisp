@@ -2,7 +2,7 @@
 ;;;; File:       music-data.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2015-07-24 01:46:54 marcusp>                           
+;;;; Time-stamp: <2015-08-10 17:44:42 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -271,8 +271,25 @@ no. in which the event occurs." ))
     (insert-dataset (utils:read-object-from-file filename) id)))
 
 (defmethod export-data ((d mtp-dataset) (type (eql :lisp)) filename)
+  (with-open-file (s filename :direction :output :if-exists :supersede
+                     :if-does-not-exist :create)
+    (write (dataset->lisp d) :stream s))
+  nil)
+
+(defun copy-datasets (target-id source-ids)
+  "Copy datasets specified by SOURCE-IDS to a new dataset 
+specified by TARGET-ID."
+  (let* ((datasets (mapcar #'get-dataset source-ids))
+         (datasets (mapcar #'dataset->lisp datasets))
+         (result (car datasets)))
+    (dolist (d (cdr datasets))
+      (setf result (append result (subseq d 4))))
+    (insert-dataset result target-id))
+  nil)
+
+(defun dataset->lisp (mtp-dataset)
   (let ((dataset nil))
-    (dolist (c (dataset-compositions d))
+    (dolist (c (dataset-compositions mtp-dataset))
       (let ((composition (list (composition-description c))))
         (dolist (e (composition-events c))
           (push (list (list :onset (event-onset e))
@@ -290,19 +307,16 @@ no. in which the event occurs." ))
                       (list :voice (event-voice e))
                       (list :ornament (event-ornament e))
                       (list :comma (event-comma e))
+                      (list :vertint12 (event-vertint12 e))
                       (list :articulation (event-articulation e))
                       (list :dyn (event-dyn e)))
                 composition))
         (push (nreverse composition) dataset)))
-    (with-open-file (s filename :direction :output :if-exists :supersede
-                       :if-does-not-exist :create)
-      (write (append (list (dataset-description d) 
-                           (dataset-timebase d)
-                           (dataset-midc d))
-                     (nreverse dataset))
-             :stream s)))
-  nil)
-  
+    (append (list (dataset-description mtp-dataset) 
+                  (dataset-timebase mtp-dataset)
+                  (dataset-midc mtp-dataset))
+            (nreverse dataset))))
+
 (defun insert-dataset (data id)
   "Takes a list of compositions <compositions> and creates a dataset
    with id <id>, description <description>, timebase <timebase>, midc
