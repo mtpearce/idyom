@@ -2,7 +2,7 @@
 ;;;; File:       temporal.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2005-11-29 10:41:20 marcusp>
-;;;; Time-stamp: <2014-10-23 18:02:00 marcusp>
+;;;; Time-stamp: <2016-04-13 13:34:38 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
@@ -140,7 +140,7 @@
   )
 
 ;; does this note fall on a crotchet beat from the first note in the piece?
-(define-viewpoint (crotchet derived (onset))
+(define-viewpoint (crotchet test (onset))
     ((events md:music-sequence) element) 
   :function (let ((e1 (car events))
                   (e2 (car (last events))))
