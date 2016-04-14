@@ -2,7 +2,7 @@
 ;;;; File:       music-data.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2015-08-10 17:44:42 marcusp>                           
+;;;; Time-stamp: <2016-04-11 16:36:05 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -276,7 +276,7 @@ no. in which the event occurs." ))
     (write (dataset->lisp d) :stream s))
   nil)
 
-(defun copy-datasets (target-id source-ids)
+(defun copy-datasets (target-id source-ids description)
   "Copy datasets specified by SOURCE-IDS to a new dataset 
 specified by TARGET-ID."
   (let* ((datasets (mapcar #'get-dataset source-ids))
@@ -285,6 +285,10 @@ specified by TARGET-ID."
     (dolist (d (cdr datasets))
       (setf result (append result (subseq d 4))))
     (insert-dataset result target-id))
+  (when description
+    #.(clsql:locally-enable-sql-reader-syntax)
+    (clsql:update-records [mtp-dataset] :av-pairs `((description ,description)) :where [= [dataset-id] target-id])
+    #.(clsql:restore-sql-reader-syntax-state))
   nil)
 
 (defun dataset->lisp (mtp-dataset)
