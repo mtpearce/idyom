@@ -2,7 +2,7 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-06-04 16:04:35 marcusp>                           
+;;;; Time-stamp: <2016-04-11 16:44:37 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -15,7 +15,7 @@
            "MAKE-EVENT-PREDICTION" "MAKE-DATASET-PREDICTION" "MAKE-SEQUENCE-PREDICTION"
            "MULTIPLY-PREDICTIONS" "COMBINE-DISTRIBUTIONS" "ARITHMETIC-COMBINATION"
            "GEOMETRIC-COMBINATION" "RANKED-COMBINATION" "BAYESIAN-COMBINATION"
-           "AVERAGE-CODELENGTHS" "AVERAGE-CODELENGTH" "CODELENGTHS"
+           "AVERAGE-CODELENGTHS" "AVERAGE-CODELENGTH" "CODELENGTHS" "CODELENGTH"
            "SHANNON-ENTROPY" "SHANNON-ENTROPIES" "EVENT-PREDICTIONS"
            "SEQUENCE-PROBABILITY" "NORMALISE-DISTRIBUTION" "FLAT-DISTRIBUTION")
   (:documentation "Entropy based performance metrics, function for
