@@ -2,7 +2,7 @@
 ;;;; File:       generation.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-08-21 18:54:17 marcusp>                           
-;;;; Time-stamp: <2015-10-20 11:22:44 marcusp>                           
+;;;; Time-stamp: <2015-10-21 17:06:22 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -402,25 +402,19 @@
              ;(previous-events (subseq sequence 0 event-index))
              (event-array (mvs:get-event-array m subsequence)))
         ;; 1. predict event without adding it
-        (mvs::old-set-model-alphabets m event-array subsequence  
-                                      (mvs:mvs-basic m))
+        ;;(mvs::old-set-model-alphabets m event-array subsequence (mvs:mvs-basic m))
         (multiple-value-bind (d1 d2 ltm-prediction-sets stm-prediction-sets)
             (mvs:model-event m event-array subsequence 
                              :ltm-locations ltm-locations 
                              :stm-locations stm-locations 
                              :construct? nil :predict? t)
           (declare (ignore d1 d2))
-          (when mvs::*debug*
-            (dolist (set (reverse stm-prediction-sets))
-              (format t "stm: ~a ~a~%"
-                      (viewpoint-name (prediction-sets:prediction-viewpoint
-                                       set))
-                      (prediction-sets:prediction-set set)))
-            (dolist (set (reverse ltm-prediction-sets))
-             (format t "ltm: ~a ~a~%"
-                     (viewpoint-name (prediction-sets:prediction-viewpoint
-                                      set))
-                     (prediction-sets:prediction-set set))))
+          ;; (when mvs::*debug*
+          ;;   (dolist (ps (list stm-prediction-sets ltm-prediction-sets))
+          ;;     (dolist (set (reverse ps))
+          ;;       (format t "~a ~a ~a~%" event-index 
+          ;;               (viewpoint-name (prediction-sets:prediction-viewpoint set))
+          ;;               (prediction-sets:prediction-set set)))))
           (if (< event-index context-length)
               (push current-event new-sequence)
               (unless (and (null ltm-prediction-sets)
@@ -428,8 +422,7 @@
               ;; 2. choose symbol from distribution (for each basic viewpoint)
               ;; 3. generate event and append to sequence
                 (when mvs::*debug*
-                  (format t "~2&~2,0@TActual Event ~A: ~A~%"
-                          event-index event-array))
+                  (format t "~2&~2,0@TActual Event ~A: ~A~%" event-index event-array))
                 (let* ((predictions (mvs:combine-predictions m
                                                              ltm-prediction-sets
                                                              stm-prediction-sets
@@ -443,8 +436,9 @@
              ;(current-event (nth event-index subsequence)) 
              ;(previous-events (subseq subsequence 0 event-index))
              (event-array (mvs:get-event-array m subsequence)))
-        (mvs::old-set-model-alphabets m event-array subsequence 
-                                      (mvs:mvs-basic m))
+        ;;(mvs::old-set-model-alphabets m event-array subsequence (mvs:mvs-basic m))
+        (print (list event-index (viewpoints:viewpoint-sequence (viewpoints:get-viewpoint 'cpitch) (subseq sequence 0 (1+ event-index)))
+                     (viewpoints:viewpoint-sequence (viewpoints:get-viewpoint 'cpitch) subsequence)))
         (when mvs::*debug* 
           (when (>= event-index context-length)
             (format t "~&~2,0@TGenerated Event ~A: ~A~%" event-index event-array)))
