@@ -2,7 +2,7 @@
 ;;;; File:       generation.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-08-21 18:54:17 marcusp>                           
-;;;; Time-stamp: <2015-10-21 17:06:22 marcusp>                           
+;;;; Time-stamp: <2016-04-14 14:19:08 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -22,11 +22,11 @@
 
 (defgeneric sampling-predict-sequence (mvs sequence cpitch))
 (defgeneric complete-prediction (mvs sequence cached-prediction))
-(defgeneric metropolis-sampling (mvs sequence iterations))
-(defgeneric gibbs-sampling (mvs sequence iterations))
+(defgeneric metropolis-sampling (mvs sequence iterations random-state))
+(defgeneric gibbs-sampling (mvs sequence iterations random-state))
 (defgeneric gibbs-sequence-distribution (mvs sequences cpitch))
-(defgeneric random-walk (mvs sequence context-length))
-(defgeneric generate-event (mvs event predictions))
+(defgeneric random-walk (mvs sequence context-length random-state))
+(defgeneric generate-event (mvs event predictions random-state))
 
 ;; ========================================================================
 ;; DATASET GENERATION 
@@ -39,7 +39,8 @@
                              (context-length nil)
                              (iterations 100) 
                              pretraining-ids
-                             description 
+                             description
+                             (random-state cl:*random-state*)
                              (use-ltms-cache? t)
                              (output-file-path nil))
   (declare (ignorable description output-file-path))
@@ -64,9 +65,9 @@
                              
          (sequence
           (case method
-            (:metropolis (metropolis-sampling mvs (car test-set) iterations))
-            (:gibbs (gibbs-sampling mvs (car test-set) iterations))
-            (:random (random-walk mvs (car test-set) context-length))
+            (:metropolis (metropolis-sampling mvs (car test-set) iterations random-state))
+            (:gibbs (gibbs-sampling mvs (car test-set) iterations random-state))
+            (:random (random-walk mvs (car test-set) context-length random-state))
             (otherwise (metropolis-sampling mvs (car test-set) iterations)))))
     ;(write-prediction-cache-to-file dataset-id attributes)
     ;(print (viewpoints:viewpoint-sequence (viewpoints:get-viewpoint 'cpitch) sequence))
@@ -92,8 +93,8 @@
     (list (list 'resampling::test (list base-id))
           (list 'resampling::train training-set))))
           
-(defun select-from-distribution (distribution)
-  (let ((r (random 1.0))
+(defun select-from-distribution (distribution random-state)
+  (let ((r (random 1.0 random-state))
         (cum-prob 0.0))
     (when mvs::*debug*
       (format t "~&R: ~A; Sum: ~A~%"
@@ -257,7 +258,7 @@
 ;; METROPOLIS SAMPLING
 ;; ======================================================================== 
 
-(defmethod metropolis-sampling ((m mvs) sequence iterations)
+(defmethod metropolis-sampling ((m mvs) sequence iterations random-state)
   ;(initialise-prediction-cache) 
   (let* ((sequence (coerce sequence 'list))
          (pitch-sequence (mapcar #'(lambda (x) (get-attribute x 'cpitch))
@@ -271,7 +272,7 @@
              (index (- l (mod i l) 1))
              (distribution (metropolis-event-distribution predictions index))
              (new-sequence
-              (metropolis-new-sequence sequence distribution index))
+              (metropolis-new-sequence sequence distribution index random-state))
              (old-cpitch (get-attribute (nth index sequence) 'cpitch))
              (new-cpitch (get-attribute (nth index new-sequence) 'cpitch)))
         (unless (eql old-cpitch new-cpitch)
@@ -304,12 +305,12 @@
 (defun metropolis-event-distribution (predictions index)
   (nth 1 (nth index predictions)))
 
-(defun metropolis-new-sequence (sequence distribution index)
+(defun metropolis-new-sequence (sequence distribution index random-state)
   (let* ((sequence-1 (subseq sequence 0 index))
          (event (nth index sequence))
          (sequence-2 (subseq sequence (1+ index)))
          (new-event (copy-event event))
-         (new-cpitch (select-from-distribution distribution)))
+         (new-cpitch (select-from-distribution distribution random-state)))
          ;(new-cpitch (select-max-from-distribution distribution)))
     ;(format t "~&New cpitch is ~A~%" new-cpitch)
     (set-attribute new-event 'cpitch new-cpitch)
@@ -335,7 +336,7 @@
 ;; GIBBS SAMPLING 
 ;; ======================================================================== 
 
-(defmethod gibbs-sampling ((m mvs) sequence iterations)
+(defmethod gibbs-sampling ((m mvs) sequence iterations random-state)
   (let* ((sequence (coerce sequence 'list))
          (pitch-sequence (mapcar #'(lambda (x) (get-attribute x 'cpitch))
                                  sequence))
@@ -348,7 +349,7 @@
              (index (- l (mod i l) 1))
              (new-sequences (gibbs-new-sequences sequence index))
              (distribution (gibbs-sequence-distribution m new-sequences cpitch))
-             (new-sequence (select-from-distribution distribution))
+             (new-sequence (select-from-distribution distribution random-state))
              (old-cpitch (get-attribute (nth index sequence) 'cpitch))
              (new-cpitch (get-attribute (nth index new-sequence) 'cpitch))
              (old-p (seq-probability (sampling-predict-sequence m sequence cpitch)))
@@ -386,7 +387,7 @@
 ;; RANDOM WALK 
 ;; ======================================================================== 
 
-(defmethod random-walk ((m mvs) sequence context-length)
+(defmethod random-walk ((m mvs) sequence context-length random-state)
   (let* ((sequence (coerce sequence 'list))
          (event-count (length sequence))
          (viewpoint-count (mvs:count-viewpoints m))
@@ -428,7 +429,7 @@
                                                              stm-prediction-sets
                                                              subsequence)))
                   (multiple-value-bind (new-event attribute-predictions)
-                      (generate-event m current-event predictions)
+                      (generate-event m current-event predictions random-state)
                     (setf last-attribute-predictions attribute-predictions)
                     (push new-event new-sequence)))))))
       ;; 4. add new event to models without predicting 
@@ -458,21 +459,22 @@
     ;(mvs:operate-on-models m #'initialise-virtual-nodes)
     (values (reverse new-sequence) last-attribute-predictions)))
 
-(defmethod generate-event ((m mvs) event predictions)
-  (let ((predictions (select-from-distributions predictions)))
+(defmethod generate-event ((m mvs) event predictions random-state)
+  (let ((predictions (select-from-distributions predictions random-state)))
     (dolist (p predictions (values event predictions))
       (setf
        (slot-value event (find-symbol (symbol-name (car p)) (find-package :music-data)))
        (nth 2 p)))))
 
-(defun select-from-distributions (predictions)
+(defun select-from-distributions (predictions random-state)
   (let ((selected-attributes
          (mapcar #'(lambda (x)
                      (multiple-value-bind (attribute-value probability)
                          ;; (select-max-from-distribution
                          ;;  (prediction-sets:prediction-set x))))
                          (select-from-distribution
-                          (prediction-sets:prediction-set x))
+                          (prediction-sets:prediction-set x)
+                          random-state)
                        (list (viewpoint-type (prediction-sets:prediction-viewpoint x))
                              (prediction-sets:prediction-element x)
                              attribute-value
