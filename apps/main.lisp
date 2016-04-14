@@ -2,7 +2,7 @@
 ;;;; File:       main.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2010-11-01 15:19:57 marcusp>
-;;;; Time-stamp: <2015-08-18 07:03:38 marcusp>
+;;;; Time-stamp: <2016-04-14 10:45:47 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:idyom)
@@ -78,8 +78,6 @@
    dataset using k-fold cross validation (AKA resampling).  The
    parameters <use-resampling-set-cache?> and <use-ltms-cache?> enable
    or disable respectively the caching of resampling-sets and LTMs."
-  ;; Set random seed
-  (setf *random-state* (make-random-state t))
   ;; Select source viewpoints, if requested
   (when (eq source-viewpoints :select)
     (format t "~&Selecting viewpoints for the ~A model on dataset ~A predicting viewpoints ~A.~%" 
