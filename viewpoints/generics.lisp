@@ -35,3 +35,4 @@ returns the supplied object."))
 (defgeneric basic-element (viewpoint viewpoint element event-list))
 
 (defgeneric strip-until-true (test-viewpoint composition))
+(defgeneric filter (viewpoint events))

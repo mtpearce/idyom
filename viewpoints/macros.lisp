@@ -35,3 +35,22 @@
        :function ,function
        :function* (list element))))
 
+(defmacro define-threaded-viewpoint (name base-viewpoint test-viewpoint class)
+  (let* ((base-viewpoint `(get-viewpoint ',base-viewpoint))
+         (test-viewpoint `(get-viewpoint ',test-viewpoint))
+         (typeset `(append (viewpoint-typeset ,base-viewpoint) (viewpoint-typeset ,test-viewpoint))))
+    `(define-viewpoint (,name threaded ,(eval typeset))
+         ((events ,class) element)
+       :function (let ((e (last-element events)))
+                   (if (null e)
+                       +undefined+
+                       (let ((f (viewpoint-element ,test-viewpoint events)))
+                         (if (zerop f)
+                             +undefined+
+                             (viewpoint-element ,base-viewpoint (filter ,test-viewpoint events))))))
+       :function* (let ((base-function (inverse-viewpoint-function ,base-viewpoint)))
+                    (when base-function 
+                      (let ((e (append (strip-until-true ,test-viewpoint (butlast events))
+                                       (last events))))
+                        (funcall base-function element e)))))))  
+

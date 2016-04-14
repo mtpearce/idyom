@@ -153,7 +153,7 @@
                  (viewpoint-links l))))
 
 
-;;; Strip-until-true
+;;; Strip-until-true and filter
 
 (defmethod strip-until-true ((test-viewpoint test) (events md:music-composition))
   (strip-until-true test (coerce events 'list)))
@@ -173,3 +173,18 @@ TEST-VIEWPOINT returns true (1 rather than 0)."
          (strip-until-true test-viewpoint (butlast events)))
         ((= (viewpoint-element test-viewpoint events) 1) events)
         (t (strip-until-true test-viewpoint (butlast events)))))
+
+
+(defmethod filter ((test-viewpoint test) (events md:music-sequence))
+  (let ((new-events (filter test-viewpoint (coerce events 'list)))
+        (copy (utils:copy-instance events)))
+    (sequence:adjust-sequence copy (length new-events)
+                              :initial-contents new-events)))
+
+(defmethod filter ((test-viewpoint test) (events list))
+  (cond ((null events) '())
+        ((undefined-p (viewpoint-element test-viewpoint events))
+         (filter test-viewpoint (butlast events)))
+        ((= (viewpoint-element test-viewpoint events) 1)
+         (append (filter test-viewpoint (butlast events)) (last events)))
+        (t (filter test-viewpoint (butlast events)))))
