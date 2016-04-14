@@ -2,7 +2,7 @@
 ;;;; File:       ppm-star.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-02-19 16:37:40 marcusp>                           
+;;;; Time-stamp: <2015-08-10 11:34:33 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -397,7 +397,6 @@
   (labels ((add-next-brother (child result)
              (if (null child) 
                  (let ((result (reverse result)))
-                   
                    ;;(print (mapcar #'(lambda (x) (list (get-symbol m (label-left (get-label m x))))) result))
                    result)
                  (add-next-brother (get-brother m child) (cons child result)))))
@@ -856,6 +855,7 @@
     ;        (ppm-order-bound m) (get-order m location))
     (if (null (ppm-order-bound m))
         (let ((sds (shortest-deterministic-state location '())))
+          ;;(print (list "location" (get-order m location) "sds" (when sds (get-order m sds))))
           (if (null sds)
               (values location nil)
               (values sds t)))

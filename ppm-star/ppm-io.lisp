@@ -2,7 +2,7 @@
 ;;;; File:       ppm-io.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2014-06-04 16:05:14 marcusp>
+;;;; Time-stamp: <2015-06-08 14:37:53 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package :ppm)
@@ -11,9 +11,9 @@
                                       ;(depth nil))
   "Prints the suffix tree of <m> to a postscript file <path>."
   (labels ((get-node-count (node)
-             (list (string-append "Count0: "
+             (list (utils:string-append "Count0: "
                                   (format nil "~D" (get-count m node)))
-                   (string-append "Count1: "
+                   (utils:string-append "Count1: "
                                   (format nil "~D" (get-count m node t)))))
            (list-node-children (node)
              ;(when (or (null depth) 
@@ -23,7 +23,7 @@
                (list-children m node));)
 
            (list->string (list)
-             (reduce #'(lambda (&optional s1 s2) (string-append s1 s2))
+             (reduce #'(lambda (&optional s1 s2) (utils:string-append s1 s2))
                      (mapcar #'(lambda (symbol)
                                  (format nil "~A " (if (symbolp symbol)
                                                        (symbol-name symbol)
