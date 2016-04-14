@@ -2,7 +2,7 @@
 ;;;; File:       ppm-star.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2015-08-10 11:34:33 marcusp>                           
+;;;; Time-stamp: <2015-10-21 10:26:57 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -990,7 +990,9 @@ those symbols that have occurred exactly once are counted."
 (defmethod order-minus1-probability ((m ppm) up-ex)
   "Returns the order -1 probability corresponding to a uniform distribution
    over the alphabet."
-  ;;(print (list (alphabet-size m) (transition-counts m *root* up-ex)))
+  ;; (print (list (alphabet-size m) (transition-counts m *root* up-ex) 
+  ;;               (length (transition-counts m *root* up-ex)) 
+  ;;               *root*))
   (/ 1.0 ;(float (alphabet-size m) 0.0)))
      (float (- (+ 1.0 (alphabet-size m))
                (length (transition-counts m *root* up-ex)))
