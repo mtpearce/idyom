@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2014-11-25 19:00:19 marcusp>
+;;;; Time-stamp: <2015-07-24 01:02:16 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -13,13 +13,13 @@
         [onset] [dur] [deltast] [cpitch] 
 	[mpitch] [accidental] [keysig] [mode]
         [barlength] [pulses] [phrase] [tempo] [dyn] [voice] [bioi] 
-        [ornament] [comma] [articulation]))
+        [ornament] [comma] [articulation][vertint12]))
 #.(clsql:restore-sql-reader-syntax-state)
 
 ; the order must match *event-attributes*
 (defvar *music-slots* '(onset dur deltast cpitch mpitch accidental 
             keysig mode barlength pulses phrase tempo dyn voice bioi 
-            ornament comma articulation))
+            ornament comma articulation vertint12))
 
 (defun music-symbol (x)
   (find-symbol (string-upcase (symbol-name x))
@@ -79,6 +79,7 @@
    (ornament :initarg :ornament :accessor ornament)
    (comma :initarg :comma :accessor comma)
    (articulation :initarg :articulation :accessor articulation)
+   (vertint12 :initarg :vertint12 :accessor vertint12)
    (voice :initarg :voice :accessor voice)))
 
 
@@ -354,6 +355,7 @@ the first event in the piece is extracted."
     (dotimes (i (1- (length event-list)) result)
       (let ((e1 (elt event-list i))
             (e2 (elt event-list (1+ i))))
+        ;;(print (list i "e1" (onset e1) (onset (end-time e1)) "e2" (onset e2) (onset (end-time e2)) "diff" (- (onset e2) (onset e1)) (disjoint e1 e2)))
         (unless (disjoint e1 e2)
           (setf result nil))))))
 

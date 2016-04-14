@@ -2,7 +2,7 @@
 ;;;; File:       basic-viewpoints.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2005-11-29 10:41:20 marcusp>
-;;;; Time-stamp: <2014-10-23 17:57:27 marcusp>
+;;;; Time-stamp: <2015-07-24 01:07:50 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
@@ -120,3 +120,7 @@
 ;; sforzando; 4 = marcato
 (define-basic-viewpoint articulation ((events md:melodic-sequence))
   (md:articulation (last-element events)))
+
+;; Vertical interval (David Sears)
+(define-basic-viewpoint vertint12 ((events md:melodic-sequence))
+  (md:vertint12 (last-element events)))

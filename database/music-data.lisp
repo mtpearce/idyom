@@ -2,7 +2,7 @@
 ;;;; File:       music-data.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2015-03-25 16:29:22 marcusp>                           
+;;;; Time-stamp: <2015-07-24 01:46:54 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -212,6 +212,11 @@ each table."))
     :initarg :articulation
     :initform nil
     :reader event-articulation)
+   (vertint12
+    :type integer
+    :initarg :vertint12
+    :initform nil
+    :reader event-vertint12)
    (voice
     :type integer
     :initarg :voice
@@ -370,6 +375,7 @@ no. in which the event occurs." ))
                         :ornament      (cadr (assoc :ornament event))
                         :comma      (cadr (assoc :comma event))
                         :articulation      (cadr (assoc :articulation event))
+                        :vertint12       (cadr (assoc :vertint12 event))
                         :voice      (cadr (assoc :voice event)))))
     (clsql:update-records-from-instance event-object)))
 
