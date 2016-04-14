@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2016-04-14 17:02:11 marcusp>                           
+;;;; Time-stamp: <2016-04-14 17:15:02 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -117,7 +117,7 @@
   "Processes the output of IDYOM-RESAMPLE. <detail> is an integer
 specifying the desired level of detail."
   (let* ((event-ics (information-content-profiles resampling-predictions))
-         (melody-ics (mapcar #'(lambda (x) (apply #'utils:average x)) mean event-ics))
+         (melody-ics (mapcar #'(lambda (x) (apply #'utils:average x)) event-ics))
          (overall-ics (apply #'utils:average melody-ics)))
     (case detail 
       (1 overall-ics)
@@ -453,7 +453,7 @@ for <viewpoint> in <dataset-id>."
    from <list> without replacement; and the second  is <list> with
    those elements removed."
   (cond ((= n 0) (values (reverse result) (reverse (append list new-list))))
-        ((< (random 1.0 (make-random-seed t)) (/ n (length list)))
+        ((< (random 1.0 (make-random-state t)) (/ n (length list)))
          (random-select (cdr list) (- n 1) (cons (car list) result) new-list))
         (t (random-select (cdr list) n result (cons (car list) new-list)))))
 
