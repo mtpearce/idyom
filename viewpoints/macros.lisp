@@ -13,19 +13,19 @@
          (typeset :initform ',typeset :allocation :class)))
       (defgeneric ,name (,events))
       (defmethod ,name ((,events ,class))
-        (declare (ignorable events))
+        (declare (ignorable ,events))
         (let ((events (coerce ,events 'list)))
           ,function))
       (defmethod ,name ((,events list))
-        (declare (ignorable events))
+        (declare (ignorable ,events))
         ,function)
       ,(when f*
-             `(defgeneric ,(intern (concatenate 'string (symbol-name name) "*")) 
-                  (,element ,events))
-             `(defmethod ,(intern (concatenate 'string (symbol-name name) "*"))
-                  (,element ,events)
-                (declare (ignorable events element))
-                ,f*)))))
+             (let ((fname `,(intern (concatenate 'string (symbol-name name) "*"))))
+               `(progn
+                  (defgeneric ,fname (,element ,events))
+                  (defmethod ,fname (,element ,events)
+                    (declare (ignorable events element))
+                    ,f*)))))))
 
 (defmacro define-basic-viewpoint (name ((events class)) function)
   `(progn 
@@ -34,5 +34,4 @@
          ((,events ,class) element)
        :function ,function
        :function* (list element))))
-
 
