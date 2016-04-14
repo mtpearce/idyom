@@ -2,7 +2,7 @@
 ;;;; File:       generation.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-08-21 18:54:17 marcusp>                           
-;;;; Time-stamp: <2015-10-20 11:21:27 marcusp>                           
+;;;; Time-stamp: <2015-10-20 11:22:44 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -34,6 +34,7 @@
 
 (defun dataset-generation (dataset-id basic-attributes attributes base-id
                            &key
+                             (models :both+)
                              (method :metropolis)
                              (context-length nil)
                              (iterations 100) 
@@ -42,6 +43,7 @@
                              (use-ltms-cache? t)
                              (output-file-path nil))
   (declare (ignorable description output-file-path))
+  (mvs:set-models models)
   (initialise-prediction-cache dataset-id attributes)
   (let* ((dataset (md:get-event-sequences (list dataset-id)))
          (pretraining-set (get-pretraining-set pretraining-ids))
