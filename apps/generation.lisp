@@ -2,7 +2,7 @@
 ;;;; File:       generation.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-08-21 18:54:17 marcusp>                           
-;;;; Time-stamp: <2015-10-20 10:51:43 marcusp>                           
+;;;; Time-stamp: <2015-10-20 11:21:27 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -27,163 +27,6 @@
 (defgeneric gibbs-sequence-distribution (mvs sequences cpitch))
 (defgeneric random-walk (mvs sequence context-length))
 (defgeneric generate-event (mvs event predictions))
-
-
-;; ========================================================================
-;; CHORALE GENERATION 
-;; ========================================================================
-
-(defvar *compositional* '(thrfiph cpintfip (cpint dur-ratio) (cpintfref dur) 
-                          thrtactus (cpintfref fib) (cpitch dur) 
-                          (cpintfref cpintfip) (cpint dur)))
-(defvar *compositional+* 
-  '(CPINTFIPH (CPINTFREF DUR) (CPINT INSCALE) (CPINT DUR-RATIO) 
-    (CPINTFREF LIPH) THRFIPH (CPITCH DUR) (CPINTFREF CPINTFIP) 
-    (CPINTFREF MODE) (CPINT DUR)))
-(defvar *perceptual* '(cpintfip (cpintfref dur-ratio) thrfiph))
-(defvar *cpitch* '(cpitch))
-(defvar *chorales* '(7 56 105 107 123 155 173))
-
-(defun generate-chorales (method model &key (models :both+) 
-                          (chorales *chorales*))
-  (cond ((eql model :compositional+)
-         (if (eql method :random)
-             (mapcar #'(lambda (x)
-                         (compositional+-random-generation x :models models))
-                     chorales)
-             (mapcar #'(lambda (x)
-                         (compositional+-chorale-generation x :models models))
-                     chorales)))
-        ((eql model :compositional)
-         (if (eql method :random)
-             (mapcar #'(lambda (x)
-                         (compositional-random-generation x :models models))
-                     chorales)
-             (mapcar #'(lambda (x)
-                         (compositional-chorale-generation x :models models))
-                     chorales)))
-        ((eql model :perceptual)
-         (if (eql method :random)
-             (mapcar #'(lambda (x)
-                         (perceptual-random-generation x :models models))
-                     chorales)
-             (mapcar #'(lambda (x)
-                         (perceptual-chorale-generation x :models models))
-                     chorales)))
-        ((eql model :cpitch)
-         (if (eql method :random)
-             (mapcar #'(lambda (x)
-                         (cpitch-random-generation x :models models))
-                     chorales)
-             (mapcar #'(lambda (x)
-                         (cpitch-chorale-generation x :models models))
-                     chorales)))))
-
-(defun compositional+-chorale-generation (base-id &key (iterations 5000)
-                                              (models :both+))
-  (mvs:set-models models)
-  (chorale-generation *compositional+* base-id :metropolis 
-                      :iterations iterations
-                      :description (get-file-description base-id 
-                                                         "compositional+"
-                                                         iterations models
-                                                         :metropolis)))
-
-(defun compositional+-random-generation (base-id &key (context-length nil)
-                                             (models :both+))
-  (mvs:set-models models)
-  (let ((context-length
-         (if (null context-length)
-             (get-context-length (md:get-event-sequence 1 base-id))
-             context-length)))
-    (chorale-generation *compositional+* base-id :random
-                        :context-length context-length
-                        :description (get-file-description base-id
-                                                           "compositional+"
-                                                           context-length
-                                                           models :random))))
-        
-(defun compositional-chorale-generation (base-id &key (iterations 5000)
-                                                 (models :both+))
-  (mvs:set-models models)
-  (chorale-generation *compositional* base-id :metropolis :iterations iterations
-                      :description (get-file-description base-id "compositional"
-                                                         iterations models
-                                                         :metropolis)))
-
-(defun compositional-random-generation (base-id &key (context-length nil)
-                                                (models :both+))
-  (mvs:set-models models)
-  (let ((context-length
-         (if (null context-length)
-             (get-context-length (md:get-event-sequence 1 base-id))
-             context-length)))
-    (chorale-generation *compositional* base-id :random
-                        :context-length context-length
-                        :description (get-file-description base-id
-                                                           "compositional"
-                                                           context-length
-                                                           models :random))))
-
-(defun perceptual-chorale-generation (base-id &key (iterations 5000)
-                                              (models :both+))
-  (mvs:set-models models)
-  (chorale-generation *perceptual* base-id :metropolis :iterations iterations
-                      :description (get-file-description base-id "perceptual"
-                                                         iterations models
-                                                         :metropolis )))
-
-(defun perceptual-random-generation (base-id &key (context-length nil)
-                                         (models :both+))
-  (mvs:set-models models)
-  (let ((context-length
-         (if (null context-length)
-             (get-context-length (md:get-event-sequence 1 base-id))
-             context-length)))
-  (chorale-generation *perceptual* base-id :random
-                      :context-length context-length
-                      :description (get-file-description base-id "perceptual"
-                                                         context-length
-                                                         models :random))))
-
-(defun cpitch-chorale-generation (base-id &key (iterations 5000)
-                                          (models :both+))
-  (mvs:set-models models)
-  (chorale-generation *cpitch* base-id :metropolis :iterations iterations
-                      :description (get-file-description base-id "cpitch"
-                                                         iterations models
-                                                         :metropolis)))
-
-(defun cpitch-random-generation (base-id &key (context-length nil)
-                                         (models :both+))
-  (mvs:set-models models)
-  (let ((context-length
-         (if (null context-length)
-             (get-context-length (md:get-event-sequence 1 base-id))
-             context-length)))
-    (chorale-generation *cpitch* base-id :random :context-length context-length
-                        :description (get-file-description base-id "cpitch"
-                                                           context-length
-                                                           models :random))))
-
-(defun chorale-generation (attributes base-id method &key (iterations 5000)
-                                      description
-                                      (context-length nil))
-  (dataset-generation 1 '(cpitch) attributes base-id :method method
-                      :iterations iterations :pretraining-ids '(2)
-                      :description description :context-length context-length))
-
-(defun get-file-description (base-id type iterations models method)
-  (let* ((file-id (1+ base-id))
-         (method (case method (:metropolis "metro") (:random "random")))
-         (zeros (cond ((< file-id 10) "00")
-                      ((< file-id 100) "0")
-                      (t "")))
-         (models (case models (:ltm "-ltm") (:stm "-stm")
-                       (otherwise ""))))
-    (format nil "chor~A~A-~A-~A~A~A"
-            zeros file-id type method iterations models)))
-
 
 ;; ========================================================================
 ;; DATASET GENERATION 
@@ -231,18 +74,7 @@
     sequence))
 
 (defun get-pretraining-set (dataset-ids)
-  (let* ((d1 (when (member 2 dataset-ids :test #'=)
-               (remove-if-not #'(lambda (x)
-                                  (member (md:get-dataset-index (md:get-identifier (car x))) (unique-ids-2)
-                                          :test #'=))
-                              (md:get-event-sequences (list 2)))))
-         (drest (md:get-event-sequences
-                 (remove-if #'(lambda (x) (= x 2)) dataset-ids))))
-    (append d1 drest)))
-
-(defun unique-ids-2 ()
-  '(2 3 6 7 8 9 10 11 14 15 17 18 20 21 26 28 31 32 34 36 38 39 40 42 43 44 45
-    46 47 48 50 52 54 56 57 58 60 65 69 72 81 93 97))
+  (md:get-event-sequences dataset-ids))
 
 (defun get-context-length (sequence)
   (1+ (position-if #'(lambda (e) (= (md:get-attribute e 'phrase) -1)) sequence)))
