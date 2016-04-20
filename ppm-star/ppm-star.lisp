@@ -2,7 +2,7 @@
 ;;;; File:       ppm-star.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2016-04-20 16:05:26 marcusp>                           
+;;;; Time-stamp: <2016-04-20 18:40:46 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -55,12 +55,10 @@
 
 (cl:in-package #:ppm)
 
-(defvar *earth* nil "The order -1 context.")
-(defvar *root*  nil "The order 0 context.")
 (defvar *sentinel* '$ "The unique end of sequence symbol.")
 (defun sentinel-p (s) (eql s *sentinel*))
 
-(defun eequal (obj1 obj2) 
+(defun eequal (obj1 obj2)
   "Predicate for comparing elements of sequences."
   (equal obj1 obj2))
 
@@ -123,7 +121,7 @@
    (order-bound :accessor ppm-order-bound :initarg :order-bound
                 :type (or null symbol))
    (escape :accessor ppm-escape :initarg :escape :type (or null symbol))
-   (k :accessor ppm-k :initarg :k :type integer)
+   (k :accessor ppm-k :initarg :k :type float)
    (d :accessor ppm-d :initarg :d :type integer))
   (:documentation "A ppm object contains all the parameters required for
    constructing and predicting from a ppm* model."))
@@ -258,6 +256,9 @@
 (defun earth-p (branch)
   "A branch <branch> is the earth if its index is 0."
   (when (branch-p branch) (= (branch-index branch) 0)))
+
+(declaim (inline get-root))
+(defun get-root () (make-branch :index 1))
 
 (defmethod alphabet-size ((m ppm))
   "Returns the cardinality of the alphabet of model <m>."
@@ -433,7 +434,6 @@
         ((or :c :x) (values 0 1))
         (:d (values -1/2 2))
         (otherwise (values 0 1)))
-    (setf *earth* (make-branch :index 0) *root* (make-branch :index 1))
     (let* ((dataset (if (null dataset) (make-hash-table) dataset))
            (front (make-index :s (hash-table-count dataset) :e 0))
            (initial-leaves (if (null leaves) (make-hash-table) leaves))
@@ -467,10 +467,12 @@
 (defmethod initialise-nodes ((m ppm))
   "Initialises the leaves, branches, leaf-index and branch-index slots of
    ppm model <m>."
-  (let* ((root-label (make-label :left (make-index) :length 0))
-         (root-record (make-branch-record :label root-label :slink *earth*
+  (let* ((earth (make-branch :index 0))
+         (root (make-branch :index 1))
+         (root-label (make-label :left (make-index) :length 0))
+         (root-record (make-branch-record :label root-label :slink earth
                                           :count0 0 :count1 0))
-         (earth-record (make-branch-record :child *root* :depth -1
+         (earth-record (make-branch-record :child root :depth -1
                                            :count0 0 :count1 0)))
     (setf (gethash 0 (ppm-branches m)) earth-record
           (gethash 1 (ppm-branches m)) root-record
@@ -541,7 +543,7 @@
                      (model-seq (cdr sequence) next-location
                                 (cons (list symbol event-distribution)
                                       prediction-set)))))))
-    (prog1 (model-seq sequence *root* '())
+    (prog1 (model-seq sequence (get-root) '())
       (when construct? (initialise-virtual-nodes m)))))
 
 (defmethod model-sentinel-event ((m ppm) location)
@@ -993,11 +995,11 @@ those symbols that have occurred exactly once are counted."
 (defmethod order-minus1-probability ((m ppm) up-ex)
   "Returns the order -1 probability corresponding to a uniform distribution
    over the alphabet."
-  ;; (print (list (alphabet-size m) (transition-counts m *root* up-ex) 
-  ;;               (length (transition-counts m *root* up-ex)) 
-  ;;               *root*))
+  ;; (print (list (alphabet-size m) (transition-counts m (get-root) up-ex) 
+  ;;               (length (transition-counts m (get-root) up-ex)) 
+  ;;               (get-root)))
   (/ 1.0 ;(float (alphabet-size m) 0.0)))
      (float (- (+ 1.0 (alphabet-size m))
-               (length (transition-counts m *root* up-ex)))
+               (length (transition-counts m (get-root) up-ex)))
             0.0)))
            
