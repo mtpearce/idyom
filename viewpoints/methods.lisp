@@ -9,15 +9,8 @@
   (viewpoint-sequence v (coerce m 'list)))
 
 (defmethod viewpoint-sequence ((v viewpoint) (m md:music-sequence))
-  (labels ((events->viewpoint (events sequence)
-             (if (= (length events) 0) sequence
-                 (let ((element (viewpoint-element v events)))
-                   (if (undefined-p element)
-                       (events->viewpoint (utils:butlast-n events) sequence)
-                       (events->viewpoint (utils:butlast-n events)
-                                          (cons element sequence)))))))
-    (events->viewpoint m '())))
-
+   (viewpoint-sequence v (coerce m 'list)))
+  
 (defmethod viewpoint-sequence ((v viewpoint) (event-list list))
   (labels ((events->viewpoint (events sequence)
              (if (null events) sequence
