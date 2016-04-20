@@ -2,7 +2,7 @@
 ;;;; File:       ppm-star.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2015-10-21 10:26:57 marcusp>                           
+;;;; Time-stamp: <2016-04-20 16:04:19 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -974,18 +974,19 @@ those symbols that have occurred exactly once are counted."
 
 (defmethod order-minus1-distribution ((m ppm) distribution excluded escape
                                       up-ex)
-  "Returns the order -1 distribution." 
-  (mapcar #'(lambda (pair)
-              (let ((symbol (nth 0 pair))
-                    (p (nth 1 pair)))
-                (if (and (null (ppm-mixtures m)) (excluded? symbol excluded)
-                         (> p 0.0))
-                    pair
-                    (list symbol
-                          (+ p 
-                             (* escape 
-                                (order-minus1-probability m up-ex)))))))
-          distribution))
+  "Returns the order -1 distribution."
+  (let ((order-minus1-p (order-minus1-probability m up-ex)))
+    (mapcar #'(lambda (pair)
+                (let ((symbol (nth 0 pair))
+                      (p (nth 1 pair)))
+                  (if (and (null (ppm-mixtures m)) (excluded? symbol excluded)
+                           (> p 0.0))
+                      pair
+                      (list symbol
+                            (+ p 
+                               (* escape 
+                                  order-minus1-p))))))
+            distribution)))
 
 (defmethod order-minus1-probability ((m ppm) up-ex)
   "Returns the order -1 probability corresponding to a uniform distribution
