@@ -2,7 +2,7 @@
 ;;;; File:       music-data.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2016-04-11 16:36:05 marcusp>                           
+;;;; Time-stamp: <2016-04-20 16:11:28 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -286,9 +286,7 @@ specified by TARGET-ID."
       (setf result (append result (subseq d 4))))
     (insert-dataset result target-id))
   (when description
-    #.(clsql:locally-enable-sql-reader-syntax)
-    (clsql:update-records [mtp-dataset] :av-pairs `((description ,description)) :where [= [dataset-id] target-id])
-    #.(clsql:restore-sql-reader-syntax-state))
+    (clsql:update-records [mtp-dataset] :av-pairs `((description ,description)) :where [= [dataset-id] target-id]))
   nil)
 
 (defun dataset->lisp (mtp-dataset)
