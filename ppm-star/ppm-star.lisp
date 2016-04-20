@@ -2,7 +2,7 @@
 ;;;; File:       ppm-star.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2016-04-20 16:04:19 marcusp>                           
+;;;; Time-stamp: <2016-04-20 16:05:26 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -937,11 +937,12 @@ probability."
   "Returns a list of the form (symbol frequency-count) for the transitions
    appearing at location <location> in the suffix tree of model <m>."
   (if (branch-p location)
-      (let ((tc '()))
+      (let ((tc '())
+            (alphabet (ppm-alphabet m)))
         (dolist (child (list-children m location) (reverse tc))
           (let ((sym (get-symbol m (label-left (get-label m child)))))
             ;;(print (list child sym))
-            (when (member sym (ppm-alphabet m) :test #'eequal)
+            (when (member sym alphabet :test #'eequal)
               (push (list sym (get-count m child up-ex)) tc)))))
       (let ((sym (get-symbol m (label-left (location-rest location)))))
         ;; we dynamically set derived alphabets on a per-event basis 
@@ -967,10 +968,11 @@ those symbols that have occurred exactly once are counted."
   "Returns the total token count for symbols appearing in <child-list>
    , an alist of the form (symbol frequency-count), excluding the
    counts for those symbols that appear in <excluded-list>."
-  (reduce #'+ (mapcar #'(lambda (c)
-                          (if (excluded? (nth 0 c) excluded-list) 0
-                              (+ (nth 1 c) (ppm-k m))))
-                      transition-counts)))
+  (let ((k (ppm-k m)))
+    (reduce #'+ (mapcar #'(lambda (c)
+                            (if (excluded? (nth 0 c) excluded-list) 0
+                                (+ (nth 1 c) k)))
+                        transition-counts))))
 
 (defmethod order-minus1-distribution ((m ppm) distribution excluded escape
                                       up-ex)
