@@ -2,7 +2,7 @@
 ;;;; File:       ppm-ui.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-06-04 16:05:23 marcusp>                           
+;;;; Time-stamp: <2016-04-20 16:52:03 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 
@@ -98,7 +98,7 @@
     (dotimes (i (length label) (nreverse results))
       (push (append prefix (subseq label 0 (1+ i))) results))))
 
-(defun root-node () ppm::*root*)
+(defun root-node () (ppm:get-root))
 (defun label (model node) 
   (ppm::instantiate-label model (ppm::get-label model node)))
 (defun frequency (model node) (ppm::get-count model node))

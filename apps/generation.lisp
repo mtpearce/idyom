@@ -2,7 +2,7 @@
 ;;;; File:       generation.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-08-21 18:54:17 marcusp>                           
-;;;; Time-stamp: <2016-04-14 14:19:08 marcusp>                           
+;;;; Time-stamp: <2016-04-20 16:54:10 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -393,9 +393,9 @@
          (viewpoint-count (mvs:count-viewpoints m))
          (new-sequence '())
          (ltm-locations
-          (make-sequence 'vector viewpoint-count :initial-element *root*))
+          (make-sequence 'vector viewpoint-count :initial-element (ppm:get-root)))
          (stm-locations
-          (make-sequence 'vector viewpoint-count :initial-element *root*))
+          (make-sequence 'vector viewpoint-count :initial-element (ppm:get-root)))
          (last-attribute-predictions nil))
     (dotimes (event-index event-count)
       (let* ((subsequence (subseq sequence 0 (1+ event-index)))

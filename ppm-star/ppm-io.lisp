@@ -2,7 +2,7 @@
 ;;;; File:       ppm-io.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2015-06-08 14:37:53 marcusp>
+;;;; Time-stamp: <2016-04-20 16:52:15 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package :ppm)
@@ -42,7 +42,7 @@
           (psgraph:*extra-y-spacing* 20))
       (with-open-file (*standard-output* filename :direction :output
                                          :if-exists :supersede)
-        (psgraph:psgraph *standard-output* *root*
+        (psgraph:psgraph *standard-output* (ppm:get-root)
                           #'list-node-children
                           #'label->string 
                           t nil #'eq nil)))))

@@ -2,7 +2,7 @@
 ;;;; File:       multiple-viewpoint-system.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-27 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-11-26 12:51:53 marcusp>                           
+;;;; Time-stamp: <2016-04-20 16:54:42 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -321,9 +321,9 @@ appropriate sequence index before this method is called."
          (viewpoint-count (count-viewpoints m))
          (prediction-sets '())
          (ltm-locations
-          (make-sequence 'vector viewpoint-count :initial-element *root*))
+          (make-sequence 'vector viewpoint-count :initial-element (ppm:get-root)))
          (stm-locations
-          (make-sequence 'vector viewpoint-count :initial-element *root*)))
+          (make-sequence 'vector viewpoint-count :initial-element (ppm:get-root))))
     (dotimes (event-index event-count)
       (when *debug* (format t "~&Event ~A~%" event-index))
       (let* ((events (subseq sequence 0 (1+ event-index)))
