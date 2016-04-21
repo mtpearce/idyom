@@ -2,7 +2,7 @@
 ;;;; File:       midi2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2007-03-21 09:47:26 marcusp>
-;;;; Time-stamp: <2015-03-25 16:31:43 marcusp>
+;;;; Time-stamp: <2016-04-21 09:37:53 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:midi2db) 
@@ -10,6 +10,7 @@
 (defvar *timebase* 96 "Basic time units per semibreve")
 (defvar *middle-c* (list 60 35) "Chromatic and diatonic integer mappings for c_4")
 (defvar *default-midifile-extension* "mid")
+(defvar *apply-pitchbend* nil)
 
 (defmethod import-data ((type (eql :mid)) path description id)
   (idyom-db:insert-dataset (midi2db path description) id))
@@ -151,8 +152,8 @@
 		   (midi-pitch (midi-pitch->pitch (getf note :pitch)))
 		   (bend (cdr (assoc midi-onset (nth i bends))))
 		   (cpitch (+ midi-pitch
-			      (if (null bend) 0
-				  (pitch-bend->cents bend))))
+			      (if (or (null *apply-pitchbend*) (null bend)) 0
+                                  (pitch-bend->cents bend))))
 		   ;; Duration
 		   (dur (- offset onset))
 		   ;; IOI
@@ -165,6 +166,8 @@
 		   (midi-deltast (if (null prev-offset) 0 
 				     (- midi-onset prev-offset)))
 		   (deltast (midi-time->time midi-deltast ppqn)))
+              ;; (when (and (not (= midi-pitch cpitch)) (not (= midi-pitch (round cpitch))))
+              ;;  (print (list midi-pitch cpitch (round cpitch))))
               ;; (format t "~&A: ~A ~A ~A ~A~%" (float onset) (float bioi) (float deltast) (float dur))
               (setf bioi (round bioi)
                     onset (+ ponset bioi)
