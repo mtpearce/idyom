@@ -2,7 +2,7 @@
 ;;;; File:       ppm-star.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2016-04-20 18:40:46 marcusp>                           
+;;;; Time-stamp: <2016-04-20 20:56:23 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -60,6 +60,7 @@
 
 (defun eequal (obj1 obj2)
   "Predicate for comparing elements of sequences."
+  (declare (optimize (speed 3) (space 0) (safety 0) (debug 0) (compilation-speed 0)))
   (equal obj1 obj2))
 
 (defmacro with-element-comparator (fun &body body)
@@ -886,7 +887,7 @@
   (if (earth-p location)
       (order-minus1-distribution m distribution excluded escape up-ex)
       (let* ((transition-counts (transition-counts m location up-ex))
-             (child-count (child-count m transition-counts))
+             (child-count (child-count m transition-counts)) 
              (node-count (node-count m transition-counts excluded))
              (weight (weight m node-count child-count))
              (next-distribution
@@ -925,7 +926,8 @@ probability."
   
 (defun excluded? (symbol excluded-list)
   "Returns true if <symbol> appears as a key in alist <excluded-list>."
-  (assoc symbol excluded-list :test #'eequal))
+  (when excluded-list
+    (gethash symbol excluded-list)))
 
 (defmethod weight ((m ppm) node-count child-count)
   "Returns the weighting to give to a node s where count node-count (s)
@@ -938,18 +940,20 @@ probability."
 (defmethod transition-counts ((m ppm) location up-ex)
   "Returns a list of the form (symbol frequency-count) for the transitions
    appearing at location <location> in the suffix tree of model <m>."
-  (if (branch-p location)
-      (let ((tc '())
-            (alphabet (ppm-alphabet m)))
-        (dolist (child (list-children m location) (reverse tc))
-          (let ((sym (get-symbol m (label-left (get-label m child)))))
-            ;;(print (list child sym))
-            (when (member sym alphabet :test #'eequal)
-              (push (list sym (get-count m child up-ex)) tc)))))
-      (let ((sym (get-symbol m (label-left (location-rest location)))))
-        ;; we dynamically set derived alphabets on a per-event basis 
-        (when (member sym (ppm-alphabet m) :test #'eequal)
-          (list (list sym (get-virtual-node-count m location up-ex)))))))
+  (declare (optimize (speed 3) (space 0) (safety 0) (debug 0) (compilation-speed 0)))
+  (let ((tc (make-hash-table :test #'equal)))
+    (if (branch-p location)
+        (let ((alphabet (ppm-alphabet m)))
+          (dolist (child (list-children m location) tc)
+            (let ((sym (get-symbol m (label-left (get-label m child)))))
+              ;;(print (list child sym))
+              (when (member sym alphabet :test #'eequal)
+                (setf (gethash sym tc) (get-count m child up-ex))))))
+        (let ((sym (get-symbol m (label-left (location-rest location)))))
+          ;; we dynamically set derived alphabets on a per-event basis 
+          (when (member sym (ppm-alphabet m) :test #'eequal)
+            (setf (gethash sym tc) (get-virtual-node-count m location up-ex)))))
+    tc))
 
 (defmethod child-count ((m ppm) transition-counts)
   "Returns the token count given <child-count-list>, an alist of the
@@ -957,24 +961,32 @@ form (symbol frequency count), i.e., the total number of symbols that
 have occurred with non-zero frequency. If the escape method is X only
 those symbols that have occurred exactly once are counted."
   (case (ppm-escape m)
-    (:x (+ (count-if #'(lambda (x) (= (nth 1 x) 1)) transition-counts) 1))
-    (otherwise (length transition-counts))))
+    (:x (let ((count 1))
+          (maphash #'(lambda (k v)
+                       (declare (ignore k))
+                       (when (= v 1) (incf count 1)))
+                   transition-counts)
+          count))
+    (otherwise (hash-table-count transition-counts))))
 
 (defmethod transition-count ((m ppm) symbol transition-counts)
   "Returns the frequency count associated with <symbol> in <child-list>
    an alist of the form (symbol frequency-count)."
-  (let ((count (assoc symbol transition-counts :test #'eequal)))
-    (if (null count) 0 (+ (nth 1 count) (ppm-k m)))))
+  (declare (optimize (speed 3) (space 0) (safety 0) (debug 0) (compilation-speed 0)))
+  (let ((count (gethash symbol transition-counts)))
+    (if (null count) 0 (+ count (ppm-k m)))))
 
 (defmethod node-count ((m ppm) transition-counts excluded-list)
   "Returns the total token count for symbols appearing in <child-list>
    , an alist of the form (symbol frequency-count), excluding the
    counts for those symbols that appear in <excluded-list>."
-  (let ((k (ppm-k m)))
-    (reduce #'+ (mapcar #'(lambda (c)
-                            (if (excluded? (nth 0 c) excluded-list) 0
-                                (+ (nth 1 c) k)))
-                        transition-counts))))
+  (let ((ppmk (ppm-k m))
+        (count 0))
+    (maphash #'(lambda (k v)
+                 (unless (excluded? k excluded-list)
+                   (incf count (+ v ppmk))))
+             transition-counts)
+    count))
 
 (defmethod order-minus1-distribution ((m ppm) distribution excluded escape
                                       up-ex)
@@ -1000,6 +1012,6 @@ those symbols that have occurred exactly once are counted."
   ;;               (get-root)))
   (/ 1.0 ;(float (alphabet-size m) 0.0)))
      (float (- (+ 1.0 (alphabet-size m))
-               (length (transition-counts m (get-root) up-ex)))
+               (hash-table-count (transition-counts m (get-root) up-ex)))
             0.0)))
            
