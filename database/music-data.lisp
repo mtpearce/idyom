@@ -2,7 +2,7 @@
 ;;;; File:       music-data.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2016-04-20 16:11:28 marcusp>                           
+;;;; Time-stamp: <2016-04-22 12:01:15 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -332,7 +332,7 @@ specified by TARGET-ID."
              (timebase (nth 1 data))
              (midc (nth 2 data))
              (compositions (nthcdr 3 data))
-             (count (length compositions))
+             (composition-id 0)
              (dataset-object (make-instance 'mtp-dataset
                                             :dataset-id id
                                             :description description
@@ -341,9 +341,9 @@ specified by TARGET-ID."
         (format t "~%Inserting data into database: dataset ~A." id)
         (clsql:with-transaction () 
           (clsql:update-records-from-instance dataset-object)
-          (dotimes (composition-id count)
-            (insert-composition dataset-object (nth composition-id compositions)
-                                composition-id))))))
+          (dolist (c compositions)
+            (insert-composition dataset-object c composition-id)
+            (when (cdr c) (incf composition-id)))))))
         
 (defmethod insert-composition ((d mtp-dataset) composition id)
   "Takes a preprocessed composition <composition> and
@@ -351,18 +351,20 @@ specified by TARGET-ID."
    dataset-id as <dataset> and inserts it into the composition table of
    the default database. Calls <insert-event> to insert each
    event of <composition> into the event table."
-  (let* ((description (format nil "~D" (car composition)))
-         (events (cdr composition))
-         (count (length events))
-         (composition-object (make-instance 'mtp-composition
-                                            :dataset-id (dataset-id d)
-                                            :timebase (dataset-timebase d)
-                                            :composition-id id
-                                            :description description)))
-    (setf (slot-value composition-object 'dataset-id) (dataset-id d))
-    (clsql:update-records-from-instance composition-object)
-    (dotimes (event-id count)
-      (insert-event composition-object (nth event-id events) event-id))))
+  (let ((description (format nil "~D" (car composition)))
+        (events (cdr composition)))
+    (if (null events)
+        (format t "~&Skipping empty composition: ~A.~%" description)
+        (let ((count (length events))
+              (composition-object (make-instance 'mtp-composition
+                                                 :dataset-id (dataset-id d)
+                                                 :timebase (dataset-timebase d)
+                                                 :composition-id id
+                                                 :description description)))
+          (setf (slot-value composition-object 'dataset-id) (dataset-id d))
+          (clsql:update-records-from-instance composition-object)
+          (dotimes (event-id count)
+            (insert-event composition-object (nth event-id events) event-id))))))
 
 (defmethod insert-event ((composition mtp-composition) event id)
   "Takes a preprocessed event tuple <event> and
