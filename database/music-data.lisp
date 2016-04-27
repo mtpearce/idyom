@@ -2,7 +2,7 @@
 ;;;; File:       music-data.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2016-04-22 12:01:15 marcusp>                           
+;;;; Time-stamp: <2016-04-25 17:55:52 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -276,14 +276,19 @@ no. in which the event occurs." ))
     (write (dataset->lisp d) :stream s))
   nil)
 
-(defun copy-datasets (target-id source-ids description)
-  "Copy datasets specified by SOURCE-IDS to a new dataset 
-specified by TARGET-ID."
+(defun copy-datasets (target-id source-ids &optional description exclude)
+  "Copy datasets specified by SOURCE-IDS to a new dataset specified by
+TARGET-ID. Optionally provide a DESCRIPTION for the new dataset (the
+default is the description of the first dataset in
+SOURCE-IDS). EXCLUDE is a list of lists, containing compositions-ids
+to exclude for each dataset specified in SOURCE-IDS."
   (let* ((datasets (mapcar #'get-dataset source-ids))
          (datasets (mapcar #'dataset->lisp datasets))
-         (result (car datasets)))
-    (dolist (d (cdr datasets))
-      (setf result (append result (subseq d 4))))
+         (result (subseq (car datasets) 0 3)))
+    (do ((d datasets (cdr d))
+         (e exclude (cdr e)))
+        ((null d))
+      (setf result (append result (utils:remove-by-position (subseq (car d) 3) (car e)))))
     (insert-dataset result target-id))
   (when description
     (clsql:update-records [mtp-dataset] :av-pairs `((description ,description)) :where [= [dataset-id] target-id]))
