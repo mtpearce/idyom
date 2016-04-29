@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2016-04-14 17:15:02 marcusp>                           
+;;;; Time-stamp: <2016-04-28 09:25:49 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -75,16 +75,9 @@
          (resampling-indices (if (null resampling-indices)
                                  (utils:generate-integers 0 (1- k))
                                  resampling-indices))
-         ;; an output filename
-         (filename (apps:dataset-modelling-filename dataset-id target-viewpoints source-viewpoints
-                                                    :extension ".dat"
-                                                    :pretraining-ids pretraining-ids
-                                                    :k k :resampling-indices resampling-indices
-                                                    :texture texture :voices voices
-                                                    :models models :ltmo ltmo :stmo stmo))
          ;; the result
          (sequence-predictions))
-    (dolist (resampling-set resampling-sets (values sequence-predictions filename))
+    (dolist (resampling-set resampling-sets sequence-predictions)
       ;; (format t "~&~0,0@TResampling set ~A: ~A~%" resampling-id resampling-set)
       ;(format t "~&Resampling ~A" resampling-id)
       (when (member resampling-id resampling-indices)

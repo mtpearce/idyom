@@ -2,7 +2,7 @@
 ;;;; File:       main.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2010-11-01 15:19:57 marcusp>
-;;;; Time-stamp: <2016-04-14 10:45:47 marcusp>
+;;;; Time-stamp: <2016-04-28 09:43:25 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:idyom)
@@ -67,6 +67,7 @@
                 ;; Output
                 (detail 3)
                 (output-path nil)
+                (overwrite nil)
                 ;; Caching
                 (use-resampling-set-cache? t)
                 (use-ltms-cache? t))
@@ -78,37 +79,45 @@
    dataset using k-fold cross validation (AKA resampling).  The
    parameters <use-resampling-set-cache?> and <use-ltms-cache?> enable
    or disable respectively the caching of resampling-sets and LTMs."
-  ;; Select source viewpoints, if requested
-  (when (eq source-viewpoints :select)
-    (format t "~&Selecting viewpoints for the ~A model on dataset ~A predicting viewpoints ~A.~%" 
-            models dataset-id target-viewpoints)
-    (let* (; Generate candidate viewpoint systems
-	   (sel-basis (find-selection-basis target-viewpoints basis))
-	   (viewpoint-systems (generate-viewpoint-systems sel-basis max-links min-links vp-white vp-black))
-           ; Select viewpoint system
-	   (selected (viewpoint-selection:dataset-viewpoint-selection
-                      dataset-id target-viewpoints viewpoint-systems
-                      :dp dp :pretraining-ids pretraining-ids
-                      :k k :resampling-indices resampling-indices
-                      :texture texture :voices voices
-                      :models models :ltmo ltmo :stmo stmo)))
-      (setf source-viewpoints selected)))
-  ;; Derive target viewpoint IC profile from source viewpoints
-  (multiple-value-bind (predictions filename)
-      (resampling:idyom-resample dataset-id target-viewpoints source-viewpoints
-                                 :pretraining-ids pretraining-ids
-                                 :k k :resampling-indices resampling-indices
-                                 :models models :ltmo ltmo :stmo stmo
-                                 :voices voices :texture texture
-                                 :use-resampling-set-cache? use-resampling-set-cache?
-                                 :use-ltms-cache? use-ltms-cache?)
-    (when output-path
-      (resampling:format-information-content predictions 
-                                             (ensure-directories-exist
-                                              (merge-pathnames
-                                               filename (utils:ensure-directory output-path)))
-                                             dataset-id detail))
-    (resampling:output-information-content predictions detail)))
+  (let* ((filename (apps:dataset-modelling-filename dataset-id target-viewpoints source-viewpoints
+                                                    :extension ".dat"
+                                                    :pretraining-ids pretraining-ids
+                                                    :k k :resampling-indices resampling-indices
+                                                    :texture texture :voices voices
+                                                    :models models :ltmo ltmo :stmo stmo))
+         (filepath (when output-path (ensure-directories-exist
+                                      (merge-pathnames filename (utils:ensure-directory output-path))))))
+    (if (and filepath (probe-file filepath) (not overwrite))
+        ;; Don't overwrite existing file if requested 
+        (format t "~&Preserving existing output file: ~A~%" filepath)
+        (progn
+          ;; Optionally select source viewpoints if requested
+          (when (eq source-viewpoints :select)
+            (format t "~&Selecting viewpoints for the ~A model on dataset ~A predicting viewpoints ~A.~%" 
+                    models dataset-id target-viewpoints)
+            (let* (;; Generate candidate viewpoint systems
+                   (sel-basis (find-selection-basis target-viewpoints basis))
+                   (viewpoint-systems (generate-viewpoint-systems sel-basis max-links min-links vp-white vp-black))
+                   ;; Select viewpoint system
+                   (selected (viewpoint-selection:dataset-viewpoint-selection
+                              dataset-id target-viewpoints viewpoint-systems
+                              :dp dp :pretraining-ids pretraining-ids
+                              :k k :resampling-indices resampling-indices
+                              :texture texture :voices voices
+                              :models models :ltmo ltmo :stmo stmo)))
+              (setf source-viewpoints selected)))
+          ;; Derive target viewpoint IC profile from source viewpoints
+          (let* ((predictions 
+                  (resampling:idyom-resample dataset-id target-viewpoints source-viewpoints
+                                             :pretraining-ids pretraining-ids
+                                             :k k :resampling-indices resampling-indices
+                                             :models models :ltmo ltmo :stmo stmo
+                                             :voices voices :texture texture
+                                             :use-resampling-set-cache? use-resampling-set-cache?
+                                             :use-ltms-cache? use-ltms-cache?)))
+            (when output-path
+              (resampling:format-information-content predictions filepath dataset-id detail))
+            (resampling:output-information-content predictions detail))))))
 
 
 (defun find-selection-basis (targets basis)
