@@ -2,7 +2,7 @@
 ;;;; File:       main.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2010-11-01 15:19:57 marcusp>
-;;;; Time-stamp: <2016-04-28 09:43:25 marcusp>
+;;;; Time-stamp: <2016-05-03 15:22:47 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:idyom)
@@ -81,6 +81,7 @@
    or disable respectively the caching of resampling-sets and LTMs."
   (let* ((filename (apps:dataset-modelling-filename dataset-id target-viewpoints source-viewpoints
                                                     :extension ".dat"
+                                                    :detail detail
                                                     :pretraining-ids pretraining-ids
                                                     :k k :resampling-indices resampling-indices
                                                     :texture texture :voices voices
