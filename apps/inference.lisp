@@ -4,47 +4,48 @@
 
 (defparameter *verbose* nil)
 
-; Directory for caching meter counts
+; Directory for caching counts
 (defparameter *counts-dir* 
   (ensure-directories-exist
    (merge-pathnames "data/counts/" (utils:ensure-directory utils:*root-dir*))))
 
-(defgeneric infer-meter (training-set target-viewpoints source-viewpoints test-sequence
+(defgeneric infer-category (training-set target-viewpoints source-viewpoints test-sequence
 			&key &allow-other-keys))
 
-(defmethod infer-meter ((training-set list) target-viewpoints source-viewpoints test-sequence
+(defmethod infer-category ((training-set list) target-viewpoints source-viewpoints test-sequence
 			&rest kwargs &key &allow-other-keys)
   (let ((training-set-promise 
 	 (promises:make-promise :function training-set 
 				:id (composition-list-signature training-set))))
-    (apply #'infer-meter (append (list training-set-promise target-viewpoints 
+    (apply #'infer-category (append (list training-set-promise target-viewpoints 
 					 source-viewpoints test-sequence)
 				   kwargs))))
 
-(defmethod infer-meter ((training-set promises:promise) 
+(defmethod infer-category ((training-set promises:promise) 
 			target-viewpoints source-viewpoints test-sequence
 			&key (voices nil) (texture :grid) 
 			  (resolution 16) (use-cache? t) &allow-other-keys)
     (let* ((sources (viewpoints:get-viewpoints source-viewpoints))
 	   (targets (viewpoints:get-basic-viewpoints target-viewpoints training-set texture))
-	   ;; Obtain event counts per meter
-	   (meter-counts (count-meters training-set texture resolution :use-cache? nil))
+	   ;; Obtain event counts per category
+	   (category-counts (count-categories training-set texture resolution :use-cache? nil))
 	   ;; Extract a list of metrical interpretations
-	   (meters (mapcar #'(lambda (meter-count) 
-			       (md:meter-string->metrical-interpretation 
-				(car meter-count) resolution)) 
-			   meter-counts))
+	   (categories (mapcar #'(lambda (category-count) 
+				   (md:meter-string->metrical-interpretation 
+				    (car category-count) resolution)) 
+			       category-counts))
+	   (models (make-category-models training-set training-set categories sources targets
+					 :voices voices :texture texture
+					 :resolution resolution :use-cache? use-cache?))
 	   ;; Generate a Nparams x Ntarget-viewpoints x Nevents matrix for event-likelihoods
 	   (likelihoods 
-	    (generate-meter-predictions training-set meters targets sources
-					test-sequence
-					:resolution resolution :voices voices
-					:texture texture :use-cache? use-cache?))
+	    (generate-category-predictions categories models test-sequence
+					:resolution resolution :texture texture))
 	   ;; Initialize the prior distribution
-	   (prior-distribution (initialise-prior-distribution meter-counts resolution))
+	   (prior-distribution (initialise-prior-distribution category-counts resolution))
 	   ;; Convert to a Nparams x Nevents data structure where each column is 
 	   ;; a probability distribution over params
-	   (posteriors (generate-meter-posteriors prior-distribution likelihoods 
+	   (posteriors (generate-category-posteriors prior-distribution likelihoods 
 					      (length test-sequence)))
 	   (information-contents 
 	    (loop for p below (length test-sequence) collecting
@@ -60,114 +61,133 @@
 			     (nth position (lookup-key i posteriors))))
 		      interpretations))))
 
-(defun generate-meter-posteriors (prior-distribution likelihoods n) 
+(defun generate-category-posteriors (prior-distribution likelihoods n) 
   (when *verbose* (format t "Performing Bayesian inference using predictions and the prior~%"))
-  (let* ((params (prediction-sets:distribution-symbols prior-distribution))
+  (let* ((categories (prediction-sets:distribution-symbols prior-distribution))
 	 ;; Initialise results with the prior
-	 (results (mapcar #'(lambda (param) 
-			      (cons param
+	 (results (mapcar #'(lambda (category) 
+			      (cons category
 				    (copy-list 
-				     (lookup-key param prior-distribution)))) params)))
-    ;; Iterate over positions in the test sequence to infer meter
+				     (lookup-key category prior-distribution)))) categories)))
+    ;; Iterate over positions in the test sequence to infer category
     (dotimes (position n)
       (let ((evidence (apply #'+ 
 			     (mapcar #'(lambda (m) 
 					 (* (get-event-likelihood m position likelihoods)
 					    (first (lookup-key m results))))
-				     params))))
-	(dolist (meter params)
-	  (let* ((posteriors (lookup-key meter results))
-		 (likelihood (get-event-likelihood meter position likelihoods))
+				     categories))))
+	(dolist (category categories)
+	  (let* ((posteriors (lookup-key category results))
+		 (likelihood (get-event-likelihood category position likelihoods))
 		 (prior (first posteriors))
 		 (posterior (/ (* likelihood prior) evidence)))
 	    ; Store the result
-	    (push posterior (cdr (assoc meter results :test #'string-equal)))))))
-    ;; Reverse the list of probabilities for each meter
-    (dolist (param params)
-      (let ((result (assoc param results :test #'string-equal)))
+	    (push posterior (cdr (assoc category results :test #'string-equal)))))))
+    ;; Reverse the list of probabilities for each category
+    (dolist (category categories)
+      (let ((result (assoc category results :test #'string-equal)))
 	(rplacd result (nreverse (cdr result)))))
     results))
 
+(defun make-category-models (training-set training-set-id categories
+			     sources targets &key voices texture resolution use-cache?)
+  "Return a LIST of with one mvs for each category in CATEGORIES."
+  (mapcar #'(lambda (category) (make-category-mvs training-set training-set-id
+						  category sources targets
+						  :voices voices :texture texture
+						  :resolution resolution
+						  :use-cache? use-cache?))
+		    categories))
 
-(defun generate-meter-predictions (training-set-promise categories targets sources test-sequence
-				   &key (resolution 16) voices texture use-cache?)
+(defun make-category-mvs (training-set training-set-id category
+			  sources targets &key voices texture resolution use-cache?)
+  (let ((ltms (resampling:get-long-term-models sources training-set
+					       nil training-set-id nil nil
+					       :voices voices :texture texture
+					       :interpretation category
+					       :resolution resolution
+					       :use-cache? use-cache?)))
+    (mvs:make-mvs targets sources ltms)))
+
+(defun generate-category-predictions (categories models test-sequence
+				   &key (resolution 16) texture)
+  "Return an ALIST containing event likelihoods under each possible interpretation of
+each category, indexed by (a string representation of the) interpretation."
   (when *verbose* 
     (format t "Generating predictions for the test sequence in all interpretations~%"))
   (flet ((model-sequence (model interpretation)
 	   (mvs:model-sequence model (coerce test-sequence 'list) texture :construct? nil 
-				:predict? t :interpretation interpretation))
-	 (make-mvs (category)
-	   (let ((ltms (resampling:get-long-term-models sources training-set-promise
-							nil (promises:get-identifier 
-							     training-set-promise) nil nil
-							:voices voices :texture texture
-							:interpretation category
-							:resolution resolution
-							:use-cache? use-cache?)))
-	     (mvs:make-mvs targets sources ltms))))
-    ;; Create a list of lists containing each category in each possible phase
+				:predict? t :interpretation interpretation)))
+    ;; Create a list of interpretations per category
     (let ((interpretations-per-category
 	   (mapcar #'(lambda (c) (md:create-interpretations c resolution)) categories)))
+      ;; Aggregate results into a flat ALIST 
       (apply #'append
+	     ;; Cycle over the models and associated interpretations
 	     (mapcar 
-	      #'(lambda (category interpretations) 
-		  (let ((model (make-mvs category)))
-		    (mapcar 
-		     #'(lambda (interpretation)
-			 ;; FIXME: Only the predictions of the *first* target viewpoint are 
-			 ;; taken into account here! They should be combined.
-			 (cons (md:meter-string interpretation)
-			       (prediction-sets:distribution-probabilities
-				(prediction-sets:event-predictions 
-				 (first (model-sequence model interpretation))))))
-		     interpretations)))
-	      categories interpretations-per-category)))))
+	      #'(lambda (model interpretations)
+		  ;; Obtain likelihoods of TEST-SEQUENCE for each interpretation
+		  (mapcar 
+		   #'(lambda (interpretation)
+		       ;; FIXME: Only the predictions of the *first* target viewpoint are 
+		       ;; taken into account here! They should be combined.
+		       (cons (md:meter-string interpretation)
+			     (prediction-sets:distribution-probabilities
+			      (prediction-sets:event-predictions 
+			       (first (model-sequence model interpretation))))))
+		   interpretations))
+	     models interpretations-per-category)))))
 
-(defgeneric count-meters (training-set texture resolution 
+(defgeneric count-categories (training-set texture resolution 
 			  &key &allow-other-keys))
 
-(defmethod count-meters ((training-set promises:promise) texture resolution
+(defmethod count-categories ((training-set promises:promise) texture resolution
 			 &key (use-cache? t) (per-composition? nil))
   (let ((filename (format nil "~A~A-~A" *counts-dir* 
 			  (promises:get-identifier training-set) resolution)))
     (unless (and (utils:file-exists filename) use-cache?)
       (let ((training-set (promises:retrieve training-set)))
-	(utils:write-object-to-file (count-meters training-set texture resolution    
+	(utils:write-object-to-file (count-categories training-set texture resolution    
 						  :per-composition? per-composition?)
 				    filename))
-      (when *verbose* (format t "Written meter counts to ~A.~%" filename)))
+      (when *verbose* (format t "Written category counts to ~A.~%" filename)))
     (utils:read-object-from-file filename)))
 
-(defmethod count-meters ((training-set list) texture resolution
+(defmethod count-categories ((training-set list) texture resolution
 			 &key (per-composition? nil))
-  "Find every occurring meter in a list of composition and count the number of bars in 
-each meter (unless <per-composition?> is true and the texture is not :grid, in that case
-the number of compositions per meter are counted and compositions are assumed not to 
-contain metrical changes). Return an ALIST with counts indexed by meter-strings."
-  (let ((meter-counts))
-    (dolist (composition training-set meter-counts)
+  "Find every occurring category in a list of composition and count the number of bars in 
+each category (unless <per-composition?> is true and the texture is not :grid, in that case
+the number of compositions per category are counted and compositions are assumed not to 
+contain metrical changes). Return an ALIST with counts indexed by category-strings."
+  (let ((category-counts))
+    (dolist (composition training-set category-counts)
       (cond ((eq texture :grid)
 	     (sequence:dosequence (event composition)
 	       (when (not (or (null (md:barlength event)) (null (md:pulses event))))
-		 (let* ((meter (md:make-metrical-interpretation event resolution))
-			(meter-string (md:meter-string meter))
-			(mcount (cdr (lookup-meter meter-string meter-counts)))
-			(increment (/ 1 (md:meter-period meter)))) 
-		   (if mcount ; use mcount as a check whether the key already exists
-		       (rplacd (lookup-meter meter-string meter-counts) (+ mcount increment))
-		       (setf meter-counts (acons meter-string increment meter-counts)))))))
+		 (let* ((category (md:make-metrical-interpretation event resolution))
+			(category-string (md:meter-string category))
+			(count (lookup-key category-string category-counts))
+			(increment (/ 1 (md:meter-period category)))) 
+		   (if count ; use count as a check whether the key already exists
+		       
+		       (rplacd (assoc category-string category-counts :test #'string-equal)
+			       (+ count increment))
+		       (setf category-counts
+			     (acons category-string increment category-counts)))))))
 	    ((member texture (list :melody :harmony))
 	     (let ((last-event (utils:last-element composition)))
 	       (let ((duration (+ (md:onset last-event)
 				  (md:duration last-event)))
-		     (meter (md:make-metrical-interpretation last-event nil)))
-		 (let* ((meter-string (md:meter-string meter))
-			(mcount (cdr (lookup-meter meter-string meter-counts)))
+		     (category (md:make-metrical-interpretation last-event nil)))
+		 (let* ((category-string (md:meter-string category))
+			(count (lookup-key category-string category-counts))
 			(increment (if per-composition? 
-				       1 (ceiling (/ duration (md:barlength meter))))))
-		   (if mcount ; use mcount as a check whether the key already exists
-		       (rplacd (lookup-meter meter-string meter-counts) (+ mcount increment))
-		       (setf meter-counts (acons meter-string increment meter-counts)))))))))))
+				       1 (ceiling (/ duration (md:barlength category))))))
+		   (if count ; use count as a check whether the key already exists
+		       (rplacd (assoc category-string category-counts :test #'string-equal)
+			       (+ count increment))
+		       (setf category-counts
+			     (acons category-string increment category-counts)))))))))))
 
 (defun initialise-prior-distribution (category-counts resolution)
   "Initialise a prior distribution over categories based on <category-counts>.
@@ -203,12 +223,12 @@ phase equals one. Return the rescaled distribution."
   "Take an alist where each key is a distribution parameter and the
 corresponding value is a list of probabilities at a specific time. Sum 
 the probabilities over time and divide by the list length."
-  (let ((params (prediction-sets:distribution-symbols distributions))
+  (let ((categories (prediction-sets:distribution-symbols distributions))
 	(results))
-    (dolist (param params)
-      (let* ((probabilities (lookup-key param distributions))
+    (dolist (category categories)
+      (let* ((probabilities (lookup-key category distributions))
 	     (result (/ (apply #'+ probabilities) (length probabilities))))
-	(setf results (acons param result results))))
+	(setf results (acons category result results))))
     results))
 
 (defun phase-metre->metre (distribution)
@@ -236,20 +256,20 @@ over metre."
 (defun lookup-key (key alist)
   (cdr (assoc key alist :test #'string-equal)))
 
-(defun get-sequence-likelihoods (meter-likelihoods meter)
-  (first (lookup-key meter meter-likelihoods)))
+(defun get-sequence-likelihoods (category-likelihoods category)
+  (first (lookup-key category category-likelihoods)))
 
-(defun get-event-likelihood (meter position likelihoods)
-  (nth position (lookup-key meter likelihoods)))
+(defun get-event-likelihood (category position likelihoods)
+  (nth position (lookup-key category likelihoods)))
 
-(defun get-prior-likelihood (meter likelihoods)
-  (lookup-key meter likelihoods))
+(defun get-prior-likelihood (category likelihoods)
+  (lookup-key category likelihoods))
 
-(defun meter->time-signature (metrical-interpretation)
-  (let ((phase (md:meter-phase metrical-interpretation))
-	(pulses (md:pulses metrical-interpretation))
-	(beat-division (md:beat-division metrical-interpretation)))
+(defun category->time-signature (interpretation)
+  (let ((phase (md:meter-phase interpretation))
+	(pulses (md:pulses interpretation))
+	(beat-division (md:beat-division interpretation)))
     (values pulses beat-division phase)))
 
-(defun lookup-meter (meter counts)
-  (assoc meter counts :test #'string-equal))
+(defun lookup-category (category counts)
+  (assoc category counts :test #'string-equal))
