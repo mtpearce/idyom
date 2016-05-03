@@ -2,7 +2,7 @@
 ;;;; File:       IDyOM.asd
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-05-04 21:29:04 marcusp>
-;;;; Time-stamp: <2016-05-03 13:47:21 marcusp>
+;;;; Time-stamp: <2016-05-03 15:58:30 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -104,4 +104,5 @@
              (:file "resampling")
              (:file "viewpoint-selection")
              (:file "main")
+             (:file "segmentation")
              (:file "generation")))))
