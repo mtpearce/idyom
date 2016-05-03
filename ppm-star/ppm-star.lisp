@@ -2,7 +2,7 @@
 ;;;; File:       ppm-star.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2016-04-20 20:56:23 marcusp>                           
+;;;; Time-stamp: <2016-05-03 13:51:53 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -60,7 +60,7 @@
 
 (defun eequal (obj1 obj2)
   "Predicate for comparing elements of sequences."
-  (declare (optimize (speed 3) (space 0) (safety 0) (debug 0) (compilation-speed 0)))
+  (declare (optimize (speed 3) (safety 1) (space 0) (debug 0) (compilation-speed 0)))
   (equal obj1 obj2))
 
 (defmacro with-element-comparator (fun &body body)
@@ -940,7 +940,7 @@ probability."
 (defmethod transition-counts ((m ppm) location up-ex)
   "Returns a list of the form (symbol frequency-count) for the transitions
    appearing at location <location> in the suffix tree of model <m>."
-  (declare (optimize (speed 3) (space 0) (safety 0) (debug 0) (compilation-speed 0)))
+  (declare (optimize (speed 3) (safety 1) (space 0) (debug 0) (compilation-speed 0)))
   (let ((tc (make-hash-table :test #'equal)))
     (if (branch-p location)
         (let ((alphabet (ppm-alphabet m)))
@@ -972,7 +972,7 @@ those symbols that have occurred exactly once are counted."
 (defmethod transition-count ((m ppm) symbol transition-counts)
   "Returns the frequency count associated with <symbol> in <child-list>
    an alist of the form (symbol frequency-count)."
-  (declare (optimize (speed 3) (space 0) (safety 0) (debug 0) (compilation-speed 0)))
+  (declare (optimize (speed 3) (safety 1) (space 0) (debug 0) (compilation-speed 0)))
   (let ((count (gethash symbol transition-counts)))
     (if (null count) 0 (+ count (ppm-k m)))))
 
