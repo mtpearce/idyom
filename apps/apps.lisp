@@ -2,7 +2,7 @@
 ;;;; File:       apps.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2005-11-27 16:27:35 marcusp>
-;;;; Time-stamp: <2015-07-01 16:36:38 marcusp>
+;;;; Time-stamp: <2016-05-03 15:21:57 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:apps) 
@@ -29,6 +29,7 @@
 ;;; A way of generating filenames to store results, cached data etc.
 (defun dataset-modelling-filename (dataset-id basic-attributes attributes
                                    &key (extension "")
+                                     (detail nil)
                                      pretraining-ids (k 10) (models :both+)
                                      resampling-indices
                                      (texture :melody) voices
@@ -40,7 +41,7 @@
            (flatten-links (list)
              (mapcar #'(lambda (x) (if (atom x) x (format-list x "%"))) list)))
     (let* ((resampling-indices (if (and (numberp k) (= (length resampling-indices) k)) nil resampling-indices))
-           (string (format nil "~(~{~A-~}~)" 
+           (string (format nil "~(~{~A~^-~}~)" 
                            (list (if (consp dataset-id) (format-list dataset-id "_") dataset-id)
                                  (format-list basic-attributes "_")
                                  (format-list attributes "_")
@@ -48,8 +49,9 @@
                                  (format-list resampling-indices "_")
                                  texture (format-list voices "_")
                                  k models
-				 (getf ltmo :order-bound) (getf ltmo :mixtures)
-				 (getf ltmo :update-exclusion) (getf ltmo :escape)
-				 (getf stmo :order-bound) (getf stmo :mixtures)
-				 (getf stmo :update-exclusion) (getf stmo :escape)))))
-      (concatenate 'string (subseq string 0 (1- (length string))) extension))))
+                                 (getf ltmo :order-bound) (getf ltmo :mixtures)
+                                 (getf ltmo :update-exclusion) (getf ltmo :escape)
+                                 (getf stmo :order-bound) (getf stmo :mixtures)
+                                 (getf stmo :update-exclusion) (getf stmo :escape)
+                                 (if detail (format nil "~A" detail) "")))))
+      (concatenate 'string string extension))))
