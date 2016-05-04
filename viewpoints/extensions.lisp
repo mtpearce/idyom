@@ -45,28 +45,32 @@
 (defun set-pos-alphabet (context)
   (setf (viewpoint-alphabet (get-viewpoint 'pos)) (pos-alphabet context)))
 
-(defmethod set-alphabet-from-dataset ((v viewpoint) dataset)
+(defmethod set-alphabet-from-dataset ((v viewpoint) (dataset list))
+  (let ((alphabet '()))
+    (dolist (composition dataset)
+      (let ((viewpoint-sequence (viewpoint-sequence v composition)))
+	(dolist (viewpoint-element viewpoint-sequence)
+	  (unless (or (undefined-p viewpoint-element)
+		      (member viewpoint-element alphabet :test #'equal))
+	    (push viewpoint-element alphabet)))))
+    (let ((sorted-alphabet
+	   (sort alphabet #'(lambda (x y)
+			      (cond ((and (numberp x) (numberp y))
+				     (< x y))
+				    ((and (listp x) (listp y))
+				     (< (car x) (car y)))
+				    (t nil))))))
+      (setf (viewpoint-alphabet v) sorted-alphabet))))
+
+(defmethod set-alphabet-from-dataset ((v viewpoint) (dataset promises:promise))
   "Initialises the alphabet of viewpoint <v> in <dataset>."
   (let ((filename (format nil "~A~A-~A" *alphabet-dir* (symbol-name (type-of v)) (promises:get-identifier dataset))))
     (unless (utils:file-exists filename)
-      (let ((alphabet '())
-	    (dataset (if (eql (type-of dataset) 'promises:promise) (promises:retrieve dataset) dataset)))
-	(dolist (composition dataset)
-	  (let ((viewpoint-sequence (viewpoint-sequence v composition)))
-	    (dolist (viewpoint-element viewpoint-sequence)
-	      (unless (or (undefined-p viewpoint-element)
-			  (member viewpoint-element alphabet :test #'equal))
-		(push viewpoint-element alphabet)))))
-	(let ((sorted-alphabet
-	       (sort alphabet #'(lambda (x y)
-				  (cond ((and (numberp x) (numberp y))
-					 (< x y))
-					((and (listp x) (listp y))
-					 (< (car x) (car y)))
-					(t nil))))))
-	  (utils:write-object-to-file sorted-alphabet filename)
-	  (format t "Written alphabet for ~A to file ~A.~%" (symbol-name (type-of v)) filename))))
-    (setf (viewpoint-alphabet v) (utils:read-object-from-file filename))))
+      (let ((dataset (promises:retrieve dataset)))
+	(utils:write-object-to-file (set-alphabet-from-dataset v dataset)
+				    filename)
+	(format t "Written alphabet for ~A to file ~A.~%"
+		(symbol-name (type-of v)) filename)))))
   
 (defmethod set-alphabet-from-context ((v viewpoint) events unconstrained 
 				      &key 
