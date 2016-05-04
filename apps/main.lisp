@@ -2,7 +2,7 @@
 ;;;; File:       main.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2010-11-01 15:19:57 marcusp>
-;;;; Time-stamp: <2016-05-03 15:22:47 marcusp>
+;;;; Time-stamp: <2016-05-04 15:24:51 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:idyom)
@@ -79,7 +79,9 @@
    dataset using k-fold cross validation (AKA resampling).  The
    parameters <use-resampling-set-cache?> and <use-ltms-cache?> enable
    or disable respectively the caching of resampling-sets and LTMs."
-  (let* ((filename (apps:dataset-modelling-filename dataset-id target-viewpoints source-viewpoints
+  (let* ((ltmo (apply #'resampling::check-model-defaults (cons mvs::*ltm-params* ltmo)))
+         (stmo (apply #'resampling::check-model-defaults (cons mvs::*stm-params* stmo)))
+         (filename (apps:dataset-modelling-filename dataset-id target-viewpoints source-viewpoints
                                                     :extension ".dat"
                                                     :detail detail
                                                     :pretraining-ids pretraining-ids
