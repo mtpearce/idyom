@@ -19,7 +19,7 @@
 				:id (composition-list-signature training-set))))
     (apply #'infer-category (append (list training-set-promise target-viewpoints 
 					 source-viewpoints test-sequence)
-				   kwargs))))
+				    kwargs))))
 
 (defmethod infer-category ((training-set promises:promise) 
 			target-viewpoints source-viewpoints test-sequence
@@ -89,20 +89,24 @@
 	(rplacd result (nreverse (cdr result)))))
     results))
 
-(defun make-category-models (training-set training-set-id categories
-			     sources targets &key voices texture resolution use-cache?)
+(defun make-category-models (training-set dataset-id categories
+			     sources targets resampling-fold resampling-count
+			     &key voices texture resolution use-cache?)
   "Return a LIST of with one mvs for each category in CATEGORIES."
-  (mapcar #'(lambda (category) (make-category-mvs training-set training-set-id
+  (mapcar #'(lambda (category) (make-category-mvs training-set dataset-id
 						  category sources targets
+						  resampling-fold resampling-count
 						  :voices voices :texture texture
 						  :resolution resolution
 						  :use-cache? use-cache?))
 		    categories))
 
-(defun make-category-mvs (training-set training-set-id category
-			  sources targets &key voices texture resolution use-cache?)
+(defun make-category-mvs (training-set dataset-id category
+			  sources targets resampling-fold resampling-count
+			  &key voices texture resolution use-cache?)
   (let ((ltms (resampling:get-long-term-models sources training-set
-					       nil training-set-id nil nil
+					       nil dataset-id
+					       resampling-fold resampling-count
 					       :voices voices :texture texture
 					       :interpretation category
 					       :resolution resolution
@@ -270,6 +274,3 @@ over metre."
 	(pulses (md:pulses interpretation))
 	(beat-division (md:beat-division interpretation)))
     (values pulses beat-division phase)))
-
-(defun lookup-category (category counts)
-  (assoc category counts :test #'string-equal))
