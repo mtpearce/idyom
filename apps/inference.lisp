@@ -23,7 +23,7 @@
 
 (defmethod infer-category ((training-set promises:promise) 
 			target-viewpoints source-viewpoints test-sequence
-			&key (voices nil) (texture :grid) 
+			&key (voices nil) (texture :melody) 
 			  (resolution 16) (use-cache? t) &allow-other-keys)
     (let* ((sources (viewpoints:get-viewpoints source-viewpoints))
 	   (targets (viewpoints:get-basic-viewpoints target-viewpoints training-set texture))
