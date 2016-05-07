@@ -34,7 +34,8 @@
 				   (md:meter-string->metrical-interpretation 
 				    (car category-count) resolution)) 
 			       category-counts))
-	   (models (make-category-models training-set training-set categories targets sources
+	   (models (make-category-models training-set (promises:get-identifier training-set)
+					 categories targets sources
 					 :voices voices :texture texture
 					 :resolution resolution :use-cache? use-cache?))
 	   ;; Generate a Nparams x Ntarget-viewpoints x Nevents matrix for event-likelihoods
