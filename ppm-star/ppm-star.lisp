@@ -2,7 +2,7 @@
 ;;;; File:       ppm-star.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2016-05-12 17:48:42 marcusp>                           
+;;;; Time-stamp: <2016-05-12 17:39:47 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -60,7 +60,7 @@
 
 (defun eequal (obj1 obj2)
   "Predicate for comparing elements of sequences."
-  (declare (optimize (speed 3) (safety 1) (space 0) (debug 0) (compilation-speed 0)))
+  ;;(declare (optimize (speed 3) (safety 1) (space 0) (debug 0) (compilation-speed 0)))
   (equal obj1 obj2))
 
 (defmacro with-element-comparator (fun &body body)
@@ -937,6 +937,7 @@ probability."
     (if (zerop denominator) 0.0 
         (float (/ node-count denominator) 0.0))))
 
+#-sb-thread
 (defmethod transition-counts ((m ppm) location up-ex)
   "Returns a list of the form (symbol frequency-count) for the transitions
    appearing at location <location> in the suffix tree of model <m>."
@@ -949,6 +950,37 @@ probability."
               ;;(print (list child sym))
               (when (member sym alphabet :test #'eequal)
                 (setf (gethash sym tc) (get-count m child up-ex))))))
+        (let ((sym (get-symbol m (label-left (location-rest location)))))
+          ;; we dynamically set derived alphabets on a per-event basis 
+          (when (member sym (ppm-alphabet m) :test #'eequal)
+            (setf (gethash sym tc) (get-virtual-node-count m location up-ex)))))
+    tc))
+
+#+sb-thread
+(defmethod transition-counts ((m ppm) location up-ex)
+  "Returns a list of the form (symbol frequency-count) for the transitions
+   appearing at location <location> in the suffix tree of model <m>."
+  ;; (declare (optimize (speed 3)))
+  (when (null lparallel:*kernel*)
+    (setf lparallel:*kernel* (lparallel:make-kernel 8)))
+  (let ((tc (make-hash-table :test #'equalp)))
+    (if (branch-p location)
+        (let ((alphabet (ppm-alphabet m))
+              (children (list-children m location)))
+          (lparallel:pdotimes (i (length children))
+            (let* ((child (nth i children))
+                   (label (get-label m child))
+                   (left (label-left label))
+                   (sym (get-symbol m left)))
+                   ;;(sym 60))
+                   ;;(sym (get-symbol m (label-left (get-label m child)))))
+              ;;(print sym)
+              (when ;;(member sym alphabet :test #'eequal)
+                  (find sym alphabet :test #'equal)
+                ;;(print "inside when")
+                (setf (gethash sym tc) 1))));;(get-count m child up-ex)))))
+              ;;(print "after when")))
+          tc)
         (let ((sym (get-symbol m (label-left (location-rest location)))))
           ;; we dynamically set derived alphabets on a per-event basis 
           (when (member sym (ppm-alphabet m) :test #'eequal)
@@ -972,7 +1004,7 @@ those symbols that have occurred exactly once are counted."
 (defmethod transition-count ((m ppm) symbol transition-counts)
   "Returns the frequency count associated with <symbol> in <child-list>
    an alist of the form (symbol frequency-count)."
-  (declare (optimize (speed 3) (safety 1) (space 0) (debug 0) (compilation-speed 0)))
+  ;;(declare (optimize (speed 3) (safety 1) (space 0) (debug 0) (compilation-speed 0)))
   (let ((count (gethash symbol transition-counts)))
     (if (null count) 0 (+ count (ppm-k m)))))
 
@@ -988,6 +1020,7 @@ those symbols that have occurred exactly once are counted."
              transition-counts)
     count))
 
+#-sb-thread
 (defmethod order-minus1-distribution ((m ppm) distribution excluded escape
                                       up-ex)
   "Returns the order -1 distribution."
@@ -1003,6 +1036,25 @@ those symbols that have occurred exactly once are counted."
                                (* escape 
                                   order-minus1-p))))))
             distribution)))
+
+#+sb-thread
+(defmethod order-minus1-distribution ((m ppm) distribution excluded escape
+                                      up-ex)
+  "Returns the order -1 distribution."
+  (when (null lparallel:*kernel*)
+    (setf lparallel:*kernel* (lparallel:make-kernel 8)))
+  (let ((order-minus1-p (order-minus1-probability m up-ex)))
+    (lparallel:pmapcar #'(lambda (pair)
+                           (let ((symbol (nth 0 pair))
+                                 (p (nth 1 pair)))
+                             (if (and (null (ppm-mixtures m)) (excluded? symbol excluded)
+                                      (> p 0.0))
+                                 pair
+                                 (list symbol
+                                       (+ p 
+                                          (* escape 
+                                             order-minus1-p))))))
+                       distribution)))
 
 (defmethod order-minus1-probability ((m ppm) up-ex)
   "Returns the order -1 probability corresponding to a uniform distribution
