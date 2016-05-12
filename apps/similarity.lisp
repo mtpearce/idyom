@@ -2,7 +2,7 @@
 ;;;; File:       similarity.lisp
 ;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
 ;;;; Created:    <2011-08-18 10:28:11 marcusp>
-;;;; Time-stamp: <2016-04-11 16:44:49 marcusp>
+;;;; Time-stamp: <2016-05-12 17:49:43 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -91,7 +91,7 @@
 ;; Compression distance
 
 (defun compression-distance (training-composition testing-composition target-viewpoints source-viewpoints                            
-                             &key (set-alphabets t) (normalised nil) (symmetric nil) (aggregation-function #'utils:average))
+                             &key (set-alphabets t) (normalised nil) (symmetric t) (aggregation-function #'utils:average))
   (let ((d12 (compress-sequence training-composition testing-composition target-viewpoints source-viewpoints 
                                 :set-alphabets set-alphabets :with-training t :aggregation-function aggregation-function)))
     (cond ((and (not symmetric) (not normalised))
