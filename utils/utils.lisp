@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2016-04-25 11:06:22 marcusp>
+;;;; Time-stamp: <2016-05-17 17:57:29 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -22,6 +22,13 @@
   (if (null numbers) 
       0
       (float (/ (reduce #'+ numbers) (length numbers)))))
+       
+(defun cumsum (&rest numbers)
+  "Returns a list of length |<numbers>| - 1 containing cumulative sums."
+  (let ((cs))
+    (dolist (item numbers)
+      (push (+ item (or (first cs) 0)) cs))
+    (nreverse cs)))
 
 (defun generate-integers (low high)
   "Returns a list containing all the integers between <low> and
@@ -54,6 +61,12 @@
 (defun n-combinations (n r)
   "Returns the no. of combinations of <n> different items taken <r> at a time."
   (/ (factorial n) (* (factorial r) (factorial (- n r)))))
+
+(defun range (max &key (min 0) (step 1))
+  "Returns a list of numbers from <min> (default=0) to <max> by steps of <step> (default=1)"
+   (loop for n from min below max by step
+      collect n))
+
 
 
 
@@ -329,6 +342,10 @@
 
 (defun gzip (filename)
   #-win32 (shell-command "gzip" (list filename)))
+
+(defun md5-sum-of-list (list)
+  "Returns the MD5SUM of the string representation of a list."
+  (format nil "~{~X~}" (coerce (sb-md5:md5sum-string (format nil "~{~D,~}" list)) 'list)))
 
 
 ;;;===========================================================================
