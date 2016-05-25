@@ -2,7 +2,7 @@
 ;;;; File:       apps.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2005-11-27 16:27:35 marcusp>
-;;;; Time-stamp: <2016-05-03 15:21:57 marcusp>
+;;;; Time-stamp: <2016-05-25 12:13:04 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:apps) 
@@ -52,6 +52,5 @@
                                  (getf ltmo :order-bound) (getf ltmo :mixtures)
                                  (getf ltmo :update-exclusion) (getf ltmo :escape)
                                  (getf stmo :order-bound) (getf stmo :mixtures)
-                                 (getf stmo :update-exclusion) (getf stmo :escape)
-                                 (if detail (format nil "~A" detail) "")))))
-      (concatenate 'string string extension))))
+                                 (getf stmo :update-exclusion) (getf stmo :escape)))))
+      (concatenate 'string string (if detail (format nil "-~A" detail) "") extension))))
