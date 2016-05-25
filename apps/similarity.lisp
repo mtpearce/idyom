@@ -1,8 +1,8 @@
 ;;;; ======================================================================
 ;;;; File:       similarity.lisp
-;;;; Author:     Marcus Pearce <m.pearce@gold.ac.uk>
+;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2011-08-18 10:28:11 marcusp>
-;;;; Time-stamp: <2016-05-12 17:49:43 marcusp>
+;;;; Time-stamp: <2016-05-25 12:14:03 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -24,7 +24,7 @@
                              (voices nil)
                              (aggregation-function #'utils:average) ;; use #'+ for NCD
                              (symmetric t)
-                             (normalised t))
+                             (normalised nil))
   (let* (;; output
          (ltmo (apply #'resampling::check-model-defaults (cons mvs::*ltm-params* ltmo)))
          (stmo (apply #'resampling::check-model-defaults (cons mvs::*stm-params* stmo)))
