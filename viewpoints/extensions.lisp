@@ -18,7 +18,7 @@
 
 (defgeneric set-alphabet-from-dataset (viewpoint dataset))
 (defgeneric set-alphabet-from-context (viewpoint events unconstrained 
-				       &key interpretation texture))
+				       &key interpretation))
 (defgeneric alphabet->events (viewpoint events texture))
 
 (defun get-basic-viewpoints (attributes dataset texture)
@@ -74,8 +74,7 @@
   
 (defmethod set-alphabet-from-context ((v viewpoint) events unconstrained 
 				      &key 
-					(interpretation nil) 
-					(texture :melody))
+					(interpretation nil))					
   "Sets the alphabet of derived viewpoint <v> based on the set of
 sequences created by concatenating the alphabet of the basic viewpoint
 from which <v> is derived onto a sequence of events
@@ -83,17 +82,14 @@ from which <v> is derived onto a sequence of events
 predicted which assume their full alphabets, otherwise the basic
 alphabets are determined on the basis of the values of the final event
 in <events>."
-  (flet ((get-alphabets (attributes context)
+  (flet ((get-alphabets (attributes)
            (let ((alphabets '()))
              (when (consp unconstrained)
                (setq unconstrained (mapcar #'viewpoint-type unconstrained)))
              (dolist (a attributes (reverse alphabets))
                (if (or (null unconstrained) (member a unconstrained))
-                   (cond 
-		     ((eql a 'onset) (push (onset-alphabet context texture) alphabets))
-		     ((eql a 'pos) (push (pos-alphabet context) alphabets))
-                     (t  (push (viewpoint-alphabet (get-viewpoint a)) 
-                             alphabets)))
+		   (push (viewpoint-alphabet (get-viewpoint a)) 
+			 alphabets)
                    (push (list (md:get-attribute (car (last events)) a))
                          alphabets))))))
     (let* ((derived-alphabet '())
@@ -102,7 +98,7 @@ in <events>."
            (context (butlast events))
            (basic-alphabet 
             (apply #'utils:cartesian-product 
-                   (get-alphabets attributes context))))
+                   (get-alphabets attributes))))
       (dolist (d basic-alphabet)
         (mapc #'(lambda (element attribute) 
                   (md:set-attribute e attribute element))

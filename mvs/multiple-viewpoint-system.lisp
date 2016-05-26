@@ -194,10 +194,10 @@ See also VIEWPOINTS:SET-ALPHABET-FROM-CONTEXT."
            (2 (mapcar #'viewpoints:get-viewpoint (viewpoints:get-basic-types event)))
            ;; 3 = a specified list of basic viewpoints         
            (t unconstrained))))
-    (unless (or (viewpoints:basic-p viewpoint) (undefined-p event)) 
-      (viewpoints:set-alphabet-from-context viewpoint events unconstrained :interpretation interpretation))
     (viewpoints::set-onset-alphabet (butlast events) texture)
     (when (eql texture :grid) (viewpoints::set-pos-alphabet (butlast events)))
+    (unless (or (viewpoints:basic-p viewpoint) (undefined-p event)) 
+      (viewpoints:set-alphabet-from-context viewpoint events unconstrained :interpretation interpretation))
     ;(format t "~&Viewpoint: ~A; Event: ~A; Alphabet length: ~A~%" 
     ;        (viewpoint-type viewpoint) event 
     ;        (length (viewpoint-alphabet vioewpoint)))
