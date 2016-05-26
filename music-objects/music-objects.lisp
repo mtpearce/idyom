@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2016-05-19 15:41:00 marcusp>
+;;;; Time-stamp: <2016-05-26 18:14:07 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -84,11 +84,16 @@
    (vertint12 :initarg :vertint12 :accessor vertint12)
    (voice :initarg :voice :accessor voice)))
 
-(defclass grid-event (music-event)
+(defclass grid-object ()
   ((resolution :initarg :resolution :accessor resolution)
    (is-onset :initarg :is-onset :accessor is-onset)
    (pos :initarg :pos :accessor pos))) ; pos(ition) is the time of the event expressed in grid-units (which are determined by the resolution)
 
+
+(defclass grid-event (music-event grid-object) ())
+
+(defclass grid-slice (music-slice grid-object) ())
+  
 
 ;;; Identifiers 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -414,7 +419,7 @@ the highest pitch sounding at that onset position."
 	  (push (composition->grid c :voices voices :resolution resolution :hide-meter hide-meter) compositions))))))
 
 (defun composition->grid (composition &key voices resolution (hide-meter nil))
-    "Extract a grid from a composition using the resolution specified by
+  "Extract a grid from a composition using the resolution specified by
 the resolution argument."
     (let* ((timebase (timebase composition))
 	   (grid-sequence (make-instance 'grid-sequence
@@ -431,7 +436,7 @@ the resolution argument."
                            event-list
                            (remove-if #'(lambda (x) (not (member x voices))) event-list :key #'md:voice)))
            (data (remove-duplicates event-list))
-      ; Create grid events
+           ;; Create grid events
 	   (grid-slices
 	    (let ((position 0))
 	      (loop for event in data collecting
@@ -443,21 +448,55 @@ the resolution argument."
 		       (return-from composition->grid grid-sequence))
 		     (loop for p from last-position below position collecting
 			  (let ((is-onset (eql p event-position)))
-			    (make-instance 'grid-event
-					   :pos p
-					   :is-onset is-onset
-					   :cpitch (when is-onset (chromatic-pitch event))
-					   :onset (when is-onset (onset event))
-					   :duration (when is-onset (duration event))
-					   :barlength (unless hide-meter (barlength event))
-					   :pulses (unless hide-meter (pulses event))
-					   :id (copy-identifier (get-identifier event))
-					   :resolution resolution
-					   :timebase timebase)))))))
-	     (grid-events (apply #'append grid-slices)))
+                            (case (type-of object)
+                              (event (music-event->grid-event event p is-onset resolution duration timebase hide-meter))
+                              (slice (music-event->grid-event event p is-onset resolution duration timebase hide-meter)))))))))
+           (grid-events (apply #'append grid-slices)))
       (sequence:adjust-sequence grid-sequence
-				(length grid-events)
-				:initial-contents grid-events)))
+                                (length grid-events)
+                                :initial-contents grid-events)))
+
+(defun music-event->grid-event (event pos is-onset resolution duration timebase hide-meter)
+  (make-instance 'grid-event
+                 ;; grid-event
+                 :pos pos
+                 :is-onset is-onset
+                 :resolution resolution
+                 ;; music-event
+                 :cpitch (when is-onset (chromatic-pitch event))
+                 :onset (when is-onset (onset event))
+                 :duration (when is-onset duration)
+                 :barlength (unless hide-meter (barlength event))
+                 :pulses (unless hide-meter (pulses event))
+                 :id (copy-identifier (get-identifier event))
+                 :timebase timebase))
+
+(defun music-event->grid-slice (event pos is-onset resolution duration timebase hide-meter)
+  (let ((onset (onset event))
+        (barlength (barlength event))
+        (pulses (pulses event))
+        (slice (make-instance 'grid-slice
+                              ;; grid-event
+                              :pos p
+                              :is-onset is-onset
+                              :resolution resolution
+                              ;; music-slice
+                              :onset (when is-onset onset)
+                              :duration (when is-onset duration)
+                              :barlength (unless hide-meter barlength)
+                              :pulses (unless hide-meter pulses)
+                              :id (copy-identifier (get-identifier event))
+                              :timebase timebase)))
+    (when is-onset
+      (sequence:adjust-sequence 
+       slice (length events)
+       :initial-contents (coerce events 'list))
+      (sequence:dosequence (v slice slice)
+        (setf (onset v) onset
+              (duration v) duration
+              (barlength v) (unless hide-meter barlength)
+              (pulses v) (unless hide-meter pulses)
+              (timebase v) timebase)))))
 
 (defun fractional? (n)
   (not (equalp (mod n 1) 0)))

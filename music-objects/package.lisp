@@ -31,6 +31,5 @@
    "TIME-SIGNATURE->METRICAL-INTERPRETATION"
    ;; Representation
    "RESCALE")
-)
   (:documentation "Musical data."))
 
