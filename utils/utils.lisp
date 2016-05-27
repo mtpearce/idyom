@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2016-05-17 17:57:29 marcusp>
+;;;; Time-stamp: <2016-05-27 12:45:32 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -397,10 +397,25 @@
 (defun copy-instance (object)
   (let* ((class (class-of object))
          (copy (allocate-instance class)))
-    (dolist (slot (mapcar #'sb-mop:slot-definition-name (sb-mop:class-slots class)))
+    (dolist (slot (mapcar #'closer-mop:slot-definition-name (closer-mop:class-slots class)))
       (when (slot-boundp object slot)
         (setf (slot-value copy slot) (slot-value object slot))))
     copy))
+
+(Defun copy-slot-values (object1 object2)
+  "Copy slot values from object1 to a copy of object2, wherever slot
+names match, returning the copy of object2."
+  (let* ((class (class-of object1))
+         (copy2 (copy-instance object2)))
+    (dolist (slot (mapcar #'closer-mop:slot-definition-name (closer-mop:class-slots class)))
+      (when (and (slot-boundp object1 slot) (slot-exists-p copy2 slot))
+        (setf (slot-value copy2 slot) (slot-value object1 slot))))
+    copy2))
+
+(defun initialise-unbound-slots (object &optional value)
+  (dolist (slot (mapcar #'closer-mop:slot-definition-name (closer-mop:class-slots (class-of object))) object)
+    (unless (slot-boundp object slot)
+      (setf (slot-value object slot) value))))
 
 ;;;===========================================================================
 ;;; Portability 
