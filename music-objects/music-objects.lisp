@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2016-05-27 12:44:59 marcusp>
+;;;; Time-stamp: <2016-05-27 14:41:28 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -67,14 +67,16 @@
 (defclass music-phrase ()
   ((phrase :initarg :phrase :accessor phrase)))
 
-(defclass music-element (music-temporal-object music-environment music-phrase) ())
+(defclass music-temporal-event (music-temporal-object)
+  ((bioi :initarg :bioi :accessor bioi)
+   (deltast :initarg :deltast :accessor deltast)))
+
+(defclass music-element (music-temporal-event music-environment music-phrase) ())
 
 (defclass music-slice (list-slot-sequence music-element) ())  ; set of music objects overlapping in time, ordered by voice
 
 (defclass music-event (music-element)
-  ((bioi :initarg :bioi :accessor bioi)
-   (deltast :initarg :deltast :accessor deltast)
-   (cpitch :initarg :cpitch :accessor chromatic-pitch)
+  ((cpitch :initarg :cpitch :accessor chromatic-pitch)
    (mpitch :initarg :mpitch :accessor morphetic-pitch)
    (accidental :initarg :accidental :accessor accidental)
    (dyn :initarg :dyn :accessor dynamics)
@@ -275,11 +277,15 @@ full expansion (cf. Conklin, 2002)."
                           (remove-if #'(lambda (x) (not (member x voices))) event-list :key #'md:voice)))
           (onsets (remove-duplicates (mapcar #'onset event-list)))
           (l (length onsets))
+          (previous-onset nil)
+          (previous-dur nil)
           (slices nil))
      ;; Extract the slices
      (dotimes (i l)
        ;; For each onset
        (let* ((onset (nth i onsets))
+              (bioi (if previous-onset (- onset previous-onset) 0))
+              (deltast (if previous-dur (- onset (+ previous-onset previous-dur)) 0))
               ;; find the events that are sounding at that onset
               (matching-events (remove-if-not #'(lambda (x) 
                                                   (and (<= (onset x) onset) 
@@ -296,10 +302,13 @@ full expansion (cf. Conklin, 2002)."
                                        matching-events))
               ;; sort them by voice
               (matching-events (sort matching-events #'< :key #'voice))
+              (dur (apply #'max (mapcar #'duration matching-events)))
               ;; create a slice object containing those events
               (slice (make-instance 'music-slice 
-                                    :onset onset 
-                                    :duration (apply #'max (mapcar #'duration matching-events))
+                                    :onset onset
+                                    :bioi bioi
+                                    :deltast deltast
+                                    :duration dur
                                     :tempo (tempo (car matching-events))
                                     :barlength (barlength (car matching-events))
                                     :pulses (pulses (car matching-events))
@@ -309,6 +318,8 @@ full expansion (cf. Conklin, 2002)."
                                     :id (copy-identifier (get-identifier composition))
                                     :description (description composition)
                                     :timebase (timebase composition))))
+         (setf previous-onset onset)
+         (setf previous-dur dur)
          (sequence:adjust-sequence 
           slice (length matching-events)
           :initial-contents (sort matching-events #'< :key #'voice))
@@ -442,6 +453,8 @@ the resolution argument."
 	      (loop for event in data collecting
 		   (let ((event-position (rescale (onset event) resolution timebase))
 			 (duration (rescale (duration event) resolution timebase))
+                         (bioi (rescale (bioi event) resolution timebase))
+                         (deltast (rescale (deltast event) resolution timebase))
 			 (last-position position))
 		     (setf position (+ event-position duration))
 		     (when (or (fractional? event-position) (fractional? duration))
@@ -449,14 +462,14 @@ the resolution argument."
 		     (loop for p from last-position below position collecting
 			  (let ((is-onset (eql p event-position)))
                             (case (type-of event)
-                              (music-event (music-event->grid-event event p is-onset resolution duration hide-meter))
-                              (music-slice (music-slice->grid-slice event p is-onset resolution duration hide-meter)))))))))
+                              (music-event (music-event->grid-event event p is-onset resolution duration bioi deltast hide-meter))
+                              (music-slice (music-slice->grid-slice event p is-onset resolution duration bioi deltast hide-meter)))))))))
            (grid-events (apply #'append grid-slices)))
       (sequence:adjust-sequence grid-sequence
                                 (length grid-events)
                                 :initial-contents grid-events)))
 
-(defun music-event->grid-event (event pos is-onset resolution duration hide-meter)
+(defun music-event->grid-event (event pos is-onset resolution duration bioi deltast hide-meter)
   (let* ((grid-event (make-instance 'grid-event
                                     :pos pos
                                     :is-onset is-onset
@@ -464,15 +477,16 @@ the resolution argument."
          (grid-event (utils:initialise-unbound-slots grid-event)))
     (when is-onset
       (setf grid-event (utils:copy-slot-values event grid-event))
-      ;; todo: set bioi and deltast as well as duration
-      (setf (duration grid-event) duration)
+      (setf (duration grid-event) duration
+            (bioi grid-event) bioi
+            (deltast grid-event) deltast)
       (when hide-meter
         (setf (barlength grid-event) nil
               (pulses grid-event) nil)))
     (setf (get-identifier grid-event) (copy-identifier (get-identifier event)))
     grid-event))
 
-(defun music-slice->grid-slice (slice pos is-onset resolution duration hide-meter)
+(defun music-slice->grid-slice (slice pos is-onset resolution duration bioi deltast hide-meter)
   (let* ((onset (onset slice))
          (barlength (barlength slice))
          (pulses (pulses slice))
@@ -484,7 +498,9 @@ the resolution argument."
     (when is-onset
       (setf grid-slice (utils:copy-slot-values slice grid-slice))
       ;; todo: set bioi and deltast as well as duration
-      (setf (duration grid-slice) duration)
+      (setf (duration grid-slice) duration
+            (bioi grid-slice) bioi
+            (deltast grid-slice) deltast)
       (when hide-meter
         (setf (barlength grid-slice) nil
               (pulses grid-slice) nil))
