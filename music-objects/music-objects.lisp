@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2016-05-26 18:14:07 marcusp>
+;;;; Time-stamp: <2016-05-27 12:44:59 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -88,7 +88,6 @@
   ((resolution :initarg :resolution :accessor resolution)
    (is-onset :initarg :is-onset :accessor is-onset)
    (pos :initarg :pos :accessor pos))) ; pos(ition) is the time of the event expressed in grid-units (which are determined by the resolution)
-
 
 (defclass grid-event (music-event grid-object) ())
 
@@ -208,7 +207,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun get-music-objects (dataset-indices composition-indices
-                          &key voices (texture :melody) (resolution 16))
+                          &key voices (texture :melody) (time-representation :event)
+                            (grid-resolution 16) (hide-meter nil))
   "Return music objects from the database corresponding to
   DATASET-INDICES, COMPOSITION-INDICES which may be single numeric IDs
   or lists of IDs. COMPOSITION-INDICES is only considered if
@@ -218,42 +218,32 @@
   2002). The voices specified by VOICES are used. If VOICES is nil,
   the melody corresponding to the voice of the first event is
   extracted or the harmony corresponding to all voices is used."
-  (cond ((eq texture :melody)
-         (if (numberp dataset-indices)
-             (cond ((null composition-indices)
-                    (get-event-sequences dataset-indices :voices voices))
-                   ((numberp composition-indices)
-                    (get-event-sequence dataset-indices composition-indices :voices voices))
-                   (t 
-                    (mapcar #'(lambda (c) (get-event-sequence dataset-indices c :voices voices)) composition-indices)))
-             (get-event-sequences dataset-indices :voices voices)))
-        ((eq texture :harmony)
-         (if (numberp dataset-indices)
-             (cond ((null composition-indices)
-                    (get-harmonic-sequences dataset-indices :voices voices))
-                   ((numberp composition-indices)
-                    (get-harmonic-sequence dataset-indices composition-indices :voices voices))
-                   (t 
-                    (mapcar #'(lambda (c) (get-harmonic-sequence dataset-indices c :voices voices)) composition-indices)))
-             (get-harmonic-sequences dataset-indices :voices voices)))
-        ((eq texture :grid)
-         (if (numberp dataset-indices)
-             (cond ((null composition-indices)
-                    (get-grid-sequences dataset-indices 
-                                        :voices voices 
-                                        :resolution resolution))
-                   ((numberp composition-indices)
-                    (get-grid-sequence dataset-indices composition-indices 
-                                       :voices voices
-                                       :resolution resolution))
-                   (t 
-                    (mapcar #'(lambda (c) (get-grid-sequence dataset-indices c :voices voices)) composition-indices)))
-             (get-grid-sequences dataset-indices :voices voices :resolution resolution)))
-        (t 
-         (print "Unrecognised texture for the music object. Current options are :melody or :harmony."))))
-
+  (let ((result nil))
+    (cond ((eq texture :melody)
+           (setf result (get-melodic-objects dataset-indices composition-indices :voices voices)))
+         ((eq texture :harmony)
+          (setf result (get-harmonic-objects dataset-indices composition-indices :voices voices)))
+         (t 
+          (print "Unrecognised texture for the music object. Current options are :melody or :harmony.")))
+    (if (eq time-representation :grid)
+        (if (atom result)
+            (composition->grid result :voices voices :resolution grid-resolution :hide-meter hide-meter)
+            (mapcar #'(lambda (x)
+                        (composition->grid x :voices voices :resolution grid-resolution :hide-meter hide-meter))
+                    result))
+        result)))
 
 ;; harmonic sequences
+
+(defun get-harmonic-objects (dataset-indices composition-indices &key voices)
+  (if (numberp dataset-indices)
+      (cond ((null composition-indices)
+             (get-harmonic-sequences (list dataset-indices) :voices voices))
+            ((numberp composition-indices)
+             (get-harmonic-sequence dataset-indices composition-indices :voices voices))
+            (t 
+             (mapcar #'(lambda (c) (get-harmonic-sequence dataset-indices c :voices voices)) composition-indices)))
+      (get-harmonic-sequences dataset-indices :voices voices)))
 
 (defun get-harmonic-sequence (dataset-index composition-index &key voices)
   (composition->harmony 
@@ -331,6 +321,16 @@ full expansion (cf. Conklin, 2002)."
 
 
 ;; melodic sequences
+
+(defun get-melodic-objects (dataset-indices composition-indices &key voices)
+  (if (numberp dataset-indices)
+      (cond ((null composition-indices)
+             (get-event-sequences (list dataset-indices) :voices voices))
+            ((numberp composition-indices)
+             (get-event-sequence dataset-indices composition-indices :voices voices))
+            (t 
+             (mapcar #'(lambda (c) (get-event-sequence dataset-indices c :voices voices)) composition-indices)))
+      (get-event-sequences dataset-indices :voices voices)))
 
 (defun get-event-sequence (dataset-index composition-index &key voices)
   (composition->monody 
@@ -428,7 +428,7 @@ the resolution argument."
                               :midc (midc composition)
                               :id (copy-identifier (get-identifier composition))
                               :description (description composition)
-                              :timebase (timebase composition)
+                              :timebase timebase
 			      :resolution resolution))
            (sorted-composition (sort composition #'< :key #'md:onset))
            (event-list (coerce sorted-composition 'list))
@@ -448,55 +448,57 @@ the resolution argument."
 		       (return-from composition->grid grid-sequence))
 		     (loop for p from last-position below position collecting
 			  (let ((is-onset (eql p event-position)))
-                            (case (type-of object)
-                              (event (music-event->grid-event event p is-onset resolution duration timebase hide-meter))
-                              (slice (music-event->grid-event event p is-onset resolution duration timebase hide-meter)))))))))
+                            (case (type-of event)
+                              (music-event (music-event->grid-event event p is-onset resolution duration hide-meter))
+                              (music-slice (music-slice->grid-slice event p is-onset resolution duration hide-meter)))))))))
            (grid-events (apply #'append grid-slices)))
       (sequence:adjust-sequence grid-sequence
                                 (length grid-events)
                                 :initial-contents grid-events)))
 
-(defun music-event->grid-event (event pos is-onset resolution duration timebase hide-meter)
-  (make-instance 'grid-event
-                 ;; grid-event
-                 :pos pos
-                 :is-onset is-onset
-                 :resolution resolution
-                 ;; music-event
-                 :cpitch (when is-onset (chromatic-pitch event))
-                 :onset (when is-onset (onset event))
-                 :duration (when is-onset duration)
-                 :barlength (unless hide-meter (barlength event))
-                 :pulses (unless hide-meter (pulses event))
-                 :id (copy-identifier (get-identifier event))
-                 :timebase timebase))
-
-(defun music-event->grid-slice (event pos is-onset resolution duration timebase hide-meter)
-  (let ((onset (onset event))
-        (barlength (barlength event))
-        (pulses (pulses event))
-        (slice (make-instance 'grid-slice
-                              ;; grid-event
-                              :pos p
-                              :is-onset is-onset
-                              :resolution resolution
-                              ;; music-slice
-                              :onset (when is-onset onset)
-                              :duration (when is-onset duration)
-                              :barlength (unless hide-meter barlength)
-                              :pulses (unless hide-meter pulses)
-                              :id (copy-identifier (get-identifier event))
-                              :timebase timebase)))
+(defun music-event->grid-event (event pos is-onset resolution duration hide-meter)
+  (let* ((grid-event (make-instance 'grid-event
+                                    :pos pos
+                                    :is-onset is-onset
+                                    :resolution resolution))
+         (grid-event (utils:initialise-unbound-slots grid-event)))
     (when is-onset
+      (setf grid-event (utils:copy-slot-values event grid-event))
+      ;; todo: set bioi and deltast as well as duration
+      (setf (duration grid-event) duration)
+      (when hide-meter
+        (setf (barlength grid-event) nil
+              (pulses grid-event) nil)))
+    (setf (get-identifier grid-event) (copy-identifier (get-identifier event)))
+    grid-event))
+
+(defun music-slice->grid-slice (slice pos is-onset resolution duration hide-meter)
+  (let* ((onset (onset slice))
+         (barlength (barlength slice))
+         (pulses (pulses slice))
+         (grid-slice (make-instance 'grid-slice
+                                    :pos pos
+                                    :is-onset is-onset
+                                    :resolution resolution))
+         (grid-slice (utils:initialise-unbound-slots grid-slice)))
+    (when is-onset
+      (setf grid-slice (utils:copy-slot-values slice grid-slice))
+      ;; todo: set bioi and deltast as well as duration
+      (setf (duration grid-slice) duration)
+      (when hide-meter
+        (setf (barlength grid-slice) nil
+              (pulses grid-slice) nil))
       (sequence:adjust-sequence 
-       slice (length events)
-       :initial-contents (coerce events 'list))
-      (sequence:dosequence (v slice slice)
+       slice (length slice)
+       :initial-contents (coerce slice 'list))
+      (sequence:dosequence (v slice)
         (setf (onset v) onset
               (duration v) duration
+              ;; todo: set bioi and deltast as well as duration
               (barlength v) (unless hide-meter barlength)
-              (pulses v) (unless hide-meter pulses)
-              (timebase v) timebase)))))
+              (pulses v) (unless hide-meter pulses))))
+    (setf (get-identifier grid-slice) (copy-identifier (get-identifier slice)))
+    grid-slice))
 
 (defun fractional? (n)
   (not (equalp (mod n 1) 0)))
