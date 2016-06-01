@@ -2,10 +2,12 @@
 ;;;; File:       basic-viewpoints.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-25 19:09:17 marcusp>                           
-;;;; Time-stamp: <2015-01-03 13:18:39 marcusp>                           
+;;;; Time-stamp: <2016-06-01 16:27:14 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
+
+(defvar *common-practice-consonance-vector* '(1 0 0 1 1 1 0 1 1 1 0 0))
 
 ;;;; Basic viewpoints
 
@@ -70,8 +72,6 @@
 
 ;;; General Chord Type (GCT) (Cambouropoulos et al., 2014, Proceedings of ICMC-SMC)
 
-(defvar *common-practice-consonance-vector* '(1 0 0 1 1 1 0 1 1 1 0 0))
-
 (defun general-chord-type (pitch-class-set pitch-scale-hierarchy consonance-vector)
   (let* ((maximal-subsets (maximal-subsets pitch-class-set consonance-vector))
          (base (mapcar #'make-compact maximal-subsets))
@@ -80,15 +80,14 @@
          (relative-chord (mapcar #'(lambda (x) (relate-to-key x pitch-scale-hierarchy)) 
                                  root-base-extension))
          (best-chord (choose-best-chord relative-chord base pitch-scale-hierarchy)))
-    (when (> (length relative-chord) 1)
-      (print (list pitch-class-set pitch-scale-hierarchy))
-      (print maximal-subsets)
-      (print base)
-      (print base-extension)
-      (print root-base-extension)
-      (print relative-chord)
-      (print best-chord)
-      )
+    ;; (when (> (length relative-chord) 1)
+    ;;   (print (list pitch-class-set pitch-scale-hierarchy))
+    ;;   (print maximal-subsets)
+    ;;   (print base)
+    ;;   (print base-extension)
+    ;;   (print root-base-extension)
+    ;;   (print relative-chord)
+    ;;   (print best-chord))
     best-chord))
 
 (defun combine-base-and-extension (chord)
@@ -132,8 +131,9 @@
                                        (not (member y pitch-scale-pc-set :test #'=)))
                                    (as-pitch-class-set x)))
                          candidates))
-        (print (list "candidates" candidates))
+        ;; (print (list "candidates" candidates))
         (when (null candidates) (setf candidates old-candidates))
+        (setf candidates (remove-duplicates candidates :test #'equalp))
         (setf n (length candidates))))
     ;; 3. otherwise choose randomly
     (when (> n 1)
