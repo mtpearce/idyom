@@ -2,7 +2,7 @@
 ;;;; File:       ppm-star.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2016-05-12 17:39:47 marcusp>                           
+;;;; Time-stamp: <2016-06-06 11:15:38 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -51,23 +51,31 @@
 ;;;;
 ;;;; ======================================================================
 
-
-
 (cl:in-package #:ppm)
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  ;; for parallel processing (where supported by SBCL)
+  (defvar *n-threads* 8)
+  (when (null lparallel:*kernel*)
+    (setf lparallel:*kernel* (lparallel:make-kernel *n-threads*))))
 
 (defvar *sentinel* '$ "The unique end of sequence symbol.")
 (defun sentinel-p (s) (eql s *sentinel*))
 
+;; a customisable equality predicate
 (defun eequal (obj1 obj2)
   "Predicate for comparing elements of sequences."
-  ;;(declare (optimize (speed 3) (safety 1) (space 0) (debug 0) (compilation-speed 0)))
+  (declare (optimize (speed 3)))
   (equal obj1 obj2))
+
+(defun eequal-hash (o) (sxhash o))
+(sb-ext:define-hash-table-test eequal eequal-hash)
 
 (defmacro with-element-comparator (fun &body body)
   `(let ((old-fun (symbol-function 'ppm::eequal))) 
-    (setf (symbol-function 'ppm::eequal) ,fun)
-    (prog1 (progn ,@body)
-      (setf (symbol-function 'ppm::eequal) old-fun))))
+     (setf (symbol-function 'ppm::eequal) ,fun)
+     (prog1 (progn ,@body)
+       (setf (symbol-function 'ppm::eequal) old-fun))))
 
 ;;;===========================================================================
 ;;; Distributions 
@@ -941,8 +949,8 @@ probability."
 (defmethod transition-counts ((m ppm) location up-ex)
   "Returns a list of the form (symbol frequency-count) for the transitions
    appearing at location <location> in the suffix tree of model <m>."
-  (declare (optimize (speed 3) (safety 1) (space 0) (debug 0) (compilation-speed 0)))
-  (let ((tc (make-hash-table :test #'equal)))
+  (declare (optimize (speed 3)))
+  (let ((tc (make-hash-table :test #'eequal)))
     (if (branch-p location)
         (let ((alphabet (ppm-alphabet m)))
           (dolist (child (list-children m location) tc)
@@ -960,26 +968,16 @@ probability."
 (defmethod transition-counts ((m ppm) location up-ex)
   "Returns a list of the form (symbol frequency-count) for the transitions
    appearing at location <location> in the suffix tree of model <m>."
-  ;; (declare (optimize (speed 3)))
-  (when (null lparallel:*kernel*)
-    (setf lparallel:*kernel* (lparallel:make-kernel 8)))
-  (let ((tc (make-hash-table :test #'equalp)))
+  (declare (optimize (speed 3)))
+  (let ((tc (make-hash-table :test #'eequal :synchronized t)))
     (if (branch-p location)
         (let ((alphabet (ppm-alphabet m))
               (children (list-children m location)))
           (lparallel:pdotimes (i (length children))
             (let* ((child (nth i children))
-                   (label (get-label m child))
-                   (left (label-left label))
-                   (sym (get-symbol m left)))
-                   ;;(sym 60))
-                   ;;(sym (get-symbol m (label-left (get-label m child)))))
-              ;;(print sym)
-              (when ;;(member sym alphabet :test #'eequal)
-                  (find sym alphabet :test #'equal)
-                ;;(print "inside when")
-                (setf (gethash sym tc) 1))));;(get-count m child up-ex)))))
-              ;;(print "after when")))
+                   (sym (get-symbol m (label-left (get-label m child)))))
+              (when (member sym alphabet :test #'eequal)
+                (setf (gethash sym tc) (get-count m child up-ex)))))
           tc)
         (let ((sym (get-symbol m (label-left (location-rest location)))))
           ;; we dynamically set derived alphabets on a per-event basis 
@@ -1004,7 +1002,7 @@ those symbols that have occurred exactly once are counted."
 (defmethod transition-count ((m ppm) symbol transition-counts)
   "Returns the frequency count associated with <symbol> in <child-list>
    an alist of the form (symbol frequency-count)."
-  ;;(declare (optimize (speed 3) (safety 1) (space 0) (debug 0) (compilation-speed 0)))
+  (declare (optimize (speed 3)))
   (let ((count (gethash symbol transition-counts)))
     (if (null count) 0 (+ count (ppm-k m)))))
 
@@ -1041,8 +1039,6 @@ those symbols that have occurred exactly once are counted."
 (defmethod order-minus1-distribution ((m ppm) distribution excluded escape
                                       up-ex)
   "Returns the order -1 distribution."
-  (when (null lparallel:*kernel*)
-    (setf lparallel:*kernel* (lparallel:make-kernel 8)))
   (let ((order-minus1-p (order-minus1-probability m up-ex)))
     (lparallel:pmapcar #'(lambda (pair)
                            (let ((symbol (nth 0 pair))
