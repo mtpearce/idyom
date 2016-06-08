@@ -176,31 +176,33 @@ contain metrical changes). Return an ALIST with counts indexed by category-strin
     (dolist (composition training-set category-counts)
       (cond ((eq texture :grid)
 	     (sequence:dosequence (event composition)
-	       (when (not (or (null (md:barlength event)) (null (md:pulses event))))
+	       (if (not (or (null (md:barlength event)) (null (md:pulses event))))
 		 (let* ((category (md:make-metrical-interpretation event resolution))
 			(category-string (md:meter-string category))
 			(count (lookup-key category-string category-counts))
 			(increment (/ 1 (md:meter-period category)))) 
 		   (if count ; use count as a check whether the key already exists
-		       
 		       (rplacd (assoc category-string category-counts :test #'string-equal)
 			       (+ count increment))
 		       (setf category-counts
-			     (acons category-string increment category-counts)))))))
+			     (acons category-string increment category-counts))))
+		 (warn "Unannotated event encountered while counting categories"))))
 	    ((member texture (list :melody :harmony))
 	     (let ((last-event (utils:last-element composition)))
-	       (let ((duration (+ (md:onset last-event)
-				  (md:duration last-event)))
-		     (category (md:make-metrical-interpretation last-event nil)))
-		 (let* ((category-string (md:meter-string category))
-			(count (lookup-key category-string category-counts))
-			(increment (if per-composition? 
-				       1 (ceiling (/ duration (md:barlength category))))))
-		   (if count ; use count as a check whether the key already exists
-		       (rplacd (assoc category-string category-counts :test #'string-equal)
-			       (+ count increment))
-		       (setf category-counts
-			     (acons category-string increment category-counts)))))))))))
+	       (if (not (or (null (md:barlength last-event)) (null (md:pulses last-event))))
+		   (let ((duration (+ (md:onset last-event) ; Calculate composition duration
+				      (md:duration last-event)))
+			 (category (md:make-metrical-interpretation last-event nil)))
+		     (let* ((category-string (md:meter-string category))
+			    (count (lookup-key category-string category-counts))
+			    (increment (if per-composition? 
+					   1 (ceiling (/ duration (md:barlength category))))))
+		       (if count ; use count as a check whether the key already exists
+			   (rplacd (assoc category-string category-counts :test #'string-equal)
+				   (+ count increment))
+			   (setf category-counts
+				 (acons category-string increment category-counts)))))
+		   (warn "Unannotated event encountered while counting categories"))))))))
 
 (defun initialise-prior-distribution (category-counts resolution)
   "Initialise a prior distribution over categories based on <category-counts>.
