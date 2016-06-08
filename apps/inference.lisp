@@ -34,7 +34,7 @@
 				   (md:meter-string->metrical-interpretation 
 				    (car category-count) resolution)) 
 			       category-counts))
-	   (models (make-category-models training-set training-set categories sources targets
+	   (models (make-category-models training-set training-set categories targets sources
 					 :voices voices :texture texture
 					 :resolution resolution :use-cache? use-cache?))
 	   ;; Generate a Nparams x Ntarget-viewpoints x Nevents matrix for event-likelihoods
@@ -90,11 +90,11 @@
     results))
 
 (defun make-category-models (training-set dataset-id categories
-			     sources targets resampling-fold resampling-count
+			     targets sources resampling-fold resampling-count
 			     &key voices texture resolution use-cache?)
   "Return a LIST of with one mvs for each category in CATEGORIES."
   (mapcar #'(lambda (category) (make-category-mvs training-set dataset-id
-						  category sources targets
+						  category targets sources
 						  resampling-fold resampling-count
 						  :voices voices :texture texture
 						  :resolution resolution
@@ -102,7 +102,7 @@
 		    categories))
 
 (defun make-category-mvs (training-set dataset-id category
-			  sources targets resampling-fold resampling-count
+			  targets sources resampling-fold resampling-count
 			  &key voices texture resolution use-cache?)
   (let ((ltms (resampling:get-long-term-models sources training-set
 					       nil dataset-id
