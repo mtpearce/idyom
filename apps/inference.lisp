@@ -47,8 +47,8 @@
 	   ;; a probability distribution over params
 	   (posteriors (generate-category-posteriors prior-distribution likelihoods 
 					      (length test-sequence)))
-	   (information-contents 
-	    (loop for p below (length test-sequence) collecting
+	   (information-contents 	
+    (loop for p below (length test-sequence) collecting
 		 (- (log (event-likelihood p likelihoods posteriors)
 			 2)))))
       (values prior-distribution likelihoods posteriors information-contents)))
@@ -63,29 +63,30 @@
 
 (defun generate-category-posteriors (prior-distribution likelihoods n) 
   (when *verbose* (format t "Performing Bayesian inference using predictions and the prior~%"))
-  (let* ((categories (prediction-sets:distribution-symbols prior-distribution))
+  (let* ((interpretations (prediction-sets:distribution-symbols prior-distribution))
 	 ;; Initialise results with the prior
-	 (results (mapcar #'(lambda (category) 
-			      (cons category
+	 (results (mapcar #'(lambda (interpretation) 
+			      (cons interpretation
 				    (copy-list 
-				     (lookup-key category prior-distribution)))) categories)))
-    ;; Iterate over positions in the test sequence to infer category
+				     (lookup-key interpretation prior-distribution))))
+			  interpretations)))
+    ;; Iterate over positions in the test sequence to infer interpretation
     (dotimes (position n)
       (let ((evidence (apply #'+ 
 			     (mapcar #'(lambda (m) 
 					 (* (get-event-likelihood m position likelihoods)
 					    (first (lookup-key m results))))
-				     categories))))
-	(dolist (category categories)
-	  (let* ((posteriors (lookup-key category results))
-		 (likelihood (get-event-likelihood category position likelihoods))
+				     interpretations))))
+	(dolist (interpretation interpretations)
+	  (let* ((posteriors (lookup-key interpretation results))
+		 (likelihood (get-event-likelihood interpretation position likelihoods))
 		 (prior (first posteriors))
 		 (posterior (/ (* likelihood prior) evidence)))
 	    ; Store the result
-	    (push posterior (cdr (assoc category results :test #'string-equal)))))))
-    ;; Reverse the list of probabilities for each category
-    (dolist (category categories)
-      (let ((result (assoc category results :test #'string-equal)))
+	    (push posterior (cdr (assoc interpretation results :test #'string-equal)))))))
+    ;; Reverse the list of probabilities for each interpretation
+    (dolist (interpretation interpretations)
+      (let ((result (assoc interpretation results :test #'string-equal)))
 	(rplacd result (nreverse (cdr result)))))
     results))
 
@@ -140,7 +141,7 @@ each category, indexed by (a string representation of the) interpretation."
 			      (prediction-sets:event-predictions 
 			       (first (model-sequence model interpretation))))))
 		   interpretations))
-	     models interpretations-per-category)))))
+	      models interpretations-per-category)))))
 
 (defgeneric count-categories (training-set texture resolution 
 			  &key &allow-other-keys))
@@ -209,10 +210,11 @@ phase equals one. Return the rescaled distribution."
 	     (mapcar (lambda (c) (md:create-interpretations c resolution))
 				     categories)))
 	(let ((interpretation-prior 
-	       (apply #'append (mapcar #'(lambda (interpretations p) 
-			   (mapcar #'(lambda (interpretation) 
-				       (cons (md:meter-string interpretation) (list p)))
-				   interpretations))
+	       (apply #'append
+		      (mapcar #'(lambda (interpretations p) 
+				  (mapcar #'(lambda (interpretation) 
+					      (cons (md:meter-string interpretation) (list p)))
+					  interpretations))
 		       interpretations-per-category category-prior))))
 	  ;; Flatten and re-normalise the distribution
 	  (prediction-sets:normalise-distribution interpretation-prior))))))
