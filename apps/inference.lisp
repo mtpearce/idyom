@@ -12,6 +12,12 @@
 (defgeneric infer-category (training-set target-viewpoints source-viewpoints test-sequence
 			&key &allow-other-keys))
 
+(defmethod infer-category ((training-set md:music-dataset) target-viewpoints source-viewpoints test-sequence
+			   &rest kwargs &key &allow-other-keys)
+    (apply #'infer-category (append (list (coerce training-set 'list) target-viewpoints 
+					 source-viewpoints test-sequence)
+				    kwargs)))
+
 (defmethod infer-category ((training-set list) target-viewpoints source-viewpoints test-sequence
 			&rest kwargs &key &allow-other-keys)
   (let ((training-set-promise 
