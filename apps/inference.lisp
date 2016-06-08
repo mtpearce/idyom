@@ -135,14 +135,21 @@ each category, indexed by (a string representation of the) interpretation."
 		  ;; Obtain likelihoods of TEST-SEQUENCE for each interpretation
 		  (mapcar 
 		   #'(lambda (interpretation)
-		       ;; FIXME: Only the predictions of the *first* target viewpoint are 
-		       ;; taken into account here! They should be combined.
-		       (cons (md:meter-string interpretation)
-			     (prediction-sets:distribution-probabilities
-			      (prediction-sets:event-predictions 
-			       (first (model-sequence model interpretation))))))
+		       (let ((prediction-sets (model-sequence model interpretation)))
+			 (cons (md:meter-string interpretation)
+			       ;; FIXME: Only the predictions of the
+			       ;; *first* target viewpoint are taken
+			       ;; into account here!
+			       ;; They should be combined.
+			       (first (prediction-sets->likelihoods prediction-sets)))))
 		   interpretations))
 	      models interpretations-per-category)))))
+
+(defun prediction-sets->likelihoods (prediction-sets)
+  (mapcar #'(lambda (prediction-set)
+	      (prediction-sets:distribution-probabilities
+	       (prediction-sets:event-predictions prediction-set)))
+	  prediction-sets))
 
 (defgeneric count-categories (training-set texture resolution 
 			  &key &allow-other-keys))
