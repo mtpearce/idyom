@@ -31,34 +31,34 @@
 			target-viewpoints source-viewpoints test-sequence
 			&key (voices nil) (texture :melody) 
 			  (resolution 16) (use-cache? t) &allow-other-keys)
-    (let* ((sources (viewpoints:get-viewpoints source-viewpoints))
-	   (targets (viewpoints:get-basic-viewpoints target-viewpoints training-set texture))
-	   ;; Obtain event counts per category
-	   (category-counts (count-categories training-set texture resolution :use-cache? nil))
-	   ;; Extract a list of metrical interpretations
-	   (categories (mapcar #'(lambda (category-count) 
-				   (md:meter-string->metrical-interpretation 
-				    (car category-count) resolution)) 
-			       category-counts))
-	   (models (make-category-models training-set (promises:get-identifier training-set)
-					 categories targets sources
-					 :voices voices :texture texture
-					 :resolution resolution :use-cache? use-cache?))
-	   ;; Generate a Nparams x Ntarget-viewpoints x Nevents matrix for event-likelihoods
-	   (likelihoods 
-	    (generate-category-predictions categories models test-sequence
-					:resolution resolution :texture texture))
-	   ;; Initialize the prior distribution
-	   (prior-distribution (initialise-prior-distribution category-counts resolution))
-	   ;; Convert to a Nparams x Nevents data structure where each column is 
-	   ;; a probability distribution over params
-	   (posteriors (generate-category-posteriors prior-distribution likelihoods 
-					      (length test-sequence)))
-	   (information-contents 	
-    (loop for p below (length test-sequence) collecting
-		 (- (log (event-likelihood p likelihoods posteriors)
-			 2)))))
-      (values prior-distribution likelihoods posteriors information-contents)))
+  (let* ((sources (viewpoints:get-viewpoints source-viewpoints))
+	 (targets (viewpoints:get-basic-viewpoints target-viewpoints training-set texture))
+	 ;; Obtain event counts per category
+	 (category-counts (count-categories training-set texture resolution :use-cache? nil))
+	 ;; Extract a list of metrical interpretations
+	 (categories (mapcar #'(lambda (category-count) 
+				 (md:meter-string->metrical-interpretation 
+				  (car category-count) resolution)) 
+			     category-counts))
+	 (models (make-category-models training-set (promises:get-identifier training-set)
+				       categories targets sources
+				       :voices voices :texture texture
+				       :resolution resolution :use-cache? use-cache?))
+	 ;; Generate a Nparams x Ntarget-viewpoints x Nevents matrix for event-likelihoods
+	 (likelihoods 
+	  (generate-category-predictions categories models test-sequence
+					 :resolution resolution :texture texture))
+	 ;; Initialize the prior distribution
+	 (prior-distribution (initialise-prior-distribution category-counts resolution))
+	 ;; Convert to a Nparams x Nevents data structure where each column is 
+	 ;; a probability distribution over params
+	 (posteriors (generate-category-posteriors prior-distribution likelihoods 
+						   (length test-sequence)))
+	 (information-contents 	
+	  (loop for p below (length test-sequence) collecting
+	       (- (log (event-likelihood p likelihoods posteriors)
+		       2)))))
+    (values prior-distribution likelihoods posteriors information-contents)))
 
 (defun event-likelihood (position likelihoods posteriors)
   "Return the predictive likelihood of an event at position <position>"
