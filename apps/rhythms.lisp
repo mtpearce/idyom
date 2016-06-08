@@ -33,11 +33,12 @@
 				     :resolution target-resolution
 				     :timebase timebase))))
 
-(defun ioi-list->melodic-events (ioi-list &key (phase 0) (timebase 96) (interpretation nil)
+(defun ioi-list->melodic-events (ioi-list &rest kwargs &key (phase 0) (timebase 96) (interpretation nil)
 					    &allow-other-keys)
   (let* ((onsets (cons phase (apply #'utils:cumsum ioi-list))))
     (loop for onset in onsets for duration in ioi-list collecting
-	 (make-melodic-event onset duration duration :timebase timebase :interpretation interpretation))))
+	 (apply #'make-melodic-event (append (list onset duration duration :timebase timebase :interpretation interpretation)
+					     kwargs)))))
 	
     
 (defun make-grid-event (is-onset position &key
@@ -63,6 +64,7 @@
 		 :onset (* onset (/ timebase source-resolution))
 		 :duration duration
 		 :cpitch nil
+		 :bioi bioi
 		 :barlength (when interpretation
 			      (md:barlength interpretation))
 		 :pulses (when interpretation
