@@ -2,7 +2,7 @@
 ;;;; File:       midi2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2007-03-21 09:47:26 marcusp>
-;;;; Time-stamp: <2016-04-21 09:37:53 marcusp>
+;;;; Time-stamp: <2016-06-20 12:06:16 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:midi2db) 
@@ -71,7 +71,7 @@
 (defun extract-midi-notes (midifile)
   (let* ((notes)
 	 (bends)
-         (tracknum 0)
+         (tracknum 1)
 	 ;; Initial list of note properties
 	 (props '(:pulses 4 :barlength 96 :tempo 120 :phrase 0)))
     ; Iterate over MIDI tracks
