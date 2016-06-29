@@ -2,7 +2,7 @@
 ;;;; File:       multiple-viewpoint-system.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-27 18:54:17 marcusp>                           
-;;;; Time-stamp: <2016-04-20 16:54:42 marcusp>                           
+;;;; Time-stamp: <2016-06-29 11:50:10 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -195,7 +195,7 @@ See also VIEWPOINTS:SET-ALPHABET-FROM-CONTEXT."
            (t unconstrained))))
     (unless (or (viewpoints:basic-p viewpoint) (undefined-p event)) 
       (viewpoints:set-alphabet-from-context viewpoint events unconstrained))
-    (viewpoints::set-onset-alphabet (butlast events))
+    ;;(viewpoints::set-onset-alphabet (butlast events))
     ;(format t "~&Viewpoint: ~A; Event: ~A; Alphabet length: ~A~%" 
     ;        (viewpoint-type viewpoint) event 
     ;        (length (viewpoint-alphabet viewpoint)))
@@ -361,6 +361,7 @@ multiple viewpoint system <m>."
          (viewpoints (mvs-viewpoints m))
          (stm-prediction-sets '())
          (ltm-prediction-sets '()))
+    (viewpoints:set-onset-alphabet (butlast events))
     (dotimes (i viewpoint-count)
       (let* ((event (aref event-array i))
              (viewpoint (aref viewpoints i))
