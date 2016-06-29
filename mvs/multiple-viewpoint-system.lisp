@@ -2,7 +2,7 @@
 ;;;; File:       multiple-viewpoint-system.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-27 18:54:17 marcusp>                           
-;;;; Time-stamp: <2016-06-29 11:50:10 marcusp>                           
+;;;; Time-stamp: <2016-06-29 11:55:09 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -324,6 +324,7 @@ appropriate sequence index before this method is called."
           (make-sequence 'vector viewpoint-count :initial-element (ppm:get-root)))
          (stm-locations
           (make-sequence 'vector viewpoint-count :initial-element (ppm:get-root))))
+    ;; (lparallel:pdotimes (event-index event-count)
     (dotimes (event-index event-count)
       (when *debug* (format t "~&Event ~A~%" event-index))
       (let* ((events (subseq sequence 0 (1+ event-index)))
