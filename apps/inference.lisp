@@ -253,28 +253,26 @@ the probabilities over time and divide by the list length."
 	(setf results (acons category result results))))
     results))
 
-(defun phase-metre->metre (distribution)
+(defun interpretations->categories (distribution)
   "Convert a distribution over metre and phase to a distribution
 over metre."
-  (flet ((remove-phase (param)
-	   (multiple-value-bind (values) 
-	       (read-from-string param)
-	     (format nil "(~A ~A)" (first values) (second values)))))
-    (let* ((params (prediction-sets:distribution-symbols distribution))
-	   (metres 
-	    (remove-duplicates (mapcar #'remove-phase params) 
-			       :test #'equal))
-	   (params-per-metre (loop for metre in metres collect 
-				  (cons metre (loop for param in params 
-						 when (equal (remove-phase param) metre)
-						 collect param)))))
-      (loop for metre-params in params-per-metre collect
-	   (let ((metre (car metre-params))
-		 (params (cdr metre-params)))
-	     (let ((probability (apply #'+ (loop for param in params collect 
-						(lookup-key param distribution)))))
-	       (cons metre (/ probability (length params)))))))))
-  
+  (let* ((interpretations (mapcar #'md:meter-string->metrical-interpretation
+				  (prediction-sets:distribution-symbols distribution)))
+	 (categories (remove-duplicates (mapcar #'md:category-string interpretations) 
+					:test #'equal))
+	 (interpretations-per-category
+	  (loop for category in categories collect 
+	       (cons category (loop for interpretation in interpretations 
+				 when (equal (remove-phase interpretation)
+					     category)
+				 collect interpretation)))))
+    (loop for category-interpretations in interpretations-per-category collect
+	 (let ((category (car category-interpretations))
+	       (interpretations (cdr category-interpretations)))
+	   (let ((probability (apply #'+ (loop for interpretation in interpretations collect 
+					      (lookup-key interpretation distribution)))))
+	     (cons category (/ probability (length interpretations))))))))
+
 (defun lookup-key (key alist)
   (cdr (assoc key alist :test #'string-equal)))
 
