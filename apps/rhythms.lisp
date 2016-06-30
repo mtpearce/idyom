@@ -59,7 +59,7 @@
 		 :id (md:make-event-id 0 0 0)
 		 :timebase timebase))
 
-(defun make-melodic-event (onset duration bioi &key (timebase 96) (source-resolution 8) (interpretation nil))
+(defun make-melodic-event (onset duration bioi &key (timebase 96) (source-resolution 8) (interpretation nil) &allow-other-keys)
   (make-instance 'md::music-event
 		 :onset (* onset (/ timebase source-resolution))
 		 :duration duration
