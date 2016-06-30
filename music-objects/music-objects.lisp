@@ -22,7 +22,7 @@
             keysig mode barlength pulses phrase tempo dyn voice bioi 
             ornament comma articulation))
 
-(defun music-symbol (x)
+n(defun music-symbol (x)
   (find-symbol (string-upcase (symbol-name x))
 	       (find-package :music-data)))
 
@@ -236,8 +236,8 @@
 (defmethod category-string ((ts time-signature))
   "Return a string representation containing the metrical category of a 
 time signature."
-  (format nil "(~A ~A)" 
-	  (barlength m) (pulses m)))
+  (format nil "(~A ~A ~A)" 
+	  (barlength ts) (pulses ts) (timebase ts)))
 
 (defgeneric create-interpretations (category resolution))
 (defmethod create-interpretations (category resolution)
@@ -256,6 +256,16 @@ time signature."
 		   :barlength (first values)
 		   :pulses (second values)
 		   :phase (third values)
+		   :resolution resolution
+		   :timebase (fourth values))))
+
+(defun category-string->metrical-interpretation (meter-string resolution)
+  (multiple-value-bind (values)
+      (read-from-string meter-string)
+    (make-instance 'md:metrical-interpretation
+		   :barlength (first values)
+		   :pulses (second values)
+		   :phase 0
 		   :resolution resolution
 		   :timebase (fourth values))))
 
