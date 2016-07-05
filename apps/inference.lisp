@@ -251,6 +251,13 @@ the probabilities over time and divide by the list length."
 	(setf results (acons category result results))))
     results))
 
+(defun get-posterior (distributions n)
+  "Obtain the posterior distribution at a specific point in time"
+  (let ((params (prediction-sets:distribution-symbols distributions)))
+    (mapcar (lambda (param) (cons param
+				  (elt (lookup-key param distributions) n)))
+	    params)))
+
 (defun interpretations->categories (distribution)
   "Convert a distribution over metre and phase to a distribution
 over metre by averaging over phases for each metre."
