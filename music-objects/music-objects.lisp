@@ -22,7 +22,7 @@
             keysig mode barlength pulses phrase tempo dyn voice bioi 
             ornament comma articulation))
 
-n(defun music-symbol (x)
+(defun music-symbol (x)
   (find-symbol (string-upcase (symbol-name x))
 	       (find-package :music-data)))
 
@@ -90,8 +90,7 @@ n(defun music-symbol (x)
    (pos :initarg :pos :accessor pos))) ; pos(ition) is the time of the event expressed in grid-units (which are determined by the resolution)
 
 (defclass metrical-interpretation (time-signature music-object)
-  ((meter-phase :initarg :phase :accessor meter-phase)
-   (resolution :initarg :resolution :accessor resolution)))
+  ((interpretation-phase :initarg :phase :accessor interpretation-phase)))
 
 ;;; Identifiers 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -201,34 +200,31 @@ n(defun music-symbol (x)
       (car (clsql:query (format nil "SELECT description FROM mtp_dataset WHERE (dataset_id = ~A);" dataset-id) :flatp t))
       (car (clsql:query (format nil "SELECT description FROM mtp_composition WHERE (dataset_id = ~A AND composition_id = ~A);" dataset-id composition-id) :flatp t))))
 
-(defgeneric make-metrical-interpretation (time-signature resolution &key phase))
-(defmethod make-metrical-interpretation ((ts time-signature) resolution 
+(defgeneric make-metrical-interpretation (time-signature &key timebase phase))
+(defmethod make-metrical-interpretation ((ts time-signature) 
 					 &key (timebase 96) (phase 0))
   (make-instance 'metrical-interpretation 
 		 :barlength (barlength ts)
 		 :pulses (pulses ts)
 		 :phase phase 
-		 :timebase (or (timebase ts) timebase)
-		 :resolution resolution))
+		 :timebase timebase))
 
 (defun time-signature->metrical-interpretation (numerator denominator 
 						&key 
 						  (phase 0)
-						  (resolution 16)
 						  (timebase 96))
   (make-instance 'metrical-interpretation 
 		 :barlength (* (/ numerator denominator) timebase)
 		 :pulses numerator
 		 :phase phase
-		 :timebase timebase
-		 :resolution resolution))
+		 :timebase timebase))
   
   
-(defgeneric meter-string (metrical-interpretation &key &allow-other-keys))
-(defmethod meter-string ((m metrical-interpretation) &key &allow-other-keys)
+(defgeneric metre-string (metrical-interpretation &key &allow-other-keys))
+(defmethod metre-string ((m metrical-interpretation) &key &allow-other-keys)
   (format nil "(~A ~A ~A ~A)" 
-	  (barlength m) (pulses m) (meter-phase m)  (timebase m)))
-(defmethod meter-string ((m time-signature) &key (phase 0))
+	  (barlength m) (pulses m) (interpretation-phase m)  (timebase m)))
+(defmethod metre-string ((m time-signature) &key (phase 0))
   (format nil "(~A ~A ~A ~A)" 
 	  (barlength m) (pulses m) phase  (timebase m)))
 
@@ -236,49 +232,46 @@ n(defun music-symbol (x)
 (defmethod category-string ((ts time-signature))
   "Return a string representation containing the metrical category of a 
 time signature."
-  (format nil "(~A ~A ~A)" 
-	  (barlength ts) (pulses ts) (timebase ts)))
+  (format nil "(~A ~A)" 
+	  (barlength ts) (pulses ts)))
 
 (defgeneric create-interpretations (category resolution))
-(defmethod create-interpretations (category resolution)
+(defmethod create-interpretations ((category time-signature) resolution)
   "Return a list of interpretations derived from a category."
-  (let ((period (md:meter-period category)))
+  (let ((period (md:barlength category))
+	(timebase (md:timebase category)))
     (flet ((make-interpretation (phase)
-	     (md:make-metrical-interpretation category resolution 
-					      :phase phase)))
+	     (md:make-metrical-interpretation category :phase phase)))
       ;; Create an interpretation for this category in each phase
-      (mapcar #'make-interpretation (utils:generate-integers 0 (1- period))))))
+      (mapcar #'make-interpretation
+	      (loop for phase in (utils:generate-integers
+				  0 (1- (rescale period resolution timebase)))
+		   collecting (rescale phase timebase resolution))))))
 
-(defun meter-string->metrical-interpretation (meter-string resolution)
+(defun metre-string->metrical-interpretation (metre-string)
   (multiple-value-bind (values)
-      (read-from-string meter-string)
+      (read-from-string metre-string)
     (make-instance 'md:metrical-interpretation
 		   :barlength (first values)
 		   :pulses (second values)
 		   :phase (third values)
-		   :resolution resolution
 		   :timebase (fourth values))))
 
-(defun category-string->metrical-interpretation (meter-string resolution)
+(defun category-string->metrical-interpretation (metre-string)
   (multiple-value-bind (values)
-      (read-from-string meter-string)
+      (read-from-string metre-string)
     (make-instance 'md:metrical-interpretation
 		   :barlength (first values)
 		   :pulses (second values)
 		   :phase 0
-		   :resolution resolution
-		   :timebase (fourth values))))
+		   :timebase (third values))))
 
-(defgeneric beat-division (meter))
+(defgeneric beat-division (metre))
 (defmethod beat-division ((m metrical-interpretation))
   (let* ((beat-duration (/ (barlength m)
 			  (pulses m)))
 	(beat-division (/ (timebase m) beat-duration)))
     beat-division))
-
-(defgeneric meter-period (meter))
-(defmethod meter-period ((m metrical-interpretation))
-  (rescale (barlength m) (resolution m) (timebase m)))
 
 ;;; Comparing music objects
 
@@ -343,19 +336,19 @@ time signature."
 ;; grid sequences
 
 ;; Needs to be monody as well?
-(defun get-grid-sequence (dataset-index composition-index &key voices resolution (hide-meter nil))
+(defun get-grid-sequence (dataset-index composition-index &key voices resolution (hide-metre nil))
   (composition->grid
     (get-composition (lookup-composition dataset-index composition-index))
-    :voices voices :resolution resolution :hide-meter hide-meter))
+    :voices voices :resolution resolution :hide-metre hide-metre))
 
-(defun get-grid-sequences (dataset-ids &key voices resolution (hide-meter nil))
+(defun get-grid-sequences (dataset-ids &key voices resolution (hide-metre nil))
   (let ((compositions '()))
     (dolist (dataset-id dataset-ids (nreverse compositions))
       (let ((d (get-dataset (lookup-dataset dataset-id))))
 	(sequence:dosequence (c d)
-	  (push (composition->grid c :voices voices :resolution resolution :hide-meter hide-meter) compositions))))))
+	  (push (composition->grid c :voices voices :resolution resolution :hide-metre hide-metre) compositions))))))
 
-(defun composition->grid (composition &key voices resolution (hide-meter nil))
+(defun composition->grid (composition &key voices resolution (hide-metre nil))
     "Extract a grid from a composition using the resolution specified by
 the resolution argument."
     (let* ((timebase (timebase composition))
@@ -386,13 +379,13 @@ the resolution argument."
 		     (loop for p from last-position below position collecting
 			  (let ((is-onset (eql p event-position)))
 			    (make-instance 'grid-event
-					   :pos p
+					   :pos (rescale p timebase resolution)
 					   :is-onset is-onset
 					   :cpitch (when is-onset (chromatic-pitch event))
 					   :onset (when is-onset (onset event))
 					   :duration (when is-onset (duration event))
-					   :barlength (unless hide-meter (barlength event))
-					   :pulses (unless hide-meter (pulses event))
+					   :barlength (unless hide-metre (barlength event))
+					   :pulses (unless hide-metre (pulses event))
 					   :id (copy-identifier (get-identifier event))
 					   :resolution resolution
 					   :timebase timebase)))))))
@@ -404,11 +397,11 @@ the resolution argument."
 (defun fractional? (n)
   (not (equalp (mod n 1) 0)))
 
-(defun rescale (time resolution timebase)
-  "Convert time from units on timebase scale to units on resolution scale. Show a warning when the resulting time is not a whole number."
-  (let* ((rescaled-time (* time (/ resolution timebase)))
+(defun rescale (time to from)
+  "Convert time from resolution <from> to resolution <to>. Show a warning when the resulting time is not a whole number."
+  (let* ((rescaled-time (* time (/ to from)))
 	 (fractional (fractional? rescaled-time)))
-    (when fractional (warn (format nil "WARNING: converting ~F (timebase ~D) to resolution ~D resulted in a fractional number (~F) ~%" time timebase resolution rescaled-time)))
+    (when fractional (warn (format nil "WARNING: converting ~F (from ~D) to ~D resulted in a fractional number (~F) ~%" time from to rescaled-time)))
     rescaled-time))
 
 ;; harmonic sequences

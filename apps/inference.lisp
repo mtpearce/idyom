@@ -37,7 +37,7 @@
 	 (category-counts (count-categories training-set texture resolution :use-cache? nil))
 	 ;; Extract a list of metrical interpretations
 	 (categories (mapcar #'(lambda (category-count) 
-				 (md:meter-string->metrical-interpretation 
+				 (md:metre-string->metrical-interpretation 
 				  (car category-count) resolution)) 
 			     category-counts))
 	 (models (make-category-models training-set (promises:get-identifier training-set)
@@ -132,7 +132,7 @@ each category, indexed by (a string representation of the) interpretation."
 				:predict? t :interpretation interpretation)))
     ;; Create a list of interpretations per category
     (let ((interpretations-per-category
-	   (mapcar #'(lambda (c) (md:create-interpretations c resolution)) categories)))
+	   (mapcar #'(lambda (c) (md:create-interpretations c)) categories)))
       ;; Aggregate results into a flat ALIST 
       (apply #'append
 	     ;; Cycle over the models and associated interpretations
@@ -142,7 +142,7 @@ each category, indexed by (a string representation of the) interpretation."
 		  (mapcar 
 		   #'(lambda (interpretation)
 		       (let ((prediction-sets (model-sequence model interpretation)))
-			 (cons (md:meter-string interpretation)
+			 (cons (md:metre-string interpretation)
 			       ;; FIXME: Only the predictions of the
 			       ;; *first* target viewpoint are taken
 			       ;; into account here!
@@ -183,26 +183,24 @@ contain metrical changes). Return an ALIST with counts indexed by category-strin
       (cond ((eq texture :grid)
 	     (sequence:dosequence (event composition)
 	       (if (not (or (null (md:barlength event)) (null (md:pulses event))))
-		 (let* ((category (md:make-metrical-interpretation event resolution))
-			(category-string (md:meter-string category))
-			(count (lookup-key category-string category-counts))
-			(increment (/ 1 (md:meter-period category)))) 
-		   (if count ; use count as a check whether the key already exists
-		       (rplacd (assoc category-string category-counts :test #'string-equal)
-			       (+ count increment))
-		       (setf category-counts
-			     (acons category-string increment category-counts))))
-		 (warn "Unannotated event encountered while counting categories"))))
+		   (let* ((category-string (md:category-string event))
+			  (count (lookup-key category-string category-counts))
+			  (increment (/ 1 (md:barlength event)))) 
+		     (if count ; use count as a check whether the key already exists
+			 (rplacd (assoc category-string category-counts :test #'string-equal)
+				 (+ count increment))
+			 (setf category-counts
+			       (acons category-string increment category-counts))))
+		   (warn "Unannotated event encountered while counting categories"))))
 	    ((member texture (list :melody :harmony))
 	     (let ((last-event (utils:last-element composition)))
 	       (if (not (or (null (md:barlength last-event)) (null (md:pulses last-event))))
 		   (let ((duration (+ (md:onset last-event) ; Calculate composition duration
 				      (md:duration last-event)))
-			 (category (md:make-metrical-interpretation last-event nil)))
-		     (let* ((category-string (md:meter-string category))
-			    (count (lookup-key category-string category-counts))
+			 (category-string (md:category-string last-event)))
+		     (let* ((count (lookup-key category-string category-counts))
 			    (increment (if per-composition? 
-					   1 (ceiling (/ duration (md:barlength category))))))
+					   1 (ceiling (/ duration (md:barlength last-event))))))
 		       (if count ; use count as a check whether the key already exists
 			   (rplacd (assoc category-string category-counts :test #'string-equal)
 				   (+ count increment))
@@ -217,19 +215,19 @@ phase equals one. Return the rescaled distribution."
   (when *verbose* (format t "Generating prior distribution~%"))
   (let ((counts (mapcar #'cdr category-counts))
 	(categories (mapcar #'(lambda (category-count) 
-				(md:meter-string->metrical-interpretation
+				(md:metre-string->metrical-interpretation
 				 (car category-count) resolution))
 			    category-counts)))
     (let ((observation-count (apply '+ counts)))
       (let ((category-prior (mapcar #'(lambda (count) (/ count observation-count)) counts))
 	    (interpretations-per-category
-	     (mapcar (lambda (c) (md:create-interpretations c resolution))
+	     (mapcar (lambda (c) (md:create-interpretations c))
 				     categories)))
 	(let ((interpretation-prior 
 	       (apply #'append
 		      (mapcar #'(lambda (interpretations p) 
 				  (mapcar #'(lambda (interpretation) 
-					      (cons (md:meter-string interpretation) (list p)))
+					      (cons (md:metre-string interpretation) (list p)))
 					  interpretations))
 		       interpretations-per-category category-prior))))
 	  ;; Flatten and re-normalise the distribution
@@ -255,15 +253,15 @@ the probabilities over time and divide by the list length."
 
 (defun interpretations->categories (distribution)
   "Convert a distribution over metre and phase to a distribution
-over metre."
-  (let* ((interpretations (mapcar #'md:meter-string->metrical-interpretation
+over metre by averaging over phases for each metre."
+  (let* ((interpretations (mapcar #'md:metre-string->metrical-interpretation
 				  (prediction-sets:distribution-symbols distribution)))
 	 (categories (remove-duplicates (mapcar #'md:category-string interpretations) 
 					:test #'equal))
 	 (interpretations-per-category
 	  (loop for category in categories collect 
 	       (cons category (loop for interpretation in interpretations 
-				 when (equal (remove-phase interpretation)
+				 when (equal (md:category-string interpretation)
 					     category)
 				 collect interpretation)))))
     (loop for category-interpretations in interpretations-per-category collect
@@ -286,7 +284,7 @@ over metre."
   (lookup-key category likelihoods))
 
 (defun category->time-signature (interpretation)
-  (let ((phase (md:meter-phase interpretation))
+  (let ((phase (md:interpretation-phase interpretation))
 	(pulses (md:pulses interpretation))
 	(beat-division (md:beat-division interpretation)))
     (values pulses beat-division phase)))

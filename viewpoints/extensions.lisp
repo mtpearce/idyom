@@ -174,8 +174,10 @@ in <events>."
 (defun pos-alphabet (previous-events)
     (if (null previous-events) '(0)
 	(let* ((last-event (car (reverse previous-events)))
-	       (pos (md:get-attribute last-event 'pos)))
-	  (list (1+ pos)))))
+	       (pos (md:get-attribute last-event 'pos))
+	       (resolution (md:resolution last-event))
+	       (timebase (md:timebase last-event)))
+	  (list (+ pos (/ timebase resolution))))))
 	
 
 (defmethod alphabet->events ((d derived) events texture)
