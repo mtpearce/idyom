@@ -16,7 +16,7 @@
   :author "Marcus Pearce"
   :licence "GPL (see COPYING file for details)"
   :description "Information Dynamics of Music (see README for details)"
-  :depends-on (clsql cl-ppcre midi closer-mop psgraph sb-md5)
+  :depends-on (clsql cl-ppcre midi closer-mop psgraph sb-md5 fiveam)
   :serial t
   :components
   (;; General utilities  
@@ -114,4 +114,10 @@
              (:file "main")
              (:file "inference")
 	     (:file "rhythms")
-             (:file "generation")))))
+             (:file "generation")))
+   (:module testing
+	    :serial t
+	    :components
+	    ((:file "inference")
+	     (:file "music-objects")
+	     (:file "util")))))
