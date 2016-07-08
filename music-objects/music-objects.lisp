@@ -219,34 +219,33 @@
 		 :phase phase
 		 :timebase timebase))
   
-  
-(defgeneric metre-string (metrical-interpretation &key &allow-other-keys))
-(defmethod metre-string ((m metrical-interpretation) &key &allow-other-keys)
-  (format nil "(~A ~A ~A ~A)" 
-	  (barlength m) (pulses m) (interpretation-phase m)  (timebase m)))
-(defmethod metre-string ((m time-signature) &key (phase 0))
-  (format nil "(~A ~A ~A ~A)" 
-	  (barlength m) (pulses m) phase  (timebase m)))
-
-(defgeneric category-string (time-signature))
-(defmethod category-string ((ts time-signature))
-  "Return a string representation containing the metrical category of a 
-time signature."
-  (format nil "(~A ~A)" 
-	  (barlength ts) (pulses ts)))
-
 (defgeneric create-interpretations (category resolution))
 (defmethod create-interpretations ((category time-signature) resolution)
   "Return a list of interpretations derived from a category."
   (let ((period (md:barlength category))
 	(timebase (md:timebase category)))
     (flet ((make-interpretation (phase)
-	     (md:make-metrical-interpretation category :phase phase)))
+	     (md:make-metrical-interpretation category :phase phase :timebase timebase)))
       ;; Create an interpretation for this category in each phase
       (mapcar #'make-interpretation
 	      (loop for phase in (utils:generate-integers
 				  0 (1- (rescale period resolution timebase)))
 		   collecting (rescale phase timebase resolution))))))
+
+(defgeneric metre-string (metrical-interpretation &key &allow-other-keys))
+(defmethod metre-string ((m metrical-interpretation) &key &allow-other-keys)
+  (format nil "(~A ~A ~A ~A)" 
+	  (barlength m) (pulses m) (timebase m)  (interpretation-phase m)))
+(defmethod metre-string ((m time-signature) &key (phase 0) (timebase 96))
+  (format nil "(~A ~A ~A ~A)" 
+	  (barlength m) (pulses m) timebase phase))
+
+(defgeneric category-string (time-signature timebase))
+(defmethod category-string ((ts time-signature) timebase)
+  "Return a string representation containing the metrical category of a 
+time signature."
+  (format nil "(~A ~A ~A)" 
+	  (barlength ts) (pulses ts) timebase))
 
 (defun metre-string->metrical-interpretation (metre-string)
   (multiple-value-bind (values)
@@ -254,8 +253,8 @@ time signature."
     (make-instance 'md:metrical-interpretation
 		   :barlength (first values)
 		   :pulses (second values)
-		   :phase (third values)
-		   :timebase (fourth values))))
+		   :timebase (third values)
+		   :phase (fourth values))))
 
 (defun category-string->metrical-interpretation (metre-string)
   (multiple-value-bind (values)
@@ -263,8 +262,8 @@ time signature."
     (make-instance 'md:metrical-interpretation
 		   :barlength (first values)
 		   :pulses (second values)
-		   :phase 0
-		   :timebase (third values))))
+		   :timebase (third values)
+		   :phase 0)))
 
 (defgeneric beat-division (metre))
 (defmethod beat-division ((m metrical-interpretation))
