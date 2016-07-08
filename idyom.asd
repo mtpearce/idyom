@@ -115,9 +115,11 @@
              (:file "inference")
 	     (:file "rhythms")
              (:file "generation")))
-   (:module testing
+   (:module tests
 	    :serial t
 	    :components
-	    ((:file "inference")
+	    ((:file "package")
+	     (:file "functions")
+	     (:file "inference")
 	     (:file "music-objects")
-	     (:file "util")))))
+	     (:file "viewpoints")))))
