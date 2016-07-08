@@ -231,7 +231,7 @@ phase equals one. Return the rescaled distribution."
 	       (apply #'append
 		      (mapcar #'(lambda (interpretations p) 
 				  (mapcar #'(lambda (interpretation) 
-					      (cons (md:metre-string interpretation) (list p)))
+					      (list (md:metre-string interpretation) p))
 					  interpretations))
 		       interpretations-per-category category-prior))))
 	  ;; Flatten and re-normalise the distribution
@@ -247,18 +247,15 @@ phase equals one. Return the rescaled distribution."
   "Take an alist where each key is a distribution parameter and the
 corresponding value is a list of probabilities at a specific time. Sum 
 the probabilities over time and divide by the list length."
-  (let ((categories (prediction-sets:distribution-symbols distributions))
-	(results))
-    (dolist (category categories)
-      (let* ((probabilities (lookup-key category distributions))
-	     (result (/ (apply #'+ probabilities) (length probabilities))))
-	(setf results (acons category result results))))
-    results))
+  (let ((categories (prediction-sets:distribution-symbols distributions)))
+    (loop for category in categories collecting
+      (let* ((probabilities (lookup-key category distributions)))
+	(list category (apply #'utils:average probabilities))))))
 
 (defun get-posterior (distributions n)
   "Obtain the posterior distribution at a specific point in time"
   (let ((params (prediction-sets:distribution-symbols distributions)))
-    (mapcar (lambda (param) (cons param
+    (mapcar (lambda (param) (list param
 				  (elt (lookup-key param distributions) n)))
 	    params)))
 
@@ -278,12 +275,15 @@ over metre by averaging over phases for each metre."
 								 (md:timebase interpretation))
 					     category)
 				 collect interpretation)))))
-    (loop for category-interpretations in interpretations-per-category collect
-	 (let ((category (car category-interpretations))
-	       (interpretations (cdr category-interpretations)))
-	   (let ((probability (apply #'+ (loop for interpretation in interpretations collect 
-					      (lookup-key interpretation distribution)))))
-	     (cons category (/ probability (length interpretations))))))))
+    (let ((category-distribution
+	   (loop for category-interpretations in interpretations-per-category collect
+		(let ((category (car category-interpretations))
+		      (interpretations (cdr category-interpretations)))
+		  (let ((probabilities (loop for interpretation in interpretations collect 
+					    (car (lookup-key (md:metre-string interpretation)
+							     distribution)))))
+		    (list category (apply #'utils:average probabilities)))))))
+      (prediction-sets:normalise-distribution category-distribution))))
 
 (defun lookup-key (key alist)
   (cdr (assoc key alist :test #'string-equal)))
