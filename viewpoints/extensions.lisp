@@ -11,7 +11,7 @@
   (ensure-directories-exist
    (merge-pathnames "data/alphabets/" (utils:ensure-directory utils:*root-dir*))))
 
-(defparameter grid-basic-viewpoints '(:is-onset :pos :onset :resolution))
+(defparameter grid-basic-viewpoints '(:is-onset :pos :onset))
 (defparameter melody-basic-viewpoints '(:ARTICULATION :COMMA :VOICE :ORNAMENT :DYN :PHRASE
  :BIOI :DELTAST :ACCIDENTAL :MPITCH :CPITCH :BARLENGTH :PULSES :TEMPO :MODE
  :KEYSIG :DUR :ONSET))
@@ -50,7 +50,13 @@
     (dolist (composition dataset)
       (let ((viewpoint-sequence (viewpoint-sequence v composition)))
 	(dolist (viewpoint-element viewpoint-sequence)
-	  (unless (or (undefined-p viewpoint-element)
+;	  (when (and (viewpoint-equal v (get-viewpoint 'bioi))
+;		     (< viewpoint-element 0))
+;	    (format t "Negative BIOI in ~%BIOI ~A~%ONSET ~A~%ID: ~A~%"
+;		    (md:description composition)))
+	  (unless (or (and (viewpoint-equal v (get-viewpoint 'bioi))
+			   (< viewpoint-element 0))
+		      (undefined-p viewpoint-element)
 		      (member viewpoint-element alphabet :test #'equal))
 	    (push viewpoint-element alphabet)))))
     (let ((sorted-alphabet
@@ -172,12 +178,13 @@ in <events>."
      
 
 (defun pos-alphabet (previous-events)
-    (if (null previous-events) '(0)
-	(let* ((last-event (car (reverse previous-events)))
-	       (pos (md:get-attribute last-event 'pos))
-	       (resolution (md:resolution last-event))
-	       (timebase (md:timebase last-event)))
-	  (list (+ pos (/ timebase resolution))))))
+  (if (null previous-events)
+      '(0)
+      (let* ((last-event (car (reverse previous-events)))
+	     (pos (md:get-attribute last-event 'pos))
+	     (resolution (md:resolution last-event))
+	     (timebase (md:timebase last-event)))
+	(list (+ pos (/ timebase resolution))))))
 	
 
 (defmethod alphabet->events ((d derived) events texture)
