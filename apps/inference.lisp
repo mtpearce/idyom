@@ -37,8 +37,8 @@
 	 (category-counts (count-categories training-set texture resolution :use-cache? nil))
 	 ;; Extract a list of metrical interpretations
 	 (categories (mapcar #'(lambda (category-count) 
-				 (md:metre-string->metrical-interpretation 
-				  (car category-count) resolution)) 
+				 (md:category-string->metrical-interpretation 
+				  (car category-count)))
 			     category-counts))
 	 (models (make-category-models training-set (promises:get-identifier training-set)
 				       categories targets sources
@@ -132,7 +132,7 @@ each category, indexed by (a string representation of the) interpretation."
 				:predict? t :interpretation interpretation)))
     ;; Create a list of interpretations per category
     (let ((interpretations-per-category
-	   (mapcar #'(lambda (c) (md:create-interpretations c)) categories)))
+	   (mapcar #'(lambda (c) (md:create-interpretations c resolution)) categories)))
       ;; Aggregate results into a flat ALIST 
       (apply #'append
 	     ;; Cycle over the models and associated interpretations
@@ -183,7 +183,7 @@ contain metrical changes). Return an ALIST with counts indexed by category-strin
       (cond ((eq texture :grid)
 	     (sequence:dosequence (event composition)
 	       (if (not (or (null (md:barlength event)) (null (md:pulses event))))
-		   (let* ((category-string (md:category-string event))
+		   (let* ((category-string (md:category-string event (md:timebase event)))
 			  (count (lookup-key category-string category-counts))
 			  (increment (/ 1 (md:barlength event)))) 
 		     (if count ; use count as a check whether the key already exists
@@ -197,7 +197,8 @@ contain metrical changes). Return an ALIST with counts indexed by category-strin
 	       (if (not (or (null (md:barlength last-event)) (null (md:pulses last-event))))
 		   (let ((duration (+ (md:onset last-event) ; Calculate composition duration
 				      (md:duration last-event)))
-			 (category-string (md:category-string last-event)))
+			 (category-string (md:category-string last-event
+							      (md:timebase last-event))))
 		     (let* ((count (lookup-key category-string category-counts))
 			    (increment (if per-composition? 
 					   1 (ceiling (/ duration (md:barlength last-event))))))
@@ -216,12 +217,12 @@ phase equals one. Return the rescaled distribution."
   (let ((counts (mapcar #'cdr category-counts))
 	(categories (mapcar #'(lambda (category-count) 
 				(md:metre-string->metrical-interpretation
-				 (car category-count) resolution))
+				 (car category-count)))
 			    category-counts)))
     (let ((observation-count (apply '+ counts)))
       (let ((category-prior (mapcar #'(lambda (count) (/ count observation-count)) counts))
 	    (interpretations-per-category
-	     (mapcar (lambda (c) (md:create-interpretations c))
+	     (mapcar (lambda (c) (md:create-interpretations c resolution))
 				     categories)))
 	(let ((interpretation-prior 
 	       (apply #'append
@@ -263,12 +264,15 @@ the probabilities over time and divide by the list length."
 over metre by averaging over phases for each metre."
   (let* ((interpretations (mapcar #'md:metre-string->metrical-interpretation
 				  (prediction-sets:distribution-symbols distribution)))
-	 (categories (remove-duplicates (mapcar #'md:category-string interpretations) 
+	 (categories (remove-duplicates (mapcar #'md:category-string
+						interpretations
+						(mapcar #'md:timebase interpretations)) 
 					:test #'equal))
 	 (interpretations-per-category
 	  (loop for category in categories collect 
 	       (cons category (loop for interpretation in interpretations 
-				 when (equal (md:category-string interpretation)
+				 when (equal (md:category-string interpretation
+								 (md:timebase interpretation))
 					     category)
 				 collect interpretation)))))
     (loop for category-interpretations in interpretations-per-category collect
