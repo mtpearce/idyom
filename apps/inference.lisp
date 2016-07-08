@@ -122,7 +122,7 @@
     (mvs:make-mvs targets sources ltms)))
 
 (defun generate-category-predictions (categories models test-sequence
-				   &key (resolution 16) texture)
+				   &key (resolution 16) texture (keep-prediction-sets nil))
   "Return an ALIST containing event likelihoods under each possible interpretation of
 each category, indexed by (a string representation of the) interpretation."
   (when *verbose* 
@@ -147,7 +147,9 @@ each category, indexed by (a string representation of the) interpretation."
 			       ;; *first* target viewpoint are taken
 			       ;; into account here!
 			       ;; They should be combined.
-			       (first (prediction-sets->likelihoods prediction-sets)))))
+			       (first (if keep-prediction-sets
+					  prediction-sets
+					  (prediction-sets->likelihoods prediction-sets))))))
 		   interpretations))
 	      models interpretations-per-category)))))
 
