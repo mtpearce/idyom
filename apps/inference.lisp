@@ -128,8 +128,8 @@ each category, indexed by (a string representation of the) interpretation."
   (when *verbose* 
     (format t "Generating predictions for the test sequence in all interpretations~%"))
   (flet ((model-sequence (model interpretation)
-	   (mvs:model-sequence model (coerce test-sequence 'list) texture :construct? nil 
-				:predict? t :interpretation interpretation)))
+	   (mvs:model-sequence model (coerce test-sequence 'list) texture :construct? t 
+			       :predict? t :interpretation interpretation)))
     ;; Create a list of interpretations per category
     (let ((interpretations-per-category
 	   (mapcar #'(lambda (c) (md:create-interpretations c resolution)) categories)))
