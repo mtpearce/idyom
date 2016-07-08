@@ -1,9 +1,9 @@
 (cl:in-package #:python)
 
-(defun alist->dict (alist &key (file nil) (dict-name "d") 
+(defun alist->dict (alist &key (file nil) 
 			      (key-format-fn #'cl-primitive->python)
 			      (value-format-fn #'cl-primitive->python))
-  (let ((dict (format nil "~A = {~A}" dict-name
+  (let ((dict (format nil "{~A}"
 			(alist->dict-items alist key-format-fn value-format-fn))))
     (when file (with-open-file (stream file :direction :output :if-exists :supersede)
 		 (format stream dict)))
