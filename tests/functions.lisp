@@ -11,11 +11,10 @@
 (defun alist-eql (a b &key (test #'eql) (alist-test #'eql))
   (let ((items-a (mapcar #'car a))
 	(items-b (mapcar #'car b)))
-    (let ((items (union items-a items-b :test #'string-equal)))
+    (let ((items (union items-a items-b :test alist-test)))
       (every #'identity (mapcar (lambda (item)
 		     (let ((value-a (cdr (assoc item a :test alist-test)))
 			   (value-b (cdr (assoc item b :test alist-test))))
-		       (print (format nil "~A ~A ~A~%" item value-a value-b))
 		       (apply test (list value-a value-b))))
 				items)))))
 
