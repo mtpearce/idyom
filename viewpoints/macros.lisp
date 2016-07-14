@@ -42,18 +42,12 @@
        (defmethod ,name ((,events ,class) (,interpretation ,interpretation-class)) ; Implementation that takes events of provided class
 	 (declare (ignorable events))
 	 (let ((event (last-element ,events)))
-	   (if (and (md:has-time-signature? event)
-		    (not (md:same-time-signature? event ,interpretation))) ; If the event has a time signature and it doesn't match the provided time signature
-	       +undefined+ ; the metrical viewpoint is undefined
 	       (let ((events (coerce ,events 'list)))
-		 ,function))))
+		 ,function)))
        (defmethod ,name ((,events list) (,interpretation ,interpretation-class))
 	 (declare (ignorable events))
 	 (let ((event (last-element events)))
-	   (if (and (md:has-time-signature? event)
-		    (not (md:same-time-signature? event ,interpretation)))
-	       +undefined+
-	       ,function)))
+	       ,function))
        ,(when f*
 	   `(defgeneric ,(intern (concatenate 'string (symbol-name name) "*")) ; Create a symbol with the name of the viewpoint and a *?
 		(,element ,events ,interpretation))

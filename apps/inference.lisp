@@ -112,14 +112,39 @@
 (defun make-category-mvs (training-set dataset-id category
 			  targets sources resampling-fold resampling-count
 			  &key voices texture resolution use-cache?)
-  (let ((ltms (resampling:get-long-term-models sources training-set
-					       nil dataset-id
-					       resampling-fold resampling-count
-					       :voices voices :texture texture
-					       :interpretation category
-					       :resolution resolution
-					       :use-cache? use-cache?)))
-    (mvs:make-mvs targets sources ltms)))
+  (let ((training-set (get-category-training-set training-set category)))
+    (let ((ltms (resampling:get-long-term-models sources training-set
+						 nil dataset-id
+						 resampling-fold resampling-count
+						 :voices voices :texture texture
+						 :interpretation category
+						 :resolution resolution
+						 :use-cache? use-cache?)))
+      (mvs:make-mvs targets sources ltms))))
+
+(defgeneric get-category-training-set (training-set category))
+
+(defmethod get-category-training-set ((training-set promises:promise)
+				      (category md::time-signature))
+  (get-category-training-set (promises:retrieve training-set) category))
+  
+(defmethod get-category-training-set ((training-set list)
+				      (category md:metrical-interpretation))
+  "Loop over all events in the training set. Collect all subsequences of 
+consequent events that have the same category as <category>."
+  (let ((category-training-set)
+	(subsequence))
+    (dolist (composition training-set)
+      (dolist (event (coerce composition 'list))
+	(if (md:same-time-signature? event category)
+	    (push event subsequence)
+	    (when (not (eql subsequence nil))
+	      (push (reverse subsequence) category-training-set)
+	      (setf subsequence nil))))
+      (unless (eql subsequence nil)
+	(push (reverse subsequence) category-training-set)
+	(setf subsequence nil)))
+    category-training-set))
 
 (defun generate-category-predictions (categories models test-sequence
 				   &key (resolution 16) texture (keep-prediction-sets nil))

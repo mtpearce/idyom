@@ -1,5 +1,23 @@
 (cl:in-package #:tests)
 
+(defmacro with-mock-dataset (&rest body)
+  `(let ((dataset (list (create-composition (loop repeat 16 collect 1)
+					    (loop repeat 16 collect 0)
+					    :timebase 4 :barlength 2 :pulses 2)
+			(create-composition (loop repeat 10 collect 1)
+					    (loop repeat 10 collect 0)
+					    :timebase 4 :barlength 4 :pulses 2)
+			(create-composition (loop repeat 18 collect 1)
+					    (loop repeat 18 collect 0)
+					    :timebase 4 :barlength 3 :pulses 3)
+			(create-composition (loop repeat 15 collect 1)
+					    (loop repeat 15 collect 0)
+					    :timebase 4 :barlength nil :pulses nil)
+			(create-composition (loop repeat 12 collect 1)
+					    (loop repeat 12 collect 0)
+					    :timebase 4 :barlength 2 :pulses 2))))
+     ,@body))
+
 (def-suite inference)
 (in-suite inference)
 
@@ -62,35 +80,40 @@ over categories."
 		       :alist-test #'string-equal))))
 
 (test (count-categories :depends-on composition->grid)
-  (let* ((dataset (list (create-composition (loop repeat 16 collect 1)
-					     (loop repeat 16 collect 0)
-					     :timebase 4 :barlength 2 :pulses 2)
-			 (create-composition (loop repeat 10 collect 1)
-					     (loop repeat 10 collect 0)
-					     :timebase 4 :barlength 4 :pulses 2)
-			 (create-composition (loop repeat 18 collect 1)
-					     (loop repeat 18 collect 0)
-					     :timebase 4 :barlength 3 :pulses 3)
-			 (create-composition (loop repeat 15 collect 1)
-					     (loop repeat 15 collect 0)
-					     :timebase 4 :barlength nil :pulses nil)
-			 (create-composition (loop repeat 12 collect 1)
-					     (loop repeat 12 collect 0)
-					     :timebase 4 :barlength 2 :pulses 2)))
-	 (grid-sequences (mapcar (lambda (composition)
-				   (md::composition->grid composition :resolution 4))
-				 dataset))
-	 (monodies (mapcar #'md::composition->monody dataset))
-	 (grid-metre-counts (inference::count-categories grid-sequences :grid 4))
-	 (monodies-metre-counts (inference::count-categories monodies :melody nil))
-	 (desired-counts '(("(2 2 4)" . 14)
-			   ("(4 2 4)" . 2.5)
-			   ("(3 3 4)" . 6))))
-    (is (alist-eql grid-metre-counts desired-counts
-		   :test #'equalp :alist-test #'string-equal))
-    (is (alist-eql monodies-metre-counts desired-counts
-		   :test #'equalp :alist-test #'string-equal))))
+  (with-mock-dataset 
+      (let* ((grid-sequences (mapcar (lambda (composition)
+				       (md::composition->grid composition :resolution 4))
+				     dataset))
+	     (monodies (mapcar #'md::composition->monody dataset))
+	     (grid-metre-counts (inference::count-categories grid-sequences :grid 4))
+	     (monodies-metre-counts (inference::count-categories monodies :melody nil))
+	     (desired-counts '(("(2 2 4)" . 14)
+			       ("(4 2 4)" . 2.5)
+			       ("(3 3 4)" . 6))))
+	(is (alist-eql grid-metre-counts desired-counts
+		       :test #'equalp :alist-test #'string-equal))
+	(is (alist-eql monodies-metre-counts desired-counts
+		       :test #'equalp :alist-test #'string-equal)))))
 
+(test get-category-training-set
+  (with-mock-dataset
+      (flet ((ts (barlength pulses)
+	       (make-instance 'md:metrical-interpretation
+			      :timebase 4
+			      :barlength barlength
+			      :pulses pulses
+			      :phase 0)))
+	(let ((data-2-2 (inference::get-category-training-set dataset (ts 2 2)))
+	      (data-4-2 (inference::get-category-training-set dataset (ts 4 2)))
+	      (data-3-3 (inference::get-category-training-set dataset (ts 3 3)))
+	      (data-4-4 (inference::get-category-training-set dataset (ts 4 4))))
+	  (format t "~{~A~}" (mapcar (lambda (seq) (format nil "~{~A ~}~%" (mapcar #'md:onset seq))) data-2-2))
+	  (format t "~{~A~}" (mapcar (lambda (seq) (format nil "~{~A ~}~%" (mapcar #'md:onset seq))) data-4-2))
+	  (format t "~{~A~}" (mapcar (lambda (seq) (format nil "~{~A ~}~%" (mapcar #'md:onset seq))) data-3-3))
+	  (is (eql (length data-2-2) 2))
+	  (is (eql (length data-4-2) 1))
+	  (is (eql (length data-3-3) 1))
+	  (is (eql (length data-4-4) 0))))))
 
 (test initialise-prior-distribution
   (let* ((counts '(("(48 2 96)" . 5)
@@ -130,7 +153,6 @@ over categories."
 				 (list "(72 6 96 60)" (/ 0.3 normalisation-8)))
 			   :test (make-approx-eql-test 0.000001)
 			   :alist-test #'string-equal))))
-       
 							   
 ;;; Tests that really need to be written:
 ;;; count-categories, generate-category-posteriors, initialise-prior-distribution, generate-category-predictions
