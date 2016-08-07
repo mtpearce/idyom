@@ -29,3 +29,16 @@
               (if (null event) +undefined+
 		  (calculate-metrical-accent onset interpretation))))
 
+(define-metrical-viewpoint (bardist metrical (onset))
+    ((events md:melodic-sequence)
+     (interpretation md:metrical-interpretation) element)
+  :function (multiple-value-bind (e1 e2)
+                (values-list (last events 2))
+              (if (or (null e1) (null e2)) +undefined+
+		  (let ((barlength (md:barlength interpretation))
+			(phase (md:interpretation-phase interpretation)))
+		    ;; Is e1 in the same bar as e2?
+		    (let ((barnum-e1 (floor (/ (- (onset (list e1)) phase) barlength)))
+			  (barnum-e2 (floor (/ (- (onset (list e2)) phase) barlength))))
+		      (- barnum-e2 barnum-e1))))))
+
