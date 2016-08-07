@@ -505,7 +505,9 @@ multiple viewpoint system <m>."
                 (dolist (v derived-viewpoints)
                   (unless (find v basic-distributions :key #'prediction-viewpoint :test #'viewpoint-equal)
                     (push (make-custom-event-prediction basic-viewpoint v events :empty) basic-distributions)))
-                (push (combine-viewpoint-distributions basic-distributions model)
+                (push (if (> (length basic-distributions) 1)
+			  (combine-viewpoint-distributions basic-distributions model)
+			  (first basic-distributions))
                       distributions)))))
       ;; (format t "~&Combined viewpoint distributions = ~A~%" (mapcar #'prediction-sets:prediction-set (reverse distributions)))
       (reverse distributions))))
@@ -545,8 +547,10 @@ given a sequence of events <sequence>."
                  (basic-elements 
                   (viewpoints:basic-element derived-viewpoint basic-viewpoint 
                                             e events :interpretation interpretation))
-                 (p (unless (or (null basic-elements) (undefined-p e)) 
-                      (/ p (length basic-elements)))))
+                 (p (unless (or (null basic-elements) (undefined-p e))
+		      (if (viewpoints::metrical-p derived-viewpoint)
+			  p
+			  (/ p (length basic-elements))))))
             ;;(when *debug*
             ;;  (format t "~&e = ~A; old-p = ~A; l = ~A; p = ~A~%" 
             ;;          e (nth 1 ep) (length basic-elements) p))
@@ -562,16 +566,18 @@ given a sequence of events <sequence>."
                    (basic-elements (nth 1 map))
                    (probability (nth 1 (assoc derived-element derived-distribution
                                               :test #'equal)))
-                   (basic-probability (/ probability (length basic-elements))))
+                   (basic-probability (if (viewpoints::metrical-p derived-viewpoint)
+					  probability
+					  (/ probability (length basic-elements)))))
               (dolist (be basic-elements)
                 (if (gethash be basic-distribution)
                     (incf (gethash be basic-distribution) basic-probability)
                     (setf (gethash be basic-distribution) basic-probability)))))))
     (let ((viewpoint-element (viewpoint-element basic-viewpoint events :interpretation interpretation))
           (distribution 
-           (normalise-distribution 
+           ;(normalise-distribution 
             (remove nil (mapcar #'(lambda (a) (list a (gethash a basic-distribution)))
-                                basic-alphabet) :key #'cadr))))
+                                basic-alphabet) :key #'cadr)));)
       (when *debug* 
         (format t "~&~A (~A) = ~&~A~%" (viewpoint-name basic-viewpoint)
                 viewpoint-element distribution))
