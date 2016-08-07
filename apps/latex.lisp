@@ -1,14 +1,14 @@
 (cl:in-package #:latex)
 
-(defgeneric latex-solution-array (events viewpoint-attributes texture &key enumerate interpretations))
+(defgeneric solution-array (events viewpoint-attributes texture &key enumerate interpretations))
 
-(defmethod latex-solution-array ((events md:music-sequence) viewpoint-attributes texture
+(defmethod solution-array ((events md:music-sequence) viewpoint-attributes texture
 				 &key (interpretations nil) (enumerate nil))
-  (latex-solution-array (coerce 'list events) viewpoint-attributes texture
+  (solution-array (coerce events 'list) viewpoint-attributes texture
 			:interpretations interpretations
 			:enumerate enumerate))
 
-(defmethod latex-solution-array ((events list) viewpoint-attributes texture
+(defmethod solution-array ((events list) viewpoint-attributes texture
 				 &key enumerate interpretations)
   (let* ((viewpoints (viewpoints:get-viewpoints viewpoint-attributes)))
     (format nil "\\begin{tabular}{~{~D~}}~%~A~A~A\\end{tabular}" 
@@ -64,27 +64,3 @@
   (format nil "~{~A~}" (mapcar #'(lambda (vp)
 				   (viewpoint-row events vp :interpretations interpretations))
 			       viewpoints)))
-
-(defun predictions-row (events viewpoint &key interpretation)
-    (let* ((sources (viewpoints:get-viewpoints sources))
-	 (targets (viewpoints:get-basic-viewpoints targets training-set texture))
-	 ;; Obtain event counts per category
-	 (category-counts (inference::count-categories training-set texture resolution :use-cache? nil))
-	 ;; Extract a list of metrical interpretations
-	 (categories (mapcar #'(lambda (category-count) 
-				 (md:category-string->metrical-interpretation 
-				  (car category-count)))
-			     category-counts))
-	 (models (inference::make-category-models training-set dataset-id
-						  categories targets sources
-						  :use-cache? t
-						  :texture texture
-						  :resolution resolution)))
-    (inference::generate-category-predictions categories models event-sequence
-					      :resolution resolution :texture texture
-					      :keep-prediction-sets t)))
-
-  
-			
-
-
