@@ -66,13 +66,8 @@
 
 (defmethod set-alphabet-from-dataset ((v viewpoint) (dataset promises:promise))
   "Initialises the alphabet of viewpoint <v> in <dataset>."
-  (let ((filename (format nil "~A~A-~A" *alphabet-dir* (symbol-name (type-of v)) (promises:get-identifier dataset))))
-    (unless (utils:file-exists filename)
-      (let ((dataset (promises:retrieve dataset)))
-	(utils:write-object-to-file (set-alphabet-from-dataset v dataset)
-				    filename)
-	(format t "Written alphabet for ~A to file ~A.~%"
-		(symbol-name (type-of v)) filename)))))
+  (let ((dataset (promises:retrieve dataset)))
+    (set-alphabet-from-dataset v dataset)))
   
 (defmethod set-alphabet-from-context ((v viewpoint) events unconstrained 
 				      &key 
