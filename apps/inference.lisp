@@ -29,8 +29,9 @@
 
 (defmethod infer-category ((training-set promises:promise) 
 			target-viewpoints source-viewpoints test-sequence
-			&key (voices nil) (texture :melody) 
-			  (resolution 16) (use-cache? t) &allow-other-keys)
+			   &key (voices nil) (texture :melody)
+			     resampling-fold resampling-count
+			     (resolution 16) (use-cache? t) &allow-other-keys)
   (let* ((sources (viewpoints:get-viewpoints source-viewpoints))
 	 (targets (viewpoints:get-basic-viewpoints target-viewpoints training-set texture))
 	 ;; Obtain event counts per category
@@ -42,6 +43,7 @@
 			     category-counts))
 	 (models (make-category-models training-set (promises:get-identifier training-set)
 				       categories targets sources
+				       resampling-fold resampling-count
 				       :voices voices :texture texture
 				       :resolution resolution :use-cache? use-cache?))
 	 ;; Generate a Nparams x Ntarget-viewpoints x Nevents matrix for event-likelihoods
