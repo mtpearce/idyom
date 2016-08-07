@@ -50,10 +50,6 @@
     (dolist (composition dataset)
       (let ((viewpoint-sequence (viewpoint-sequence v composition)))
 	(dolist (viewpoint-element viewpoint-sequence)
-;	  (when (and (viewpoint-equal v (get-viewpoint 'bioi))
-;		     (< viewpoint-element 0))
-;	    (format t "Negative BIOI in ~%BIOI ~A~%ONSET ~A~%ID: ~A~%"
-;		    (md:description composition)))
 	  (unless (or (and (viewpoint-equal v (get-viewpoint 'bioi))
 			   (< viewpoint-element 0))
 		      (undefined-p viewpoint-element)
