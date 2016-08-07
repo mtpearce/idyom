@@ -70,7 +70,11 @@
 			     (nth position (lookup-key i posteriors))))
 		      interpretations))))
 
-(defun generate-category-posteriors (prior-distribution likelihoods n) 
+(defun generate-category-posteriors (prior-distribution likelihoods n)
+  "Perform iterative Bayesian inference using the prior distribution and list
+of event likelihoods per interpretation. 
+Return an ALIST of posterior probabilities per interpretation per point in time. 
+The posterior probabilities at time zero correspond to the prior distribution."
   (when *verbose* (format t "Performing Bayesian inference using predictions and the prior~%"))
   (let* ((interpretations (prediction-sets:distribution-symbols prior-distribution))
 	 ;; Initialise results with the prior
@@ -109,7 +113,7 @@
 						  :voices voices :texture texture
 						  :resolution resolution
 						  :use-cache? use-cache?))
-		    categories))
+	  categories))
 
 (defun make-category-mvs (training-set dataset-id category
 			  targets sources resampling-fold resampling-count
@@ -156,7 +160,7 @@ each category, indexed by (a string representation of the) interpretation."
     (format t "Generating predictions for the test sequence in all interpretations~%"))
   (flet ((model-sequence (model interpretation)
 	   (mvs:model-sequence model (coerce test-sequence 'list) texture :construct? t 
-			       :predict? t :interpretation interpretation)))
+			       :predict? t :interpretation interpretation)))		
     ;; Create a list of interpretations per category
     (let ((interpretations-per-category
 	   (mapcar #'(lambda (c) (md:create-interpretations c resolution)) categories)))
@@ -179,6 +183,18 @@ each category, indexed by (a string representation of the) interpretation."
 					  (prediction-sets->likelihoods prediction-sets))))))
 		   interpretations))
 	      models interpretations-per-category)))))
+;; More readable implementation (write tests first before refactoring things that work)
+;;     (let ((predictions))
+;;      (loop for category in categories for model in models collecting
+;;	   (let ((interpretations (md:create-interpretations category resolution)))
+;;	     (loop for interpretation in interpretations collecting
+;;		  (let ((prediction-sets (model-sequence model interpretation)))
+;;		    (push (cons (md:metre-string interpretation)
+;;				(first (if keep-prediction-sets
+;;					   prediction-sets
+;;					   (prediction-sets->likelihoods prediction-sets))))
+;;			  predictions))))))))
+
 
 (defun prediction-sets->likelihoods (prediction-sets)
   (mapcar #'(lambda (prediction-set)
