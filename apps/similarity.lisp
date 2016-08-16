@@ -2,7 +2,7 @@
 ;;;; File:       similarity.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2011-08-18 10:28:11 marcusp>
-;;;; Time-stamp: <2016-05-25 12:14:03 marcusp>
+;;;; Time-stamp: <2016-08-16 14:59:32 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -16,7 +16,7 @@
 
 ;; top-level function
 
-(defun dataset-similarity (dataset-ids target-viewpoints source-viewpoints 
+(defun dataset-similarity (dataset-ids-1 dataset-ids-2 target-viewpoints source-viewpoints 
                            &key output-path
                              (overwrite t)
                              (ltmo mvs::*ltm-params*) (stmo mvs::*stm-params*)
@@ -28,7 +28,8 @@
   (let* (;; output
          (ltmo (apply #'resampling::check-model-defaults (cons mvs::*ltm-params* ltmo)))
          (stmo (apply #'resampling::check-model-defaults (cons mvs::*stm-params* stmo)))
-         (filename (apps:dataset-modelling-filename dataset-ids target-viewpoints source-viewpoints
+         (filename (apps:dataset-modelling-filename (append dataset-ids-1 dataset-ids-2)
+                                                    target-viewpoints source-viewpoints
                                                     :extension
                                                     (format nil "-similarity-~A-~A-~A.dat"
                                                             (cond ((eq aggregation-function #'utils:average)
@@ -55,16 +56,18 @@
                (mvs::*ltm-mixtures* (getf ltmo :mixtures))
                (mvs::*stm-mixtures* (getf stmo :mixtures))
                ;; data
-               (dataset (music-data:get-event-sequences dataset-ids))
-               (dataset (mapcar #'(lambda (x) (coerce x 'list)) dataset))
+               (dataset1 (music-data:get-event-sequences dataset-ids-1))
+               (dataset1 (mapcar #'(lambda (x) (coerce x 'list)) dataset1))
+               (dataset2 (music-data:get-event-sequences dataset-ids-2))
+               (dataset2 (mapcar #'(lambda (x) (coerce x 'list)) dataset2))
                ;; output 
                (stream (if (null filepath) t (open filepath :direction :output :if-does-not-exist :create :if-exists :supersede)))
                ;; modelling
                (c1-cids) (c1-descriptions) (c2-cids) (c2-descriptions) (similarities))
-          (viewpoints:initialise-basic-viewpoints dataset)
+          (viewpoints:initialise-basic-viewpoints (append dataset1 dataset2))
           (format stream "~&c1.did c1.cid c1.description c2.did c2.cid c2.description similarity~%")
-          (dolist (c1 dataset)
-            (dolist (c2 dataset)
+          (dolist (c1 dataset1)
+            (dolist (c2 dataset2)
               (let* ((similarity (compression-distance c1 c2 target-viewpoints source-viewpoints 
                                                        :set-alphabets nil :normalised normalised :symmetric symmetric
                                                        :aggregation-function #'utils:average))
