@@ -2,7 +2,7 @@
 ;;;; File:       midi2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2007-03-21 09:47:26 marcusp>
-;;;; Time-stamp: <2016-06-20 12:06:16 marcusp>
+;;;; Time-stamp: <2016-08-18 16:55:37 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:midi2db) 
@@ -163,8 +163,9 @@
                                ((zerop midi-bioi) 1)
                                (t (midi-time->time midi-bioi ppqn))))
 		   ;; deltast
-		   (midi-deltast (if (null prev-offset) 0 
-				     (- midi-onset prev-offset)))
+		   (midi-deltast (cond ((null prev-offset) 0)
+                                       ((< midi-onset prev-offset) 0)
+                                       (t (- midi-onset prev-offset))))
 		   (deltast (midi-time->time midi-deltast ppqn)))
               ;; (when (and (not (= midi-pitch cpitch)) (not (= midi-pitch (round cpitch))))
               ;;  (print (list midi-pitch cpitch (round cpitch))))
@@ -172,7 +173,7 @@
               (setf bioi (round bioi)
                     onset (+ ponset bioi)
                     dur (round dur)
-                    deltast (- bioi pdur))
+                    deltast (if (< bioi pdur) 0 (- bioi pdur)))
               ;; (format t "~&B: ~A ~A ~A ~A~%" onset bioi deltast dur)
 	      (push (make-dbevent onset dur deltast bioi cpitch note) dbevents)
 	      (setf ponset onset
