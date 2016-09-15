@@ -1,35 +1,48 @@
 # IDyOM: Information Dynamics of Music
 
-Version 1.3
+Version 1.4
 
-Copyright 2001-2015, Marcus Pearce [marcus.pearce@qmul.ac.uk](mailto:marcus.pearce@qmul.ac.uk)
+Copyright 2001-2016, Marcus Pearce [marcus.pearce@qmul.ac.uk](mailto:marcus.pearce@qmul.ac.uk)
 
-This program is distributed under the terms of the GNU General Public
-License.  See COPYING for details.
+This program is distributed under the terms of the GNU General Public License.  See COPYING for details.
 
 ## Documentation
 
-Documentation on how to install and use the system can be found on the
-IDyOM wiki at Sound Software:
+Documentation on how to install and use the system can be found on the IDyOM wiki at Sound Software:
 
 [https://code.soundsoftware.ac.uk/projects/idyom-project/wiki](https://code.soundsoftware.ac.uk/projects/idyom-project/wiki)
 
-The design of the system and its underlying principles are documented
-in Marcus Pearce's PhD thesis "The Construction and Evaluation of
-Statistical Models of Melodic Structure in Music Perception and
-Composition" (2005) included here as 'thesis.pdf'. Please cite this 
-thesis in any publications using this software.
+The design of the system and its underlying principles are documented in Marcus Pearce's PhD thesis "The Construction and Evaluation of Statistical Models of Melodic Structure in Music Perception and Composition" (2005) included here as 'thesis.pdf'. Please cite this thesis in any publications using this software.
 
 ## Requirements
 
-* SBCL [http://www.sbcl.org](http://www.sbcl.org)
-* Emacs [http://www.gnu.org/software/emacs/](http://www.gnu.org/software/emacs/)
-* Quicklisp [http://www.quicklisp.org/](http://www.quicklisp.org/)
-* Sqlite [http://www.sqlite.org/](http://www.sqlite.org/)
+* SBCL       [http://www.sbcl.org](http://www.sbcl.org)
+* Emacs      [http://www.gnu.org/software/emacs](http://www.gnu.org/software/emacs)
+* Quicklisp  [http://www.quicklisp.org](http://www.quicklisp.org)
+* Sqlite     [http://www.sqlite.org](http://www.sqlite.org)
 
 See the [wiki](https://code.soundsoftware.ac.uk/projects/idyom-project/wiki) for further details on installation.
 
 ## News
+
+### 2016-05-03
+
+v1.4
+
+* new feature: new function IDYOM-DB:COPY-DATASETS for copying and merging datasets
+* new feature: new function UTILS:REMOVE-BY-POSITION in utilities
+* new feature: new module for information-theoretic detection of grouping boundaries (see Pearce et al., 2010, Perception, 39, 1367-1391).
+* new feature: new top-level variable in IDYOM:IDYOM to control whether existing output-files are overwritten (:overwrite nil)
+* enhancement: greater randomness in the generation of resampling sets (the random state is now reset in the call to random)
+* enhancement: allow the user to pass a random-state as a top-level argument to dataset-generation
+* enhancement: add model configuration (STM, LTM, LTM+, BOTH or BOTH+) as a top-level argument in the generation module
+* enhancement: the root and earth nodes in the PPM* module are no longer global variables
+* enhancement: add a variable to control whether MIDI pitch bends affect pitch in MIDI import module (*apply-pitchbend*)
+* enhancement: ignore empty compositions when importing data
+* optimization: improved efficiency in generating the order-1 distribution in the PPM module (thanks to T Hedges)
+* optimization: improved efficiency in generating viewpoint sequences
+* optimization: generate transition counts more efficiently in the PPM module
+* bug-fix: greater elegance in the viewpoint generation macros
 
 ### 2015-03-25
 
@@ -43,7 +56,7 @@ v1.3: new features and enhancements include:
 * fix last-element and penultimate-element for empty sequences
 * add utility functions for permutations and rotation
 
-#### 2014-12-31
+### 2014-12-31
 
 v1.2: small enhancements including:
 
@@ -67,6 +80,6 @@ v1.1: new features include:
 
 ### 2014-06-04:
 
-v1.0: first public release, I am grateful to Jeremy Gow and 
-David Lewis for their contributions to this release, and also to 
+v1.0: first public release, I am grateful to Jeremy Gow and David Lewis 
+for their contributions to this release, and also to 
 Niels Chr. Hansen and Roger Dean for user feedback.
