@@ -74,6 +74,9 @@
                        (:file "phrase")
 		       (:file "threaded")
 		       (:file "implication-realisation")))
+	     (:module harmony :serial t
+		      :components
+		      ((:file "basic-viewpoints")))
              ;; useful extensions for modelling 
              ;; (not strictly part of the representation scheme)
 	     (:file "extensions")))
