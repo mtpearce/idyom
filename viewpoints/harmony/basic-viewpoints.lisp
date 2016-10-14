@@ -2,7 +2,7 @@
 ;;;; File:       basic-viewpoints.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-25 19:09:17 marcusp>                           
-;;;; Time-stamp: <2016-10-14 14:32:53 peter>                           
+;;;; Time-stamp: <2016-10-14 14:49:49 peter>                           
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
@@ -118,9 +118,10 @@
           (let* ((permutation (nth mp permutations))
                  (base (car permutation))
                  (base-position (position base bases :test #'equal))
-                 (chord (nth base-position chords)))
-            (push chord candidates)
-            (setf n (length candidates))))))
+		 (chord (nth base-position chords)))
+            (push chord candidates)))
+	(setf candidates (remove-duplicates candidates :test #'equalp))
+	(setf n (length candidates))))
     ;; 2. avoid non-scale tones in the base
     (when (> n 1)
       (let ((pitch-scale-pc-set (as-pitch-class-set pitch-scale-hierarchy))
@@ -133,7 +134,6 @@
                          candidates))
         ;; (print (list "candidates" candidates))
         (when (null candidates) (setf candidates old-candidates))
-        (setf candidates (remove-duplicates candidates :test #'equalp))
         (setf n (length candidates))))
     ;; 3. otherwise choose randomly
     (when (> n 1)
