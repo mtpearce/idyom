@@ -2,7 +2,7 @@
 ;;;; File:       basic-viewpoints.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-25 19:09:17 marcusp>                           
-;;;; Time-stamp: <2016-06-01 16:27:14 marcusp>                           
+;;;; Time-stamp: <2016-10-14 14:10:54 peter>                           
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
@@ -187,11 +187,6 @@
          (extensions (remove-if #'(lambda (x) 
                                     (member x chord))
                                 pc-set))
-         (extensions (mapcar #'(lambda (x) 
-                                 (if (< x max)
-                                     (+ x 12)
-                                     x))
-                             extensions))
          (extensions (sort extensions #'<)))
     (list chord extensions)))
 
