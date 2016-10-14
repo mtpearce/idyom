@@ -2,7 +2,7 @@
 ;;;; File:       basic-viewpoints.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-25 19:09:17 marcusp>                           
-;;;; Time-stamp: <2016-10-14 15:00:52 peter>                           
+;;;; Time-stamp: <2016-10-14 15:42:45 peter>                           
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
@@ -137,7 +137,7 @@
         (setf n (length candidates))))
     ;; 3. otherwise choose randomly
     (when (> n 1)
-      (format t "~&Warning: selecting chord pseudo-randomly from: ~A.~%" candidates)
+      ; (format t "~&Warning: selecting chord pseudo-randomly from: ~A.~%" candidates)
       (setf candidates (list (nth (mod (sxhash candidates) n) candidates))))
     (car candidates)))
 
