@@ -2,7 +2,7 @@
 ;;;; File:       basic-viewpoints.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-25 19:09:17 marcusp>                           
-;;;; Time-stamp: <2016-10-14 14:10:54 peter>                           
+;;;; Time-stamp: <2016-10-14 14:32:53 peter>                           
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
@@ -175,9 +175,9 @@
         (list (subtract-mod-n root tonic 12) base extension))))
 
 (defun add-root (chord)
-  (let* ((base (first chord))
-         (extensions (second chord))
-         (root (car base)))
+  (let* ((root (car (first chord)))
+	 (base (cdr (first chord)))
+         (extensions (second chord)))
     (list root 
           (mapcar #'(lambda (x) (subtract-mod-n x root 12)) base) 
           (mapcar #'(lambda (x) (subtract-mod-n x root 12)) extensions))))
