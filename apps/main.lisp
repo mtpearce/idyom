@@ -2,7 +2,7 @@
 ;;;; File:       main.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2010-11-01 15:19:57 marcusp>
-;;;; Time-stamp: <2016-05-04 15:24:51 marcusp>
+;;;; Time-stamp: <2016-10-15 13:03:05 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:idyom)
@@ -66,6 +66,7 @@
                 (texture :melody)
                 ;; Output
                 (detail 3)
+		(return-predictions nil)
                 (output-path nil)
                 (overwrite nil)
                 ;; Caching
@@ -120,7 +121,9 @@
                                              :use-ltms-cache? use-ltms-cache?)))
             (when output-path
               (resampling:format-information-content predictions filepath dataset-id detail))
-            (resampling:output-information-content predictions detail))))))
+	    (if return-predictions
+		predictions
+		(resampling:output-information-content predictions detail)))))))
 
 
 (defun find-selection-basis (targets basis)
