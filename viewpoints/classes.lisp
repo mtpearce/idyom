@@ -34,8 +34,8 @@ sequence where threaded viewpoints are defined."))
   ((links :accessor %viewpoint-links :initarg :links
           :initform '() :type list))
   (:documentation "A linked viewpoint represents an attribute composed
-of more than one basic or derived attribute whose elements are
-elements of the cartesian product of the alphabets of the constituent
+of more than one basic or derived attributes whose elements are
+elements of the Cartesian product of the alphabets of the constituent
 viewpoints."))
 
 (defclass threaded (derived)
