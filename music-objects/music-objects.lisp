@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2015-07-24 01:02:16 marcusp>
+;;;; Time-stamp: <2016-10-24 15:54:37 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -37,8 +37,8 @@
 (defclass music-object ()
   ((identifier :initarg :id :accessor get-identifier :type identifier)
    (description :initarg :description :accessor description)
-   (timebase :initarg :timebase :accessor timebase)
-   (midc :initarg :midc :accessor midc)))
+   (timebase :initarg :timebase :accessor timebase :documentation "Number of time units in a semibreve")
+   (midc :initarg :midc :accessor midc :documentation "MIDI note number corresponding to middle C")))
 
 (defclass music-dataset (list-slot-sequence music-object) ())
 
@@ -50,15 +50,15 @@
 (defclass harmonic-sequence (music-sequence) ())                        ; a sequence of harmonic slices
 
 (defclass key-signature ()
-  ((keysig :initarg :keysig :accessor key-signature)
-   (mode :initarg :mode :accessor mode)))
+  ((keysig :initarg :keysig :accessor key-signature :documentation "Number of sharps (+ve) or flats (-ve) in key signature")
+   (mode :initarg :mode :accessor mode :documentation "Mode: 0 = major, 9 = minor, etc.")))
 
 (defclass time-signature ()
-  ((barlength :initarg :barlength :accessor barlength)
-   (pulses :initarg :pulses :accessor pulses)))
+  ((barlength :initarg :barlength :accessor barlength :documentation "Number of basic time units (ticks) in bar")
+   (pulses :initarg :pulses :accessor pulses :documentation "Number of basic pulses/tactus units in bar")))
 
 (defclass tempo ()
-  ((tempo :initarg :tempo :accessor tempo)))
+  ((tempo :initarg :tempo :accessor tempo :documentation "Tempo in beats per minute")))
   
 (defclass music-environment (key-signature time-signature tempo) ())
 
@@ -70,17 +70,27 @@
 (defclass music-slice (list-slot-sequence music-element) ())  ; set of music objects overlapping in time, ordered by voice
 
 (defclass music-event (music-element)
-  ((bioi :initarg :bioi :accessor bioi)
-   (deltast :initarg :deltast :accessor deltast)
-   (cpitch :initarg :cpitch :accessor chromatic-pitch)
-   (mpitch :initarg :mpitch :accessor morphetic-pitch)
-   (accidental :initarg :accidental :accessor accidental)
-   (dyn :initarg :dyn :accessor dynamics)
-   (ornament :initarg :ornament :accessor ornament)
-   (comma :initarg :comma :accessor comma)
-   (articulation :initarg :articulation :accessor articulation)
+  ((bioi :initarg :bioi :accessor bioi
+	 :documentation "Basic interonset interval between last note and its predecessor")
+   (deltast :initarg :deltast :accessor deltast :documentation
+	    "Length of immediately preceding rest")
+   (cpitch :initarg :cpitch :accessor chromatic-pitch
+	   :documentation "MIDI pitch number")
+   (mpitch :initarg :mpitch :accessor morphetic-pitch
+	   :documentation "Meredith's morphetic pitch")
+   (accidental :initarg :accidental :accessor accidental
+	       :documentation "Inflection of named note: 0 = natural, 1 = single sharp,
+2 = double sharp, -1 = single flat , etc.")
+   (dyn :initarg :dyn :accessor dynamics
+	:documentation "ppppp = -11; pppp = -9; ppp = -7; pp = -5; p = -3; mp = -1; mf = 1; f = 3; ff = 5;
+fff = 7; ffff = 9; fffff = 11")
+   (ornament :initarg :ornament :accessor ornament
+	     :documentation "0 = no ornament; 1 = accacciatura; 2 = mordent; 3 = trill")
+   (comma :initarg :comma :accessor comma :documentation "0 = no comma; 1 = comma (breath mark)")
+   (articulation :initarg :articulation :accessor articulation
+		 :documentation "0 = no articulation mark; 1 = staccato; 2 = staccatissimo; 3 = sforzando; 4 = marcato")
    (vertint12 :initarg :vertint12 :accessor vertint12)
-   (voice :initarg :voice :accessor voice)))
+   (voice :initarg :voice :accessor voice :documentation "Voice number in a score (Voice 1 assumed to be the monody)")))
 
 
 ;;; Identifiers 
@@ -161,6 +171,7 @@
 
 (defgeneric set-attribute (event attribute value))
 (defmethod set-attribute ((e music-element) attribute value)
+  "Sets the value for slot <attribute> in event object <e>."
   (setf (slot-value e (music-symbol attribute)) value))
 
 (defmethod set-attribute ((ms music-slice) attribute value)
@@ -181,10 +192,13 @@
     ms-copy))
 
 (defun count-compositions (dataset-id)
+  "Gets the number of compositions in dataset indexed by DATASET-ID"
   ;;(length (get-dataset (lookup-dataset dataset-id))))
   (car (clsql:query (format nil "SELECT count(composition_id) FROM mtp_composition WHERE (dataset_id = ~A);" dataset-id) :flatp t)))
 
 (defun get-description (dataset-id &optional composition-id)
+  "Gets the description of a dataset (if just DATASET-ID is provided) or of
+  a composition (if both DATASET-ID and COMPOSITION-ID are provided)"
   (if (null composition-id)
       ;; (description (get-dataset (lookup-dataset dataset-id)))
       ;; (description (get-composition (lookup-composition dataset-id composition-id)))))
@@ -196,15 +210,15 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun get-music-objects (dataset-indices composition-indices &key voices (texture :melody))
-  "Return music objects from the database corresponding to
-  DATASET-INDICES, COMPOSITION-INDICES which may be single numeric IDs
-  or lists of IDs. COMPOSITION-INDICES is only considered if
-  DATASET-INDICES is a single ID. TEXTURE determines whether the returned
-  object is a melody (using the Skyline algorithm if necessary) or a
-  sequence of harmonic slices using full expansion (cf. Conklin,
-  2002). The voices specified by VOICES are used. If VOICES is nil,
-  the melody corresponding to the voice of the first event is
-  extracted or the harmony corresponding to all voices is used."
+  "Returns music objects from the database corresponding to
+DATASET-INDICES, COMPOSITION-INDICES which may be single numeric IDs
+or lists of IDs. COMPOSITION-INDICES is only considered if
+DATASET-INDICES is a single ID. TEXTURE determines whether the returned
+object is a melody (using the Skyline algorithm if necessary) or a
+sequence of harmonic slices using full expansion (cf. Conklin,
+2002). The voices specified by VOICES are used. If VOICES is nil,
+the melody corresponding to the voice of the first event is
+extracted or the harmony corresponding to all voices is used."
   (cond ((eq texture :melody)
          (if (numberp dataset-indices)
              (cond ((null composition-indices)
@@ -230,11 +244,15 @@
 ;; harmonic sequences
 
 (defun get-harmonic-sequence (dataset-index composition-index &key voices)
+  "Gets harmonic sequences from a given composition indexed
+by DATASET-INDEX and COMPOSITION-INDEX"
   (composition->harmony 
    (get-composition (lookup-composition dataset-index composition-index))
    :voices voices))
                     
 (defun get-harmonic-sequences (dataset-ids &key voices)
+  "Gets harmonic sequences for all compositions contained within
+a set of datasets indexed by DATASET-IDS"
     (let ((compositions '()))
     (dolist (dataset-id dataset-ids (nreverse compositions))
       (let ((d (get-dataset (lookup-dataset dataset-id))))
