@@ -42,3 +42,8 @@
 			  (barnum-e2 (floor (/ (- (onset (list e2)) phase) barlength))))
 		      (- barnum-e2 barnum-e1))))))
 
+(define-metrical-viewpoint (metrical-ioi metrical (ioi))
+    ((events md:melodic-sequence) 
+     (interpretation md:metrical-interpretation) element)
+  :function (let ((ioi (onset events)))
+	      ioi))
