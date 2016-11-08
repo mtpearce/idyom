@@ -30,8 +30,11 @@
 (defmethod infer-category ((training-set promises:promise) 
 			target-viewpoints source-viewpoints test-sequence
 			   &key (voices nil) (texture :melody)
+			     (prior :empirical)
+			     custom-prior
 			     resampling-fold resampling-count
 			     (resolution 16) (use-cache? t) &allow-other-keys)
+  "Train models for each of the <source-viewpoints> using <training-set>. Predict the <target-viewpoints> in <test-sequence>. The type of prior to use can be specified with <prior>. Options are :empirical and :flat. <resampling-fold> and <resampling-count> are used to load or store the right cached models."
   (let* ((sources (viewpoints:get-viewpoints source-viewpoints))
 	 (targets (viewpoints:get-basic-viewpoints target-viewpoints training-set texture))
 	 ;; Obtain event counts per category
@@ -51,7 +54,14 @@
 	  (generate-category-predictions categories models test-sequence
 					 :resolution resolution :texture texture))
 	 ;; Initialize the prior distribution
-	 (prior-distribution (initialise-prior-distribution category-counts resolution))
+	 (prior-distribution (cond ((eq prior :empirical)
+				     (initialise-prior-distribution category-counts resolution))
+				   ((eq prior :flat)
+				    (flat-prior-distribution categories resolution))
+				   ((eq prior :custom)
+				    (initialise-prior-distribution custom-prior
+								   resolution))
+				   (t nil)))
 	 ;; Convert to a Nparams x Nevents data structure where each column is 
 	 ;; a probability distribution over params
 	 (posteriors (generate-category-posteriors prior-distribution likelihoods 
@@ -279,6 +289,21 @@ phase equals one. Return the rescaled distribution."
 		       interpretations-per-category category-prior))))
 	  ;; Flatten and re-normalise the distribution
 	  (prediction-sets:normalise-distribution interpretation-prior))))))
+
+(defun flat-prior-distribution (categories resolution)
+    "Initialise a prior distribution over categories based on <category-counts>.
+Rescale the distribution so the sum of prior category likelihoods in each possible
+phase equals one. Return the rescaled distribution."
+    (when *verbose* (format t "Generating a flat  distribution~%"))
+    (let* ((categories (mapcar #'md:metre-string->metrical-interpretation categories))
+	   (interpretations
+	    (apply #'append
+		  (mapcar (lambda (c) (md:create-interpretations c resolution))
+			  categories)))
+	   (parameters (length interpretations)))
+      (mapcar (lambda (interpretation) (list (md:metre-string interpretation)
+					     (/ 1 parameters)))
+	      interpretations)))
 
 (defun composition-list-signature (composition-list)
   "Return the hexdigest of the MD5SUM of the list of all composition indices in the list."
