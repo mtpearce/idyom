@@ -2,7 +2,7 @@
 ;;;; File:       music-data.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2016-04-25 17:55:52 marcusp>                           
+;;;; Time-stamp: <2016-10-24 23:17:54 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -10,7 +10,7 @@
 ;;;; Provides a database structure for storing and querying melodic
 ;;;; data in an sql database. The database contains tables for
 ;;;; datasets, mtp-compositions and mtp-events where each event is identified
-;;;; a unique set of three keys: dataset-id composition-id and
+;;;; a unique set of three keys: dataset-id, composition-id and
 ;;;; event-id. Selector functions are provided for selecting
 ;;;; attributes of events, compositions and datasets through their
 ;;;; ids.
@@ -62,7 +62,7 @@
 providing the following slots: <dataset-id> which is a unique integer
 key value for the dataset, <dataset-description> which is an arbitrary
 string describing the dataset; <timebase> and <midc> which are integers
-representing the timebase and chromatic mapping for middle c of the
+representing the timebase and chromatic mapping for middle C of the
 original encoding; and <compositions> which defines a one to many join
 with the composition table based on dataset-id in both tables."))
 
@@ -225,7 +225,7 @@ each table."))
   (:base-table mtp_event)
   (:documentation "A view class defining a table for events. The
 <dataset-id>, <composition-id> and <event-id> slots are integers which
-together uniquely identify an eveappnt. The remaining slots contain event
+together uniquely identify an event. The remaining slots contain event
 attribute values as follows: <onset> the onset time of the event; <cpitch>
 the chromatic pitch of the event; <mpitch> the morphetic pitch of the
 event; <keysig> an integer representing the number of sharps or flats in
