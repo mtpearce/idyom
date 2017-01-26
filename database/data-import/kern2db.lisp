@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2015-03-25 23:09:12 marcusp>                           
+;;;; Time-stamp: <2017-01-26 15:55:44 peter>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -71,7 +71,7 @@
                     (cadr x)))
           '(("^\\.$" ignore-token)                  ;ignore null tokens
             ("^!" ignore-token)                     ;ignore in-line comments 
-            ("^\\*$" ignore-token)                  ;ignore null tandem tokens
+            ("^\\*$" ignore-token)                  ;ignore null interpretations
             ("^[^ ! * =].*[q Q]" ignore-token)      ;ignore grace notes/groupettos 
             ("^\\*\\|\\." ignore-token)             ;ignore staff lining  
             ("^\\*staff" ignore-token)              ;ignore staff position 
