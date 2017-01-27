@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-01-26 15:55:44 peter>                           
+;;;; Time-stamp: <2017-01-27 09:49:29 peter>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -281,15 +281,17 @@
 
 (defun extract-spines (records new-records current-spine spine-list)
   "Given <records>, a list containing lists of strings corresponding to
-   each spine in a record, returns a list of spines taking account of
-   terminated spines and splitting and joining spines. Does not currently
-   take acount of added or exchanged spines." 
+   each spine in a record, returns a list of spines. Currently accounts
+   correctly for cases where the number of spines stays constant throughout,
+   or where a spine ends partway through the kern file. Does not account
+   correctly for cases where a spine is added, a spine is split, two spines
+   are joined, or two spines are exchanged." 
   (let* ((current-record (car records))
          (current-token (car current-record))
          (remaining-tokens (cdr current-record)))
     (cond ((null current-record)
-           (reverse (if current-spine (cons current-spine spine-list)
-                        spine-list)))
+	   (reverse (if current-spine (cons current-spine spine-list)
+			spine-list)))
           ((end-of-spine-p current-token)
            (extract-spines (append (reverse (cons remaining-tokens
                                                   new-records))
