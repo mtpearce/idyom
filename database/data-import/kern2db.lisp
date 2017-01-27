@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-01-27 13:44:01 peter>                           
+;;;; Time-stamp: <2017-01-27 14:22:48 peter>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -342,8 +342,8 @@
     (sort-events (reverse spine-list) '())))
 
 (defun process-spines-according-to-type (spines voices &optional (count 1))
-  "Sends each spine in a list to be processed individually according to its
-   type and conses the results together." 
+  "Sends each spine in a list to be processed individually into CHARM
+   readable format, according to its type, and conses the results together." 
   (let ((spine (car spines)))
     (cond ((null spines) '())
           ((or (null voices) (member count voices))
@@ -479,8 +479,7 @@
              ;token previous-event (end-of-phrase-p token))
              ;(format t "~&Updated event: ~A~%" (update-alist previous-event (list :phrase -1)))
              (cons (update-alist previous-event (list :phrase -1))
-                   (cdr converted-spine))
-             )
+                   (cdr converted-spine)))
            converted-spine))
       (otherwise converted-spine))))
 
@@ -593,11 +592,11 @@
 
 (defun update-alist (alist &rest new-entries)
   "Updates <alist> with <new-entries> which must be key-value pairs.
-   If the value in nil then the pair is not added to the alist unless
+   If the value is nil then the pair is not added to the alist unless
    the key is 'correct-onsets which is the only key in the environment
    allowed to have null values."
-  (flet ((insert-entry (alist force new-entry)
-           (cond ((and (null force) (null (cadr new-entry)))
+  (flet ((insert-entry (alist force new-entry)                           
+           (cond ((and (null force) (null (cadr new-entry)))              
                   alist)
                  ((assoc (car new-entry) alist)
                   (substitute-if new-entry #'(lambda (key)
