@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-01-27 09:49:29 peter>                           
+;;;; Time-stamp: <2017-01-27 13:44:01 peter>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -325,9 +325,11 @@
   (merge-spines (process-spines-according-to-type spine-list *voices*)))
 
 (defun merge-spines (spine-list &optional (sort-type :onset))
-  "Merges all the spines in spine-list into one dataset, sorting them
-   according to <sort-type> which must be a key in the event alist (e.g,
-   pitch, onset, duration etc.). "
+  "Merges all the spines in spine-list (a list of spines that have been
+   processed into CHARM readable format by process-spines-according-to-type)
+   into one dataset, sorting them  according to <sort-type> which must be a
+   key in the event alist (e.g, pitch, onset, duration etc.). Assumes that
+   each given spine is already sorted according to <sort-type>."
   (labels ((sort-predicate (event1 event2)
              (let ((attribute1 (cadr (assoc sort-type event1)))
                    (attribute2 (cadr (assoc sort-type event2))))
@@ -449,8 +451,8 @@
 
 (defun update-converted-spine (converted-spine token type environment
                                                &key tied)
-  "Updates <converted-spine> with a new <token> according to its <type>
-   and the current <environment>."
+  "Adds a new <token> to the beginning of <converted-spine>, with 
+   reference to the token's <type> and the current <environment>."
   (let ((current-event (funcall type token environment))
         (previous-event (car converted-spine)))
     ;(format t "~&token: ~A; type: ~A~%" token type)
