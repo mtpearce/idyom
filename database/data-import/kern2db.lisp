@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-01-27 14:22:48 peter>                           
+;;;; Time-stamp: <2017-01-27 19:26:10 peter>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -325,11 +325,14 @@
   (merge-spines (process-spines-according-to-type spine-list *voices*)))
 
 (defun merge-spines (spine-list &optional (sort-type :onset))
-  "Merges all the spines in spine-list (a list of spines that have been
+  "Merges all the spines in <spine-list> (a list of spines that have been
    processed into CHARM readable format by process-spines-according-to-type)
-   into one dataset, sorting them  according to <sort-type> which must be a
-   key in the event alist (e.g, pitch, onset, duration etc.). Assumes that
-   each given spine is already sorted according to <sort-type>."
+   into one dataset, sorting them according to <sort-type> which must be a
+   key in the event alist (e.g, pitch, onset, duration etc.). Note, however,
+   that this function assumes that each given spine is already sorted
+   according to <sort-type>. This is likely to be true if <sort-type> is
+   :onset, since **kern files are encoded in forward temporal order,
+   but it is unlikely to be true for any other <sort-type>."
   (labels ((sort-predicate (event1 event2)
              (let ((attribute1 (cadr (assoc sort-type event1)))
                    (attribute2 (cadr (assoc sort-type event2))))
@@ -387,7 +390,7 @@
                (list 'deltast *default-onset*)
                (list 'spine-id spine-id)
                (list 'phrase 0)
-               (list 'voice 1))))
+               (list 'voice 1)))) ; should this be (position spine-id *voices* :test #'=)?
     (process-kern-tokens spine '() environment-alist)))
                
 (defun process-kern-tokens (spine converted-spine environment &key tied)
@@ -628,10 +631,10 @@
 
 (defun voice (voice-token &optional environment)
   "Process a voice token."
-  (let* ((spine-id (cadr (assoc 'spine-id environment)))
-         (voice-entry (assoc spine-id *voice-alist* :test #'=)))
-    (unless (member voice-token (cadr voice-entry) :test #'string=)
-      (setf *voice-alist*
+  (let* ((spine-id (cadr (assoc 'spine-id environment)))            ; get spine-id from environment
+         (voice-entry (assoc spine-id *voice-alist* :test #'=)))    ; get current list of voices for that spine
+    (unless (member voice-token (cadr voice-entry) :test #'string=) ; check whether this voice is new
+      (setf *voice-alist*                                           ; if so, update the list of voices
             (update-alist *voice-alist* 
                           (list spine-id (cons voice-token (cadr voice-entry))))))
     (1+ (position spine-id *voices* :test #'=))))
