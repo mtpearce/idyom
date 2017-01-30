@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2017-01-30 15:56:42 peter>
+;;;; Time-stamp: <2017-01-30 17:32:10 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -78,15 +78,6 @@
 (defun butlast-n (sequence &optional (n 1))
   "Return a sequence with the last n elements removed."
   (subseq sequence 0 (- (length sequence) n)))
-
-(defun all-positions-if (sequence predicate)
-  "Returns positions of all elements of <sequence> that
-   satisfy <predicate>."
-  (let ((result nil))
-    (dotimes (i (length sequence))
-      (if (funcall predicate (nth i sequence))
-          (push i result)))
-    (nreverse result)))
 
 
 ;;;===========================================================================
@@ -218,6 +209,15 @@
                     (rbp (cdr l) (1+ i) r))
                    (t (rbp (cdr l) (1+ i) (cons (car l) r))))))
     (rbp list 0 nil)))
+
+(defun all-positions-if (list predicate)
+  "Returns positions of all elements of <list> that
+   satisfy <predicate>."
+  (let ((result nil))
+    (dotimes (i (length list))
+      (if (funcall predicate (nth i list))
+          (push i result)))
+    (nreverse result)))
 
 ;;;===========================================================================
 ;;; Nested lists

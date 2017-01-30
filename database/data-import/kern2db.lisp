@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-01-27 19:26:10 peter>                           
+;;;; Time-stamp: <2017-01-30 16:57:51 peter>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -82,7 +82,8 @@
             ("^\\*[8 Tr]" ignore-token)             ;ignore transposition token
             ("^\\*>.*\\[" ignore-token)             ;ignore section expansions 
             ("^\\*>[^ \\[]+" ignore-token)          ;ignore section labels 
-            ("^\\*[+ ^ v x -]" ignore-token)        ;ignore spine path tokens
+       	;;  ("^\\*[+ ^ v x -]" ignore-token)        ;ignore spine path tokens
+	    ("^\\*[+ ^ v x -]" spine-path-token)    ;process spine path tokens
             ("^\\*MM[0-9]" tempo)                   ;process tempo token
             ("^\\*MM\\[" tempo)                     ;process tempo token
             ("^=1[^ 0-9]*$" first-barline)          ;adjust onsets at 1st barline
