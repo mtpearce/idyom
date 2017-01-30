@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2017-01-30 17:32:10 peter>
+;;;; Time-stamp: <2017-01-30 17:33:08 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -218,6 +218,12 @@
       (if (funcall predicate (nth i list))
           (push i result)))
     (nreverse result)))
+
+(defun insert-after (list position item)
+  "Destructively inserts <item> into the index <position> in <list>,
+   shifting all later elements forward by one position."
+  (push item (cdr (nthcdr position list)))
+  list)
 
 ;;;===========================================================================
 ;;; Nested lists
