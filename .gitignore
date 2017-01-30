@@ -1,2 +1,20 @@
 data/
 *.DS_Store
+
+### CL
+
+*.FASL
+*.fasl
+*.lisp-temp
+
+### EMACS
+
+# -*- mode: gitignore; -*-
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
