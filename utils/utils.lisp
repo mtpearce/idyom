@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2016-04-25 11:06:22 marcusp>
+;;;; Time-stamp: <2017-01-30 15:56:42 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -79,6 +79,15 @@
   "Return a sequence with the last n elements removed."
   (subseq sequence 0 (- (length sequence) n)))
 
+(defun all-positions-if (sequence predicate)
+  "Returns positions of all elements of <sequence> that
+   satisfy <predicate>."
+  (let ((result nil))
+    (dotimes (i (length sequence))
+      (if (funcall predicate (nth i sequence))
+          (push i result)))
+    (nreverse result)))
+
 
 ;;;===========================================================================
 ;;; Strings 
@@ -99,6 +108,7 @@
                                 result))
                    (t (find-words (cdr char-list) "" (cons word result))))))
     (find-words (coerce string 'list) "" '())))
+
 
 ;; (defun regex (expression string)
 ;;   "Interface to the re:regexec function which returns the first sub-string
