@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2017-01-30 17:33:08 peter>
+;;;; Time-stamp: <2017-02-03 17:01:18 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -201,6 +201,11 @@
                           (permutations (remove x list :count 1)))) 
               list)))
 
+(defun remove-nth (n list)
+  "Removes the nth item from a list non-destructively."
+  (remove-if #'(lambda (x) (declare (ignore x)) t)
+	     list :start n :end (1+ n)))
+
 (defun remove-by-position (list positions)
   (labels ((rbp (l i r)
              (cond ((null l)
@@ -210,9 +215,8 @@
                    (t (rbp (cdr l) (1+ i) (cons (car l) r))))))
     (rbp list 0 nil)))
 
-(defun all-positions-if (list predicate)
-  "Returns positions of all elements of <list> that
-   satisfy <predicate>."
+(defun all-positions-if (predicate list)
+  "Returns positions of all elements of <list> that satisfy <predicate>."
   (let ((result nil))
     (dotimes (i (length list))
       (if (funcall predicate (nth i list))
@@ -224,6 +228,18 @@
    shifting all later elements forward by one position."
   (push item (cdr (nthcdr position list)))
   list)
+
+(defun all-eql
+    (list &key (predicate #'eql))
+  "Tests whether all elements of a given <list> are 
+   equal according to <predicate> (defaults to EQL).
+   Also returns t if the list is empty."
+  (if (< (length list) 2)
+      t
+      (if (not (funcall predicate
+			(first list) (second list)))
+	  nil
+	  (all-eql (cdr list) :predicate predicate))))
 
 ;;;===========================================================================
 ;;; Nested lists
