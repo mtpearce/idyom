@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-02-06 15:11:55 peter>                           
+;;;; Time-stamp: <2017-02-06 16:17:19 peter>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -382,31 +382,57 @@
 		humdrum-state processed-events))))
 
 (defun join-states (humdrum-states)
+  "This function takes a list of humdrum states, <humdrum-states>,
+   and joins any adjacent states that all have :cued-for-join
+   as true. Joining is only permitted if the states to be joined
+   have the same exclusive interpretation. The join preserves only
+   the properties of the first state in the collection to be joined.
+   Note 1: joining just one state to itself is not an error.
+   Note 2: joining more than two states to one state is not an error."
   (if (null humdrum-states)
       nil
-      (labels ((fun (input accumulator)
-		 (cond ((null input) (reverse accumulator))
-		       ((eql (length input) 1)
-			(if (humdrum-state-cued-for-join (car input))
-			    (error 'kern-line-read-error
-				   :text "Unmatched spine join token found.")
-			    (fun nil (cons (car input) accumulator))))
-		       (t (if (humdrum-state-cued-for-join (car input))
-			      (if (humdrum-state-cued-for-join (second input))
-				  (if (eql (humdrum-state-excl-interpret
-					    (car input))
-					   (humdrum-state-excl-interpret
-					    (second input)))
-				      ;; Join spines by dropping the second spine
-				      (fun (cddr input)
-					   (cons (car input) accumulator))
-				      (error 'kern-line-read-error
-					     :text "Tried to join spines without matching exclusive interpretations."))
-				  
+      (labels ((fun (input joining-stage accumulator)
+		 ;; <input> is a list of humdrum-states yet to be processed
+		 ;; <joining-stage> is a list of states cued to be joined
+		 ;; <accumulator> is the output list of states in reverse order
+		 (cond ((null input)
+			(if (null joining-stage)
+			    (reverse accumulator)
+			    (if (utils:all-eql (mapcar #'humdrum-state-excl-interpret
+						       joining-stage)
+					       :predicate #'string=)
+				;; Apply all staged joins
+				(fun nil nil (cons (combine-specific-states
+						    joining-stage)
+						   accumulator))
+				(error 'kern-line-read-error
+				       :text "Tried to join spines without matching exclusive interpretations."))))
+		       ;; If the first element is cued for joining, stage it
+		       ((humdrum-state-cued-for-join (car input))
+			(fun (cdr input)
+			     (cons (car input) joining-stage)
+			     accumulator))
+		       ;; Otherwise, join the staged elements if appropriate
+		       (t (if (null joining-stage)
+			      (fun (cdr input) nil
+				   (cons (car input) accumulator))
+			      (if (utils:all-eql
+				   (mapcar #'humdrum-state-excl-interpret
+					   joining-stage) :predicate #'string=)
+				  (fun input nil (cons (combine-specific-states
+							joining-stage)
+						       accumulator))
 				  (error 'kern-line-read-error
-					 :text "Unmatched spine join token found."))
-			      (fun (cdr input) (cons (car input) accumulator)))))))
-	(fun humdrum-states nil))))
+					 :text "Tried to join spines without matching exclusive interpretations."))))))
+	       (combine-specific-states (state-list)
+		 "Combines a list of states specifically identified
+                  for combination into one state."
+		 (let ((out-state (car (last state-list))))
+		   (setf (humdrum-state-cued-for-join out-state)
+			 nil)
+		   out-state)))
+	(fun humdrum-states nil nil))))
+
 
 (defun exchange-states (humdrum-states)
   (if (null humdrum-states)
