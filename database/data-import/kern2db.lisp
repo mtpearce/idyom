@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-02-06 16:17:19 peter>                           
+;;;; Time-stamp: <2017-02-06 23:23:08 peter>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -106,6 +106,8 @@
 (defvar *lines* '())
 (defvar *first-barline-reached* nil)
 (defvar *onset-correction* 0)
+(defvar *ties* nil)
+(defvar *record-onsets* nil)
 
 (defparameter *default-timebase* 96)    ;basic time units in a semibreve 
 (defparameter *middle-c* '(60 35))      ;pitch mapping for middle c
@@ -122,7 +124,43 @@
 (defparameter *default-instrument-class* nil) ;default instrument class
 (defparameter *default-instrument-group* nil) ;default instrument group
 
+;; This parameter determines whether onsets should be corrected so that
+;; an onset of 0 corresponds to the beginning of the first complete bar
+;; in the piece, with anacruses being imaginarily extended to the
+;; length of a full bar (see Pearce, 2005 for more details).
 (defparameter *correct-onsets-to-first-barline* t)
+
+;; This parameter determines whether ties are allowed to cross voices.
+(defparameter *ties-may-cross-voices* nil)
+
+;; This parameter determines whether ties are allowed to cross subvoices
+;; (ignored if *ties-may-cross-voices* is true).
+(defparameter *ties-may-cross-subvoices* t)
+
+
+
+
+;;;==================
+;;;* Structures *
+;;;==================
+
+(defstruct humdrum-state
+  excl-interpret    ;; exclusive interpretation, e.g. **kern, **dyn, ...
+  environment       ;; e.g. time signature, mode, ...
+  cued-for-join     ;; boolean, concerns spine paths
+  cued-for-exchange ;; boolean, concerns spine paths
+  tied-events)      ;; list of "tie-markers", each corresponding to an unclosed tie
+
+(defstruct tie-marker
+  cpitch               ;; chromatic pitch of the tied note
+  closed               ;; boolean: whether an end has been found for this tie
+  voice
+  subvoice
+  attach-onsets        ;; list of onsets at which future notes can join the tie
+  position)            ;; ordinal position of the processed event corresponding
+;; to this tied note in <processed-events>, 1-indexed once <processed-events>
+;; has been reversed so that earlier elements of the list correspond to earlier
+;; temporal positions.
 
 
 ;;;==================
@@ -213,6 +251,12 @@
    Assumes that it has already been determined that the 
    token is a kern-event and not, say, a key signature."
   (cl-ppcre:scan-to-strings "\\[" kern-event))
+
+(defun middle-tie-p (kern-event)
+  "Returns whether a given <kern-event> token opens a tie.
+   Assumes that it has already been determined that the 
+   token is a kern-event and not, say, a key signature."
+  (cl-ppcre:scan-to-strings "\\_" kern-event))
 
 (defun close-tie-p (kern-event)
   "Returns whether a given <kern-event> token opens a tie.
@@ -314,6 +358,8 @@
 	(records-to-parse (cdr records))
 	(processed-events nil))
     (check-interpretations interpretations)
+    (setf *first-barline-reached* nil)
+    (setf *ties* nil)
     (let ((humdrum-states (initialise-humdrum-states
 			   interpretations))
 	  (next-humdrum-states nil))
@@ -321,7 +367,8 @@
       (dolist (numbered-record records-to-parse)
 	(let ((record (second numbered-record)))
 	  (setf *line-number* (first numbered-record))
-	  (setf *first-barline-reached* nil)
+	  (setf *record-onsets* nil)
+	  (format t "Record number: ~A~%" *line-number*)
 	  (check-num-tokens humdrum-states record)
 	  ;; Iterate over states/tokens	
 	  (dotimes (i (length humdrum-states))
@@ -334,7 +381,6 @@
 					(cadr regexp-match)))
 		   (excl-interpret (humdrum-state-excl-interpret
 				    humdrum-state)))
-	      (check-open-ties humdrum-state processed-events)
 	      (check-token-type humdrum-state kern-token-type)
 	      (multiple-value-bind (new-humdrum-states new-processed-events)
 		  (case kern-token-type
@@ -350,6 +396,9 @@
 		(setf next-humdrum-states (append new-humdrum-states
 						  next-humdrum-states))
 		(setf processed-events new-processed-events))))
+	  (check-record-onsets *record-onsets*)
+	  (setf *ties* (check-ties *ties* *record-onsets* processed-events))
+	  (format t "Ties: ~A~%" *ties*)
 	  (setf next-humdrum-states (join-states next-humdrum-states))
 	  (setf next-humdrum-states (exchange-states next-humdrum-states))
 	  (setf humdrum-states (reverse next-humdrum-states)
@@ -518,20 +567,6 @@ The line reads:
 	  (list 'voice voice)
 	  (list 'subvoice assigned-subvoice))))
 
-(defstruct humdrum-state
-  excl-interpret    ;; exclusive interpretation, e.g. **kern, **dyn, ...
-  environment       ;; e.g. time signature, mode, ...
-  cued-for-join     ;; boolean, concerns spine paths
-  cued-for-exchange ;; boolean, concerns spine paths
-  tied-events)      ;; list of "tie-markers", each corresponding to an unclosed tie
-
-(defstruct tie-marker  ;; Marker for an unclosed tie.
-  cpitch               ;; chromatic pitch of the tied note
-  position)            ;; ordinal position of the processed event corresponding
-;; to this tied note in <processed-events>, 1-indexed once <processed-events>
-;; has been reversed so that earlier elements of the list correspond to earlier
-;; temporal positions.
-
 (defun initialise-humdrum-states (interpretations)
   (reset-voice-counter)
   (mapcar #'(lambda (x)
@@ -553,6 +588,7 @@ The line reads:
    the 0-indexed position without reversing."
   (- (length processed-events)
      (tie-marker-position tie-marker)))
+
 
 (defun deep-copy-humdrum-state
     (state &key
@@ -602,24 +638,51 @@ The line reads:
   "Copies an environment."
   (deep-copy-via-prin1 environment))
 
-(defun check-open-ties (humdrum-state processed-events)
-  "Checks that there aren't any ties that have lasted too long
-   without being closed. To do this, we check that there are 
-   no open tied notes in <processed-events> whose current
-   offsets are before the current environment onset time."
-  (dolist (open-tie (humdrum-state-tied-events humdrum-state))
-    (let* ((tie-position (get-tie-position-in-processed-events
-			  open-tie processed-events))
-	   (tie-event (nth tie-position processed-events))
-	   (tie-offset (+ (second (assoc :onset tie-event))
-			  (second (assoc :dur tie-event))))
-	   (current-environment (humdrum-state-environment
-				 humdrum-state))
-	   (current-onset (second (assoc 'onset
-					 current-environment))))
-      (if (< tie-offset current-onset)
-	  (error 'kern-line-read-error
-		 :text "Unclosed tie found.")))))
+(defun check-record-onsets (record-onsets)
+  "Checks that all onsets recorded for the current record
+   are equal."
+  (format t "Record onsets: ~A~%" record-onsets)
+  (if (not (utils:all-eql record-onsets))
+      (error
+	 'kern-line-read-error
+	 :text "Note timings failed to match up between spines.")))
+
+(defun get-onset-from-humdrum-states (state-list)
+  (let ((onsets nil))
+    (dolist (state state-list)
+      (if (string= (humdrum-state-excl-interpret state)
+		   "**kern")
+	  (push (get-from-humdrum-state-envir 'onset state)
+		onsets)))
+    (if (utils:all-eql onsets)
+	(car onsets)
+	(error
+	 'kern-line-read-error
+	 :text "Note timings failed to match up between spines."))))
+
+(defun check-ties (ties record-onsets processed-events)
+  "Checks that no tied notes have been left unclosed. 
+   Also removes old tie-markers from *ties*."
+  (if (not (null record-onsets))
+      (let ((current-onset (car record-onsets))
+	    (new-ties nil))
+	(dolist (tie ties)
+	  (let* ((tie-position (get-tie-position-in-processed-events
+				tie processed-events))
+		 (tie-event (nth tie-position processed-events))
+		 (tie-offset (+ (second (assoc :onset tie-event))
+				(second (assoc :dur tie-event))))
+		 (tie-closed (tie-marker-closed tie)))
+	    (format t "Tie-position: ~A~%" tie-position)
+	    (format t "Tie-event: ~A~%" tie-event)
+	    (format t "Tie-offset: ~A~%" tie-offset)
+	    (format t "Tie-closed: ~A~%" tie-closed)
+	    (if (>= tie-offset current-onset)
+		(push tie new-ties)
+		(if (not tie-closed)
+		    (error 'kern-line-read-error
+			   :text "Unclosed tie found.")))))
+	new-ties)))
 
 (defun check-token-type (state token-type)
   "Checks that the type of the observed token is consistent
@@ -732,6 +795,7 @@ The line reads:
 	 (dur2 (cadr (assoc :dur note2)))
 	 (offset1 (+ onset1 dur1))
 	 (offset2 (+ onset2 dur2))
+	 (new-dur (- (max offset1 offset2) onset1))
 	 (cpitch1 (cadr (assoc :cpitch note1)))
 	 (cpitch2 (cadr (assoc :cpitch note2))))
     (cond ((< offset1 onset2)
@@ -742,7 +806,7 @@ The line reads:
 		  :text "Tried to merge two notes with different pitches."))
 	  ((> offset1 offset2) note1)
 	  (t (update-alist note1 
-			   (list :dur offset2)
+			   (list :dur new-dur)
 			   (list :phrase 
 				 (let ((p1 (cadr (assoc :phrase note1)))
 				       (p2 (cadr (assoc :phrase note2))))
@@ -1016,7 +1080,44 @@ in a phrase, and 0 otherwise."
 		       kern-token))))
     (values next-humdrum-states processed-events)))
 
+
 (defun process-kern-event->processed-event
+    (kern-token humdrum-state processed-events)
+  (let* ((new-event (funcall 'kern-event kern-token
+			     environment))
+	 (new-onset (second (assoc :onset new-event))))
+    (push new-onset *record-onsets*))
+  (cond ((open-tie-p kern-token)
+	 (process-open-tie->processed-event
+	  kern-token humdrum-state processed-events))
+	((close-tie-p kern-token)
+	 (process-continue-tie->processed-event
+	  kern-token humdrum-state processed-events))))
+
+(defun process-open-tie->processed-event
+    (kern-token humdrum-state processed-events)
+  (let* ((environment (humdrum-state-environment
+		       humdrum-state))
+	 (voice (get-from-humdrum-state-envir
+		 'voice humdrum-state))
+	 (subvoice (get-from-humdrum-state-envir
+		    'subvoice humdrum-state))
+	 (new-event (funcall 'kern-event kern-token
+			     environment))
+	 (new-cpitch (second (assoc :cpitch new-event)))
+	 (new-onset (second (assoc :onset new-event)))
+	 (new-dur (second (assoc :dur new-event)))
+	 (new-offset (+ new-onset new-dur)))
+    (push new-event processed-events)
+    (push (make-tie-marker :cpitch new-cpitch
+			   :closed nil
+			   :voice voice :subvoice subvoice
+			   :attach-onsets (list new-offset)
+			   :position (length processed-events))
+	  *ties*)
+    processed-events))  
+
+(defun process-continue-tie->processed-event
     (kern-token humdrum-state processed-events)
   "Takes a <kern-token>, processes it, and returns
    an updated <humdrum-state> and <processed-events>.
@@ -1027,60 +1128,68 @@ in a phrase, and 0 otherwise."
    :environment slot of <humdrum-state> is not
    affected by this function; this functionality
    is achieved by process-kern-event->environment."
-  (let* ((open-tie-permitted t)
-	 (environment (humdrum-state-environment
+  (let* ((environment (humdrum-state-environment
 		       humdrum-state))
+	 (voice (get-from-humdrum-state-envir
+		 'voice humdrum-state))
+	 (subvoice (get-from-humdrum-state-envir
+		    'subvoice humdrum-state))
 	 (new-event (funcall 'kern-event kern-token
 			     environment))
-	 (tied-to-prev-event nil))
-    (if (null (humdrum-state-tied-events humdrum-state))
-	;; No previous ties exist
-	(if (close-tie-p kern-token)
-	    (error 'kern-line-read-error
-		   :text "Tie closure indicated with no tie to close.")
-	    (push new-event processed-events))
-	;; Previous ties exist
-	(let* ((new-cpitch (second (assoc :cpitch new-event)))
-	       (index-matching-ties (utils:all-positions-if
-				     #'(lambda (x)
-					 (eql (tie-marker-cpitch x)
-					      new-cpitch))
-				     (humdrum-state-tied-events humdrum-state))))
-	  (if (> (length index-matching-ties) 0)
-	      (progn
-		(dolist (i index-matching-ties)
-		  (setf tied-to-prev-event t)
-		  (let ((tied-note-position (get-tie-position-in-processed-events
-					     (nth i (humdrum-state-tied-events
-						     humdrum-state))
-					     processed-events)))
-		    (setf (nth tied-note-position processed-events)
-			  (merge-tied-notes (nth tied-note-position processed-events)
-					    new-event))))
-		;; Ties can't start on notes already part of ties
-		(setf open-tie-permitted nil))
-	      (push new-event processed-events))
-	  (if (close-tie-p kern-token)
-	      (if (> (length index-matching-ties) 0)
-		  (dolist (i index-matching-ties)
-		    (setf (humdrum-state-tied-events humdrum-state)
-			  (utils:remove-nth i (humdrum-state-tied-events
-					       humdrum-state))))
-		  (error 'kern-line-read-error
-			 :text "Attempted to close a tie when none was open.")))))
-    (if (open-tie-p kern-token)
-	(if (null open-tie-permitted)
-	    (error 'kern-line-read-error
-		   :text "Attempted to open a tie during a tie.")
-	    (let ((new-tie-marker
-		   (make-tie-marker :cpitch (second (assoc :cpitch new-event))
-				    :position (length processed-events))))
-	      (push new-tie-marker                   
-		    (humdrum-state-tied-events humdrum-state)))))
-    (values humdrum-state processed-events tied-to-prev-event)))
+	 (new-onset (second (assoc :onset new-event)))
+	 (new-dur (second (assoc :dur new-event)))
+	 (new-offset (+ new-onset new-dur))
+	 (new-cpitch (second (assoc :cpitch new-event)))
+	 (tied-to-prev-event nil)
+	 (index-matching-ties (loop for n below
+				   (length *ties*)
+				 collect n))
+	 ;;; Find the initial tied event
+	 ;; Check subvoice
+	 (index-matching-ties (if *ties-may-cross-subvoices*
+				  index-matching-ties
+				  (utils:all-positions-if
+				   #'(lambda (x)
+				       (eql (tie-marker-subvoice (nth x *ties*))
+					    subvoice))
+				   index-matching-ties)))
+	 ;; Check voice
+	 (index-matching-ties (if *ties-may-cross-voices*
+				  index-matching-ties
+				  (utils:all-positions-if
+				   #'(lambda (x)
+				       (eql (tie-marker-voice (nth x *ties*))
+					    voice))
+				   index-matching-ties)))
+	 ;; Check pitch
+	 (index-matching-ties (utils:all-positions-if
+			       #'(lambda (x)
+				   (eql (tie-marker-cpitch (nth x *ties*))
+					new-cpitch))
+			       index-matching-ties))
+	 ;; Check onset
+	 (index-matching-ties (utils:all-positions-if
+			       #'(lambda (x)
+				   (member new-onset
+					   (tie-marker-attach-onsets (nth x *ties*))))
+			       index-matching-ties)))
+    (if (null index-matching-ties)
+	;; No matching ties found
+	(error 'kern-line-read-error
+	       :text "Tie continuation indicated but could not find any ties to continue."))
+    (dolist (i index-matching-ties)
+      (let ((tied-note-position (get-tie-position-in-processed-events
+				 (nth i *ties*) processed-events)))
+	(setf (nth tied-note-position processed-events)
+	      (merge-tied-notes (nth tied-note-position processed-events)
+				new-event))
+	(if (middle-tie-p kern-token)
+	    ;; Allow the tie to be continued by future events
+	    (push new-offset (tie-marker-attach-onsets (nth i *ties*))))))
+    processed-events)
 
 (defun process-kern-event->environment
-    (kern-token humdrum-state tied-to-prev-event)
+    (kern-token humdrum-state)
   (let* ((environment (humdrum-state-environment humdrum-state))
 	 (current-envir-onset (cadr (assoc 'onset environment)))
 	 (current-envir-bioi (cadr (assoc 'bioi environment)))
@@ -1089,7 +1198,8 @@ in a phrase, and 0 otherwise."
 	 (new-envir-onset (list 'onset (+ current-envir-onset
 					  event-dur)))
 	 (new-envir-bioi (list 'bioi (+ event-dur 
-					(if tied-to-prev-event
+					(if (or (middle-tie-p kern-token)
+						(close-tie-p kern-token))
 					    current-envir-bioi
 					    0))))
 	 (new-envir-deltast (list 'deltast 0))
@@ -1105,16 +1215,13 @@ in a phrase, and 0 otherwise."
 
 (defun process-kern-event
     (kern-token humdrum-state processed-events)
-  (multiple-value-bind (new-state
-			new-processed-events
-			tied-to-prev-event)
-      (process-kern-event->processed-event kern-token
-					   humdrum-state
-					   processed-events)
-    (values (list (process-kern-event->environment kern-token
-						   new-state
-						   tied-to-prev-event))
-	    new-processed-events)))
+  (let ((new-processed-events (process-kern-event->processed-event
+			       kern-token
+			       humdrum-state
+			       processed-events))
+	(new-humdrum-state (process-kern-event->environment
+			    kern-token humdrum-state)))
+    (values new-humdrum-state new-processed-events)))
 
 (defun process-chord
     (kern-token humdrum-state processed-events)
