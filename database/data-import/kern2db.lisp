@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-02-06 23:23:08 peter>                           
+;;;; Time-stamp: <2017-02-07 10:40:10 peter>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -368,7 +368,8 @@
 	(let ((record (second numbered-record)))
 	  (setf *line-number* (first numbered-record))
 	  (setf *record-onsets* nil)
-	  (format t "Record number: ~A~%" *line-number*)
+	  ;;(format t "~%Record number: ~A~%" *line-number*)
+	  ;;(format t "Record: ~A~%" record)
 	  (check-num-tokens humdrum-states record)
 	  ;; Iterate over states/tokens	
 	  (dotimes (i (length humdrum-states))
@@ -395,10 +396,15 @@
 		       (t (values humdrum-state processed-events)))))
 		(setf next-humdrum-states (append new-humdrum-states
 						  next-humdrum-states))
+		;;(format t "New processed events after state ~A: ~A~%"
+		;;	i new-processed-events)
 		(setf processed-events new-processed-events))))
+	  ;;(format t "Processed events: ~A~%" processed-events)
+	  ;;(format t "Record onsets: ~A~%" *record-onsets*)
 	  (check-record-onsets *record-onsets*)
 	  (setf *ties* (check-ties *ties* *record-onsets* processed-events))
-	  (format t "Ties: ~A~%" *ties*)
+	  ;;(format t "Processed events: ~A~%" processed-events)
+	  ;;(format t "Ties: ~A~%" *ties*)
 	  (setf next-humdrum-states (join-states next-humdrum-states))
 	  (setf next-humdrum-states (exchange-states next-humdrum-states))
 	  (setf humdrum-states (reverse next-humdrum-states)
@@ -641,7 +647,6 @@ The line reads:
 (defun check-record-onsets (record-onsets)
   "Checks that all onsets recorded for the current record
    are equal."
-  (format t "Record onsets: ~A~%" record-onsets)
   (if (not (utils:all-eql record-onsets))
       (error
 	 'kern-line-read-error
@@ -673,10 +678,10 @@ The line reads:
 		 (tie-offset (+ (second (assoc :onset tie-event))
 				(second (assoc :dur tie-event))))
 		 (tie-closed (tie-marker-closed tie)))
-	    (format t "Tie-position: ~A~%" tie-position)
-	    (format t "Tie-event: ~A~%" tie-event)
-	    (format t "Tie-offset: ~A~%" tie-offset)
-	    (format t "Tie-closed: ~A~%" tie-closed)
+	    ;;(format t "Tie-position: ~A~%" tie-position)
+	    ;;(format t "Tie-event: ~A~%" tie-event)
+	    ;;(format t "Tie-offset: ~A~%" tie-offset)
+	    ;;(format t "Tie-closed: ~A~%" tie-closed)
 	    (if (>= tie-offset current-onset)
 		(push tie new-ties)
 		(if (not tie-closed)
@@ -1080,19 +1085,36 @@ in a phrase, and 0 otherwise."
 		       kern-token))))
     (values next-humdrum-states processed-events)))
 
+(defun process-kern-event
+    (kern-token humdrum-state processed-events)
+  (let ((new-processed-events (process-kern-event->processed-event
+			       kern-token
+			       humdrum-state
+			       processed-events))
+	(new-humdrum-state (process-kern-event->environment
+			    kern-token humdrum-state)))
+    (values (list new-humdrum-state)
+	    new-processed-events)))
 
 (defun process-kern-event->processed-event
     (kern-token humdrum-state processed-events)
-  (let* ((new-event (funcall 'kern-event kern-token
+  (let* ((environment (humdrum-state-environment
+		       humdrum-state))
+	 (new-event (funcall 'kern-event kern-token
 			     environment))
-	 (new-onset (second (assoc :onset new-event))))
-    (push new-onset *record-onsets*))
-  (cond ((open-tie-p kern-token)
-	 (process-open-tie->processed-event
-	  kern-token humdrum-state processed-events))
-	((close-tie-p kern-token)
-	 (process-continue-tie->processed-event
-	  kern-token humdrum-state processed-events))))
+	 (new-onset (second (assoc :onset new-event)))
+	 (new-processed-events
+	  (cond ((open-tie-p kern-token)
+		 (process-open-tie->processed-event
+		  kern-token humdrum-state processed-events))
+		((or (middle-tie-p kern-token)
+		     (close-tie-p kern-token))
+		 (process-continue-tie->processed-event
+		  kern-token humdrum-state processed-events))
+		(t (process-no-tie->processed-event
+		    kern-token humdrum-state processed-events)))))
+    (push new-onset *record-onsets*)
+    new-processed-events))
 
 (defun process-open-tie->processed-event
     (kern-token humdrum-state processed-events)
@@ -1140,7 +1162,6 @@ in a phrase, and 0 otherwise."
 	 (new-dur (second (assoc :dur new-event)))
 	 (new-offset (+ new-onset new-dur))
 	 (new-cpitch (second (assoc :cpitch new-event)))
-	 (tied-to-prev-event nil)
 	 (index-matching-ties (loop for n below
 				   (length *ties*)
 				 collect n))
@@ -1185,8 +1206,21 @@ in a phrase, and 0 otherwise."
 				new-event))
 	(if (middle-tie-p kern-token)
 	    ;; Allow the tie to be continued by future events
-	    (push new-offset (tie-marker-attach-onsets (nth i *ties*))))))
-    processed-events)
+	    (push new-offset (tie-marker-attach-onsets (nth i *ties*)))
+	    (if (close-tie-p kern-token)
+		;; Close the tie marker
+		(setf (tie-marker-closed (nth i *ties*)) t)
+		(error "Ties should be only able to continue as <middle> or <close>.")))))
+    processed-events))
+
+(defun process-no-tie->processed-event
+    (kern-token humdrum-state processed-events)
+  (let* ((environment (humdrum-state-environment
+		       humdrum-state))
+	 (new-event (funcall 'kern-event kern-token
+			     environment)))
+    (push new-event processed-events)
+    processed-events))
 
 (defun process-kern-event->environment
     (kern-token humdrum-state)
@@ -1213,24 +1247,14 @@ in a phrase, and 0 otherwise."
 	  new-environment)
     humdrum-state))
 
-(defun process-kern-event
-    (kern-token humdrum-state processed-events)
-  (let ((new-processed-events (process-kern-event->processed-event
-			       kern-token
-			       humdrum-state
-			       processed-events))
-	(new-humdrum-state (process-kern-event->environment
-			    kern-token humdrum-state)))
-    (values new-humdrum-state new-processed-events)))
-
 (defun process-chord
     (kern-token humdrum-state processed-events)
-  (multiple-value-bind (new-state new-processed-events any-untied)
+  (multiple-value-bind (new-processed-events any-untied)
       (process-chord->processed-events kern-token
 				       humdrum-state
 				       processed-events)
     (values (list (process-chord->environment kern-token
-					      new-state
+					      humdrum-state
 					      any-untied))
 	    new-processed-events)))
 
@@ -1248,23 +1272,22 @@ in a phrase, and 0 otherwise."
   (let ((chord-split (split-string kern-token " "))
 	(any-untied nil))
     (labels ((fun (remaining-tokens humdrum-state processed-events)
-	       (if (null remaining-tokens) (values humdrum-state
-						   processed-events)
-		   (multiple-value-bind (new-state
-					 new-processed-events
-					 tied-to-prev-event)
-		       (process-kern-event->processed-event
-			(car remaining-tokens)
-			humdrum-state
-			processed-events)
+	       (if (null remaining-tokens)
+		   processed-events
+		   (let* ((token (car remaining-tokens))
+			  (new-remaining-tokens (cdr remaining-tokens))
+			  (tied-to-prev-event (or (middle-tie-p token)
+						  (close-tie-p token)))
+			  (new-processed-events
+			   (process-kern-event->processed-event
+			    token humdrum-state processed-events)))
 		     (if (not tied-to-prev-event)
 			 (setf any-untied t))
-		     (fun (cdr remaining-tokens)
-			  new-state
+		     (fun new-remaining-tokens humdrum-state
 			  new-processed-events)))))
-      (multiple-value-bind (new-state new-processed-events)
-	  (fun chord-split humdrum-state processed-events)
-	(values new-state new-processed-events any-untied)))))
+      (let ((new-processed-events (fun chord-split humdrum-state
+				       processed-events)))
+	(values new-processed-events any-untied)))))
 
 (defun process-chord->environment
     (kern-token humdrum-state any-untied)
