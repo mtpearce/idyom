@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-02-07 14:10:05 peter>                           
+;;;; Time-stamp: <2017-02-07 15:55:08 peter>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -46,20 +46,64 @@
 ;;;; representation (not a performance), rests are not explicitly encoded
 ;;;; and repeated sections are not explicitly expanded. 
 ;;;;
-;;;; Todo =================================================================
+;;;; Todo (features)  =====================================================
 ;;;; ======================================================================
 ;;;;
-;;;; 1. take account of spine path tokens (*+ *- *^ *v *x) when
-;;;;    converting records to spines.
-;;;; 2. process representations other than **kern (e.g, **dyn, **dur,
+;;;; 1. process representations other than **kern (e.g, **dyn, **dur,
 ;;;;    **harm etc.)
-;;;; 3. deal with other event tokens
-;;;; 4. deal with nested or overlapping phrases.
-;;;; 5. explicitly expand repeated sections
+;;;; 2. deal with other event tokens
+;;;; 3. deal with nested or overlapping phrases
+;;;; 4. explicitly expand repeated sections
+;;;; 5. add intelligent tie correction
+;;;;
+;;;; ======================================================================
+;;;; Todo (coding) ========================================================
+;;;; ======================================================================
+;;;;
+;;;; 1. reimplement using CLOS
+;;;; 2. combine the concept of "humdrum-state" with that of "environment"
+;;;; 3. implement a parser "state" instead of using global variables
+;;;; 4. make use of *unrecognised-representations* and *unrecognised-tokens*
 ;;;;
 ;;;; =======================================================================
 
 (cl:in-package #:kern2db)
+
+;;;==================
+;;;* User parameters *
+;;;==================
+
+(defparameter *default-timebase* 96)    ;basic time units in a semibreve 
+(defparameter *middle-c* '(60 35))      ;pitch mapping for middle c
+(defparameter *spines* '(1))            ;spines to convert (nil = all spines)
+(defparameter *default-onset* 0)        ;initial onset  
+(defparameter *default-pause* 1)        ;initial pause off
+
+(defparameter *default-timesig* '(nil nil))   ;default time signature
+(defparameter *default-keysig* nil)           ;no. of sharps in keysig
+(defparameter *default-mode* nil)             ;0 major - 9 minor
+(defparameter *default-tempo* nil)            ;default tempo/bpm
+(defparameter *default-bioi* 0)               ;default inter-onset interval
+(defparameter *default-instrument* nil)       ;default instrument
+(defparameter *default-instrument-class* nil) ;default instrument class
+(defparameter *default-instrument-group* nil) ;default instrument group
+
+;; This parameter determines whether onsets should be corrected so that
+;; an onset of 0 corresponds to the beginning of the first complete bar
+;; in the piece, with anacruses being imaginarily extended to the
+;; length of a full bar (see Pearce, 2005 for more details).
+(defparameter *correct-onsets-to-first-barline* t)
+
+;; This parameter determines whether ties are allowed to cross voices.
+(defparameter *ties-may-cross-voices* t)
+
+;; This parameter determines whether ties are allowed to cross subvoices
+;; (ignored if *ties-may-cross-voices* is true).
+(defparameter *ties-may-cross-subvoices* t)
+
+;;;======================
+;;;* Global constants *
+;;;======================
 
 (defvar *eof* (list 'eof))
 (defvar *input-file-extension* ".krn")
@@ -96,54 +140,28 @@
             ("^=" ignore-token)                    ;ignore the other barlines 
             ("^[^!=.*].*r" musical-rest)           ;rests 
             ("^[^!=.*].* .+" chord)                ;chords
-            ("^[^!=.*]" kern-event))))             ;events   
+            ("^[^!=.*]" kern-event))))             ;events
 
-(defvar *unrecognised-representations* '())
-(defvar *unrecognised-tokens* '())
-(defvar *voices* '())
-(defvar *voice-counter* 0)
-(defvar *line-number* 0)
-(defvar *lines* '())
-(defvar *first-barline-reached* nil)
-(defvar *onset-correction* 0)
-(defvar *ties* nil)
-(defvar *record-onsets* nil)
+;;;======================
+;;;* Global variables *
+;;;======================
 
-(defparameter *default-timebase* 96)    ;basic time units in a semibreve 
-(defparameter *middle-c* '(60 35))      ;pitch mapping for middle c
-(defparameter *spines* '(1))            ;spines to convert (nil = all spines)
-(defparameter *default-onset* 0)        ;initial onset  
-(defparameter *default-pause* 1)        ;initial pause off
-
-(defparameter *default-timesig* '(nil nil))   ;default time signature
-(defparameter *default-keysig* nil)           ;no. of sharps in keysig
-(defparameter *default-mode* nil)             ;0 major - 9 minor
-(defparameter *default-tempo* nil)            ;default tempo/bpm
-(defparameter *default-bioi* 0)               ;default inter-onset interval
-(defparameter *default-instrument* nil)       ;default instrument
-(defparameter *default-instrument-class* nil) ;default instrument class
-(defparameter *default-instrument-group* nil) ;default instrument group
-
-;; This parameter determines whether onsets should be corrected so that
-;; an onset of 0 corresponds to the beginning of the first complete bar
-;; in the piece, with anacruses being imaginarily extended to the
-;; length of a full bar (see Pearce, 2005 for more details).
-(defparameter *correct-onsets-to-first-barline* t)
-
-;; This parameter determines whether ties are allowed to cross voices.
-(defparameter *ties-may-cross-voices* t)
-
-;; This parameter determines whether ties are allowed to cross subvoices
-;; (ignored if *ties-may-cross-voices* is true).
-(defparameter *ties-may-cross-subvoices* t)
-
-
-
+(defvar *unrecognised-representations* '());list of unrecognised representations
+(defvar *unrecognised-tokens* '())         ;list of unrecognised tokens
+(defvar *voices* '())                      ;list of assigned voices
+(defvar *voice-counter* 0)                 ;counts the number of voices assigned so far
+(defvar *line-number* 0)                   ;current line being parsed
+(defvar *lines* '())                       ;list of lines in the file being parsed
+(defvar *first-barline-reached* nil)       ;boolean; whether the first barline has been parsed
+(defvar *onset-correction* 0)              ;correction which will be applied to all onsets
+(defvar *ties* nil)                        ;list of ties currently available
+(defvar *record-onsets* nil)               ;list of onsets derived for the current record
 
 ;;;==================
 ;;;* Structures *
 ;;;==================
 
+;; <humdrum-states> are used to track the parsing of individual spines.
 (defstruct humdrum-state
   excl-interpret    ;; exclusive interpretation, e.g. **kern, **dyn, ...
   environment       ;; e.g. time signature, mode, ...
@@ -151,18 +169,18 @@
   cued-for-exchange ;; boolean, concerns spine paths
   tied-events)      ;; list of "tie-markers", each corresponding to an unclosed tie
 
+;; <tie-markers> are used to track tied events.
 (defstruct tie-marker
   cpitch               ;; chromatic pitch of the tied note
   closed               ;; boolean: whether an end has been found for this tie
-  voice
-  subvoice
-  tokens               ;; tokens that formed part of the tie
+  voice                ;; voice of the tied note
+  subvoice             ;; subvoice of the tied note
+  tokens               ;; **kern tokens that formed part of the tie
   attach-onsets        ;; list of onsets at which future notes can join the tie
   position)            ;; ordinal position of the processed event corresponding
 ;; to this tied note in <processed-events>, 1-indexed once <processed-events>
 ;; has been reversed so that earlier elements of the list correspond to earlier
 ;; temporal positions.
-
 
 ;;;==================
 ;;;* Top level call *
@@ -219,7 +237,8 @@
     (cons (pathname-name file-name) processed-data)))
 
 (defun print-status ()
-  "Print message warning about unrecognised representations or tokens."
+  "Print message warning about unrecognised representations or tokens.
+   Not currently used."
   (unless (null *unrecognised-representations*)
     (format t "~%The following representations were unrecognised: ~S"
             *unrecognised-representations*))
@@ -233,18 +252,23 @@
 ;;;===========================
 
 (defun kern-p (x)
+  "Returns whether a kern token corresponds to the **kern representation."
   (string= x "**kern"))
 
 (defun pause-p (token)
+  "Returns whether a kern token corresponds to a pause."
   (cl-ppcre:scan-to-strings ";" token))
 
 (defun end-of-phrase-p (token)
+  "Returns whether a kern token corresponds to the end of a phrase."
   (cl-ppcre:scan-to-strings "}" token))
 
 (defun start-of-phrase-p (token)
+  "Returns whether a kern token corresponds to the start of a phrase."
   (cl-ppcre:scan-to-strings "{" token))
 
 (defun line-comment-p (string)
+  "Returns whether a kern line corresponds to a full-line comment."
   (cl-ppcre:scan-to-strings "^!!" string))
 
 (defun open-tie-p (kern-event)
@@ -265,18 +289,6 @@
    token is a kern-event and not, say, a key signature."
   (cl-ppcre:scan-to-strings "\\]" kern-event))
 
-(defun chord-open-tie-p (chord)
-  "Returns whether a given <chord> token opens a tie.
-   Assumes that it has already been determined that the 
-   token is a chord and not, say, a key signature."
-  (mapcar #'open-tie-p (split-string chord " ")))
-
-(defun chord-close-tie-p (chord)
-  "Returns whether a given <chord> token closes a tie.
-   Assumes that it has already been determined that the 
-   token is a chord and not, say, a key signature."
-  (mapcar #'close-tie-p (split-string chord " ")))
-
 
 ;;;================================
 ;;;* Reading kern data from file. * 
@@ -284,9 +296,9 @@
 
 
 (defun read-kern-data (file-name)
-  "Converts a kern file into a list of lists corresponding to each spine in
-   the file. Elements in the spine lists are strings corresponding to each
-   element in the spine."
+  "Reads data from a kern file, returning a numbered
+   list of records, where each record has been split
+   into a list of its component tokens."
   (setf *lines* (reverse (get-lines file-name)))
   (let* ((records (remove-empty-strings *lines*))
 	 (records (remove-line-comments records)))
@@ -312,8 +324,8 @@
     (map-stream-objects function s)))
 
 (defun get-lines (file-name)
-  "Returns a list of strings corresponding to the lines in <file-name>. Each
-   line in a kern file is a distinct record of musical events."
+  "Returns a numbered list of strings corresponding to the lines in <file-name>.
+   Each line in a kern file is a distinct record of musical events."
   (let ((lines '())
 	(line-count 0))
     (map-file-objects
@@ -354,7 +366,7 @@
 
 
 (defun process-kern-data (records)
-  "Converts the recorded kern data into a CHARM readable format."
+  "Converts the read kern data into a CHARM readable format."
   (let ((interpretations (car records))
 	(records-to-parse (cdr records))
 	(processed-events nil))
@@ -419,6 +431,9 @@
 
 (defun process-kern-token
     (humdrum-state processed-events kern-token kern-token-type)
+  "Processes a kern token according to its type, returning an
+   updated list of <humdrum-states> and an updated list 
+   of <processed-events>."
   (case kern-token-type
     (ignore-token (process-ignore-token
 		   humdrum-state processed-events))
@@ -440,8 +455,8 @@
 		humdrum-state processed-events))))
 
 (defun join-states (humdrum-states)
-  "This function takes a list of humdrum states, <humdrum-states>,
-   and joins any adjacent states that all have :cued-for-join
+  "Takes a list of <humdrum-states>
+   and joins all sets of adjacent states that all have :cued-for-join
    as true. Joining is only permitted if the states to be joined
    have the same exclusive interpretation. The join preserves only
    the properties of the first state in the collection to be joined.
@@ -491,8 +506,9 @@
 		   out-state)))
 	(fun humdrum-states nil nil))))
 
-
 (defun exchange-states (humdrum-states)
+  "Takes a list of <humdrum-states> and exchanges the order of any pairs
+   of states which have :cued-for-exchange as true."
   (if (null humdrum-states)
       nil
       (labels ((fun (input accumulator)
@@ -515,14 +531,14 @@
 			      (fun (cdr input) (cons (car input) accumulator)))))))
 	(fun humdrum-states nil))))
 
-
-
 (defun check-matching-excl-interpret (state1 state2)
   "Checks whether two humdrum states (<state1> and <state2>
    have the same exclusive interpretation."
   (eql (humdrum-state-excl-interpret state1)
        (humdrum-state-excl-interpret state2)))
-    
+
+;; Generic line read error, returning information about the
+;; line number and the text on that line.
 (define-condition kern-line-read-error (error)
   ((text :initarg :text :reader text))
   (:report (lambda (condition stream)
@@ -536,6 +552,8 @@ The line reads:
 		     (get-line *line-number*)))))
 
 (defun check-interpretations (interpretations)
+  "Checks <interpretations> to ensure that each element corresponds to
+   a valid exclusive interpretation label."
   (let ((*line-number* (first interpretations)))
     (if (not (every #'(lambda (x) (>= (length x) 2))
 		    (second interpretations)))
@@ -546,17 +564,21 @@ The line reads:
 	(error 'kern-line-read-error
 	       :text "First line of kern file (excluding comments and blank lines) contained tokens which did not begin with two asterisks, which is required by the Humdrum specification (these tokens should correspond to the spines' exclusive interpretations."))))
 
-(defun check-num-tokens
-    (humdrum-states record)
+(defun check-num-tokens (humdrum-states record)
+  "Checks that the number of tokens in <record> matches the
+   number of <humdrum-states>."
   (if (not (eql (length humdrum-states) (length record)))
       (error 'kern-line-read-error
 	     :text (format nil "Expected ~A tokens, but only found ~A."
 			   (length humdrum-states) (length record)))))
 
 (defun initialise-environment (voice &optional subvoice)
+  "Initialises the :environment component of a <humdrum-state>.
+   <voice> must be provided; if <subvoice> is not provided, then
+   it defaults to <voice>."
   (let ((assigned-subvoice (if subvoice 
 			       subvoice
-			       (list voice)))) ; subvoice defaults to voice
+			       (list voice))))
     ;; When we initialise this list, we need to copy any elements
     ;; which themselves are lists.
     (list (list 'onset *default-onset*)
@@ -577,6 +599,8 @@ The line reads:
 	  (list 'subvoice assigned-subvoice))))
 
 (defun initialise-humdrum-states (interpretations)
+  "Initialises <humdrum-states> according to the specifications
+   provided in <interpretations>."
   (reset-voice-counter)
   (mapcar #'(lambda (x)
 	      (let ((environment
@@ -597,7 +621,6 @@ The line reads:
    the 0-indexed position without reversing."
   (- (length processed-events)
      (tie-marker-position tie-marker)))
-
 
 (defun deep-copy-humdrum-state
     (state &key
@@ -638,9 +661,7 @@ The line reads:
 	value))
 
 (defun deep-copy-via-prin1 (obj)
-  "Makes a deep copy of an object by reading its printed representation.
-   Only works on simple types of objects, e.g. nested lists and
-   simple structures."
+  "Makes a deep copy of an object by reading its printed representation."
   (values (read-from-string (prin1-to-string obj))))
 
 (defun copy-environment (environment)
@@ -648,29 +669,15 @@ The line reads:
   (deep-copy-via-prin1 environment))
 
 (defun check-record-onsets (record-onsets)
-  "Checks that all onsets recorded for the current record
-   are equal."
+  "Checks that all onsets recorded for the current record are equal."
   (if (not (utils:all-eql record-onsets))
       (error
 	 'kern-line-read-error
 	 :text "Note timings failed to match up between spines.")))
 
-(defun get-onset-from-humdrum-states (state-list)
-  (let ((onsets nil))
-    (dolist (state state-list)
-      (if (string= (humdrum-state-excl-interpret state)
-		   "**kern")
-	  (push (get-from-humdrum-state-envir 'onset state)
-		onsets)))
-    (if (utils:all-eql onsets)
-	(car onsets)
-	(error
-	 'kern-line-read-error
-	 :text "Note timings failed to match up between spines."))))
-
 (defun check-ties (ties record-onsets processed-events)
   "Checks that no tied notes have been left unclosed. 
-   Also removes old tie-markers from ties."
+   Returns a version of <ties> where all old ties have been removed."
   (if (null record-onsets)
       ties
       (let ((current-onset (car record-onsets))
@@ -700,10 +707,10 @@ Tie **kern tokens: ~A~%" tie-position tie-event
 tie-offset tie-closed (reverse tie-tokens)))))))
 	new-ties)))
 
-(defun check-token-type (state token-type)
+(defun check-token-type (humdrum-state token-type)
   "Checks that the type of the observed token is consistent
-   with the the current state."
-  (if (null (humdrum-state-excl-interpret state))
+   with the the current <humdrum-state>."
+  (if (null (humdrum-state-excl-interpret humdrum-state))
       ;; If the exclusive interpretation slot is NIL, then 
       ;; we must see an exclusive interpretation on the
       ;; upcoming token.
@@ -759,36 +766,6 @@ tie-offset tie-closed (reverse tie-tokens)))))))
    expressions) which matches <string>." 
   (assoc string alist :test #'(lambda (item patt) 
                                 (cl-ppcre:scan-to-strings patt item))))
-
-(defun correct-onsets-in-first-bar (converted-spine first-onset environment
-				    &optional (offset 0))
-  "Corrects the onsets of events in the first bar in cases where the first
-   event in the piece is not the first event in the first bar."
-  (if (null (car (cadr (assoc 'timesig environment))))
-      converted-spine 
-      (let* ((current-event (car converted-spine)) ;; last note of first bar
-             (current-onset (cadr (assoc :onset current-event))) ;; last note onset
-             (current-dur (cadr (assoc :dur current-event))) ;; last note duration
-             (bar-length (calculate-bar-length environment)) ;; duration of first bar
-             (next-offset (if (not (null current-event))
-                              (+ offset current-dur)
-                              offset))
-             (new-onset (if (not (null current-event))
-                            (- (+ first-onset bar-length) next-offset))))
-        (cond ((null converted-spine) '())
-              ((= current-onset first-onset)
-               (cons (update-alist current-event
-                                   (list :onset new-onset)
-                                   (list :bioi new-onset)
-					;(list :deltast new-onset))
-                                   (list :deltast 0))
-                     (cdr converted-spine)))
-              (t (cons (update-alist current-event (list :onset new-onset
-							 :bioi new-onset))
-                       (correct-onsets-in-first-bar (cdr converted-spine)
-                                                    first-onset
-                                                    environment
-                                                    next-offset)))))))
 
 (defun calculate-bar-length (environment)
   "Calculates the number of time-units in a bar from the values of the
@@ -890,7 +867,7 @@ tie-offset tie-closed (reverse tie-tokens)))))))
     (pushnew new-instrument-group current-instrument-groups :test #'string=)))
 
 (defun keysig (keysig-token &optional environment)
-  "Process a key signature token."
+  "Processes a key signature token."
   (declare (ignore environment))
   (let* ((keysig-string (cl-ppcre:scan-to-strings "[a-g A-G n # -]+" keysig-token))
 	 (keysig-char (coerce keysig-string 'list)))
@@ -904,7 +881,7 @@ tie-offset tie-closed (reverse tie-tokens)))))))
       (find-sharps keysig-char 0))))
 
 (defun mode (mode-token &optional environment)
-  "Process a key token."
+  "Processes a key token."
   (declare (ignore environment))
   (let* ((mode-string (cl-ppcre:scan-to-strings "[a-g A-G ? X]" mode-token))
          (mode-char (car (coerce mode-string 'list))))
@@ -913,7 +890,7 @@ tie-offset tie-closed (reverse tie-tokens)))))))
           (t 0))))
 
 (defun timesig (timesig-token &optional environment)
-  "Process a time signature token."
+  "Processes a time signature token."
   (declare (ignore environment))
   (if (cl-ppcre:scan-to-strings "[X|Z|?]" timesig-token)
       (list nil nil)
@@ -925,12 +902,12 @@ tie-offset tie-closed (reverse tie-tokens)))))))
         (list num den))))
 
 (defun timebase (timebase-token &optional environment)
-  "Process a timebase token."
+  "Processes a timebase token."
   (declare (ignore environment))
   (parse-integer (cl-ppcre:scan-to-strings "[0-9]+" timebase-token)))
 
 (defun tempo (tempo-token &optional environment)
-  "Process a tempo token."
+  "Processes a tempo token."
   (declare (ignore environment))
   (if (cl-ppcre:scan-to-strings "^\\*MM\\[" tempo-token) ; verbal tempo indication
       nil
@@ -985,7 +962,7 @@ tie-offset tie-closed (reverse tie-tokens)))))))
           pulses phrase voice tempo)))
 
 (defun process-pitch (event-token)    
-  "Convert a kern pitch token <pitch-token> into a chromatic pitch
+  "Converts a kern pitch token <pitch-token> into a chromatic pitch
    and morphetic pitch given *middle-c*." 
   (let* ((c-middle-c (nth 0 *middle-c*))
          (m-middle-c (nth 1 *middle-c*))
@@ -1022,7 +999,7 @@ tie-offset tie-closed (reverse tie-tokens)))))))
          (- num-sharps num-flats)))))
 
 (defun process-dur (event-token environment)
-  "Convert a kern duration token <event-token> into a duration value in
+  "Converts a kern duration token <event-token> into a duration value in
    terms of basic time units specified by the timebase found in the
    current environment."
   (labels ((get-dotted-dur (dur num-dots)
@@ -1046,14 +1023,17 @@ in a phrase, and 0 otherwise."
         (t 0)))
 
 (defun process-excl-interpret-token (kern-token state processed-events)
+  "Processes an exclusive interpretation token."
   (setf (humdrum-state-excl-interpret state)
 	kern-token)
   (values (list state) processed-events))
 
 (defun process-ignore-token (state processed-events)
+  "Ignores a token."
   (values (list state) processed-events))
 
 (defun process-spine-path (kern-token humdrum-state processed-events)
+  "Processes a spine-path token."
   (let ((next-humdrum-states nil))
     (cond
       ;; Adding a spine path
@@ -1098,6 +1078,7 @@ in a phrase, and 0 otherwise."
 
 (defun process-kern-event
     (kern-token humdrum-state processed-events)
+  "Processes an event token (typically a musical note)."
   (let ((new-processed-events (process-kern-event->processed-event
 			       kern-token
 			       humdrum-state
@@ -1109,6 +1090,8 @@ in a phrase, and 0 otherwise."
 
 (defun process-kern-event->processed-event
     (kern-token humdrum-state processed-events)
+  "Updates <processed-events> with the result of processing 
+   an event token."
   (let* ((environment (humdrum-state-environment
 		       humdrum-state))
 	 (new-event (funcall 'kern-event kern-token
@@ -1129,6 +1112,8 @@ in a phrase, and 0 otherwise."
 
 (defun process-open-tie->processed-event
     (kern-token humdrum-state processed-events)
+   "Updates <processed-events> with the result of processing 
+   an event token which opens a tie."
   (let* ((environment (humdrum-state-environment
 		       humdrum-state))
 	 (voice (get-from-humdrum-state-envir
@@ -1153,15 +1138,8 @@ in a phrase, and 0 otherwise."
 
 (defun process-continue-tie->processed-event
     (kern-token humdrum-state processed-events)
-  "Takes a <kern-token>, processes it, and returns
-   an updated <humdrum-state> and <processed-events>.
-   Specifically, <processed-events> receives updates
-   to tied notes (if applicable) as well as additional
-   note events (if applicable), and the :tied-events
-   slot of <humdrum-state> updated. Note that the 
-   :environment slot of <humdrum-state> is not
-   affected by this function; this functionality
-   is achieved by process-kern-event->environment."
+   "Updates <processed-events> with the result of processing 
+   an event token which continues or terminates a tie."
   (let* ((environment (humdrum-state-environment
 		       humdrum-state))
 	 (voice (get-from-humdrum-state-envir
@@ -1235,6 +1213,8 @@ in a phrase, and 0 otherwise."
 
 (defun process-no-tie->processed-event
     (kern-token humdrum-state processed-events)
+  "Updates <processed-events> with the result of processing 
+   an event token which does not take part in a tie."
   (let* ((environment (humdrum-state-environment
 		       humdrum-state))
 	 (new-event (funcall 'kern-event kern-token
@@ -1244,6 +1224,8 @@ in a phrase, and 0 otherwise."
 
 (defun process-kern-event->environment
     (kern-token humdrum-state)
+  "Updates the :environment slot of a humdrum-state with 
+   the result of processing an event token."
   (let* ((environment (humdrum-state-environment humdrum-state))
 	 (current-envir-onset (cadr (assoc 'onset environment)))
 	 (current-envir-bioi (cadr (assoc 'bioi environment)))
@@ -1269,6 +1251,7 @@ in a phrase, and 0 otherwise."
 
 (defun process-chord
     (kern-token humdrum-state processed-events)
+  "Processes a chord token."
   (multiple-value-bind (new-processed-events any-untied)
       (process-chord->processed-events kern-token
 				       humdrum-state
@@ -1280,15 +1263,8 @@ in a phrase, and 0 otherwise."
 
 (defun process-chord->processed-events
     (kern-token humdrum-state processed-events)
-  "Takes a <kern-token> corresponding to a chord,
-   processes it, and returns an updated <humdrum-state>
-   and <processed-events>. Specifically, <processed-events>
-   receives updates to tied notes (if applicable) as well as 
-   additional note events (if applicable), and the :tied-events
-   slot of <humdrum-state> updated. Note that the 
-   :environment slot of <humdrum-state> is not
-   affected by this function; this functionality
-   is achieved by process-chord->environment."
+  "Updates <processed-events> with the result of processing 
+   a chord token."
   (let ((chord-split (split-string kern-token " "))
 	(any-untied nil))
     (labels ((fun (remaining-tokens humdrum-state processed-events)
@@ -1311,6 +1287,8 @@ in a phrase, and 0 otherwise."
 
 (defun process-chord->environment
     (kern-token humdrum-state any-untied)
+  "Updates the :environment slot of a humdrum-state with 
+   the result of processing a chord token."
   (let* ((environment (humdrum-state-environment humdrum-state))
 	 (current-envir-onset (cadr (assoc 'onset environment)))
 	 (current-envir-bioi (cadr (assoc 'bioi environment)))
@@ -1339,6 +1317,7 @@ in a phrase, and 0 otherwise."
 
 (defun process-first-barline
     (humdrum-state processed-events)
+  "Process the first barline of a piece."
   (let* ((environment (humdrum-state-environment
 		       humdrum-state))
 	 (current-envir-onset (cadr (assoc 'onset environment)))
@@ -1356,6 +1335,8 @@ in a phrase, and 0 otherwise."
 	    new-processed-events)))
 
 (defun correct-onsets (events correction)
+  "Corrects the onsets of a converted piece by adding
+   <correction> to the :onset slot of each event."
   (mapcar #'(lambda (event)
 	      (let ((current-onset (cadr (assoc :onset event))))
 		(update-alist event
@@ -1365,6 +1346,7 @@ in a phrase, and 0 otherwise."
 
 (defun process-musical-rest
     (kern-token humdrum-state processed-events)
+  "Processes a musical rest."
   (let* ((environment (humdrum-state-environment
 		       humdrum-state))
 	 (previous-event (car processed-events))
@@ -1402,6 +1384,7 @@ in a phrase, and 0 otherwise."
 (defun process-other-tokens
     (kern-token kern-token-type
      humdrum-state processed-events)
+  "Processes any other tokens not yet accounted for."
   (let* ((environment (humdrum-state-environment
 		       humdrum-state))
 	 (current-event (funcall kern-token-type kern-token environment))
