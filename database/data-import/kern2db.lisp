@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-02-07 10:40:10 peter>                           
+;;;; Time-stamp: <2017-02-07 14:10:05 peter>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -131,7 +131,7 @@
 (defparameter *correct-onsets-to-first-barline* t)
 
 ;; This parameter determines whether ties are allowed to cross voices.
-(defparameter *ties-may-cross-voices* nil)
+(defparameter *ties-may-cross-voices* t)
 
 ;; This parameter determines whether ties are allowed to cross subvoices
 ;; (ignored if *ties-may-cross-voices* is true).
@@ -156,6 +156,7 @@
   closed               ;; boolean: whether an end has been found for this tie
   voice
   subvoice
+  tokens               ;; tokens that formed part of the tie
   attach-onsets        ;; list of onsets at which future notes can join the tie
   position)            ;; ordinal position of the processed event corresponding
 ;; to this tied note in <processed-events>, 1-indexed once <processed-events>
@@ -368,8 +369,10 @@
 	(let ((record (second numbered-record)))
 	  (setf *line-number* (first numbered-record))
 	  (setf *record-onsets* nil)
-	  ;;(format t "~%Record number: ~A~%" *line-number*)
+	  ;;(format t "~%Line number: ~A~%" *line-number*)
 	  ;;(format t "Record: ~A~%" record)
+	  ;;(format t "Ties present at beginning of record: ~A~%" *ties*)
+	  ;;(format t "Processed events at beginning of record: ~A~%" processed-events)
 	  (check-num-tokens humdrum-states record)
 	  ;; Iterate over states/tokens	
 	  (dotimes (i (length humdrum-states))
@@ -404,7 +407,7 @@
 	  (check-record-onsets *record-onsets*)
 	  (setf *ties* (check-ties *ties* *record-onsets* processed-events))
 	  ;;(format t "Processed events: ~A~%" processed-events)
-	  ;;(format t "Ties: ~A~%" *ties*)
+	  
 	  (setf next-humdrum-states (join-states next-humdrum-states))
 	  (setf next-humdrum-states (exchange-states next-humdrum-states))
 	  (setf humdrum-states (reverse next-humdrum-states)
@@ -524,7 +527,7 @@
   ((text :initarg :text :reader text))
   (:report (lambda (condition stream)
 	     (format stream
-		     "Line ~A could not be parsed.
+		     "Error parsing line ~A.
 ~A
 The line reads:
 ~S"
@@ -667,8 +670,9 @@ The line reads:
 
 (defun check-ties (ties record-onsets processed-events)
   "Checks that no tied notes have been left unclosed. 
-   Also removes old tie-markers from *ties*."
-  (if (not (null record-onsets))
+   Also removes old tie-markers from ties."
+  (if (null record-onsets)
+      ties
       (let ((current-onset (car record-onsets))
 	    (new-ties nil))
 	(dolist (tie ties)
@@ -677,7 +681,8 @@ The line reads:
 		 (tie-event (nth tie-position processed-events))
 		 (tie-offset (+ (second (assoc :onset tie-event))
 				(second (assoc :dur tie-event))))
-		 (tie-closed (tie-marker-closed tie)))
+		 (tie-closed (tie-marker-closed tie))
+		 (tie-tokens (tie-marker-tokens tie)))
 	    ;;(format t "Tie-position: ~A~%" tie-position)
 	    ;;(format t "Tie-event: ~A~%" tie-event)
 	    ;;(format t "Tie-offset: ~A~%" tie-offset)
@@ -686,7 +691,13 @@ The line reads:
 		(push tie new-ties)
 		(if (not tie-closed)
 		    (error 'kern-line-read-error
-			   :text "Unclosed tie found.")))))
+			   :text (format nil "Unclosed tie found.~%
+Tie position: ~A
+Tie event: ~A
+Tie offset: ~A
+Tie closed: ~A
+Tie **kern tokens: ~A~%" tie-position tie-event
+tie-offset tie-closed (reverse tie-tokens)))))))
 	new-ties)))
 
 (defun check-token-type (state token-type)
@@ -1134,6 +1145,7 @@ in a phrase, and 0 otherwise."
     (push (make-tie-marker :cpitch new-cpitch
 			   :closed nil
 			   :voice voice :subvoice subvoice
+			   :tokens (list kern-token)
 			   :attach-onsets (list new-offset)
 			   :position (length processed-events))
 	  *ties*)
@@ -1169,7 +1181,7 @@ in a phrase, and 0 otherwise."
 	 ;; Check subvoice
 	 (index-matching-ties (if *ties-may-cross-subvoices*
 				  index-matching-ties
-				  (utils:all-positions-if
+				  (remove-if-not
 				   #'(lambda (x)
 				       (eql (tie-marker-subvoice (nth x *ties*))
 					    subvoice))
@@ -1177,33 +1189,39 @@ in a phrase, and 0 otherwise."
 	 ;; Check voice
 	 (index-matching-ties (if *ties-may-cross-voices*
 				  index-matching-ties
-				  (utils:all-positions-if
+				  (remove-if-not
 				   #'(lambda (x)
 				       (eql (tie-marker-voice (nth x *ties*))
 					    voice))
 				   index-matching-ties)))
 	 ;; Check pitch
-	 (index-matching-ties (utils:all-positions-if
+	 (index-matching-ties (remove-if-not
 			       #'(lambda (x)
 				   (eql (tie-marker-cpitch (nth x *ties*))
 					new-cpitch))
 			       index-matching-ties))
 	 ;; Check onset
-	 (index-matching-ties (utils:all-positions-if
+	 (index-matching-ties (remove-if-not
 			       #'(lambda (x)
 				   (member new-onset
 					   (tie-marker-attach-onsets (nth x *ties*))))
 			       index-matching-ties)))
+    ;;(format t "New event: ~A~%" new-event)
+    ;;(format t "Index matching ties: ~A~%" index-matching-ties)
+    ;;(format t "Ties before update: ~A~%" *ties*)
     (if (null index-matching-ties)
 	;; No matching ties found
 	(error 'kern-line-read-error
-	       :text "Tie continuation indicated but could not find any ties to continue."))
+	       :text (format nil
+			     "Tie continuation indicated (~S) but could not find any ties to continue."
+			     kern-token)))
     (dolist (i index-matching-ties)
       (let ((tied-note-position (get-tie-position-in-processed-events
 				 (nth i *ties*) processed-events)))
 	(setf (nth tied-note-position processed-events)
 	      (merge-tied-notes (nth tied-note-position processed-events)
 				new-event))
+	(push kern-token (tie-marker-tokens (nth i *ties*)))
 	(if (middle-tie-p kern-token)
 	    ;; Allow the tie to be continued by future events
 	    (push new-offset (tie-marker-attach-onsets (nth i *ties*)))
@@ -1211,6 +1229,8 @@ in a phrase, and 0 otherwise."
 		;; Close the tie marker
 		(setf (tie-marker-closed (nth i *ties*)) t)
 		(error "Ties should be only able to continue as <middle> or <close>.")))))
+    ;; (format t "Ties after update: ~A~%" *ties*)
+    ;; (if (string= kern-token "8B\\L]") (break)) 
     processed-events))
 
 (defun process-no-tie->processed-event
