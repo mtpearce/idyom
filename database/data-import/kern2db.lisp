@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-02-07 15:55:08 peter>                           
+;;;; Time-stamp: <2017-02-07 15:59:40 peter>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -957,9 +957,13 @@ tie-offset tie-closed (reverse tie-tokens)))))))
          (barlength (list :barlength (calculate-bar-length environment)))
          (pulses (list :pulses (car (cadr (assoc 'timesig environment)))))
          (phrase (list :phrase (process-phrase event environment)))
-         (voice (list :voice (cadr (assoc 'voice environment)))))
+         (voice (list :voice (cadr (assoc 'voice environment))))
+	 (subvoice (list :subvoice (cadr (assoc 'subvoice environment))))
+	 (instrument (list :instrument (cadr (assoc 'instrument environment))))
+	 (instrument-class (list :instrument-class (cadr (assoc 'instrument-class environment))))
+	 (instrument-group (list :instrument-group (cadr (assoc 'instrument-group environment)))))
     (list onset dur deltast bioi cpitch mpitch accidental keysig mode barlength
-          pulses phrase voice tempo)))
+          pulses phrase voice subvoice tempo instrument instrument-class instrument-group)))
 
 (defun process-pitch (event-token)    
   "Converts a kern pitch token <pitch-token> into a chromatic pitch
