@@ -2,7 +2,7 @@
 ;;;; File:       music-data.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-02-08 10:47:44 peter>                           
+;;;; Time-stamp: <2017-02-08 11:13:47 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -319,7 +319,7 @@ to exclude for each dataset specified in SOURCE-IDS."
                       (list :vertint12 (event-vertint12 e))
                       (list :articulation (event-articulation e))
                       (list :dyn (event-dyn e))
-		      (list :tempo (event-tempo e))
+		      (list :tempo (event-tempo e)))
                 composition))
         (push (nreverse composition) dataset)))
     (append (list (dataset-description mtp-dataset) 
