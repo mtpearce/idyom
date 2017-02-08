@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2017-02-08 12:00:55 peter>
+;;;; Time-stamp: <2017-02-08 17:27:48 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -379,6 +379,22 @@
 
 (defun gzip (filename)
   #-win32 (shell-command "gzip" (list filename)))
+
+;; Taken from http://stackoverflow.com/questions/15796663/lisp-how-to-read-content-from-a-file-and-write-it-in-another-file
+(defun copy-file (from-file to-file)
+  "Copies a file from one location to another."
+  (with-open-file (input-stream from-file
+				:direction :input
+				:element-type '(unsigned-byte 8))
+    (with-open-file (output-stream to-file
+				   :direction :output
+				   :if-exists :supersede
+				   :if-does-not-exist :create
+				   :element-type '(unsigned-byte 8))
+      (let ((buf (make-array 4096 :element-type (stream-element-type input-stream))))
+    (loop for pos = (read-sequence buf input-stream)
+       while (plusp pos)
+       do (write-sequence buf output-stream :end pos))))))
 
 
 ;;;===========================================================================
