@@ -2,7 +2,7 @@
 ;;;; File:       music-data.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2016-10-24 23:17:54 peter>                           
+;;;; Time-stamp: <2017-02-08 10:47:44 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -259,7 +259,8 @@ no. in which the event occurs." ))
     :ornament       ',(event-ornament e)
     :articulation   ',(event-articulation e)
     :comma          ',(event-comma e)
-    :voice          ',(event-voice e)))
+    :voice          ',(event-voice e)
+    :vertint12      ',(event-vertint12 e)))
     
 
 ;; Inserting and deleting datasets 
@@ -295,6 +296,7 @@ to exclude for each dataset specified in SOURCE-IDS."
   nil)
 
 (defun dataset->lisp (mtp-dataset)
+  "Converts a dataset to a LISP representation."
   (let ((dataset nil))
     (dolist (c (dataset-compositions mtp-dataset))
       (let ((composition (list (composition-description c))))
@@ -316,7 +318,8 @@ to exclude for each dataset specified in SOURCE-IDS."
                       (list :comma (event-comma e))
                       (list :vertint12 (event-vertint12 e))
                       (list :articulation (event-articulation e))
-                      (list :dyn (event-dyn e)))
+                      (list :dyn (event-dyn e))
+		      (list :tempo (event-tempo e))
                 composition))
         (push (nreverse composition) dataset)))
     (append (list (dataset-description mtp-dataset) 
@@ -352,7 +355,7 @@ to exclude for each dataset specified in SOURCE-IDS."
         
 (defmethod insert-composition ((d mtp-dataset) composition id)
   "Takes a preprocessed composition <composition> and
-   creates a compositon object with composition-id <id> and the same
+   creates a composition object with composition-id <id> and the same
    dataset-id as <dataset> and inserts it into the composition table of
    the default database. Calls <insert-event> to insert each
    event of <composition> into the event table."
@@ -555,7 +558,8 @@ a list containing the dataset-id is returned."))
                  :ornament (event-ornament e)
                  :comma (event-comma e)
                  :articulation (event-articulation e)
-                 :voice (event-voice e)))
+                 :voice (event-voice e)
+		 :vertint12 (event-vertint12 e)))
 
 
 ;; Utility functions
