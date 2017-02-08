@@ -2,7 +2,7 @@
 ;;;; File:       music-data.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-02-08 11:13:47 peter>                           
+;;;; Time-stamp: <2017-02-08 12:44:14 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -18,6 +18,35 @@
 ;;;; ======================================================================
 
 (cl:in-package #:idyom-db)
+
+(defun check-db ()
+  "Top-level function for checking that the database has an 
+   up-to-date structure. If out-of-date structure is found, the 
+   user is given the option to upgrade it."
+  ;; To do: make a backup
+  (labels ((insert-attribute (table-name attr-name attr-type)
+	     (clsql:execute-command
+	      (format nil "ALTER TABLE ~A ADD COLUMN ~A ~A;"
+		      table-name attr-name attr-type)))
+	   (make-db-checks (update-db)
+	     "Low-level function for making the database checks.
+              If <update-db> is true, then the database is 
+              updated to fix failed checks."
+	     ;; Check for the existence of certain attributes in MTP_EVENT.
+	     (let ((mtp-event-attr (clsql:list-attributes "MTP_EVENT")))
+	       (if (not (member "SUBVOICE" mtp-event-attr :test #'string=))
+		   (if update-db
+		       (insert-attribute "MTP_EVENT" "SUBVOICE" "TEXT")
+		       (return-from make-db-checks nil))))
+	     t))
+    (if (null (make-db-checks nil))
+	(if (utils:ask-user-y-n-question
+	     "Old database structure detected. Would you like to upgrade it?")
+	    (progn
+	      (format t "Attempting to upgrade database.~%")
+	      (make-db-checks t))
+	    (format t "Leaving original database intact.~%")))))
+
 
 (defclass thread-safe-db-obj (clsql-sys:standard-db-object)
   nil
