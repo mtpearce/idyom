@@ -2,7 +2,7 @@
 ;;;; File:       music-data.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-02-08 12:44:14 peter>                           
+;;;; Time-stamp: <2017-02-08 20:17:01 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -19,34 +19,164 @@
 
 (cl:in-package #:idyom-db)
 
+(defun db-backup (&key (verbose t))
+  (let* ((db-filename (pathname (slot-value clsql-sys:*default-database*
+				  'CLSQL-SYS:NAME)))
+	 (backups-folder (make-pathname 
+			  :directory (append (pathname-directory
+					      db-filename)
+					     '("backups"))))
+	 (backup-file-name (pathname (format nil "db-backup-~A.sqlite"
+				   (get-universal-time))))
+	 (backup-full-filename
+	  (merge-pathnames backups-folder backup-file-name)))
+    (if verbose
+	(format t "Backing up the IDyOM database to ~A.~%"
+		(namestring backup-full-filename)))
+    (ensure-directories-exist backups-folder)
+    (utils:copy-file db-filename backup-full-filename)))
+
 (defun check-db ()
   "Top-level function for checking that the database has an 
    up-to-date structure. If out-of-date structure is found, the 
    user is given the option to upgrade it."
-  ;; To do: make a backup
-  (labels ((insert-attribute (table-name attr-name attr-type)
-	     (clsql:execute-command
-	      (format nil "ALTER TABLE ~A ADD COLUMN ~A ~A;"
-		      table-name attr-name attr-type)))
-	   (make-db-checks (update-db)
-	     "Low-level function for making the database checks.
-              If <update-db> is true, then the database is 
-              updated to fix failed checks."
-	     ;; Check for the existence of certain attributes in MTP_EVENT.
-	     (let ((mtp-event-attr (clsql:list-attributes "MTP_EVENT")))
-	       (if (not (member "SUBVOICE" mtp-event-attr :test #'string=))
-		   (if update-db
-		       (insert-attribute "MTP_EVENT" "SUBVOICE" "TEXT")
-		       (return-from make-db-checks nil))))
-	     t))
-    (if (null (make-db-checks nil))
-	(if (utils:ask-user-y-n-question
-	     "Old database structure detected. Would you like to upgrade it?")
-	    (progn
-	      (format t "Attempting to upgrade database.~%")
-	      (make-db-checks t))
-	    (format t "Leaving original database intact.~%")))))
+  (if (not (and (db-check-attribute-existence "MTP_EVENT" "SUBVOICE")
+		(db-check-attribute-existence "MTP_EVENT" "INSTRUMENT")
+		(db-check-attribute-existence "MTP_EVENT" "INSTRUMENT_CLASS")
+		(db-check-attribute-existence "MTP_EVENT" "INSTRUMENT_GROUP")
+		(db-check-attribute-class "MTP_EVENT" "ONSET" :float)
+		(db-check-attribute-class "MTP_EVENT" "CPITCH" :float)
+		(db-check-attribute-class "MTP_EVENT" "DUR" :float)
+		(db-check-attribute-class "MTP_EVENT" "DELTAST" :float)
+		(db-check-attribute-class "MTP_EVENT" "BIOI" :float)
+		(db-check-attribute-class "MTP_EVENT" "BARLENGTH" :float)
+		(db-check-attribute-class "MTP_EVENT" "PULSES" :float)
+		(db-check-attribute-class "MTP_EVENT" "TEMPO" :float)
+		(db-check-attribute-class "MTP_EVENT" "VERTINT12" :float)))
+      (if (utils:ask-user-y-n-question
+	   "Old database structure detected. Would you like to upgrade it?")
+	  (progn
+	    (db-backup)
+	    (format t "Attempting to upgrade database.~%")
+	    (format t "Adding new event attributes...~%")
+	    (db-check-attribute-existence "MTP_EVENT" "SUBVOICE"
+					  :desired-attribute-type "VARCHAR"
+					  :update t)
+	    (db-check-attribute-existence "MTP_EVENT" "INSTRUMENT"
+					  :desired-attribute-type "VARCHAR"
+					  :update t)
+	    (db-check-attribute-existence "MTP_EVENT" "INSTRUMENT_CLASS"
+					  :desired-attribute-type "VARCHAR"
+					  :update t)
+	    (db-check-attribute-existence "MTP_EVENT" "INSTRUMENT_GROUP"
+					  :desired-attribute-type "VARCHAR"
+					  :update t)
+	    (format t "Changing event attribute types...~%")
+	    ;; Warning: an error will be thrown if the old database
+	    ;; (with the columns just added) doesn't have a matching
+	    ;; column structure to that specified in this package.
+	    (db-update-types "MTP_EVENT" 'mtp-event :verbose nil)
+	    (format t "Database upgrade complete.~%"))
+	  (format t "Old database left unmodified."))))
 
+(defun db-check-attribute-existence (table-sqlite-name
+				     attribute-name &key desired-attribute-type
+				     (update nil) (verbose nil))
+  "Checks whether an attribute with name <attribute-name>
+  is present in table <table-name>.
+  Returns t if this is true and nil if not. Additionally,
+  if <update> is t, the attribute is added to the table.
+  <update> may only be set to t if the type of this 
+  attribute is provided in <desired-attribute-type>.
+  <table-sqlite-name> should be a string, e.g. \"MTP_EVENT\".
+  <attribute-name> should be a string, e.g. \"ONSET\".
+  <desired-attribute-type> should be a keyword, e.g. :integer.
+  <update> and <verbose> should both be Booleans."
+  (if (and update (null desired-attribute-type))
+      (error "<update> may only be set to t if <desired-attribute-type> is provided."))
+  (let ((current-attributes (clsql:list-attributes table-sqlite-name)))
+    (if (not (member attribute-name current-attributes :test #'string=))
+	(progn
+	  (if verbose (format t "Attribute ~A not found in database.~%"
+			      attribute-name))
+	  (if update
+	      (db-insert-attribute table-sqlite-name attribute-name
+				   desired-attribute-type :verbose verbose))
+	  nil)
+	t)))
+
+(defun db-check-attribute-class (table-sqlite-name
+				 attribute-name desired-attribute-type
+				 &key (verbose nil))
+  "Checks whether the type of the attribute <attribute-name>
+   is equal to <desired-attribute-type>, as desired.
+   Returns t if this is true and nil if not.
+  <table-sqlite-name> should be a string, e.g. \"MTP_EVENT\".
+  <table-clsql-name> should be a symbol, e.g. 'mtp-event.
+  <attribute-name> should be a string, e.g. \"ONSET\".
+  <desired-attribute-type> should be a keyword, e.g. :integer.
+  <verbose> should be a Boolean."
+  (let ((current-type (second (car (remove-if-not
+				    #'(lambda (x)
+					(string= (first x) attribute-name))
+				    (clsql:list-attribute-types table-sqlite-name))))))
+    (if (eql current-type desired-attribute-type)
+	t
+	(progn
+	  (if verbose (format t "Attribute ~A had type ~A, not ~A as required.~%"
+			      attribute-name current-type desired-attribute-type))
+	  nil))))
+
+(defun db-insert-attribute (table-sqlite-name
+			    attribute-name attribute-type
+			    &key (verbose t))
+  "Inserts an attribute with name <attribute-name> and type
+  <attribute-type> to the table with name <table-sqlite-name>. If
+  <verbose> is t, a status message is also printed."
+  (if verbose
+      (format t "Adding column ~A (~A) to table ~A...~%"
+	      attribute-name attribute-type table-sqlite-name))
+  (clsql:execute-command
+   (format nil "ALTER TABLE ~A ADD COLUMN ~A ~A;"
+	   table-sqlite-name attribute-name attribute-type)))
+
+(defun db-update-types (table-sqlite-name table-clsql-name
+			&key (verbose t))
+  "Updates the types of the SQL table with name <table-sqlite-name>
+   to match the types in the corresponding view-class
+   named <table-clsql-name>. This is achieved by creating a new 
+   table with the correct structure and then copying the data 
+   over to this table.
+   Warning 1: this function assumes that the original database
+   has the same structure as the view-class (in terms of number
+   and order of columns).
+   Warning 2: this function will not preserve 
+   any structure of the table (e.g. triggers) that is not specified
+   within the view-class.
+   Example usage: (db-update-types \"MTP_EVENT\" 'mtp-event),
+   without the escape backslashes."
+  (if verbose
+      (format t "Updating the type definitions for table ~A/~A.~%"
+	      table-sqlite-name table-clsql-name))
+  (clsql:start-transaction)
+  (clsql:execute-command
+   (format nil "ALTER TABLE ~A RENAME TO BACKUP;"
+	   table-sqlite-name))
+  (create-view-from-class table-clsql-name)
+  ;; Check that the columns match up
+  (let* ((old-attributes (clsql:list-attributes "BACKUP"))
+	 (new-attributes (clsql:list-attributes table-sqlite-name)))
+    (if (equal old-attributes new-attributes)
+	(progn
+	  (clsql:execute-command
+	   (format nil "INSERT INTO ~A SELECT * FROM BACKUP"
+		   table-sqlite-name))
+	  (clsql:execute-command "DROP TABLE BACKUP")
+	  (clsql:commit))
+	(progn
+	  (clsql:rollback)
+	  (error (format nil "Could not update column types because the original attributes:~%~A~% did not match up with the new attributes specified in the idyom-db package:~%~A.~%"
+			 old-attributes new-attributes))))))
 
 (defclass thread-safe-db-obj (clsql-sys:standard-db-object)
   nil
@@ -157,12 +287,12 @@ each table."))
     :reader dataset-id 
     :type integer)
    (onset
-    :type integer
+    :type float ;; originally integer
     :initarg :onset
     :initform 0 
     :reader event-onset)
    (cpitch 
-    :type integer
+    :type float ;; originally integer
     :initarg :cpitch
     :initform 60 
     :reader event-cpitch)
@@ -177,17 +307,17 @@ each table."))
     :initform 0
     :reader event-accidental)
    (dur
-    :type integer
+    :type float ;; originally integer
     :initarg :dur
     :initform 24
     :reader event-dur)
    (deltast
-    :type integer
+    :type float ;; originally integer
     :initarg :deltast
     :initform 0
     :reader event-deltast)
    (bioi
-    :type integer
+    :type float ;; originally integer
     :initarg :bioi
     :initform 0 
     :reader event-bioi)
@@ -202,12 +332,12 @@ each table."))
     :initform 0
     :reader event-mode)
    (barlength
-    :type integer
+    :type float ;; originally integer
     :initarg :barlength
     :initform 96
     :reader event-barlength)
    (pulses
-    :type integer
+    :type float ;; originally integer
     :initarg :pulses
     :initform 4
     :reader event-pulses)
@@ -217,7 +347,7 @@ each table."))
     :initform 0
     :reader event-phrase)
    (tempo
-    :type integer
+    :type float ;; originally integer
     :initarg :tempo
     :initform nil
     :reader event-tempo)
@@ -242,7 +372,7 @@ each table."))
     :initform nil
     :reader event-articulation)
    (vertint12
-    :type integer
+    :type float ;; originally integer
     :initarg :vertint12
     :initform nil
     :reader event-vertint12)
@@ -250,7 +380,27 @@ each table."))
     :type integer
     :initarg :voice
     :initform 1
-    :reader event-voice))
+    :reader event-voice)
+   (subvoice
+    :type string
+    :initarg :subvoice
+    :initform "(1)"
+    :reader event-subvoice)
+   (instrument
+    :type string
+    :initarg :instrument
+    :initform nil
+    :reader event-instrument)
+   (instrument-class
+    :type string
+    :initarg :instrument-class
+    :initform 1
+    :reader event-instrument-class)
+   (instrument-group
+    :type string
+    :initarg :instrument-group
+    :initform 1
+    :reader event-instrument-group))
   (:base-table mtp_event)
   (:documentation "A view class defining a table for events. The
 <dataset-id>, <composition-id> and <event-id> slots are integers which
@@ -262,8 +412,11 @@ the key signature; <mode> 0 for major and 9 for minor; <barlength> an
 integer representing the number of basic time units in a bar; <pulses>
 an integer number of pulses in a bar; <phrase> 1 if the event is the
 first in a phrase and 0 otherwise; <tempo> is the tempo in crotchet bpm;
-<dyn> represents the dynamics of the event; and <voice> is the voice
-no. in which the event occurs." ))
+<dyn> represents the dynamics of the event; <voice> is the voice
+no. in which the event occurs; <subvoice> identifies the subvoice 
+in which the event occurs; <instrument>, <instrument-class>, and
+<instrument-group> are strings describing the instrumentation
+of the musical event at various levels of detail." ))
 
 (defmethod make-load-form ((e mtp-event) &optional environment)
   (declare (ignore environment))
@@ -289,7 +442,11 @@ no. in which the event occurs." ))
     :articulation   ',(event-articulation e)
     :comma          ',(event-comma e)
     :voice          ',(event-voice e)
-    :vertint12      ',(event-vertint12 e)))
+    :vertint12      ',(event-vertint12 e)
+    :subvoice       ',(event-subvoice e)
+    :instrument     ',(event-instrument e)
+    :instrument-class      ',(event-instrument-class e)
+    :instrument-group      ',(event-instrument-group e)))
     
 
 ;; Inserting and deleting datasets 
@@ -348,7 +505,11 @@ to exclude for each dataset specified in SOURCE-IDS."
                       (list :vertint12 (event-vertint12 e))
                       (list :articulation (event-articulation e))
                       (list :dyn (event-dyn e))
-		      (list :tempo (event-tempo e)))
+		      (list :tempo (event-tempo e))
+		      (list :subvoice (event-subvoice e))
+		      (list :instrument (event-instrument e))
+		      (list :instrument-class (event-instrument-class e))
+		      (list :instrument-group (event-instrument-group e)))
                 composition))
         (push (nreverse composition) dataset)))
     (append (list (dataset-description mtp-dataset) 
@@ -427,11 +588,15 @@ to exclude for each dataset specified in SOURCE-IDS."
                         :phrase     (cadr (assoc :phrase event))
                         :dyn        (cadr (assoc :dyn event))
                         :tempo      (cadr (assoc :tempo event))
-                        :ornament      (cadr (assoc :ornament event))
+                        :ornament   (cadr (assoc :ornament event))
                         :comma      (cadr (assoc :comma event))
-                        :articulation      (cadr (assoc :articulation event))
-                        :vertint12       (cadr (assoc :vertint12 event))
-                        :voice      (cadr (assoc :voice event)))))
+                        :articulation (cadr (assoc :articulation event))
+                        :vertint12  (cadr (assoc :vertint12 event))
+                        :voice      (cadr (assoc :voice event))
+			:subvoice   (cadr (assoc :subvoice event))
+			:instrument       (cadr (assoc :instrument event))
+			:instrument-class (cadr (assoc :instrument-class event))
+			:instrument-group (cadr (assoc :instrument-group event)))))
     (clsql:update-records-from-instance event-object)))
 
  
@@ -588,7 +753,11 @@ a list containing the dataset-id is returned."))
                  :comma (event-comma e)
                  :articulation (event-articulation e)
                  :voice (event-voice e)
-		 :vertint12 (event-vertint12 e)))
+		 :vertint12 (event-vertint12 e)
+		 :subvoice (event-subvoice e)
+		 :instrument (event-instrument e)
+		 :instrument-class (event-instrument-class e)
+		 :instrument-group (event-instrument-group e)))
 
 
 ;; Utility functions
