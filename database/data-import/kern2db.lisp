@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-02-07 17:08:22 peter>                           
+;;;; Time-stamp: <2017-02-08 10:16:12 peter>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -15,22 +15,31 @@
 ;;;;    (<onset> <cpitch> <mpitch> <dur> <keysig> <mode> <barlength>
 ;;;;     <phrase> <voice>)
 ;;;; 
-;;;; where: <onset>      is an integer using *default-onset* as the onset of
+;;;; where: <onset>      is a number using *default-onset* as the onset of
 ;;;;                     of the start of the piece and *default-timebase* as
 ;;;;                     the unit granularity: 8=crotchets; 16=semiquavers
 ;;;;                     etc.
-;;;;        <cpitch>    is an integer representing chromatic pitch using
+;;;;        <dur>        is a number representing the number of time-units
+;;;;                     that the event lasts.
+;;;;        <deltast>    is a number representing the number of time-units
+;;;;                     between the offset of the previous note and the
+;;;;                     onset of the current note. 
+;;;;        <bioi>       is a number representing the number of time-units
+;;;;                     between the onset of the current note and the onset
+;;;;                     of the previous note (returns 0 for the first note)
+;;;;        <cpitch>     is a number representing chromatic pitch using
 ;;;;                     (nth 0 *middle-c) as middle c.
-;;;;        <mpitch>    is an integer representing morphetic (diatonic)
+;;;;        <mpitch>     is a number representing morphetic (diatonic)
 ;;;;                     pitch using (nth 1 *middle-c*) as middle-c. 
-;;;;        <dur>        is an integer representing the number of time-units
-;;;;                     that the event lasts. 
+;;;;        <accidental> is an integer representing the note's inflection,
+;;;;                     with 0 for a natural, 1 for a single sharp, 2 for
+;;;;                     a double sharp, -1 for a flat and so on
 ;;;;        <keysig>     the key signature is represented by a number of
 ;;;;                     sharps (positive integers) or flats (negative
 ;;;;                     integers). 
 ;;;;        <mode>       the mode is represented by an integer -- 0 for
 ;;;;                     major and 9 for minor. 
-;;;;        <barlength>    is an integer specifying the number of time units
+;;;;        <barlength>  is an integer specifying the number of time units
 ;;;;                     in a bar.
 ;;;;        <pulses>     is an integer representing the number of metric
 ;;;;                     pulses in a bar (the numerator of the time
@@ -38,9 +47,20 @@
 ;;;;        <phrase>     is 1 if an event is the first in a phrase, -1 if
 ;;;;                     it is the last in the phrase and 0 otherwise.
 ;;;;        <voice>      is an integer representing the voice in which the
-;;;;                     event occurs -- voices are represented by the
-;;;;                     positive integers upwards of 1 which represents
-;;;;                     the left-most spine in the kern file.
+;;;;                     event occurs -- voices are represented by
+;;;;                     positive integers which index each **kern spine
+;;;;                     that appears in the musical piece. Spine splits
+;;;;                     produce two spines with the same voice.
+;;;;        <subvoice>   is a (possibly nested) list of integers representing
+;;;;                     the subvoice in which the event occurs, derived
+;;;;                     so as to represent each spine split uniquely.
+;;;;        <instrument> is a list of strings containing each instrument
+;;;;                     name associated with the event.
+;;;;        <instrument-class>   is a list of strings containing each instrument
+;;;;                             class associated with the event.
+;;;;                             so as to represent each spine split uniquely.
+;;;;        <instrument-group>   is a list of strings containing each instrument
+;;;;                             group associated with the event.
 ;;;;
 ;;;; Note that all these values are derived directly from a score-like
 ;;;; representation (not a performance), rests are not explicitly encoded
