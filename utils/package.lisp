@@ -2,14 +2,15 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-02-03 17:00:55 peter>                           
+;;;; Time-stamp: <2017-02-08 11:56:35 peter>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
 
 (defpackage #:utils
   (:use #:cl)
-  (:export "ROUND-TO-NEAREST-DECIMAL-PLACE" "AVERAGE" "GENERATE-INTEGERS"
+  (:export "ASK-USER-Y-N-QUESTION"
+           "ROUND-TO-NEAREST-DECIMAL-PLACE" "AVERAGE" "GENERATE-INTEGERS"
 	   "POWERSET" "QUOTIENT" "FACTORIAL" "N-PERMUTATIONS" "N-COMBINATIONS"
            "NTH-ROOT" "STRING-APPEND" "SPLIT-STRING" 
            "INSERTION-SORT" "CARTESIAN-PRODUCT" "FLATTEN" "COMBINATIONS"

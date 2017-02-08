@@ -2,10 +2,28 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2017-02-03 17:01:18 peter>
+;;;; Time-stamp: <2017-02-08 11:57:27 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
+
+;;;===========================================================================
+;;; User interaction 
+;;;===========================================================================
+
+(defun ask-user-y-n-question
+    (question)
+  "Asks user a yes or no question over the command line.
+   Returns t for yes, and nil for no."
+  (format t "~%~A (y/n)~%" question)
+  (let ((res (read)))
+    (cond ((or (string= res "y")
+	       (string= res "Y"))
+	   t)
+	  ((or (string= res "n")
+	       (string= res "N"))
+	   nil)
+	  (t (ask-user-y-n-question question)))))
 
 ;;;===========================================================================
 ;;; Numerical 
