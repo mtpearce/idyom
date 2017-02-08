@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-02-07 15:59:40 peter>                           
+;;;; Time-stamp: <2017-02-07 17:08:22 peter>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -64,6 +64,7 @@
 ;;;; 2. combine the concept of "humdrum-state" with that of "environment"
 ;;;; 3. implement a parser "state" instead of using global variables
 ;;;; 4. make use of *unrecognised-representations* and *unrecognised-tokens*
+;;;; 5. combine the two parallel sets of token processing functions
 ;;;;
 ;;;; =======================================================================
 
@@ -140,7 +141,8 @@
             ("^=" ignore-token)                    ;ignore the other barlines 
             ("^[^!=.*].*r" musical-rest)           ;rests 
             ("^[^!=.*].* .+" chord)                ;chords
-            ("^[^!=.*]" kern-event))))             ;events
+            ("^[^!=.*]" kern-event)                ;events
+	    (".*" unrecognised-token))))          ;everything else is unrecognised
 
 ;;;======================
 ;;;* Global variables *
@@ -238,7 +240,7 @@
 
 (defun print-status ()
   "Print message warning about unrecognised representations or tokens.
-   Not currently used."
+   Currently *unrecognised-representations* is unused."
   (unless (null *unrecognised-representations*)
     (format t "~%The following representations were unrecognised: ~S"
             *unrecognised-representations*))
@@ -371,6 +373,7 @@
 	(records-to-parse (cdr records))
 	(processed-events nil))
     (check-interpretations interpretations)
+    (setf *unrecognised-tokens* nil) ; remove this eventually
     (setf *first-barline-reached* nil)
     (setf *ties* nil)
     (let ((humdrum-states (initialise-humdrum-states
@@ -427,6 +430,7 @@
     (if *correct-onsets-to-first-barline*
 	(setf processed-events (correct-onsets processed-events
 					       *onset-correction*)))
+    (print-status)
     (reverse processed-events)))
 
 (defun process-kern-token
@@ -437,6 +441,8 @@
   (case kern-token-type
     (ignore-token (process-ignore-token
 		   humdrum-state processed-events))
+    (unrecognised-token (process-unrecognised-token
+			 kern-token humdrum-state processed-events))
     (excl-interpret-token (process-excl-interpret-token
 			   kern-token humdrum-state
 			   processed-events))
@@ -838,6 +844,12 @@ tie-offset tie-closed (reverse tie-tokens)))))))
   "Return nil for ignored tokens."
   (declare (ignore token environment)))
 
+(defun unrecognised-token (token &optional environment)
+  "Return nil for ignored tokens, and adds them 
+   to the unrecognised tokens list."
+  (declare (ignore environment))
+  (pushnew token *unrecognised-tokens*))
+
 (defun first-barline (token environment)
   "Returns nil."
   (declare (ignore token environment)))
@@ -1034,6 +1046,11 @@ in a phrase, and 0 otherwise."
 
 (defun process-ignore-token (state processed-events)
   "Ignores a token."
+  (values (list state) processed-events))
+
+(defun process-unrecognised-token (token state processed-events)
+  "Processes an unrecognised token."
+  (unrecognised-token token) ; adds the token to *unrecognised-tokens*
   (values (list state) processed-events))
 
 (defun process-spine-path (kern-token humdrum-state processed-events)
