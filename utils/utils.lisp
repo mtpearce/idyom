@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2017-02-08 11:57:27 peter>
+;;;; Time-stamp: <2017-02-08 12:00:55 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -13,7 +13,7 @@
 
 (defun ask-user-y-n-question
     (question)
-  "Asks user a yes or no question over the command line.
+  "Asks user a yes or no <question> over the command line.
    Returns t for yes, and nil for no."
   (format t "~%~A (y/n)~%" question)
   (let ((res (read)))
