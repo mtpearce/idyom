@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2017-02-08 17:27:48 peter>
+;;;; Time-stamp: <2017-02-09 15:17:03 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -327,6 +327,28 @@
     (maphash #'(lambda (k v) (push (cons k v) sorted-entries) (remhash k ht)) ht)
     (let ((sort-key (if (eql by :keys) #'car #'cdr)))
       (sort sorted-entries sort-fn :key sort-key))))
+
+(defun csv->hash-table (path &key value-fun)
+  "Reads csv file from <path> and uses it to create a hash-table which,
+   for each line in the csv file, maps every field but the first field (keys)
+   to the first field (values). Assumes that the csv file has no header.
+   If a function <value-fun> is passed as an argument, then this function will 
+   be applied to all values (not keys) before entry to the hash table."
+  (let* ((lines (cl-csv:read-csv path))
+	 (hash-table (make-hash-table :test #'equal)))
+    (dolist (line lines hash-table)
+      (let* ((value (car line))
+	     (value (if (null value-fun)
+			value
+			(funcall value-fun value)))
+	    (keys (cdr line)))
+	(dolist (key keys)
+	  (if (not (equal key ""))
+	      (progn
+		(if (nth-value 1 (gethash key hash-table))
+		    (error (format nil "Attempted to add duplicate keys (~A) to hash table."
+				   key)))
+		(setf (gethash key hash-table) value))))))))
 
 ;;;===========================================================================
 ;;; File I/O 
