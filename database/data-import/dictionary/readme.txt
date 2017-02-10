@@ -33,3 +33,11 @@ This dictionary describes different chord "qualities": those aspects of the chor
 Symbols were primarily derived from the Hal Leonard Pocket Piano Chord Dictionary (author: Andrew DuBrock; publisher: Hal Leonard; city: Cheltenham, Victoria, Australia; published year: 2009). Degree signs for diminished chords were replaced with the text "dim". The scale degrees and pitch classes of the diminished seventh chord were corrected from the original, which instead gave the scale degrees for the half-diminished seventh chord. Additionally, the chord degrees for the "seventh, flat ninth, sharp fifth" were modified to incorporate a flat ninth.
 
 Additional symbols were then added with reference to the McGill Billboard corpus and the following paper: Harte, C., Sandler, M., Abdallah, S. & Gómez, E. Symbolic representation of musical chords: A proposed syntax for text annotations. in Proceedings of the International Conference on Music Information Retrieval 66–71 (2005).
+
+The iRb corpus contains a number of chords that look like this: Amin7(C:maj7), C:maj7(C#:min7), C:maj7(F#7), and so on. My impression after listening to the original scores is that these are not intended as simultaneous interpretations but instead as alternative interpretations. The IDyOM policy is to retain only the primary interpretations of these chords. Unfortunately, it is awkward to construct a foolproof parser that distinguishes simultaneous interpretations like these from ordinary chord qualities. The approach taken is therefore to add these particular cases, when they occur, to the chord dictionary. For example, adding "min7(C:maj7)" to the dictionary in the same row as "min7" has the effect of ignoring the second interpretation.
+
+The iRb corpus contains the chord quality maj7#11, which is not contained in the Hal Leonard dictionary. With reference to some online sources, e.g. Wikipedia, this has been added to the dictionary as simply a major seventh chord with an added sharp 11th.
+
+When "sus" is specified without the scale degree of the suspension, it is mapped to sus4, the most common suspension type.
+
+The so-called "altered" chord has several different possible interpretations, according to the Wikipedia article. Here it has been arbitrarily specified as the following scale degrees: (1 3 b5 b7 b9 b13).

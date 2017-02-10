@@ -2,13 +2,13 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-02-10 10:37:33 peter>                           
+;;;; Time-stamp: <2017-02-10 16:48:50 peter>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
 ;;;; ======================================================================
 ;;;;
-;;;; kern2db converts kern data into a format suitable for reading
+;;;; kern2db converts **kern or **jazz data into a format suitable for reading
 ;;;; into the database. Each file is converted to a list of events where
 ;;;; each event is a list of attribute values:
 ;;;;
@@ -127,7 +127,7 @@
 ;;;======================
 
 (defvar *eof* (list 'eof))
-(defvar *input-file-extension* ".krn")
+(defvar *input-file-extensions* (list ".krn" ".jazz"))
 (defvar *kern-spine-separator* #\Tab)
 
 (defvar *known-exclusive-interpretations* (list "**kern" "**jazz"))
@@ -199,6 +199,19 @@
 					'(:relative "dictionary")
 					:name "key-signatures" :type "csv")
 			 :value-fun #'parse-integer))
+
+(defparameter *chord-quality-dictionary*
+  ;; This is a hash-table where keys are strings representing notated
+  ;; musical chords and values are lists of integers corresponding
+  ;; to the pitch-class sets implied by these chords, expressed
+  ;; relative to the root (so 0 is the root, 7 is a perfect fifth
+  ;; above the root, and so on).
+  (utils:csv->hash-table (make-pathname :directory
+					'(:relative "dictionary")
+					:name "chord-qualities" :type "csv")
+			 :value-fun #'(lambda (x)
+					(mapcar #'parse-integer
+						(utils:split-string x " "))))) 
 
 
   
@@ -280,13 +293,19 @@
       (print-status))))
 
 (defun process-data (file-or-dir directory)
-  "If <file-or-dir-name> is a directory all the files in that directory
+  "If <file-or-dir> is a directory all the files in that directory
    are converted -- if it is a filename that file is processed."
   (if directory
-      (mapcar #'(lambda (file-name) (convert-kern-file file-name))
-              (directory (concatenate 'string
-                                      (directory-namestring file-or-dir)
-                                      "*" *input-file-extension*)))
+      (let* ((files nil))
+	(dolist (extension *input-file-extensions*)
+	  (setf files
+		(append (directory
+			 (concatenate 'string
+				      (directory-namestring file-or-dir)
+				      "*" extension))
+			files)))
+	(mapcar #'(lambda (file-name) (convert-kern-file file-name))
+		files))
       (list (convert-kern-file file-or-dir))))
 
 (defun convert-kern-file (file-name)
@@ -467,13 +486,13 @@
 		  (cond ((eql token-type 'excl-interpret-token)
 			 (process-excl-interpret-token token humdrum-state
 						       processed-events))
-			 ((eql token-type 'spine-path)
-			 (process-spine-path token humdrum-state processed-events))
-			((string= excl-interpret "**kern")
-			 (process-kern-token humdrum-state processed-events token))
-			((string= excl-interpret "**jazz")
-			 (process-jazz-token humdrum-state processed-events token))
-			(t (values humdrum-state processed-events)))
+			 ((eql token-type 'spine-path-token)
+			  (process-spine-path token humdrum-state processed-events))
+			 ((string= excl-interpret "**kern")
+			  (process-kern-token humdrum-state processed-events token))
+			 ((string= excl-interpret "**jazz")
+			  (process-jazz-token humdrum-state processed-events token))
+			 (t (values humdrum-state processed-events)))
 		(setf next-humdrum-states (append new-humdrum-states
 						  next-humdrum-states))
 		;;(format t "New processed events after state ~A: ~A~%"
@@ -494,7 +513,7 @@
     (reverse processed-events)))
 
 (defun process-kern-token
-    (humdrum-state processed-events kern-token kern-token-type)
+    (humdrum-state processed-events kern-token)
   "Processes a **kern token according to its type, returning an
    updated list of <humdrum-states> and an updated list 
    of <processed-events>."
@@ -521,7 +540,7 @@
 		  humdrum-state processed-events)))))
 
 (defun process-jazz-token
-    (humdrum-state processed-events jazz-token jazz-token-type)
+    (humdrum-state processed-events jazz-token)
   "Processes a **jazz token according to its type, returning an
    updated <humdrum-state> in a list and an updated list 
    of <processed-events>."
@@ -639,7 +658,16 @@
 		     "Error parsing line ~A.~%~A~%~%The line reads:~%~%~S"
 		     *line-number*
 		     (text condition)
-		     (get-line *line-number*)))))
+		     (ignore-errors (get-line *line-number*))))))
+
+(define-condition jazz-line-read-error (error)
+  ((text :initarg :text :reader text))
+  (:report (lambda (condition stream)
+	     (format stream
+		     "Error parsing line ~A.~%~A~%~%The line reads:~%~%~S"
+		     *line-number*
+		     (text condition)
+		     (ignore-errors (get-line *line-number*))))))
 
 (defun check-interpretations (interpretations)
   "Checks <interpretations> to ensure that each element corresponds to
@@ -652,7 +680,7 @@
 		  (second interpretations)))
       (error 'kern-line-read-error
 	     :text "First line of kern file (excluding comments and blank lines) contained tokens which did not begin with two asterisks, which is required by the Humdrum specification (these tokens should correspond to the spines' exclusive interpretations."))
-  (dolist (interpretation interpretations)
+  (dolist (interpretation (second interpretations))
     (if (not (member interpretation *known-exclusive-interpretations*
 		     :test #'string=))
 	(pushnew interpretation *unrecognised-representations*))))
@@ -968,7 +996,7 @@ tie-offset tie-closed (reverse tie-tokens)))))))
 (defun keysig (keysig-token &optional environment)
   "Processes a key signature token."
   (declare (ignore environment))
-  (let* ((keysig-string (cl-ppcre:scan-to-strings "[a-g A-G n # -]+" keysig-token))
+  (let* ((keysig-string (cl-ppcre:scan-to-strings "[a-gA-Gn#-]+" keysig-token))
 	 (keysig-char (coerce keysig-string 'list)))
     (labels ((find-sharps (char-list num-sharps)
                (cond ((null char-list) num-sharps)
@@ -982,7 +1010,7 @@ tie-offset tie-closed (reverse tie-tokens)))))))
 (defun mode (mode-token &optional environment)
   "Processes a key token."
   (declare (ignore environment))
-  (let* ((mode-string (cl-ppcre:scan-to-strings "[a-g A-G ? X]" mode-token))
+  (let* ((mode-string (cl-ppcre:scan-to-strings "[a-gA-G?X]" mode-token))
          (mode-char (car (coerce mode-string 'list))))
     (cond ((upper-case-p mode-char) 0)
           ((lower-case-p mode-char) 9)
@@ -1062,7 +1090,7 @@ tie-offset tie-closed (reverse tie-tokens)))))))
 	 (instrument-class (list :instrument-class (cadr (assoc 'instrument-class environment))))
 	 (instrument-group (list :instrument-group (cadr (assoc 'instrument-group environment)))))
     (list onset dur deltast bioi cpitch mpitch accidental keysig mode barlength
-          pulses phrase voice subvoice tempo instrument instrument-class instrument-group)))
+          pulses phrase voice (copy-list subvoice) tempo instrument instrument-class instrument-group)))
 
 (defun process-pitch (event-token)    
   "Converts a kern pitch token <pitch-token> into a chromatic pitch
@@ -1120,8 +1148,8 @@ tie-offset tie-closed (reverse tie-tokens)))))))
 in a phrase, and 0 otherwise."
   (cond ((= 1 (cadr (assoc 'pause environment))) 1)
         ((= 1 (cadr (assoc 'phrase environment))) 1)
-        ((cl-ppcre:scan-to-strings "^[^ &\\{]*\\{" event) 1)
-        ((cl-ppcre:scan-to-strings "^[^ &\\}]*\\}" event) -1)
+        ((cl-ppcre:scan-to-strings "^[^&\\{]*\\{" event) 1)
+        ((cl-ppcre:scan-to-strings "^[^&\\}]*\\}" event) -1)
         ((cl-ppcre:scan-to-strings ";" event) -1)
         (t 0)))
 
@@ -1506,10 +1534,10 @@ in a phrase, and 0 otherwise."
 	  new-environment)
     (values (list humdrum-state) processed-events)))
 
-(defun jazz-key
+(defun process-jazz-key
     (jazz-token humdrum-state processed-events)
   "Processes a jazz-key token (<jazz-token>) within a **jazz spine,
-   updating <humdrum-state> and <processed-events> in the process."
+   updating <humdrum-state> accordingly."
   (let* ((key (cl-ppcre:regex-replace-all "[*:]" jazz-token ""
 					  :preserve-case t))
 	 (letter (char key 0))
@@ -1520,126 +1548,158 @@ in a phrase, and 0 otherwise."
     (setf-in-humdrum-state-envir 'keysig humdrum-state keysig)
     (values (list humdrum-state) processed-events)))
 
-(defun process-jazz-chord
-    (jazz-token humdrum-state processed-events)
-  "Processes a jazz-chord token."
+(defun parse-jazz-chord-token (jazz-token)
+  "Parses a jazz-chord token. Returns tokens corresponding 
+   to the various elements of the chord token (see last line
+   of function for details. All are guaranteed to be non-empty
+   except for bass-token, which will be NIL if no explicit 
+   bass information was provided. If no quality token was provided,
+   {empty-string} is returned for the corresponding value."
   ;; Unlike **kern tokens, **jazz tokens are context-sensitive.
   ;; Therefore, instead of immediately using the context-free
   ;; pitch and duration extraction functions process-dur
   ;; and process-pitch, we first parse the **jazz token
   ;; according to the mandatory order of components.
+  ;; Jazz tokens take the form [duration][root][quality]/[bass]
+  ;; where /[bass] is optional.
+  (if (not (cl-ppcre:scan-to-strings
+	    "^[0-9]+[.]*[A-G]" jazz-token))
+      (error 'jazz-line-read-error
+	     :text (format nil "Malformed **jazz chord token (~A) found."
+			   jazz-token)))
   (let* ((dur-regex "^[0-9]+[.]*")
-	 (root-regex "^[a-gA-G]+[-#]*")
-	 (root-regex2 "^[a-gA-G]+[-#]*:?") ; deals with optional colons
-	 (dur-token (cl-ppcre:scan-to-strings dur-regex jazz-token))
-	 (remaining-token (cl-ppcre:regex-replace-all dur-regex jazz-token ""
-						      :preserve-case t))
+	 (root-regex "^[A-G][-#]*")
+	 (root-regex-2 "^[A-G][-#]*:?") 
+	 (bass-regex "\\/[A-G][-#]*$")
+	 (dur-token (cl-ppcre:scan-to-strings dur-regex
+					      jazz-token))
+	 (remaining-token (cl-ppcre:regex-replace-all dur-regex jazz-token
+						      "" :preserve-case t))
 	 (root-token (cl-ppcre:scan-to-strings root-regex
 					       remaining-token))
-	 (quality-token (cl-ppcre:regex-replace-all root-regex2 remaining-token ""
-						    :preserve-case t))
-	 (environment (humdrum-state-environment humdrum-state))
+	 (remaining-token (cl-ppcre:regex-replace-all root-regex-2 remaining-token
+						      "" :preserve-case t))
+	 (bass-token (cl-ppcre:scan-to-strings bass-regex
+					       remaining-token))
+	 (quality-token (cl-ppcre:regex-replace-all bass-regex remaining-token
+						    "" :preserve-case t))
+	 (quality-token (if (string= quality-token "")
+			    "{empty-string}"
+			    quality-token)))
+    (values dur-token root-token quality-token bass-token)))
 
-	 (dur (list :dur (process-dur dur-token environment)))
-
-	     (dur (process-dur dur-token environment))
-	 (root-pitch (process-pitch root-token))
-	 (root-cpitch 
-	 
-	 (pitch (process-pitch event))
-	 (cpitch (list :cpitch (nth 0 pitch)))
-         (mpitch (list :mpitch (nth 1 pitch)))
-         (accidental (list :accidental (nth 2 pitch)))
-	 ;; We get the rest from the environment
-	 (tempo (list :tempo (cadr (assoc 'tempo environment))))
-         (deltast (list :deltast (cadr (assoc 'deltast environment))))
-         (onset (list :onset (cadr (assoc 'onset environment))))
-         (bioi (list :bioi (cadr (assoc 'bioi environment))))
-         (keysig (list :keysig (cadr (assoc 'keysig environment))))
-         (mode (list :mode (cadr (assoc 'mode environment))))
-         (barlength (list :barlength (calculate-bar-length environment)))
-         (pulses (list :pulses (car (cadr (assoc 'timesig environment)))))
-         (phrase (list :phrase (process-phrase event environment)))
-         (voice (list :voice (cadr (assoc 'voice environment))))
-	 (subvoice (list :subvoice (cadr (assoc 'subvoice environment))))
-	 (instrument (list :instrument (cadr (assoc 'instrument environment))))
-	 (instrument-class (list :instrument-class (cadr (assoc 'instrument-class environment))))
-	 (instrument-group (list :instrument-group (cadr (assoc 'instrument-group environment)))))
-
-	 
-
-	 
-	 
-    (values dur-token root-token quality-token)))
-	 
-	   
-
-
-
-	(new-processed-events (process-kern-event->processed-event
-			       kern-token
+(defun process-jazz-chord
+    (jazz-token humdrum-state processed-events)
+  "Processes a jazz chord token."
+  (let ((new-processed-events (process-jazz-chord->processed-events
+			       jazz-token
 			       humdrum-state
 			       processed-events))
-	(new-humdrum-state (process-kern-event->environment
-			    kern-token humdrum-state)))
+	(new-humdrum-state (process-jazz-chord->environment
+			    jazz-token humdrum-state)))
     (values (list new-humdrum-state)
 	    new-processed-events)))
 
+(defun parsed-jazz-chord->cpitch (root-token quality-token bass-token)
+  "Takes output tokens from the function <parse-jazz-chord-token> 
+   and returns a list of cpitch values that represent the pitch
+   content of the chord. These cpitch values span from the C one
+   octave below middle C to the B just under one octave above
+   middle C. Exactly one cpitch value is below middle middle C,
+   and corresponds to the bass note of the chord. The bass note
+   is derived from the <bass-token> if one is provided; if the bass token
+   is nil, then the bass note is assumed to be the root note. The remaining
+   notes in the chord are mapped to pitches in the octave above middle C.
+   If a pitch class appears in the bass, it is not repeated in the octave
+   above middle C."
+  (let* ((cpitch-middle-c (nth 0 *middle-c*))
+	 (root-pc (mod (first (process-pitch root-token)) 12))
+	 (bass-pc (if (null bass-token)
+		      root-pc
+		      (mod (first (process-pitch bass-token)) 12)))
+	 (quality-relative-pc
+	  (multiple-value-bind (result result-found?)
+	      (gethash quality-token *chord-quality-dictionary*)
+	    (if result-found?
+		result
+		(error 'jazz-line-read-error
+		       :text (format nil "Unrecognised chord quality: ~A"
+				     quality-token)))))
+	 (quality-absolute-pc (mapcar #'(lambda (x)
+					  (mod (+ x root-pc) 12))
+				      quality-relative-pc))
+	 (non-bass-pc (remove-if #'(lambda (x) (eql x bass-pc))
+				 (cons root-pc quality-absolute-pc)))
+	 (non-bass-cpitch (mapcar #'(lambda (x) (+ x cpitch-middle-c))
+				  non-bass-pc))
+	 (bass-cpitch (- (+ bass-pc cpitch-middle-c) 12))
+	 (cpitch (cons bass-cpitch non-bass-cpitch))
+	 (cpitch (sort cpitch #'<)))
+    cpitch))
 
-         (tempo (list :tempo (cadr (assoc 'tempo environment))))
-         (deltast (list :deltast (cadr (assoc 'deltast environment))))
-         (onset (list :onset (cadr (assoc 'onset environment))))
-         (bioi (list :bioi (cadr (assoc 'bioi environment))))
-         (pitch (process-pitch event))
-         (cpitch (list :cpitch (nth 0 pitch)))
-         (mpitch (list :mpitch (nth 1 pitch)))
-         (accidental (list :accidental (nth 2 pitch)))
-         (dur (list :dur (process-dur event environment)))
-         (keysig (list :keysig (cadr (assoc 'keysig environment))))
-         (mode (list :mode (cadr (assoc 'mode environment))))
-         (barlength (list :barlength (calculate-bar-length environment)))
-         (pulses (list :pulses (car (cadr (assoc 'timesig environment)))))
-         (phrase (list :phrase (process-phrase event environment)))
-         (voice (list :voice (cadr (assoc 'voice environment))))
-	 (subvoice (list :subvoice (cadr (assoc 'subvoice environment))))
-	 (instrument (list :instrument (cadr (assoc 'instrument environment))))
-	 (instrument-class (list :instrument-class (cadr (assoc 'instrument-class environment))))
-	 (instrument-group (list :instrument-group (cadr (assoc 'instrument-group environment)))))
-    (list onset dur deltast bioi cpitch mpitch accidental keysig mode barlength
-          pulses phrase voice subvoice tempo instrument instrument-class instrument-group)))
+(defun process-jazz-chord->processed-events
+    (jazz-token humdrum-state processed-events)
+  "Updates <processed-events> with the result of processing 
+   a jazz-chord token."
+  (multiple-value-bind (dur-token root-token quality-token bass-token)
+      (parse-jazz-chord-token jazz-token)
+    (let* ((new-processed-events processed-events)
+	   (environment (humdrum-state-environment humdrum-state))
+	   (cpitch-list (parsed-jazz-chord->cpitch
+			 root-token quality-token bass-token))
+	   (dur (list :dur (process-dur dur-token environment)))
+	   (phrase (list :phrase (process-phrase jazz-token environment)))
+	   ;; Accidental and mpitch are nil, because they're not
+	   ;; well-defined for **jazz chords.
+	   (accidental (list :accidental nil))
+	   (mpitch (list :mpitch nil))
+	   ;; The other event attributes are derived from the environment.
+	   (tempo (list :tempo (cadr (assoc 'tempo environment))))
+	   (deltast (list :deltast (cadr (assoc 'deltast environment))))
+	   (onset (list :onset (cadr (assoc 'onset environment))))
+	   (bioi (list :bioi (cadr (assoc 'bioi environment))))
+	   (keysig (list :keysig (cadr (assoc 'keysig environment))))
+	   (mode (list :mode (cadr (assoc 'mode environment))))
+	   (barlength (list :barlength (calculate-bar-length environment)))
+	   (pulses (list :pulses (car (cadr (assoc 'timesig environment)))))
+	   (voice (list :voice (cadr (assoc 'voice environment))))
+	   (subvoice (list :subvoice (cadr (assoc 'subvoice environment))))
+	   (instrument (list :instrument (cadr (assoc 'instrument environment))))
+	   (instrument-class (list :instrument-class (cadr (assoc 'instrument-class
+								  environment))))
+	   (instrument-group (list :instrument-group (cadr (assoc 'instrument-group
+								  environment)))))
+      (dolist (cpitch cpitch-list new-processed-events)
+	(push (list onset dur deltast bioi (list :cpitch cpitch)
+		    mpitch accidental keysig mode barlength
+		    pulses phrase voice (copy-list subvoice)
+		    tempo instrument instrument-class instrument-group)
+	      new-processed-events)))))
+
+(defun process-jazz-chord->environment
+    (jazz-token humdrum-state)
+  "Updates the :environment slot of a humdrum-state with 
+  the result of processing a jazz-chord token."
+  (let* ((dur-token (parse-jazz-chord-token jazz-token))
+	 (environment (humdrum-state-environment humdrum-state))
+	 (current-envir-onset (cadr (assoc 'onset environment)))
+	 (event-dur (process-dur dur-token environment))
+	 (new-envir-onset (list 'onset (+ current-envir-onset
+					  event-dur)))
+	 (new-envir-bioi (list 'bioi 0))
+	 (new-envir-deltast (list 'deltast 0))
+	 ;; <phrase> and <pause> have been removed because it's not clear
+	 ;; that these are allowed within the **jazz specification.
+	 (new-environment (update-alist environment
+					new-envir-onset new-envir-deltast
+					new-envir-bioi)))
+    (setf (humdrum-state-environment humdrum-state)
+	  new-environment)
+    humdrum-state))
 
 
 
-  (let* ((c-middle-c (nth 0 *middle-c*))
-         (m-middle-c (nth 1 *middle-c*))
-         (pitch-token (cl-ppcre:scan-to-strings "[a-gA-G]+[-#n]*" event-token))
-         (pitch (cl-ppcre:scan-to-strings "[a-gA-G]+" pitch-token))
-         (num-octaves (- (length pitch) 1))
-         (num-sharps (length (cl-ppcre:scan-to-strings "[#]+" pitch-token)))
-         (num-flats (length (cl-ppcre:scan-to-strings "[-]+" pitch-token)))
-         (c-interval (case (char-downcase (char pitch 0))
-                       (#\c 0)
-                       (#\d 2)
-                       (#\e 4)
-                       (#\f 5)
-                       (#\g 7)
-                       (#\a 9)
-                       (#\b 11)))
-         (m-interval (case (char-downcase (char pitch 0))
-                       (#\c 0)
-                       (#\d 1)
-                       (#\e 2)
-                       (#\f 3)
-                       (#\g 4)
-                       (#\a 5)
-                       (#\b 6))))
-    (if (lower-case-p (char pitch 0))
-        (list
-         (+ c-middle-c c-interval (* num-octaves 12) (- num-flats) num-sharps)
-         (+ m-middle-c m-interval (* num-octaves 7))
-         (- num-sharps num-flats))
-        (list 
-         (- c-middle-c (- 12 c-interval) (* num-octaves 12) num-flats
-            (- num-sharps))
-         (- m-middle-c (- 7 m-interval) (* num-octaves 7))
-         (- num-sharps num-flats)))))
+
+
+
+     
