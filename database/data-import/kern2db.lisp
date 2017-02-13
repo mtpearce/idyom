@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-02-10 16:48:50 peter>                           
+;;;; Time-stamp: <2017-02-13 11:12:37 peter>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -94,6 +94,12 @@
 ;;;* User parameters *
 ;;;==================
 
+;; This parameter determines whether to stop when an unrecognised
+;; token is encountered. If true, unrecognised tokens throw an error.
+;; If nil, the import process continues, but a warning is given
+;; to the user afterwards.
+(defparameter *stop-on-unrecognised-tokens* t)
+
 (defparameter *default-timebase* 96)    ;basic time units in a semibreve 
 (defparameter *middle-c* '(60 35))      ;pitch mapping for middle c
 (defparameter *spines* '(1))            ;spines to convert (nil = all spines)
@@ -132,7 +138,7 @@
 
 (defvar *known-exclusive-interpretations* (list "**kern" "**jazz"))
 
-(defvar *humdrum-token-alist*
+(defparameter *humdrum-token-alist*
   (mapcar #'(lambda (x) 
               (list (cl-ppcre:create-scanner (car x) :single-line-mode t) 
                     (cadr x)))
@@ -143,7 +149,7 @@
 	    ("^\\*\\*" excl-interpret-token)       ;exclusive interpretation
 	    (".*" unrecognised-token))))           ;everything else is unrecognised
 
-(defvar *kern-token-alist*
+(defparameter *kern-token-alist*
   (mapcar #'(lambda (x) 
               (list (cl-ppcre:create-scanner (car x) :single-line-mode t) 
                     (cadr x)))
@@ -177,11 +183,11 @@
             ("^[^!=.*]" kern-event)                ;events
 	    (".*" unrecognised-token))))           ;everything else is unrecognised
 
-(defvar *jazz-token-alist*
+(defparameter *jazz-token-alist*
   (let* ((alist (remove-if #'(lambda (x) (member (second x)
 						 (list 'kern-event 'chord 'mode)))
 			   *kern-token-alist*)))
-    (push (list (cl-ppcre:create-scanner "^[0-9]+[A-G]"
+    (push (list (cl-ppcre:create-scanner "^[0-9]+\\.*[A-G]"
 					 :single-line-mode t)
 		'jazz-chord)
 	  alist)
@@ -191,28 +197,38 @@
 	  alist)
     alist))
 
+
 (defparameter *keysig-dictionary*
   ;; This is a hash-table where keys are strings corresponding to musical keys
   ;; and values are integers corresponding to the number of sharps (positive
   ;; integers) or flats (negative integers) for that key. 
-  (utils:csv->hash-table (make-pathname :directory
-					'(:relative "dictionary")
-					:name "key-signatures" :type "csv")
-			 :value-fun #'parse-integer))
+  (utils:csv->hash-table (merge-pathnames
+			  (make-pathname :directory
+					 '(:relative "database"
+					   "data-import" "dictionary")
+					 :name "key-signatures" :type "csv")
+			  cl-user::*idyom-code-root*)
+			  :value-fun #'parse-integer))
 
-(defparameter *chord-quality-dictionary*
-  ;; This is a hash-table where keys are strings representing notated
-  ;; musical chords and values are lists of integers corresponding
-  ;; to the pitch-class sets implied by these chords, expressed
-  ;; relative to the root (so 0 is the root, 7 is a perfect fifth
-  ;; above the root, and so on).
-  (utils:csv->hash-table (make-pathname :directory
-					'(:relative "dictionary")
-					:name "chord-qualities" :type "csv")
-			 :value-fun #'(lambda (x)
-					(mapcar #'parse-integer
-						(utils:split-string x " "))))) 
+(defparameter *chord-quality-dictionary* nil)
 
+(defun load-chord-quality-dictionary ()
+  "Loads a hash-table where keys are strings representing notated
+   musical chords and values are lists of integers corresponding
+   to the pitch-class sets implied by these chords, expressed
+   relative to the root (so 0 is the root, 7 is a perfect fifth
+   above the root, and so on)."
+  (setf *chord-quality-dictionary* 
+	(utils:csv->hash-table (merge-pathnames
+				(make-pathname :directory
+					       '(:relative "database"
+						 "data-import" "dictionary")
+					       :name "chord-qualities" :type "csv")
+				cl-user::*idyom-code-root*)
+			       :value-fun #'(lambda (x)
+					      (mapcar #'parse-integer
+						      (utils:split-string x " "))))))
+(load-chord-quality-dictionary)
 
   
 ;;;======================
@@ -223,6 +239,9 @@
 (defvar *unrecognised-tokens* '())         ;list of unrecognised tokens
 (defvar *voices* '())                      ;list of assigned voices
 (defvar *voice-counter* 0)                 ;counts the number of voices assigned so far
+
+(defvar *file-number* 0)
+(defvar *file-name* nil)
 (defvar *line-number* 0)                   ;current line being parsed
 (defvar *lines* '())                       ;list of lines in the file being parsed
 (defvar *first-barline-reached* nil)       ;boolean; whether the first barline has been parsed
@@ -295,6 +314,8 @@
 (defun process-data (file-or-dir directory)
   "If <file-or-dir> is a directory all the files in that directory
    are converted -- if it is a filename that file is processed."
+  (load-chord-quality-dictionary)
+  (setf *file-number* 0)
   (if directory
       (let* ((files nil))
 	(dolist (extension *input-file-extensions*)
@@ -304,7 +325,11 @@
 				      (directory-namestring file-or-dir)
 				      "*" extension))
 			files)))
-	(mapcar #'(lambda (file-name) (convert-kern-file file-name))
+	(mapcar #'(lambda (file-name)
+		    (progn
+		      (incf *file-number*)
+		      (setf *file-name* file-name)
+		       (convert-kern-file file-name)))
 		files))
       (list (convert-kern-file file-or-dir))))
 
@@ -525,7 +550,7 @@
     (case kern-token-type
       (ignore-token (process-ignore-token
 		     humdrum-state processed-events))
-      (unrecognised-token (process-unrecognised-token
+      (unrecognised-token (process-unrecognised-kern-token
 			   kern-token humdrum-state processed-events))
       (kern-event (process-kern-event
 		   kern-token humdrum-state processed-events))
@@ -552,7 +577,7 @@
     (case jazz-token-type
       (ignore-token (process-ignore-token
 		     humdrum-state processed-events))
-      (unrecognised-token (process-unrecognised-token
+      (unrecognised-token (process-unrecognised-jazz-token
 			   jazz-token humdrum-state processed-events))
       (jazz-chord (process-jazz-chord
 		   jazz-token humdrum-state processed-events))
@@ -655,8 +680,9 @@
   ((text :initarg :text :reader text))
   (:report (lambda (condition stream)
 	     (format stream
-		     "Error parsing line ~A.~%~A~%~%The line reads:~%~%~S"
+		     "Error parsing line ~A of file ~A.~%~A~%~%The line reads:~%~%~S"
 		     *line-number*
+		     *file-name*
 		     (text condition)
 		     (ignore-errors (get-line *line-number*))))))
 
@@ -664,8 +690,9 @@
   ((text :initarg :text :reader text))
   (:report (lambda (condition stream)
 	     (format stream
-		     "Error parsing line ~A.~%~A~%~%The line reads:~%~%~S"
+		     "Error parsing line ~A of file ~A.~%~A~%~%The line reads:~%~%~S"
 		     *line-number*
+		     *file-name*
 		     (text condition)
 		     (ignore-errors (get-line *line-number*))))))
 
@@ -1166,10 +1193,23 @@ in a phrase, and 0 otherwise."
   "Ignores a token."
   (values (list state) processed-events))
 
-(defun process-unrecognised-token (token state processed-events)
-  "Processes an unrecognised token."
-  (unrecognised-token token) ; adds the token to *unrecognised-tokens*
-  (values (list state) processed-events))
+(defun process-unrecognised-kern-token (token state processed-events)
+  "Processes an unrecognised **kern token."
+  (if *stop-on-unrecognised-tokens*
+      (error 'kern-line-read-error
+	     :text (format nil "Unrecognised token: ~A~%" token))
+      (progn
+	(unrecognised-token token) ; adds the token to *unrecognised-tokens*
+	(values (list state) processed-events))))
+
+(defun process-unrecognised-jazz-token (token state processed-events)
+  "Processes an unrecognised **jazz token."
+  (if *stop-on-unrecognised-tokens*
+      (error 'jazz-line-read-error
+	     :text (format nil "Unrecognised token: ~A~%" token))
+      (progn
+	(unrecognised-token token) ; adds the token to *unrecognised-tokens*
+	(values (list state) processed-events))))
 
 (defun process-spine-path (kern-token humdrum-state processed-events)
   "Processes a spine-path token."
@@ -1560,20 +1600,38 @@ in a phrase, and 0 otherwise."
   ;; pitch and duration extraction functions process-dur
   ;; and process-pitch, we first parse the **jazz token
   ;; according to the mandatory order of components.
-  ;; Jazz tokens take the form [duration][root][quality]/[bass]
-  ;; where /[bass] is optional.
+  ;; Jazz tokens take the form [duration][root][quality]/[bass](alternative)
+  ;; where /[bass] and (alternative) are optional.
+  ;; (alternative) gives an alternative chord choice,
+  ;; and is ignored for our purposes. The parser removes
+  ;; (alternative) tokens by identifying any sequence of characters
+  ;; at the end of the string that is enclosed in parentheses
+  ;; and begins with a capital letter betweeen A and G.
+  ;; Semicolons are also removed from the end of lines.
+  ;; In the case where it's unclear whether a symbol could belong
+  ;; to the chord root or the chord quality, the root is preferred
+  ;; (e.g. 1F#7susadd3 is parsed with F# being the root).
   (if (not (cl-ppcre:scan-to-strings
 	    "^[0-9]+[.]*[A-G]" jazz-token))
       (error 'jazz-line-read-error
 	     :text (format nil "Malformed **jazz chord token (~A) found."
 			   jazz-token)))
-  (let* ((dur-regex "^[0-9]+[.]*")
+  (let* ((semicolon-regex ";$")
+	 (alternative-regex "\\([A-G].*\\)$")
+	 (dur-regex "^[0-9]+[.]*")
 	 (root-regex "^[A-G][-#]*")
 	 (root-regex-2 "^[A-G][-#]*:?") 
 	 (bass-regex "\\/[A-G][-#]*$")
+	 (no-semicolon-token (cl-ppcre:regex-replace-all semicolon-regex
+							   jazz-token
+						      "" :preserve-case t))
+	 (no-alternative-token (cl-ppcre:regex-replace-all alternative-regex
+							   no-semicolon-token
+						      "" :preserve-case t))
 	 (dur-token (cl-ppcre:scan-to-strings dur-regex
-					      jazz-token))
-	 (remaining-token (cl-ppcre:regex-replace-all dur-regex jazz-token
+					      no-alternative-token))
+	 (remaining-token (cl-ppcre:regex-replace-all dur-regex
+						      no-alternative-token
 						      "" :preserve-case t))
 	 (root-token (cl-ppcre:scan-to-strings root-regex
 					       remaining-token))
