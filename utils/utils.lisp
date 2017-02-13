@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2017-02-13 14:58:51 peter>
+;;;; Time-stamp: <2017-02-13 17:59:22 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -51,10 +51,9 @@
    progress bars therefore must take detail level 3."
   (if (<= detail cl-user::*idyom-message-detail-level*)
       (progn
-	(format t text)
 	(if add-new-line (format t "~%"))
+	(format t text)
 	(force-output))))
-
 
 (defstruct progress-bar
   value num-blocks min max display-width)
@@ -78,7 +77,7 @@
 	      :display-width display-width)))
     (if (member cl-user::*idyom-message-detail-level* '(1 2))
 	(progn 
-	  (format t "| Progress: ")
+	  (format t "~%| Progress: ")
 	  (dotimes (i (- display-width 13)) (format t "-"))
 	  (format t "|~%")
 	  (force-output)))
@@ -99,6 +98,18 @@
 	  (dotimes (i num-blocks-to-add)
 	    (write-char #\=))
 	  (force-output)))))
+
+(defmacro dolist-pb
+    ((var list &optional result) &body body)
+  "A version of dolist that displays a progress
+   bar tracking the iterative process."
+  `(let* ((num-items (length ,list))
+	  (counter 0)
+	  (bar (initialise-progress-bar num-items)))
+     (dolist (,var ,list ,result)
+       ,@body
+       (incf counter)
+       (update-progress-bar bar counter))))
 
 
 ;;;===========================================================================
