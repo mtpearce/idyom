@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-02-13 11:12:37 peter>                           
+;;;; Time-stamp: <2017-02-13 15:08:04 peter>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -98,7 +98,7 @@
 ;; token is encountered. If true, unrecognised tokens throw an error.
 ;; If nil, the import process continues, but a warning is given
 ;; to the user afterwards.
-(defparameter *stop-on-unrecognised-tokens* t)
+(defparameter *stop-on-unrecognised-tokens* nil)
 
 (defparameter *default-timebase* 96)    ;basic time units in a semibreve 
 (defparameter *middle-c* '(60 35))      ;pitch mapping for middle c
@@ -317,21 +317,36 @@
   (load-chord-quality-dictionary)
   (setf *file-number* 0)
   (if directory
-      (let* ((files nil))
+      (let ((files nil)
+	    (converted-files nil)
+	    (num-files nil)
+	    (progress-bar nil))
 	(dolist (extension *input-file-extensions*)
 	  (setf files
 		(append (directory
 			 (concatenate 'string
 				      (directory-namestring file-or-dir)
 				      "*" extension))
-			files)))
-	(mapcar #'(lambda (file-name)
-		    (progn
-		      (incf *file-number*)
-		      (setf *file-name* file-name)
-		       (convert-kern-file file-name)))
-		files))
-      (list (convert-kern-file file-or-dir))))
+			files))) 
+	(setf num-files (length files))
+	(utils:message (format nil "Converting ~A files..." num-files)
+		       :detail 1)
+	(setf progress-bar (utils:initialise-progress-bar num-files))
+	(dolist (file files converted-files)
+	  (progn
+	    (incf *file-number*)
+	    (setf *file-name* file)
+	    (utils:message (format nil "Converting file ~A out of ~A: ~A"
+				   *file-number* num-files *file-name*)
+			   :detail 3)
+	    (convert-kern-file file)
+	    (utils:update-progress-bar progress-bar *file-number*))))
+      (progn
+	(setf *file-number* 1)
+	(setf *file-name* file-or-dir)
+	(utils:message (format nil "Converting file: ~A" *file-name*)
+		       :detail 1)
+	(list (convert-kern-file file-or-dir)))))
 
 (defun convert-kern-file (file-name)
   "Top level call to convert the kern file <file-name> to CHARM readable
@@ -344,11 +359,16 @@
   "Print message warning about unrecognised representations or tokens.
    Currently *unrecognised-representations* is unused."
   (unless (null *unrecognised-representations*)
-    (format t "~%The following representations were unrecognised: ~S"
-            *unrecognised-representations*))
+    (utils:message
+     (format nil
+	     "~%The following representations were unrecognised: ~S"
+	     *unrecognised-representations*)
+     :detail 1))
   (unless (null *unrecognised-tokens*)
-    (format t "~%The following tokens were unrecognised: ~S"
-            *unrecognised-tokens*)))
+    (utils:message
+     (format nil "~%The following tokens were unrecognised: ~S"
+	     *unrecognised-tokens*)
+     :detail 1)))
 
 
 ;;;===========================
@@ -479,7 +499,6 @@
 	(records-to-parse (cdr records))
 	(processed-events nil))
     (check-interpretations interpretations)
-    (setf *unrecognised-tokens* nil) ; remove this eventually
     (setf *first-barline-reached* nil)
     (setf *ties* nil)
     (let ((humdrum-states (initialise-humdrum-states
@@ -534,7 +553,6 @@
     (if *correct-onsets-to-first-barline*
 	(setf processed-events (correct-onsets processed-events
 					       *onset-correction*)))
-    (print-status)
     (reverse processed-events)))
 
 (defun process-kern-token
