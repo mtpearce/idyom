@@ -2,10 +2,14 @@
 ;;;; File:       main.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2010-11-01 15:19:57 marcusp>
-;;;; Time-stamp: <2016-10-15 13:03:05 peter>
+;;;; Time-stamp: <2017-02-13 15:10:14 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:idyom)
+
+;;;==================
+;;;* Viewpoints *
+;;;==================
 
 (defvar *cpitch-viewpoints*
   '(;; Chromatic pitch
