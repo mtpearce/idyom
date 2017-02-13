@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2017-02-09 15:56:04 peter>
+;;;; Time-stamp: <2017-02-13 14:58:51 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -11,8 +11,7 @@
 ;;; User interaction 
 ;;;===========================================================================
 
-(defun ask-user-y-n-question
-    (question)
+(defun ask-user-y-n-question (question)
   "Asks user a yes or no <question> over the command line.
    Returns t for yes, and nil for no."
   (format t "~%~A (y/n)~%" question)
@@ -24,6 +23,83 @@
 	       (string= res "N"))
 	   nil)
 	  (t (ask-user-y-n-question question)))))
+
+(defun message (text &key (detail 1) (add-new-line t))
+  "Prints a status message (<text>) to standard-output, 
+   and forces the output to appear immediately.
+   If <add-new-line> is true, then a new line
+   marker is appended to the message.
+
+   <detail-level> decribes the detail level of the
+   message, and can take the value 1, 2, or 3.
+   1: highest-level status information, suitable
+      default setting for non-technical user
+   2: medium-level status information, e.g. RAM usage, 
+      suitable default setting for advanced user
+   3: low-level status information, intended only
+      to be activated for debugging purposes.
+
+   The current message printing detail level is determined
+   by the variable <cl-user::*idyom-message-detail-level*>. Messages
+   are only printed if their <detail-level> is less than or
+   equal to the current value of <cl-user::*idyom-message-detail-level*>.
+
+   Progress bars display at detail levels 1 and 2
+   but not at detail level 3. These progress bars are
+   disrupted if other messages print before the progress
+   bar is finished. Messages within routines with 
+   progress bars therefore must take detail level 3."
+  (if (<= detail cl-user::*idyom-message-detail-level*)
+      (progn
+	(format t text)
+	(if add-new-line (format t "~%"))
+	(force-output))))
+
+
+(defstruct progress-bar
+  value num-blocks min max display-width)
+
+(defun initialise-progress-bar
+    (max &key (min 0) (initial 0) (display-width 60))
+  "Initialises a progress bar object for the purpose
+   of tracking an iterative operation. The progress bar
+   can subsequently be updated using the <update-progress-bar>
+   function.
+   Whether or not the progress bar is actually displayed
+   is determined by the variable <idyom::*message-detail-level*>.
+   Bars are only displayed when this variable takes the 
+   values 1 or 2 (i.e. not 3). 
+   Progress bars are disrupted if other messages print before 
+   the progress bar is finished. Messages within routines with 
+   progress bars therefore must take detail level 3."
+  (let ((bar (make-progress-bar
+	      :value 0 :num-blocks 0
+	      :min min :max max
+	      :display-width display-width)))
+    (if (member cl-user::*idyom-message-detail-level* '(1 2))
+	(progn 
+	  (format t "| Progress: ")
+	  (dotimes (i (- display-width 13)) (format t "-"))
+	  (format t "|~%")
+	  (force-output)))
+    (update-progress-bar bar initial)
+    bar))
+
+(defun update-progress-bar (bar value)
+  (let* ((num-blocks (floor (* (progress-bar-display-width
+				bar)
+			       (/ value (progress-bar-max
+					 bar)))))
+	 (num-blocks-to-add (- num-blocks
+			       (progress-bar-num-blocks
+				bar))))
+    (setf (progress-bar-num-blocks bar) num-blocks)
+    (if (member cl-user::*idyom-message-detail-level* '(1 2))
+	(progn 
+	  (dotimes (i num-blocks-to-add)
+	    (write-char #\=))
+	  (force-output)))))
+
 
 ;;;===========================================================================
 ;;; Numerical 
