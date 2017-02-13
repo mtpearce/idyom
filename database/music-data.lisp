@@ -2,10 +2,11 @@
 ;;;; File:       music-data.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-02-08 20:17:01 peter>                           
+;;;; Time-stamp: <2017-02-13 18:11:07 peter>                           
 ;;;; ======================================================================
 ;;;;
-;;;; DESCRIPTION 
+;;;; Description ==== =====================================================
+;;;; ======================================================================
 ;;;; 
 ;;;; Provides a database structure for storing and querying melodic
 ;;;; data in an sql database. The database contains tables for
@@ -15,11 +16,22 @@
 ;;;; attributes of events, compositions and datasets through their
 ;;;; ids.
 ;;;;
+;;;;
+;;;; Todo (features)  =====================================================
 ;;;; ======================================================================
+;;;;
+;;;; 
+;;;; Todo (coding) ========================================================
+;;;; ======================================================================
+;;;;
+;;;; 1. Rewrite with less copying and pasting.
+;;;; 2. Update status messages to use utils:message
+;;;; 3. Incorporate additional progress bars where appropriate
+;;;;
 
 (cl:in-package #:idyom-db)
 
-(defun db-backup (&key (verbose t))
+(defun db-backup ()
   (let* ((db-filename (pathname (slot-value clsql-sys:*default-database*
 				  'CLSQL-SYS:NAME)))
 	 (backups-folder (make-pathname 
@@ -30,9 +42,10 @@
 				   (get-universal-time))))
 	 (backup-full-filename
 	  (merge-pathnames backups-folder backup-file-name)))
-    (if verbose
-	(format t "Backing up the IDyOM database to ~A.~%"
-		(namestring backup-full-filename)))
+    (utils:message
+     (format nil "Backing up the IDyOM database to ~A.~%"
+	     (namestring backup-full-filename))
+     :detail 1)
     (ensure-directories-exist backups-folder)
     (utils:copy-file db-filename backup-full-filename)))
 
@@ -81,7 +94,7 @@
 
 (defun db-check-attribute-existence (table-sqlite-name
 				     attribute-name &key desired-attribute-type
-				     (update nil) (verbose nil))
+						      (update nil) (verbose nil))
   "Checks whether an attribute with name <attribute-name>
   is present in table <table-name>.
   Returns t if this is true and nil if not. Additionally,
@@ -263,7 +276,7 @@ for the composition; <composition-description> which is an arbitrary string
 describing the composition; and <events> which defines a one to many join
 with the event table based on the dataset-id and composition-id keys of
 each table."))
-                  
+
 (clsql:def-view-class mtp-event (thread-safe-db-obj)
   ((event-id 
     :db-kind :key
@@ -289,17 +302,17 @@ each table."))
    (onset
     :type float ;; originally integer
     :initarg :onset
-    :initform 0 
+    :initform 0.0 
     :reader event-onset)
    (cpitch 
     :type float ;; originally integer
     :initarg :cpitch
-    :initform 60 
+    :initform 60.0
     :reader event-cpitch)
    (mpitch 
     :type integer
     :initarg :mpitch
-    :initform 35 
+    :initform 35.0
     :reader event-mpitch)
    (accidental
     :type integer
@@ -309,17 +322,17 @@ each table."))
    (dur
     :type float ;; originally integer
     :initarg :dur
-    :initform 24
+    :initform 24.0
     :reader event-dur)
    (deltast
     :type float ;; originally integer
     :initarg :deltast
-    :initform 0
+    :initform 0.0
     :reader event-deltast)
    (bioi
     :type float ;; originally integer
     :initarg :bioi
-    :initform 0 
+    :initform 0.0 
     :reader event-bioi)
    (keysig
     :type integer
@@ -334,12 +347,12 @@ each table."))
    (barlength
     :type float ;; originally integer
     :initarg :barlength
-    :initform 96
+    :initform 96.0
     :reader event-barlength)
    (pulses
     :type float ;; originally integer
     :initarg :pulses
-    :initform 4
+    :initform 4.0
     :reader event-pulses)
    (phrase
     :type integer
@@ -394,12 +407,12 @@ each table."))
    (instrument-class
     :type string
     :initarg :instrument-class
-    :initform 1
+    :initform nil
     :reader event-instrument-class)
    (instrument-group
     :type string
     :initarg :instrument-group
-    :initform 1
+    :initform nil
     :reader event-instrument-group))
   (:base-table mtp_event)
   (:documentation "A view class defining a table for events. The
@@ -421,33 +434,33 @@ of the musical event at various levels of detail." ))
 (defmethod make-load-form ((e mtp-event) &optional environment)
   (declare (ignore environment))
   `(make-instance ',(type-of e)
-    :event-id       ',(event-id e)
-    :composition-id ',(composition-id e)
-    :dataset-id     ',(dataset-id e)
-    :onset          ',(event-onset e)
-    :deltast        ',(event-deltast e)
-    :bioi           ',(event-bioi e)
-    :cpitch         ',(event-cpitch e)
-    :mpitch         ',(event-mpitch e)
-    :accidental     ',(event-accidental e)
-    :dur            ',(event-dur e)
-    :keysig         ',(event-keysig e)
-    :mode           ',(event-mode e)
-    :barlength      ',(event-barlength e)
-    :pulses         ',(event-pulses e)
-    :phrase         ',(event-phrase e)
-    :tempo          ',(event-tempo e)
-    :dyn            ',(event-dyn e)
-    :ornament       ',(event-ornament e)
-    :articulation   ',(event-articulation e)
-    :comma          ',(event-comma e)
-    :voice          ',(event-voice e)
-    :vertint12      ',(event-vertint12 e)
-    :subvoice       ',(event-subvoice e)
-    :instrument     ',(event-instrument e)
-    :instrument-class      ',(event-instrument-class e)
-    :instrument-group      ',(event-instrument-group e)))
-    
+		  :event-id       ',(event-id e)
+		  :composition-id ',(composition-id e)
+		  :dataset-id     ',(dataset-id e)
+		  :onset          ',(event-onset e)
+		  :deltast        ',(event-deltast e)
+		  :bioi           ',(event-bioi e)
+		  :cpitch         ',(event-cpitch e)
+		  :mpitch         ',(event-mpitch e)
+		  :accidental     ',(event-accidental e)
+		  :dur            ',(event-dur e)
+		  :keysig         ',(event-keysig e)
+		  :mode           ',(event-mode e)
+		  :barlength      ',(event-barlength e)
+		  :pulses         ',(event-pulses e)
+		  :phrase         ',(event-phrase e)
+		  :tempo          ',(event-tempo e)
+		  :dyn            ',(event-dyn e)
+		  :ornament       ',(event-ornament e)
+		  :articulation   ',(event-articulation e)
+		  :comma          ',(event-comma e)
+		  :voice          ',(event-voice e)
+		  :vertint12      ',(event-vertint12 e)
+		  :subvoice       ',(event-subvoice e)
+		  :instrument     ',(event-instrument e)
+		  :instrument-class      ',(event-instrument-class e)
+		  :instrument-group      ',(event-instrument-group e)))
+
 
 ;; Inserting and deleting datasets 
 ;;================================
@@ -524,25 +537,29 @@ to exclude for each dataset specified in SOURCE-IDS."
    Calls <insert-composition> to insert each composition in
    <compositions> into the composition table." 
   (if (null (nthcdr 3 data))
-      (print "Cowardly refusing to import an empty dataset.")
+      (utils:message "Cowardly refusing to import an empty dataset."
+		     :detail 1)
       (let* ((id (or id (get-next-free-id)))
              (description (nth 0 data))
              (timebase (nth 1 data))
              (midc (nth 2 data))
              (compositions (nthcdr 3 data))
+	     (num-compositions (length compositions))
              (composition-id 0)
              (dataset-object (make-instance 'mtp-dataset
                                             :dataset-id id
                                             :description description
                                             :timebase timebase
                                             :midc midc)))
-        (format t "~%Inserting data into database: dataset ~A." id)
+	(utils:message
+	 (format nil "Inserting ~A compositions into database: dataset ~A."
+		 num-compositions id) :detail 1)
         (clsql:with-transaction () 
           (clsql:update-records-from-instance dataset-object)
-          (dolist (c compositions)
+          (utils:dolist-pb (c compositions)
             (insert-composition dataset-object c composition-id)
             (when (cdr c) (incf composition-id)))))))
-        
+
 (defmethod insert-composition ((d mtp-dataset) composition id)
   "Takes a preprocessed composition <composition> and
    creates a composition object with composition-id <id> and the same
@@ -569,35 +586,40 @@ to exclude for each dataset specified in SOURCE-IDS."
    creates an event object with event-id <id> and the same dataset-id and
    composition-id as <composition> and inserts it into the event table of
    the default database."
-  (let ((event-object 
-         (make-instance 'mtp-event
-                        :dataset-id (dataset-id composition)
-                        :composition-id (composition-id composition)
-                        :event-id id
-                        :onset      (cadr (assoc :onset event))
-                        :deltast    (cadr (assoc :deltast event))
-                        :bioi       (cadr (assoc :bioi event))
-                        :cpitch     (cadr (assoc :cpitch event))
-                        :mpitch     (cadr (assoc :mpitch event))
-                        :accidental (cadr (assoc :accidental event))
-                        :dur        (cadr (assoc :dur event))
-                        :keysig     (cadr (assoc :keysig event))
-                        :mode       (cadr (assoc :mode event))
-                        :barlength  (cadr (assoc :barlength event))
-                        :pulses     (cadr (assoc :pulses event))
-                        :phrase     (cadr (assoc :phrase event))
-                        :dyn        (cadr (assoc :dyn event))
-                        :tempo      (cadr (assoc :tempo event))
-                        :ornament   (cadr (assoc :ornament event))
-                        :comma      (cadr (assoc :comma event))
-                        :articulation (cadr (assoc :articulation event))
-                        :vertint12  (cadr (assoc :vertint12 event))
-                        :voice      (cadr (assoc :voice event))
-			:subvoice   (cadr (assoc :subvoice event))
-			:instrument       (cadr (assoc :instrument event))
-			:instrument-class (cadr (assoc :instrument-class event))
-			:instrument-group (cadr (assoc :instrument-group event)))))
-    (clsql:update-records-from-instance event-object)))
+  (flet ((coerce-to-float (x)
+	   (if (null x) x (coerce x 'float)))
+	 (coerce-to-string (x)
+	   (if (null x) x (prin1-to-string x))))
+    (let ((event-object 
+	   (make-instance
+	    'mtp-event
+	    :dataset-id (dataset-id composition)
+	    :composition-id (composition-id composition)
+	    :event-id id
+	    :onset      (coerce-to-float (cadr (assoc :onset event)))
+	    :deltast    (coerce-to-float (cadr (assoc :deltast event)))
+	    :bioi       (coerce-to-float (cadr (assoc :bioi event)))
+	    :cpitch     (coerce-to-float (cadr (assoc :cpitch event)))
+	    :mpitch     (cadr (assoc :mpitch event))
+	    :accidental (cadr (assoc :accidental event))
+	    :dur        (coerce-to-float (cadr (assoc :dur event)))
+	    :keysig     (cadr (assoc :keysig event))
+	    :mode       (cadr (assoc :mode event))
+	    :barlength  (coerce-to-float (cadr (assoc :barlength event)))
+	    :pulses     (coerce-to-float (cadr (assoc :pulses event)))
+	    :phrase     (cadr (assoc :phrase event))
+	    :dyn        (cadr (assoc :dyn event))
+	    :tempo      (coerce-to-float (cadr (assoc :tempo event)))
+	    :ornament   (cadr (assoc :ornament event))
+	    :comma      (cadr (assoc :comma event))
+	    :articulation (cadr (assoc :articulation event))
+	    :vertint12  (coerce-to-float (cadr (assoc :vertint12 event)))
+	    :voice      (cadr (assoc :voice event))
+	    :subvoice   (coerce-to-string (cadr (assoc :subvoice event)))
+	    :instrument       (coerce-to-string (cadr (assoc :instrument event)))
+	    :instrument-class (coerce-to-string (cadr (assoc :instrument-class event)))
+	    :instrument-group (coerce-to-string (cadr (assoc :instrument-group event))))))
+      (clsql:update-records-from-instance event-object))))
 
  
 (defun delete-dataset (dataset-id)
@@ -845,7 +867,8 @@ per composition, as well as the domains of each event attribute."
     (let ((attributes
            (if (null attributes)
                '(cpitch mpitch accidental dur deltast bioi keysig mode barlength
-                 pulses phrase dyn tempo voice ornament articulation comma)
+                 pulses phrase dyn tempo voice subvoice ornament articulation comma
+		 instrument instrument-class instrument-group)
                (if (atom attributes) (list attributes) attributes))))
       (print-description dataset-id)
       (print-separator)

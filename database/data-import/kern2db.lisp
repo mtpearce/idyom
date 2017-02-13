@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-02-13 15:08:04 peter>                           
+;;;; Time-stamp: <2017-02-13 15:43:54 peter>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -281,6 +281,12 @@
 (defmethod import-data ((type (eql :krn)) path description id)
   (idyom-db:insert-dataset (kern2db path description) id))
 
+(defmethod import-data ((type (eql :jazz)) path description id)
+  (idyom-db:insert-dataset (kern2db path description) id))
+
+(defmethod import-data ((type (eql :humdrum)) path description id)
+  (idyom-db:insert-dataset (kern2db path description) id))
+
 (defun kern2db (file-or-dir-name description
                 &key (timesig *default-timesig*)
                   (keysig *default-keysig*)
@@ -339,8 +345,9 @@
 	    (utils:message (format nil "Converting file ~A out of ~A: ~A"
 				   *file-number* num-files *file-name*)
 			   :detail 3)
-	    (convert-kern-file file)
-	    (utils:update-progress-bar progress-bar *file-number*))))
+	    (push (convert-kern-file file) converted-files)
+	    (utils:update-progress-bar progress-bar *file-number*)))
+	(reverse converted-files)) 
       (progn
 	(setf *file-number* 1)
 	(setf *file-name* file-or-dir)
