@@ -2,7 +2,7 @@
 ;;;; File:       db2midi.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2005-06-09 11:01:51 marcusp>
-;;;; Time-stamp: <2015-03-25 16:33:47 marcusp>
+;;;; Time-stamp: <2017-02-15 10:51:34 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:db2midi)
@@ -41,6 +41,7 @@
   (floor (* 1000000 (/ 60 bpm))))
 
 (defun event-lists->midi (event-lists file &key (format 1) (program *default-program*))
+  ;; This function isn't currently being used
   (let* ((tempo (idyom-db:get-attribute (car (car event-lists)) :tempo))
          (tempo-msg (make-instance 'midi:tempo-message :time 0
                                    :status #xff
@@ -71,6 +72,8 @@
                                    :tempo (bpm->usecs 
                                            (if tempo tempo *default-tempo*))))
          (track (mapcan #'event->midi events))
+	 (track (sort track #'(lambda (x y) (< (midi:message-time x)
+					       (midi:message-time y)))))
          (midifile (make-instance 'midi:midifile
                                   :format format
                                   :division (* (/ *timebase* 4) *tick-multiplier*)
@@ -81,8 +84,8 @@
     midifile))
 
 (defun event->midi (event)
-  (let* ((non-onset (idyom-db:get-attribute event :onset))
-         (noff-onset (+ non-onset (idyom-db:get-attribute event :dur)))
+  (let* ((non-onset (round (idyom-db:get-attribute event :onset)))
+         (noff-onset (round (+ non-onset (idyom-db:get-attribute event :dur))))
          (channel (idyom-db:get-attribute event :voice))
          (keynum  (round (+ (- 60 *midc*)
                             (idyom-db:get-attribute event :cpitch))))
