@@ -2,10 +2,10 @@
 ;;;; File:       music-data.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-02-13 18:11:07 peter>                           
+;;;; Time-stamp: <2017-02-15 15:09:37 peter>                           
 ;;;; ======================================================================
 ;;;;
-;;;; Description ==== =====================================================
+;;;; Description ==========================================================
 ;;;; ======================================================================
 ;;;; 
 ;;;; Provides a database structure for storing and querying melodic
@@ -17,7 +17,7 @@
 ;;;; ids.
 ;;;;
 ;;;;
-;;;; Todo (features)  =====================================================
+;;;; Todo (features) ======================================================
 ;;;; ======================================================================
 ;;;;
 ;;;; 
@@ -470,11 +470,14 @@ of the musical event at various levels of detail." ))
   (with-open-file (s filename :direction :input)
     (insert-dataset (utils:read-object-from-file filename) id)))
 
-(defmethod export-data ((d mtp-dataset) (type (eql :lisp)) filename)
-  (with-open-file (s filename :direction :output :if-exists :supersede
-                     :if-does-not-exist :create)
-    (write (dataset->lisp d) :stream s))
-  nil)
+(defmethod export-data ((d mtp-dataset) (type (eql :lisp)) dir &key filename)
+  (let* ((dir-path (pathname dir))
+	 (filename (if filename filename "dataset.lisp"))
+	 (file-path (merge-pathnames dir-path (pathname filename))))
+    (with-open-file (s file-path :direction :output :if-exists :supersede
+		       :if-does-not-exist :create)
+      (write (dataset->lisp d) :stream s))
+    nil))
 
 (defun copy-datasets (target-id source-ids &optional description exclude)
   "Copy datasets specified by SOURCE-IDS to a new dataset specified by

@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-02-13 15:43:54 peter>                           
+;;;; Time-stamp: <2017-02-14 20:15:42 peter>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -66,7 +66,7 @@
 ;;;; representation (not a performance), rests are not explicitly encoded
 ;;;; and repeated sections are not explicitly expanded. 
 ;;;;
-;;;; Todo (features)  =====================================================
+;;;; Todo (features) ======================================================
 ;;;; ======================================================================
 ;;;;
 ;;;; 1. process representations other than **kern (e.g, **dyn, **dur,
