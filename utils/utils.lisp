@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2017-02-16 10:41:17 peter>
+;;;; Time-stamp: <2017-02-16 18:27:18 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -571,6 +571,40 @@
                          :type nil
                          :defaults pathname)
           pathname))))
+
+(defun recursively-list-files (directory-name &key extension (max-num-directories 100000))
+  "Recursively lists all files present in <directory-name>, optionally filtered 
+   by <extension> (e.g. the string krn). The number of directories to search is limited
+   by <max-num-directories 100000>, which if exceeded causes an error to be thrown."
+  (labels ((directory-p (pathname)
+             (and (not (present-p (pathname-type pathname)))
+                  (not (present-p (pathname-name pathname)))))
+           (present-p (x)
+             (and x (not (eq x :unspecific))))
+	   (fun (dirs-to-search files-found number-of-dirs-searched)
+	     (if (null dirs-to-search) files-found
+		 (let* ((new-dirs (remove-if-not
+				   #'directory-p
+				   (mapcan #'(lambda (dir) (directory (merge-pathnames
+								       dir "*")))
+						     dirs-to-search)))
+			(new-files (mapcan #'uiop:directory-files dirs-to-search))
+			(num-new-dirs (length new-dirs))
+			;; (new-files-and-dirs (mapcan #'(lambda (dir)
+			;; 				(directory dir))
+			;; 			    dirs-to-search))
+			;; (new-dirs (remove-if-not #'directory-p new-files-and-dirs))	
+			;; (new-files (remove-if #'directory-p new-files-and-dirs))
+			(new-files (if (null extension) new-files
+				       (remove-if-not #'(lambda (path) (string= (pathname-type path)
+										extension))
+						      new-files))))
+		   (if (> (+ num-new-dirs number-of-dirs-searched)
+			  max-num-directories)
+		       (error "Search did not terminate before the maximum number of directories were searched."))
+		   (fun new-dirs (nconc new-files files-found) (+ num-new-dirs number-of-dirs-searched))))))
+    (fun (list (ensure-directory directory-name)) nil 0)))
+
 
 ;;;===========================================================================
 ;;; Objects

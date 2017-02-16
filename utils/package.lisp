@@ -2,7 +2,7 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-02-16 10:43:01 peter>                           
+;;;; Time-stamp: <2017-02-16 18:30:05 peter>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -24,7 +24,7 @@
 	   "NMAPCAR" "NPOSITION" "NPOSITIONS" "NMEMBER" "NMIN" "NSELECTFIRST"
            "ALIST->HASH-TABLE" "HASH-TABLE->ALIST" "HASH-TABLE->SORTED-ALIST"
            "READ-OBJECT-FROM-FILE" "FILE-EXISTS" "WRITE-OBJECT-TO-FILE"
-           "CD" "PWD" "ENSURE-DIRECTORY" "COPY-FILE"
+           "CD" "PWD" "ENSURE-DIRECTORY" "COPY-FILE" "RECURSIVELY-LIST-FILES"
            "COLLECT-GARBAGE" "SHELL-COMMAND")
   (:documentation "Utility functions of general use."))
 
