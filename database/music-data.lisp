@@ -2,7 +2,7 @@
 ;;;; File:       music-data.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-02-15 15:09:37 peter>                           
+;;;; Time-stamp: <2017-02-16 16:50:07 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -53,7 +53,8 @@
   "Top-level function for checking that the database has an 
    up-to-date structure. If out-of-date structure is found, the 
    user is given the option to upgrade it."
-  (if (not (and (db-check-attribute-existence "MTP_EVENT" "SUBVOICE")
+  (if (not (and (db-check-attribute-existence "MTP_EVENT" "TONIC")
+		(db-check-attribute-existence "MTP_EVENT" "SUBVOICE")
 		(db-check-attribute-existence "MTP_EVENT" "INSTRUMENT")
 		(db-check-attribute-existence "MTP_EVENT" "INSTRUMENT_CLASS")
 		(db-check-attribute-existence "MTP_EVENT" "INSTRUMENT_GROUP")
@@ -72,6 +73,8 @@
 	    (db-backup)
 	    (format t "Attempting to upgrade database.~%")
 	    (format t "Adding new event attributes...~%")
+	    ;; When adding new basic viewpoints, new db-check-attribute-existence
+	    ;; functions should be added to the END of the current block.
 	    (db-check-attribute-existence "MTP_EVENT" "SUBVOICE"
 					  :desired-attribute-type "VARCHAR"
 					  :update t)
@@ -83,6 +86,9 @@
 					  :update t)
 	    (db-check-attribute-existence "MTP_EVENT" "INSTRUMENT_GROUP"
 					  :desired-attribute-type "VARCHAR"
+					  :update t)
+	    (db-check-attribute-existence "MTP_EVENT" "TONIC"
+					  :desired-attribute-type "INTEGER"
 					  :update t)
 	    (format t "Changing event attribute types...~%")
 	    ;; Warning: an error will be thrown if the old database
@@ -278,6 +284,7 @@ with the event table based on the dataset-id and composition-id keys of
 each table."))
 
 (clsql:def-view-class mtp-event (thread-safe-db-obj)
+  ;; Any new basic viewpoints should be added to the END of the current block.
   ((event-id 
     :db-kind :key
     :db-constraints :not-null
@@ -413,7 +420,12 @@ each table."))
     :type string
     :initarg :instrument-group
     :initform nil
-    :reader event-instrument-group))
+    :reader event-instrument-group)
+   (tonic
+    :type integer
+    :initarg :tonic
+    :initform 0
+    :reader event-tonic))
   (:base-table mtp_event)
   (:documentation "A view class defining a table for events. The
 <dataset-id>, <composition-id> and <event-id> slots are integers which
@@ -421,7 +433,8 @@ together uniquely identify an event. The remaining slots contain event
 attribute values as follows: <onset> the onset time of the event; <cpitch>
 the chromatic pitch of the event; <mpitch> the morphetic pitch of the
 event; <keysig> an integer representing the number of sharps or flats in
-the key signature; <mode> 0 for major and 9 for minor; <barlength> an
+the key signature; <tonic> an integer representing the pitch class of
+the tonic; <mode> 0 for major and 9 for minor; <barlength> an
 integer representing the number of basic time units in a bar; <pulses>
 an integer number of pulses in a bar; <phrase> 1 if the event is the
 first in a phrase and 0 otherwise; <tempo> is the tempo in crotchet bpm;
@@ -445,6 +458,7 @@ of the musical event at various levels of detail." ))
 		  :accidental     ',(event-accidental e)
 		  :dur            ',(event-dur e)
 		  :keysig         ',(event-keysig e)
+		  :tonic          ',(event-tonic e)
 		  :mode           ',(event-mode e)
 		  :barlength      ',(event-barlength e)
 		  :pulses         ',(event-pulses e)
@@ -511,6 +525,7 @@ to exclude for each dataset specified in SOURCE-IDS."
                       (list :mpitch (event-mpitch e))
                       (list :accidental (event-accidental e))
                       (list :keysig (event-keysig e))
+		      (list :tonic (event-tonic e))
                       (list :mode (event-mode e))
                       (list :barlength (event-barlength e))
                       (list :pulses (event-pulses e))
@@ -607,6 +622,7 @@ to exclude for each dataset specified in SOURCE-IDS."
 	    :accidental (cadr (assoc :accidental event))
 	    :dur        (coerce-to-float (cadr (assoc :dur event)))
 	    :keysig     (cadr (assoc :keysig event))
+	    :tonic      (cadr (assoc :tonic event))
 	    :mode       (cadr (assoc :mode event))
 	    :barlength  (coerce-to-float (cadr (assoc :barlength event)))
 	    :pulses     (coerce-to-float (cadr (assoc :pulses event)))
@@ -767,6 +783,7 @@ a list containing the dataset-id is returned."))
                  :mpitch (event-mpitch e)
                  :dur (event-dur e)
                  :keysig (event-keysig e)
+		 :tonic (event-tonic e)
                  :accidental (event-accidental e)
                  :mode (event-mode e)
                  :barlength (event-barlength e)
@@ -869,7 +886,7 @@ per composition, as well as the domains of each event attribute."
                    (make-sequence 'string columns :initial-element #\-))))
     (let ((attributes
            (if (null attributes)
-               '(cpitch mpitch accidental dur deltast bioi keysig mode barlength
+               '(cpitch mpitch accidental dur deltast bioi keysig tonic mode barlength
                  pulses phrase dyn tempo voice subvoice ornament articulation comma
 		 instrument instrument-class instrument-group)
                (if (atom attributes) (list attributes) attributes))))
