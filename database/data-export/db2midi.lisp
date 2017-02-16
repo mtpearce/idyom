@@ -2,7 +2,7 @@
 ;;;; File:       db2midi.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2005-06-09 11:01:51 marcusp>
-;;;; Time-stamp: <2017-02-15 17:37:17 peter>
+;;;; Time-stamp: <2017-02-16 00:14:17 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:db2midi)
@@ -17,7 +17,10 @@
 (defvar *remap-voices* t)
 
 ;; Path to the user's Timidity executable
-(defvar *timidity-path* "/usr/local/Cellar/timidity/2.14.0/bin/timidity")
+(defparameter *timidity-path* "/usr/local/Cellar/timidity/2.14.0/bin/timidity")
+
+(defparameter *musescore-path* "/Applications/MuseScore 2.app/Contents/MacOS/mscore")
+(defparameter *pdf-viewer-path* "/Applications/Preview.app/Contents/MacOS/Preview")
 
 (defvar *timebase* 96)
 (defvar *midc* 60) 
@@ -104,6 +107,34 @@
 	(if (eql (sb-ext:process-status process) :running)
 	    (sb-ext:process-kill process 15))
 	(if (eql char #\q) t nil)))))
+
+(defun midi->pdf (input-file output-file &key open-viewer)
+  (sb-ext:run-program *musescore-path*
+		      (list (namestring input-file)
+			    "-o" (namestring (ensure-directories-exist
+					      output-file))))
+  (if open-viewer
+    (asdf:run-shell-command (concatenate 'string "open "
+					(namestring output-file))))
+  (namestring output-file))
+
+(defmethod preview-score ((c idyom-db:mtp-composition) &key (temp-dir "/tmp/idyom/"))
+  (utils:message (format nil "Generating preview for composition ~A."
+			 (idyom-db::composition-description c))
+		 :detail 1)
+  (let* ((dir-path (ensure-directories-exist (utils:ensure-directory temp-dir)))
+	 (midi-file-path (export-data c :mid dir-path :filename "temp-audio.mid"))
+	 (midi-file-path-string (namestring midi-file-path))
+	 (pdf-file-path (merge-pathnames dir-path
+					 (concatenate 'string "temp-score"
+						      (write-to-string
+						       (get-internal-real-time))
+						      ".pdf")))
+	 (pdf-file-path-string (namestring pdf-file-path)))
+    (utils:message (format nil "Converting midi file (~A) to PDF (~A)."
+			   midi-file-path-string pdf-file-path-string)
+		   :detail 3)
+    (midi->pdf midi-file-path pdf-file-path :open-viewer t)))
 
 (defun bpm->usecs (bpm)
   (floor (* 1000000 (/ 60 bpm))))
