@@ -2,7 +2,7 @@
 ;;;; File:       db2midi.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2005-06-09 11:01:51 marcusp>
-;;;; Time-stamp: <2017-02-16 00:14:17 peter>
+;;;; Time-stamp: <2017-02-16 13:16:11 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:db2midi)
@@ -15,6 +15,9 @@
 ;; IDyOM order (low voice number implies low register) to the standard
 ;; MIDI order (low channel implies high register).
 (defvar *remap-voices* t)
+
+(defvar *encode-timesig* t)   ; whether time signatures are to be encoded in MIDI
+(defvar *encode-keysig* t)    ; whether key signatures are to be encoded in MIDI
 
 ;; Path to the user's Timidity executable
 (defparameter *timidity-path* "/usr/local/Cellar/timidity/2.14.0/bin/timidity")
@@ -34,6 +37,7 @@
 ;;;==================
 
 (defvar *voice->channel-map* nil)
+(defvar *environment* nil)
 
 ;;;=======================
 ;;;* Functions and methods *
@@ -60,19 +64,21 @@
       (if (equal 1 (length compositions))
 	  output-path dir))))
 
-  (defmethod export-data ((c idyom-db:mtp-composition) (type (eql :mid)) dir &key filename)
-    ;; FIXME: *midc* is never set if export-data is called with a
-    ;; composition directly.
-    (let* ((*timebase* (idyom-db::composition-timebase c))
-	   (dir-path (utils:ensure-directory dir))
-	   (filename (if filename
-			 filename
-			 (concatenate 'string (idyom-db::composition-description c)
-				      ".mid")))
-	   (file-path (merge-pathnames dir-path (pathname filename))))
-      (ensure-directories-exist dir-path)
-      (events->midi (idyom-db::composition-events c) file-path)
-      file-path))
+(defmethod export-data ((c idyom-db:mtp-composition) (type (eql :mid)) dir &key filename)
+  ;; FIXME: *midc* is never set if export-data is called with a
+  ;; composition directly.
+  (let* ((*timebase* (idyom-db::composition-timebase c))
+	 (dir-path (utils:ensure-directory dir))
+	 (filename (if filename
+		       filename
+		       (concatenate 'string (idyom-db::composition-description c)
+				    ".mid")))
+	 (file-path (merge-pathnames dir-path (pathname filename))))
+    (ensure-directories-exist dir-path)
+    (events->midi (idyom-db::composition-events c) file-path
+		  :encode-keysig *encode-keysig*
+		  :encode-timesig *encode-timesig*)
+    file-path))
 
 (defmethod play-audio ((d idyom-db:mtp-dataset) &key (temp-dir "/tmp/idyom/"))
   (let* ((compositions (idyom-db::dataset-compositions d))
@@ -102,7 +108,7 @@
     (let ((process (sb-ext:run-program *timidity-path* (list file-path-string) :wait nil)))
       (utils:message
        (format nil "Press enter to skip, or Q then enter to quit.~%")
-	       :detail 1)
+       :detail 1)
       (let ((char (read-char)))
 	(if (eql (sb-ext:process-status process) :running)
 	    (sb-ext:process-kill process 15))
@@ -114,8 +120,8 @@
 			    "-o" (namestring (ensure-directories-exist
 					      output-file))))
   (if open-viewer
-    (asdf:run-shell-command (concatenate 'string "open "
-					(namestring output-file))))
+      (asdf:run-shell-command (concatenate 'string "open "
+					   (namestring output-file))))
   (namestring output-file))
 
 (defmethod preview-score ((c idyom-db:mtp-composition) &key (temp-dir "/tmp/idyom/"))
@@ -161,10 +167,12 @@
 	channel)
       voice))
 
-(defun events->midi (events file &key (format 1) (program *default-program*))
+(defun events->midi (events file &key (format 1) (program *default-program*)
+				   encode-timesig encode-keysig)
   "Converts a list of CHARM events to a MIDI representation."
   (if *remap-voices* (update-voice->channel-map events))
-  (let* ((voice (idyom-db:get-attribute (car events) :voice))
+  (let* ((*environment* nil)
+	 (voice (idyom-db:get-attribute (car events) :voice))
 	 (channel (voice->channel voice))
          (channel-msg (make-instance 'midi:program-change-message :time 0 
                                      :status (+ #xc0 channel) 
@@ -174,7 +182,11 @@
                                    :status #xff
                                    :tempo (bpm->usecs 
                                            (if tempo tempo *default-tempo*))))
-         (track (mapcan #'event->midi events))
+         (track (mapcan #'(lambda (event)
+			    (event->midi event
+					 :encode-timesig encode-timesig
+					 :encode-keysig encode-keysig))
+			events))
 	 (track (sort track #'(lambda (x y) (< (midi:message-time x)
 					       (midi:message-time y)))))
          (midifile (make-instance 'midi:midifile
@@ -186,7 +198,7 @@
     (midi:write-midi-file midifile file)
     midifile))
 
-(defun event->midi (event)
+(defun event->midi (event &key encode-timesig encode-keysig)
   "Converts a CHARM event to a MIDI representation."
   (let* ((non-onset (round (idyom-db:get-attribute event :onset)))
          (noff-onset (round (+ non-onset (idyom-db:get-attribute event :dur))))
@@ -194,17 +206,88 @@
 	 (channel (voice->channel voice))
          (keynum  (round (+ (- 60 *midc*)
                             (idyom-db:get-attribute event :cpitch))))
-         (velocity (idyom-db:get-attribute event :dyn)))
-    (list (make-instance 'midi:note-on-message
-                         :time (* non-onset *tick-multiplier*)
-                         :status (+ #x90 channel)
-                         :key keynum 
-                         :velocity (if velocity velocity *default-velocity*))
-          (make-instance 'midi:note-off-message
-                         :time (* noff-onset *tick-multiplier*)
-                         :status (+ #x80 channel)
-                         :key keynum
-                         :velocity (if velocity velocity *default-velocity*)))))
+         (velocity (idyom-db:get-attribute event :dyn))
+	 (midi-messages
+	  (list (make-instance 'midi:note-on-message
+			       :time (* non-onset *tick-multiplier*)
+			       :status (+ #x90 channel)
+			       :key keynum 
+			       :velocity (if velocity velocity
+					     *default-velocity*))
+		(make-instance 'midi:note-off-message
+			       :time (* noff-onset *tick-multiplier*)
+			       :status (+ #x80 channel)
+			       :key keynum
+			       :velocity (if velocity velocity
+					     *default-velocity*)))))
+    (if encode-keysig
+	(let ((prev-keysig (second (assoc :keysig *environment*)))
+	      (cur-keysig (idyom-db:get-attribute event :keysig))
+	      (prev-mode (second (assoc :mode *environment*)))
+	      (cur-mode (idyom-db:get-attribute event :mode))
+	      (first-keysig-reached (second (assoc :first-keysig-reached
+						   *environment*))))
+	  (when (not (null cur-keysig))
+	    (if (not (integerp cur-keysig))
+		(error (format nil "keysig must be an integer, but found ~A."
+			       cur-keysig)))
+	    (if (not (and (<= -7 cur-keysig) (<= cur-keysig 7)))
+		(error (format nil "keysig must be between -7 and 7, but found ~A."
+			       cur-keysig)))
+	    (if (not (member cur-mode '(0 1) :test #'equal))
+		(setf cur-mode 0))
+	    (if (not (and (equal prev-keysig cur-keysig)
+			  (equal prev-mode cur-mode)))
+		(let ((keysig-msg
+		       (make-instance 'midi:key-signature-message
+				      :time (if first-keysig-reached
+						(* non-onset *tick-multiplier*)
+						0)
+				      :status #xFF)))
+		  (setf (slot-value keysig-msg 'midi::mi) cur-mode)
+		  (setf (slot-value keysig-msg 'midi::sf) cur-keysig)
+		  (push keysig-msg midi-messages)
+		  (setf *environment* (utils:update-alist
+				       *environment*
+				       (list :keysig cur-keysig)
+				       (list :mode cur-mode)
+				       (list :first-keysig-reached t))))))))
+    (if encode-timesig
+    	(let* ((prev-pulses (second (assoc :pulses *environment*)))
+    	       (cur-pulses (idyom-db:get-attribute event :pulses))
+    	       (prev-barlength (second (assoc :barlength *environment*)))
+    	       (cur-barlength (idyom-db:get-attribute event :barlength))
+    	       (numerator (round cur-pulses))
+    	       (pulse-dur (round (/ cur-barlength cur-pulses)))
+    	       (pulse-whole-notes (/ pulse-dur *timebase*))
+    	       (denominator (/ 1 pulse-whole-notes))
+    	       (multiplier (denominator denominator))
+    	       (numerator (* numerator multiplier))
+    	       (denominator (* denominator multiplier))
+	       (dd (round (log denominator 2))))
+    	  (if (and (not (or (null cur-pulses) (null cur-barlength)))
+    		     (or (not (equal cur-pulses prev-pulses))
+    			 (not (equal cur-barlength prev-barlength))))
+	      (let ((timesig-msg
+		       (make-instance 'midi:time-signature-message
+				      :time (* non-onset *tick-multiplier*)
+				      :status #xFF)))
+		  (setf (slot-value timesig-msg 'midi::nn) numerator)
+		  (setf (slot-value timesig-msg 'midi::dd) dd)
+	;;	  (setf (slot-value timesig-msg 'midi::nn) 3)
+	;;	  (setf (slot-value timesig-msg 'midi::dd) 2)
+		  (setf (slot-value timesig-msg 'midi::cc) (* pulse-whole-notes 96))
+		  (setf (slot-value timesig-msg 'midi::bb) 8)
+		  (push timesig-msg midi-messages)
+		  (setf *environment* (utils:update-alist
+				       *environment*
+				       (list :pulses cur-pulses)
+				       (list :barlength cur-barlength)))))))
+    midi-messages))
+
+
+
+
 
 ;; (defun event-lists->midi (event-lists file &key (format 1) (program *default-program*))
 ;;   (let* ((tempo (idyom-db:get-attribute (car (car event-lists)) :tempo))
