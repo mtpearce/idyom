@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-02-16 16:36:57 peter>                           
+;;;; Time-stamp: <2017-02-16 19:25:34 peter>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -87,6 +87,7 @@
 ;;;; 3. implement a parser "state" instead of using global variables
 ;;;; 4. make use of *unrecognised-representations* and *unrecognised-tokens*
 ;;;; 5. combine the two parallel sets of token processing functions
+;;;; 6. update the viewpoint documentation above (e.g. add tempo)
 ;;;;
 ;;;; =======================================================================
 
