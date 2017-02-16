@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-02-14 20:15:42 peter>                           
+;;;; Time-stamp: <2017-02-16 16:36:57 peter>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -12,7 +12,7 @@
 ;;;; into the database. Each file is converted to a list of events where
 ;;;; each event is a list of attribute values:
 ;;;;
-;;;;    (<onset> <cpitch> <mpitch> <dur> <keysig> <mode> <barlength>
+;;;;    (<onset> <cpitch> <mpitch> <dur> <keysig> <tonic> <mode> <barlength>
 ;;;;     <phrase> <voice>)
 ;;;; 
 ;;;; where: <onset>      is a number using *default-onset* as the onset of
@@ -36,7 +36,9 @@
 ;;;;                     a double sharp, -1 for a flat and so on
 ;;;;        <keysig>     the key signature is represented by a number of
 ;;;;                     sharps (positive integers) or flats (negative
-;;;;                     integers). 
+;;;;                     integers).
+;;;;        <tonic>      the tonic is represented by an integer corresponding
+;;;;                     to its pitch class.
 ;;;;        <mode>       the mode is represented by an integer -- 0 for
 ;;;;                     major and 9 for minor. 
 ;;;;        <barlength>  is an integer specifying the number of time units
@@ -108,6 +110,7 @@
 
 (defparameter *default-timesig* '(nil nil))   ;default time signature
 (defparameter *default-keysig* nil)           ;no. of sharps in keysig
+(defparameter *default-tonic* nil)            ;default tonic
 (defparameter *default-mode* nil)             ;0 major - 9 minor
 (defparameter *default-tempo* nil)            ;default tempo/bpm
 (defparameter *default-bioi* 0)               ;default inter-onset interval
@@ -173,7 +176,7 @@
 	    ("^\\*IC" instrument-class)            ;instrument class
             ("^\\*IG" instrument-group)            ;instrument group
             ("^\\*k\\[" keysig)                    ;keysig token
-            ("^\\*[a-gA-G?X]" mode)                ;mode token
+            ("^\\*[a-gA-G?X]" key)                 ;key token
             ("^\\*M(FREI)?[0-9?XZ]" timesig)       ;timesig token
 	    ("^=[a-z;=|!'`:-]*1[a-z;=|!'`:-]*$"    ;first barline
 	     first-barline)     
@@ -185,7 +188,7 @@
 
 (defparameter *jazz-token-alist*
   (let* ((alist (remove-if #'(lambda (x) (member (second x)
-						 (list 'kern-event 'chord 'mode)))
+						 (list 'kern-event 'chord 'mode 'key)))
 			   *kern-token-alist*)))
     (push (list (cl-ppcre:create-scanner "^[0-9]+\\.*[A-G]"
 					 :single-line-mode t)
@@ -290,6 +293,7 @@
 (defun kern2db (file-or-dir-name description
                 &key (timesig *default-timesig*)
                   (keysig *default-keysig*)
+		  (tonic *default-tonic*)
                   (mode *default-mode*)
                   (timebase *default-timebase*)
                   (onset *default-onset*)
@@ -302,6 +306,7 @@
    allow the user to change the default parameters for the conversion."
   (setq *default-timesig* timesig
         *default-keysig* keysig
+	*default-tonic* tonic
         *default-mode* mode
         *default-timebase* timebase
         *default-onset* onset
@@ -585,6 +590,8 @@
 		      humdrum-state processed-events))
       (musical-rest (process-musical-rest
 		     kern-token humdrum-state processed-events))
+      (key (process-key
+	    kern-token humdrum-state processed-events))
       (otherwise (process-other-tokens
 		  kern-token kern-token-type
 		  humdrum-state processed-events)))))
@@ -757,6 +764,7 @@
     (list (list 'onset *default-onset*)
 	  (list 'bioi *default-bioi*)
 	  (list 'keysig *default-keysig*)
+	  (list 'tonic *default-tonic*)
 	  (list 'mode *default-mode*)
 	  (list 'timesig (copy-list *default-timesig*))
 	  (list 'timebase *default-timebase*)
@@ -1059,14 +1067,24 @@ tie-offset tie-closed (reverse tie-tokens)))))))
                      (t (find-sharps (cdr char-list) num-sharps)))))
       (find-sharps keysig-char 0))))
 
-(defun mode (mode-token &optional environment)
+;; (defun mode (mode-token &optional environment)
+;;   "Processes a key token."
+;;   (declare (ignore environment))
+;;   (let* ((mode-string (cl-ppcre:scan-to-strings "[a-gA-G?X]" mode-token))
+;;          (mode-char (car (coerce mode-string 'list))))
+;;     (cond ((upper-case-p mode-char) 0)
+;;           ((lower-case-p mode-char) 9)
+;;           (t 0))))
+
+(defun key (key-token)
   "Processes a key token."
-  (declare (ignore environment))
-  (let* ((mode-string (cl-ppcre:scan-to-strings "[a-gA-G?X]" mode-token))
-         (mode-char (car (coerce mode-string 'list))))
-    (cond ((upper-case-p mode-char) 0)
-          ((lower-case-p mode-char) 9)
-          (t 0))))
+  (let* ((letter-string (cl-ppcre:scan-to-strings "[a-gA-G?X]" key-token))
+         (letter-char (car (coerce letter-string 'list)))
+	 (mode (cond ((upper-case-p letter-char) 0)
+		     ((lower-case-p letter-char) 9)
+		     (t 0)))
+	 (tonic (mod (car (process-pitch key-token)) 12)))
+    (values mode tonic)))
 
 (defun timesig (timesig-token &optional environment)
   "Processes a time signature token."
@@ -1132,6 +1150,7 @@ tie-offset tie-closed (reverse tie-tokens)))))))
          (accidental (list :accidental (nth 2 pitch)))
          (dur (list :dur (process-dur event environment)))
          (keysig (list :keysig (cadr (assoc 'keysig environment))))
+	 (tonic (list :tonic (cadr (assoc 'tonic environment))))
          (mode (list :mode (cadr (assoc 'mode environment))))
          (barlength (list :barlength (calculate-bar-length environment)))
          (pulses (list :pulses (car (cadr (assoc 'timesig environment)))))
@@ -1141,7 +1160,7 @@ tie-offset tie-closed (reverse tie-tokens)))))))
 	 (instrument (list :instrument (cadr (assoc 'instrument environment))))
 	 (instrument-class (list :instrument-class (cadr (assoc 'instrument-class environment))))
 	 (instrument-group (list :instrument-group (cadr (assoc 'instrument-group environment)))))
-    (list onset dur deltast bioi cpitch mpitch accidental keysig mode barlength
+    (list onset dur deltast bioi cpitch mpitch accidental keysig tonic mode barlength
           pulses phrase voice (copy-list subvoice) tempo instrument instrument-class instrument-group)))
 
 (defun process-pitch (event-token)    
@@ -1585,6 +1604,20 @@ in a phrase, and 0 otherwise."
 	  new-environment)
     (values (list humdrum-state) new-processed-events)))
 
+(defun process-key
+    (kern-token humdrum-state processed-events)
+  "Processes a key token."
+  (let* ((environment (humdrum-state-environment
+		       humdrum-state))
+	 (new-environment (multiple-value-bind (mode tonic)
+			      (key kern-token)
+			    (update-alist environment
+					  (list 'mode mode)
+					  (list 'tonic tonic)))))
+    (setf (humdrum-state-environment humdrum-state)
+	  new-environment)
+    (values (list humdrum-state) processed-events)))
+
 (defun process-other-tokens
     (kern-token kern-token-type
      humdrum-state processed-events)
@@ -1603,14 +1636,16 @@ in a phrase, and 0 otherwise."
     (jazz-token humdrum-state processed-events)
   "Processes a jazz-key token (<jazz-token>) within a **jazz spine,
    updating <humdrum-state> accordingly."
-  (let* ((key (cl-ppcre:regex-replace-all "[*:]" jazz-token ""
-					  :preserve-case t))
-	 (letter (char key 0))
+  (let* ((key-token (cl-ppcre:regex-replace-all "[*:]" jazz-token ""
+						:preserve-case t))
+	 (letter (char key-token 0))
 	 (major-key (upper-case-p letter))
 	 (mode (if major-key 0 9))
-	 (keysig (gethash key *keysig-dictionary*)))
+	 (keysig (gethash key-token *keysig-dictionary*))
+	 (tonic (mod (car (process-pitch key-token)) 12)))
     (setf-in-humdrum-state-envir 'mode humdrum-state mode)
     (setf-in-humdrum-state-envir 'keysig humdrum-state keysig)
+    (setf-in-humdrum-state-envir 'tonic humdrum-state tonic)
     (values (list humdrum-state) processed-events)))
 
 (defun parse-jazz-chord-token (jazz-token)
@@ -1742,6 +1777,7 @@ in a phrase, and 0 otherwise."
 	   (onset (list :onset (cadr (assoc 'onset environment))))
 	   (bioi (list :bioi (cadr (assoc 'bioi environment))))
 	   (keysig (list :keysig (cadr (assoc 'keysig environment))))
+	   (tonic (list :tonic (cadr (assoc 'tonic environment))))
 	   (mode (list :mode (cadr (assoc 'mode environment))))
 	   (barlength (list :barlength (calculate-bar-length environment)))
 	   (pulses (list :pulses (car (cadr (assoc 'timesig environment)))))
@@ -1754,7 +1790,7 @@ in a phrase, and 0 otherwise."
 								  environment)))))
       (dolist (cpitch cpitch-list new-processed-events)
 	(push (list onset dur deltast bioi (list :cpitch cpitch)
-		    mpitch accidental keysig mode barlength
+		    mpitch accidental keysig tonic mode barlength
 		    pulses phrase voice (copy-list subvoice)
 		    tempo instrument instrument-class instrument-group)
 	      new-processed-events)))))
