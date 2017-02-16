@@ -2,7 +2,7 @@
 ;;;; File:       db2midi.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2005-06-09 11:01:51 marcusp>
-;;;; Time-stamp: <2017-02-16 13:16:11 peter>
+;;;; Time-stamp: <2017-02-16 14:50:32 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:db2midi)
@@ -80,39 +80,49 @@
 		  :encode-timesig *encode-timesig*)
     file-path))
 
-(defmethod play-audio ((d idyom-db:mtp-dataset) &key (temp-dir "/tmp/idyom/"))
+(defmethod preview ((d idyom-db:mtp-dataset) &key (temp-dir "/tmp/idyom/")
+					       (play-audio t) (display-score t))
   (let* ((compositions (idyom-db::dataset-compositions d))
 	 (num-compositions (length compositions))
 	 (counter 0))
-    (utils:message (format nil "Playing dataset (~A composition(s))."
+    (utils:message (format nil "Previewing dataset (~A composition(s))."
 			   num-compositions) :detail 1)
     (dolist (composition compositions)
       (utils:message (format nil "(~A/~A)" (incf counter) num-compositions)
 		     :detail 1)
-      (if (play-audio composition :temp-dir temp-dir)
+      (if (preview composition :temp-dir temp-dir
+		   :play-audio play-audio :display-score display-score)
 	  (return)))))
 
-(defmethod play-audio ((c idyom-db:mtp-composition) &key (temp-dir "/tmp/idyom/"))
-  (let* ((dir-path (ensure-directories-exist (utils:ensure-directory temp-dir)))
-	 (file-path (export-data c :mid dir-path :filename "temp-audio.mid"))
-	 (file-path-string (namestring file-path)))
-    (utils:message (format nil "Playing composition ~A."
-			   (idyom-db::composition-description c))
-		   :detail 1)
-    (utils:message (format nil "Saved temporary midi file to ~A."
-			   (namestring file-path-string))
-		   :detail 3)
-    (utils:message (format nil "Playing MIDI file using application ~A."
-			   *timidity-path*)
-		   :detail 3)
-    (let ((process (sb-ext:run-program *timidity-path* (list file-path-string) :wait nil)))
-      (utils:message
-       (format nil "Press enter to skip, or Q then enter to quit.~%")
-       :detail 1)
-      (let ((char (read-char)))
-	(if (eql (sb-ext:process-status process) :running)
-	    (sb-ext:process-kill process 15))
-	(if (eql char #\q) t nil)))))
+(defmethod preview ((c idyom-db:mtp-composition) &key (temp-dir "/tmp/idyom/")
+						   (play-audio t) (display-score t))
+  (utils:message (format nil "Previewing composition ~A."
+			 (idyom-db::composition-description c))
+		 :detail 1)
+  (if (or play-audio display-score)
+      (let* ((dir-path (ensure-directories-exist (utils:ensure-directory temp-dir)))
+	     (midi-file-path (export-data c :mid dir-path :filename "temp-audio.mid"))
+	     (midi-file-path-string (namestring midi-file-path))
+	     (pdf-file-path (merge-pathnames dir-path
+					     (concatenate 'string "temp-score"
+							  (write-to-string
+							   (get-internal-real-time))
+							  ".pdf")))
+	     (audio-process nil))
+	(if display-score
+	    (midi->pdf midi-file-path pdf-file-path :open-viewer t))
+	(if play-audio
+	    (setf audio-process (sb-ext:run-program *timidity-path*
+						    (list midi-file-path-string)
+						    :wait nil)))
+	(utils:message
+	 (format nil "Press enter to continue, or Q then enter to quit.~%")
+	 :detail 1)
+	(let ((char (read-char)))
+	  (if (and (not (null audio-process))
+		   (eql (sb-ext:process-status audio-process) :running))
+	      (sb-ext:process-kill audio-process 15))
+	  (if (eql char #\q) t nil)))))
 
 (defun midi->pdf (input-file output-file &key open-viewer)
   (sb-ext:run-program *musescore-path*
@@ -123,24 +133,6 @@
       (asdf:run-shell-command (concatenate 'string "open "
 					   (namestring output-file))))
   (namestring output-file))
-
-(defmethod preview-score ((c idyom-db:mtp-composition) &key (temp-dir "/tmp/idyom/"))
-  (utils:message (format nil "Generating preview for composition ~A."
-			 (idyom-db::composition-description c))
-		 :detail 1)
-  (let* ((dir-path (ensure-directories-exist (utils:ensure-directory temp-dir)))
-	 (midi-file-path (export-data c :mid dir-path :filename "temp-audio.mid"))
-	 (midi-file-path-string (namestring midi-file-path))
-	 (pdf-file-path (merge-pathnames dir-path
-					 (concatenate 'string "temp-score"
-						      (write-to-string
-						       (get-internal-real-time))
-						      ".pdf")))
-	 (pdf-file-path-string (namestring pdf-file-path)))
-    (utils:message (format nil "Converting midi file (~A) to PDF (~A)."
-			   midi-file-path-string pdf-file-path-string)
-		   :detail 3)
-    (midi->pdf midi-file-path pdf-file-path :open-viewer t)))
 
 (defun bpm->usecs (bpm)
   (floor (* 1000000 (/ 60 bpm))))
