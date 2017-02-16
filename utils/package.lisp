@@ -2,7 +2,7 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-02-13 17:38:50 peter>                           
+;;;; Time-stamp: <2017-02-16 10:43:01 peter>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -11,7 +11,7 @@
   (:use #:cl)
   (:export "ASK-USER-Y-N-QUESTION" "MESSAGE"
 	   "INITIALISE-PROGRESS-BAR" "UPDATE-PROGRESS-BAR"
-	   "DOLIST-PB"
+	   "DOLIST-PB" "UPDATE-ALIST"
            "ROUND-TO-NEAREST-DECIMAL-PLACE" "AVERAGE" "GENERATE-INTEGERS"
 	   "POWERSET" "QUOTIENT" "FACTORIAL" "N-PERMUTATIONS" "N-COMBINATIONS"
            "NTH-ROOT" "STRING-APPEND" "SPLIT-STRING" 
