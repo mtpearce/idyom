@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2017-02-16 18:27:18 peter>
+;;;; Time-stamp: <2017-02-16 18:50:28 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -572,10 +572,12 @@
                          :defaults pathname)
           pathname))))
 
-(defun recursively-list-files (directory-name &key extension (max-num-directories 100000))
-  "Recursively lists all files present in <directory-name>, optionally filtered 
-   by <extension> (e.g. the string krn). The number of directories to search is limited
-   by <max-num-directories 100000>, which if exceeded causes an error to be thrown."
+(defun recursively-list-files (directory-name &key extensions (max-num-directories 100000))
+  "Recursively lists all files present in <directory-name>, optionally filtered to 
+  retain only files with extensions present in the list <extensions>.
+  The number of directories to search is limited by <max-num-directories 100000>,
+  which if exceeded causes an error to be thrown.
+  Example usage: (recursively-list-files \"Users/\" :extensions '(\"krn\" \"jazz\"))"
   (labels ((directory-p (pathname)
              (and (not (present-p (pathname-type pathname)))
                   (not (present-p (pathname-name pathname)))))
@@ -595,13 +597,16 @@
 			;; 			    dirs-to-search))
 			;; (new-dirs (remove-if-not #'directory-p new-files-and-dirs))	
 			;; (new-files (remove-if #'directory-p new-files-and-dirs))
-			(new-files (if (null extension) new-files
-				       (remove-if-not #'(lambda (path) (string= (pathname-type path)
-										extension))
+			(new-files (if (null extensions) new-files
+				       (remove-if-not #'(lambda (path)
+							  (member (pathname-type path)
+								  extensions
+								  :test #'string=))
 						      new-files))))
 		   (if (> (+ num-new-dirs number-of-dirs-searched)
 			  max-num-directories)
-		       (error "Search did not terminate before the maximum number of directories were searched."))
+		       (error
+			"Search did not terminate before the maximum number of directories were searched."))
 		   (fun new-dirs (nconc new-files files-found) (+ num-new-dirs number-of-dirs-searched))))))
     (fun (list (ensure-directory directory-name)) nil 0)))
 
