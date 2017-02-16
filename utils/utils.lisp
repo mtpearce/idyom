@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2017-02-13 17:59:22 peter>
+;;;; Time-stamp: <2017-02-16 10:41:17 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -347,9 +347,33 @@
 	  (all-eql (cdr list) :predicate predicate))))
 
 ;;;===========================================================================
-;;; Nested lists
+;;; Assoc-lists
 ;;;===========================================================================
 
+(defun update-alist (alist &rest new-entries)
+  "Returns a version of <alist> updated with <new-entries> which must be 
+   key-value pairs. If the value is nil then the pair is not added to the 
+   alist unless the key is 'correct-onsets which is the only key in the
+   environment allowed to have null values. Does not modify original list."
+  (flet ((insert-entry (alist force new-entry)                           
+           (cond ((and (null force) (null (cadr new-entry)))              
+                  alist)
+                 ((assoc (car new-entry) alist)
+                  (substitute-if new-entry #'(lambda (key)
+                                               (eql key (car new-entry)))
+                                 alist :key #'car))
+                 (t
+                  (cons new-entry alist)))))
+    (let* ((entry (car new-entries))
+           (force (if (eql (car entry) 'correct-onsets) t nil)))
+      (if (null entry)
+          alist
+          (apply #'update-alist (insert-entry alist force entry)
+                 (cdr new-entries))))))
+
+;;;===========================================================================
+;;; Nested lists
+;;;===========================================================================
 
 (defun nposition (x xs) 
   "Index of first element equal to or containing x"
