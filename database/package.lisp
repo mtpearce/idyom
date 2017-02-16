@@ -2,7 +2,7 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-02-16 14:45:28 peter>                           
+;;;; Time-stamp: <2017-02-16 18:59:36 peter>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -48,6 +48,10 @@
   (:use #:common-lisp #:idyom-db)
   (:documentation "Import tabular pitch values where each row is a
 melody and each column a pitch into the database"))
+
+(defpackage #:mcgill2db
+  (:use #:common-lisp #:idyom-db #:cl-ppcre)
+  (:documentation "Importing the McGill Billboard corpus to the database."))
 
 ;;; ======================================================================
 ;;; DATA EXPORT 
