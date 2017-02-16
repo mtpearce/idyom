@@ -2,7 +2,7 @@
 ;;;; File:       db2midi.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2005-06-09 11:01:51 marcusp>
-;;;; Time-stamp: <2017-02-16 14:50:32 peter>
+;;;; Time-stamp: <2017-02-16 14:55:54 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:db2midi)
@@ -104,7 +104,7 @@
 	     (midi-file-path (export-data c :mid dir-path :filename "temp-audio.mid"))
 	     (midi-file-path-string (namestring midi-file-path))
 	     (pdf-file-path (merge-pathnames dir-path
-					     (concatenate 'string "temp-score"
+					     (concatenate 'string "temp-score-"
 							  (write-to-string
 							   (get-internal-real-time))
 							  ".pdf")))
