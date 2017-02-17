@@ -2,7 +2,7 @@
 ;;;; File:       mcgill2db.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-02-16 15:38:15 peter>                           
-;;;; Time-stamp: <2017-02-16 20:26:26 peter>                           
+;;;; Time-stamp: <2017-02-17 17:54:26 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -27,6 +27,9 @@
 ;; If nil, the import process continues, but a warning is given
 ;; to the user afterwards.
 (defparameter *stop-on-unrecognised-tokens* nil)
+
+;; Whether or not to expand repeated lines.
+(defparameter *expand-repeated-lines* t)
 
 (defparameter *default-timebase* 96)    ;basic time units in a semibreve 
 (defparameter *middle-c* '(60 35))      ;pitch mapping for middle c
@@ -66,6 +69,9 @@
 			 :value-fun #'parse-integer))
 
 (defparameter *chord-quality-dictionary* nil)
+(defparameter *major-scale-degree-dictionary* nil)
+(defparameter *minor-scale-degree-dictionary* nil)
+(defparameter *num-beats-in-bar-dictionary* nil)
 
 (defun load-chord-quality-dictionary ()
   "Loads a hash-table where keys are strings representing notated
@@ -83,7 +89,72 @@
 			       :value-fun #'(lambda (x)
 					      (mapcar #'parse-integer
 						      (utils:split-string x " "))))))
-(load-chord-quality-dictionary)
+
+(defun load-major-scale-degree-dictionary ()
+  "Loads a hash-table where keys are strings representing notated
+   scale degrees, asssuming a major tonality, and values are integers
+   corresponding to the pitch class of the scale degree, expressed
+   relative to the root (so 0 is the root, 7 is a perfect fifth
+   above the root, and so on)."
+  (setf *major-scale-degree-dictionary* 
+	(utils:csv->hash-table (merge-pathnames
+				(make-pathname :directory
+					       '(:relative "database"
+						 "data-import" "dictionary")
+					       :name "major-scale-degrees" :type "csv")
+				cl-user::*idyom-code-root*)
+			       :value-fun #'parse-integer)))
+
+(defun load-minor-scale-degree-dictionary ()
+  "Loads a hash-table where keys are strings representing notated
+   scale degrees, asssuming a minor tonality, and values are integers
+   corresponding to the pitch class of the scale degree, expressed
+   relative to the root (so 0 is the root, 7 is a perfect fifth
+   above the root, and so on)."
+  (setf *minor-scale-degree-dictionary* 
+	(utils:csv->hash-table (merge-pathnames
+				(make-pathname :directory
+					       '(:relative "database"
+						 "data-import" "dictionary")
+					       :name "minor-scale-degrees" :type "csv")
+				cl-user::*idyom-code-root*)
+			       :value-fun #'parse-integer)))
+
+(defun load-num-beats-in-bar-dictionary ()
+  "Loads a hash-table where keys are strings representing notated
+   time signatures and values are integers corresponding to the number
+   of beats in the bar."
+  (setf *num-beats-in-bar-dictionary* 
+	(utils:csv->hash-table (merge-pathnames
+				(make-pathname :directory
+					       '(:relative "database"
+						 "data-import" "dictionary")
+					       :name "num-beats-in-bar" :type "csv")
+				cl-user::*idyom-code-root*)
+			       :value-fun #'parse-integer)))
+
+(defun load-dictionaries ()
+  (load-chord-quality-dictionary)
+  (load-major-scale-degree-dictionary)
+  (load-minor-scale-degree-dictionary)
+  (load-num-beats-in-bar-dictionary))
+
+(load-dictionaries)
+
+(defparameter *token-regex-alist*
+  (mapcar #'(lambda (x) 
+              (list (cl-ppcre:create-scanner (car x) :single-line-mode t) 
+                    (cadr x)))
+          '(("^[A-G][#b]*:" chord-token)               
+            ("^\\(?[0-9]+/[0-9]+\\)?$" metre-token)
+	    (".*" unrecognised-token))))
+
+(defun get-token-type (string)
+  "Returns the token type of <string> by searching in *token-regex-alist*.
+   Note: only the first match is returned." 
+  (second (assoc string *token-regex-alist*
+		 :test #'(lambda (item patt) 
+			   (cl-ppcre:scan-to-strings patt item)))))
 
 ;;;======================
 ;;;* Global variables *
@@ -96,6 +167,37 @@
 (defvar *line* nil)
 (defvar *lines* '())                       ;list of lines in the file being parsed
 
+;;;======================
+;;;* Objects etc. *
+;;;======================
+
+(defstruct reader title artist metre num-beats-in-bar envir output)
+
+(defclass token ()
+  ((text :initarg :text :accessor text)))
+
+(defclass chord-token (token)
+  ((cpitch
+    :accessor cpitch
+    :documentation "List of cpitch values that represent the pitch
+   content of the chord. These cpitch values span from the C one
+   octave below middle C to the B just under one octave above
+   middle C. Exactly one cpitch value is below middle middle C,
+   and corresponds to the bass note of the chord. The bass note
+   is derived from the <bass-token> if one is provided; if the bass token
+   is nil, then the bass note is assumed to be the root note. The remaining
+   notes in the chord are mapped to pitches in the octave above middle C.
+   If a pitch class appears in the bass, it is not repeated in the octave
+   above middle C. This should be consistent across IDyOM import methods
+   for chord sequences.")))
+
+(defclass metre-token (token)
+  ((numerator :accessor :numerator)
+   (denominator :accessor :denominator)
+   (num-beats-in-bar :accessor :num-beats-in-bar)
+   (pulses :accessor pulses)         ; numerator of time signature
+   (barlength :accessor barlength)))
+						 
 ;;;==================
 ;;;* Top level call *
 ;;;==================
@@ -135,7 +237,7 @@
 (defun process-files (file-or-dir directory)
   "If <file-or-dir> is a directory all the files in that directory
    are converted -- if it is a filename that file is processed."
-  (load-chord-quality-dictionary)
+  (load-dictionaries)
   (setf *file-number* 0)
   (setf *file-name* nil)
   (if directory
@@ -164,8 +266,14 @@
   "Top level call to convert the file <file-name> to CHARM readable
    format using the default parameters."
   (let* ((raw-data (read-data file-name))
-         (processed-data (process-data raw-data)))
-    (cons (pathname-name file-name) processed-data)))
+         (processed-data (process-data raw-data))
+	 (title (reader-title processed-data))
+	 (artist (reader-artist processed-data))
+	 (description (format nil "~A: ~A"
+			      (if artist artist "Unknown artist")
+			      (if title title "Unknown title")))
+	 (events (reader-output processed-data)))
+    (cons description events)))
 
 (defun print-status ()
   "Print message warning about unrecognised tokens."
@@ -222,6 +330,7 @@
   "Removes empty strings from a numbered list of strings."
   (remove-if #'(lambda (x) (string= (second x)  "")) list))
 
+;; This is already defined in utils?
 (defun split-string (string separator)
   "Takes a string object and returns a list of strings corresponding to each
    <separator> delimited sequence of characters in that string."
@@ -243,20 +352,23 @@
   (:report (lambda (condition stream)
 	     (format stream
 		     "Error parsing line ~A of file ~A.~%~A~%~%The line reads:~%~%~S"
-		     *line-number*
-		     *file-name*
-		     (text condition)
-		     *line*))))
+   		     *line-number*
+ 		     *file-name*
+ 		     (text condition)
+     		     *line*))))
 
 (defun process-data (raw-data)
   (labels ((fun (remaining-lines reader)
 	     (if (null remaining-lines)
-		 (reverse (reader-output reader))
+		 (progn (setf (reader-output reader)
+			      (reverse (reader-output reader)))
+			reader)
+		 ;;(reverse (reader-output reader))
 		 (fun (cdr remaining-lines)
 		      (process-line (car remaining-lines) reader)))))
     (fun raw-data (initialise-reader))))
 
-(defstruct reader title artist metre envir output)
+
 
 (defun initialise-envir ()
   (list (list :onset *default-onset*)
@@ -287,19 +399,26 @@
       (process-body *line* reader)))
 
 (defun process-metadata (line reader)
+  "Processes one <line> of metadata, returning an updated <reader>."
+  ;; A typical line looks like this:
+  ;; # title: Last Child
   (if (not (cl-ppcre:scan-to-strings
 	    "^# .+: " line))
       (error 'line-read-error :text "Found an unusual comment line."))
-  (let* ((no-comment (cl-ppcre:regex-replace-all "^# " line "" :preserve-case t))
-	 (type (cl-ppcre:regex-replace-all ":.*" no-comment "" :preserve-case t))
-	 (value (cl-ppcre:regex-replace-all "^.*: " no-comment "" :preserve-case t)))
+  (let* ((no-comment (cl-ppcre:regex-replace-all "^# " line ""
+						 :preserve-case t))
+	 (type (cl-ppcre:regex-replace-all ":.*" no-comment ""
+					   :preserve-case t))
+	 (value (cl-ppcre:regex-replace-all "^[^:.]*: " no-comment ""
+					    :preserve-case t)))
     (cond ((string= type "title") (process-title value reader))
 	  ((string= type "artist") (process-artist value reader))
 	  ((string= type "metre") (process-metre value reader))
 	  ((string= type "tonic") (process-tonic value reader))
-	  (t (progn (error 'line-read-error
-			   :text (format nil "Found unrecognised metadata type ~A." type))
-		    reader)))))
+	  (t  (error 'line-read-error
+		     :text (format nil
+				   "Found unrecognised metadata type ~A."
+				   type))))))
 
 (defun process-title (value reader)
   (setf (reader-title reader) value)
@@ -310,21 +429,204 @@
   reader)
 
 (defun process-tonic (value reader)
-  (setf (reader-tonic reader) value)
+  (setf (reader-envir reader)
+	(utils:update-alist (reader-envir reader)
+			    (list :tonic (process-pitch-class value))))
   reader)
 
 (defun process-metre (value reader)
+  "Processes a metre string in a metadata line where the comment has been removed."
+  (let ((metre-token (make-instance 'metre-token :text value)))
+    (process-token metre-token reader)))
+
+(defun process-pitch-class (string)
   (if (not (cl-ppcre:scan-to-strings
-	    "^[0-9]+/[0-9]+$" value))
-      (error 'line-read-error :text "Found an unusual metre."))
-  (let* ((numerator (parse-integer
-		     (cl-ppcre:regex-replace-all "/[0-9]+$" value "")))
-	 (denominator (parse-integer
-		       (cl-ppcre:regex-replace-all "^[0-9]+/" value "")))
-	 (barlength (* (/ *default-timebase* denominator)
-		       numerator)))
-    (setf (reader-envir reader)
-	  (utils:update-alist (reader-envir reader)
-			      (list :pulses numerator)
-			      (list :barlength barlength)))
-    reader))
+	    "^[A-G][#b]*$" string))
+      (error 'line-read-error
+	     :text (format nil "Found an unusual pitch string: ~A." string)))
+  (let* ((num-sharps (length (cl-ppcre:scan-to-strings "[#]+" string)))
+         (num-flats (length (cl-ppcre:scan-to-strings "[b]+" string)))
+	 (letter (char string 0))
+	 (letter-pc (case letter
+		      (#\C 0)
+		      (#\D 2)
+		      (#\E 4)
+		      (#\F 5)
+		      (#\G 7)
+		      (#\A 9)
+		      (#\B 11)
+		      (otherwise -99)))
+	 (pc (- (+ letter-pc num-sharps) num-flats)))
+    pc))
+
+(defun process-body (line reader)
+  "Processes one <line> of body, returning an updated <reader>."
+  ;; A body line typically looks something like this:
+  ;; 16.562811791	| D:maj/9 E:min | E:min C:maj |, (keyboard
+  ;; Note other possibilities:
+  ;; 0.000000000	silence
+  ;; 8.753378684	| N | N | N | N |, (drums)
+  (let* (;; Remove everything before and after the first
+	 ;; and last | symbols
+	 (bars-regex "\\|.*\\|")
+	 (bars (cl-ppcre:scan-to-strings bars-regex line)))
+    ;; If there are no bars, skip the line
+    (if (null bars) (return-from process-body reader))
+    ;; Check that bars looks something like this:
+    ;; "| Eb:7 | Eb:7 | Ab:maj | Ab:maj |"
+    (if (not (cl-ppcre:scan-to-strings "(^\\| .* )+\\|$" bars))
+	(error 'line-read-error "Found an unusual body line."))
+    (let* (;; Get everything after the end of the last bar
+	   (line-suffix (cl-ppcre:regex-replace ".*\\|" line ""
+						:preserve-case t))
+	   ;; Find the number of marked repetitions, if any
+	   ;; Repetition is defined inclusively, so two repetitions
+	   ;; is equivalent to x2, i.e. play twice.
+	   (rep-token (cl-ppcre:scan-to-strings "x[0-9]+"
+						line-suffix))
+	   (num-reps (if rep-token
+			 (parse-integer (cl-ppcre:scan-to-strings "[0-9]+"
+								  rep-token))
+			 1))
+	   ;; Split into bars
+	   (bar-list (cl-ppcre:all-matches-as-strings "\\| [^\\|]*" bars))
+	   ;; Trim bars
+	   (trim-bar-list (mapcar #'(lambda (x) (cl-ppcre:regex-replace-all
+						 "(^\\| )|( $)" x ""))
+				  bar-list))
+	   ;; Split each bar into a list of chords
+	   (chord-list (mapcar #'(lambda (x) (utils:split-string x " "))
+			       trim-bar-list)))
+      
+      
+      (values chord-list num-reps reader))))
+
+;; (defclass ())
+
+;; (defun classify-token (token)
+  
+;;   )
+
+;; (defun parse-token (token)
+	       
+
+      
+;;;======================
+;;;* Token matching  *
+;;;======================
+
+(defgeneric process-token (token reader)
+  (:documentation "Processes a <token> and returns an updated <reader>."))
+
+;;; Chord tokens
+
+(defmethod initialize-instance :after ((token chord-token) &key)
+  "Finds the cpitch representation for a chord from its textual representation."
+  (let ((text (text token)))
+    (if (not (eql (get-token-type text) 'chord-token))
+	(error 'line-read-error
+	       :text "Tried to parse an incorrectly formatted chord token."))
+    (setf (slot-value token 'cpitch)
+	  (multiple-value-bind (root-token quality-token bass-token)
+	      (parse-chord-text text)
+	    (parsed-chord->cpitch root-token quality-token bass-token)))))
+
+
+(defun parse-chord-text (text)
+  "Parses the <text> for a chord token (note: assumes correct syntax)."
+  (let* ((root-regex "^[A-G][#b]*")
+	 (root-token  (cl-ppcre:scan-to-strings
+		       root-regex text))                         ; e.g. Db
+	 (root-regex-2 "^[A-G][#b]*:")
+	 (remaining-token (cl-ppcre:regex-replace-all            ; e.g. maj/b7
+			   root-regex-2 text "" :preserve-case t))
+	 (slash-regex "/[^/]+$")
+	 (slash-token (cl-ppcre:scan-to-strings                  ; e.g. /b7
+		       slash-regex remaining-token))             ; e.g. nil
+	 (bass-token (if slash-token (subseq slash-token 1) nil)); e.g. b7
+	 (quality-token (cl-ppcre:regex-replace-all              ; e.g. maj
+			 slash-regex remaining-token
+			 "" :preserve-case t)))
+    (values root-token quality-token bass-token)))
+
+;; This function is similar to one in kern2db.lisp.
+(defun parsed-chord->cpitch (root-token quality-token bass-token)
+  (let* ((cpitch-middle-c (nth 0 *middle-c*))
+	 (root-pc (process-pitch-class root-token))
+	 (bass-relative-pc (if bass-token
+			       (bass-token->relative-pc
+				bass-token quality-token)
+			       0))
+	 (bass-pc (mod (+ root-pc bass-relative-pc) 12))
+	 (quality-relative-pc
+	  (multiple-value-bind (result result-found?)
+	      (gethash quality-token *chord-quality-dictionary*)
+	    (if result-found?
+		result
+		(error 'line-read-error
+		       :text (format nil "Unrecognised chord quality: ~A"
+				     quality-token)))))
+	 (quality-absolute-pc (mapcar #'(lambda (x)
+					  (mod (+ x root-pc) 12))
+				      quality-relative-pc))
+	 (non-bass-pc (remove-duplicates 
+		       (remove-if #'(lambda (x) (eql x bass-pc))
+				  (cons root-pc quality-absolute-pc))))
+	 (non-bass-cpitch (mapcar #'(lambda (x) (+ x cpitch-middle-c))
+				  non-bass-pc))
+	 (bass-cpitch (- (+ bass-pc cpitch-middle-c) 12))
+	 (cpitch (cons bass-cpitch non-bass-cpitch))
+	 (cpitch (sort cpitch #'<)))
+    cpitch))
+
+(defun bass-token->relative-pc (bass-token quality-token)
+  (let* ((minor-chord? (cl-ppcre:scan-to-strings "^min" quality-token))
+	 (dictionary (if minor-chord?
+			 *minor-scale-degree-dictionary*
+			 *major-scale-degree-dictionary*)))
+    (multiple-value-bind (result result-found?)
+	      (gethash bass-token dictionary)
+	    (if result-found?
+		result
+		(error 'line-read-error
+		       :text (format nil "Unrecognised bass token: ~A"
+				     bass-token))))))
+    
+;;; Metre tokens
+
+(defmethod initialize-instance :after ((token metre-token) &key)
+  "Abstracts information from a metre token.
+   Note: there is an independent function, process-metre, that gets
+   metre information from a metadata line."
+  (let ((text (text token)))
+    (if (not (eql (get-token-type text) 'metre-token))
+	(error 'line-read-error
+	       :text "Tried to parse an incorrectly formatted metre token."))
+    (let* ((no-brackets (cl-ppcre:regex-replace-all "[\\(\\)]" text ""))
+	   (numerator (parse-integer
+		       (cl-ppcre:regex-replace-all "/[0-9]+$" no-brackets "")))
+	   (denominator (parse-integer
+			 (cl-ppcre:regex-replace-all "^[0-9]+/" no-brackets "")))
+	   (barlength (* (/ *default-timebase* denominator)
+			 numerator))
+	   (num-beats-in-bar (multiple-value-bind (result result-found?)
+				 (gethash no-brackets *num-beats-in-bar-dictionary*)
+			       (if result-found?
+				   result
+				   (error 'line-read-error
+					  :text (format nil "Didn't know how many beats in the bar for ~A."
+							no-brackets))))))
+      (setf (slot-value token 'numerator) numerator
+	    (slot-value token 'denominator) denominator
+	    (slot-value token 'pulses) numerator
+	    (slot-value token 'barlength) barlength
+	    (slot-value token 'num-beats-in-bar) num-beats-in-bar))))
+
+(defmethod process-token ((token metre-token) reader)
+  (setf (reader-envir reader)
+	(utils:update-alist (reader-envir reader)
+			    (list :pulses (pulses token))
+			    (list :barlength (barlength token))))
+  (setf (reader-metre reader) value)
+  (setf (reader-num-beats-in-bar reader) (num-beats-in-bar token))
+  token)

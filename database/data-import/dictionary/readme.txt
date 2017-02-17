@@ -41,3 +41,16 @@ The iRb corpus contains the chord quality maj7#11, which is not contained in the
 When "sus" is specified without the scale degree of the suspension, it is mapped to sus4, the most common suspension type.
 
 The so-called "altered" chord has several different possible interpretations, according to the Wikipedia article. Here it has been arbitrarily specified as the following scale degrees: (1 3 b5 b7 b9 b13).
+
+*** Key signatures (key-signatures.csv)
+
+This dictionary maps keys (**kern notation) to their position on the cycle of 5ths.
+
+*** Major scale degrees (major-scale-degrees.csv)
+
+This dictionary maps scale degrees to pitch classes relative to the tonic/chord root, assuming a major tonality/chord. If the tonality is unclear, then this major scale degree dictionary should take precedence over the minor scale degree dictionary.
+
+*** Minor scale degrees (minor-scale-degrees.csv)
+
+This dictionary maps scale degrees to pitch classes relative to the tonic/chord root, assuming a minor tonality/chord.
+
