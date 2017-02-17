@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-02-16 19:25:34 peter>                           
+;;;; Time-stamp: <2017-02-17 16:47:01 peter>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -1747,8 +1747,9 @@ in a phrase, and 0 otherwise."
 	 (quality-absolute-pc (mapcar #'(lambda (x)
 					  (mod (+ x root-pc) 12))
 				      quality-relative-pc))
-	 (non-bass-pc (remove-if #'(lambda (x) (eql x bass-pc))
-				 (cons root-pc quality-absolute-pc)))
+	 (non-bass-pc (remove-duplicates
+		       (remove-if #'(lambda (x) (eql x bass-pc))
+				  (cons root-pc quality-absolute-pc))))
 	 (non-bass-cpitch (mapcar #'(lambda (x) (+ x cpitch-middle-c))
 				  non-bass-pc))
 	 (bass-cpitch (- (+ bass-pc cpitch-middle-c) 12))
