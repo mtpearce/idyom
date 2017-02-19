@@ -2,13 +2,15 @@
 ;;;; File:       mcgill2db.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-02-16 15:38:15 peter>                           
-;;;; Time-stamp: <2017-02-17 17:54:26 peter>                           
+;;;; Time-stamp: <2017-02-19 23:07:38 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
 ;;;; ======================================================================
 ;;;;
 ;;;; Provides methods for importing data from the McGill Billboard Corpus.
+;;;;
+;;;; One chord is produced for each beat in the bar.
 ;;;;
 ;;;; Todo (features) ======================================================
 ;;;; ======================================================================
@@ -23,9 +25,10 @@
 ;;;==================
 
 ;; This parameter determines whether to stop when an unrecognised
-;; token is encountered. If true, unrecognised tokens throw an error.
+;; line/token is encountered. If true, unrecognised lines/tokens throw an error.
 ;; If nil, the import process continues, but a warning is given
 ;; to the user afterwards.
+(defparameter *stop-on-unrecognised-lines* nil)
 (defparameter *stop-on-unrecognised-tokens* nil)
 
 ;; Whether or not to expand repeated lines.
@@ -73,6 +76,22 @@
 (defparameter *minor-scale-degree-dictionary* nil)
 (defparameter *num-beats-in-bar-dictionary* nil)
 
+;;;======================
+;;;* Global variables *
+;;;======================
+
+(defvar *unrecognised-lines* '())
+(defvar *unrecognised-tokens* '())         ;list of unrecognised tokens
+(defvar *file-number* 0)
+(defvar *file-name* nil)
+(defvar *line-number* 0)                   ;current line being parsed
+(defvar *line* nil)
+(defvar *lines* '())                       ;list of lines in the file being parsed
+
+;;;======================
+;;;* Dictionaries *
+;;;======================
+
 (defun load-chord-quality-dictionary ()
   "Loads a hash-table where keys are strings representing notated
    musical chords and values are lists of integers corresponding
@@ -88,7 +107,8 @@
 				cl-user::*idyom-code-root*)
 			       :value-fun #'(lambda (x)
 					      (mapcar #'parse-integer
-						      (utils:split-string x " "))))))
+						      (utils:split-string
+						       x " "))))))
 
 (defun load-major-scale-degree-dictionary ()
   "Loads a hash-table where keys are strings representing notated
@@ -101,7 +121,8 @@
 				(make-pathname :directory
 					       '(:relative "database"
 						 "data-import" "dictionary")
-					       :name "major-scale-degrees" :type "csv")
+					       :name "major-scale-degrees"
+					       :type "csv")
 				cl-user::*idyom-code-root*)
 			       :value-fun #'parse-integer)))
 
@@ -116,7 +137,8 @@
 				(make-pathname :directory
 					       '(:relative "database"
 						 "data-import" "dictionary")
-					       :name "minor-scale-degrees" :type "csv")
+					       :name "minor-scale-degrees"
+					       :type "csv")
 				cl-user::*idyom-code-root*)
 			       :value-fun #'parse-integer)))
 
@@ -141,38 +163,109 @@
 
 (load-dictionaries)
 
+;;;======================
+;;;* Regex matching *
+;;;======================
+
 (defparameter *token-regex-alist*
   (mapcar #'(lambda (x) 
               (list (cl-ppcre:create-scanner (car x) :single-line-mode t) 
                     (cadr x)))
           '(("^[A-G][#b]*:" chord-token)               
             ("^\\(?[0-9]+/[0-9]+\\)?$" metre-token)
+	    ("^\\.$" repeat-chord-token)
+	    ("^&pause$" pause-token)
+	    ("^\\*$" complex-token)
+	    ("^N$" null-token)
 	    (".*" unrecognised-token))))
 
+(defparameter *line-regex-alist*
+  (mapcar #'(lambda (x) 
+              (list (cl-ppcre:create-scanner (car x) :single-line-mode t) 
+                    (cadr x)))
+	  '(("^# title: " title-line)
+	    ("^# artist: " artist-line)
+	    ("^# tonic: " tonic-line)
+	    ("^# metre: " metre-line)
+	    ("^$" blank-line)
+	    ("^[0-9]+\\.[0-9]+\\t" body-line)
+	    (".*" unrecognised-line))))
+
+(defun get-regexp-in-alist (string alist)
+  "Returns the first entry in <alist> (whose keys are regular
+   expressions) which matches <string>." 
+  (second (assoc string alist :test #'(lambda (item patt) 
+					(cl-ppcre:scan-to-strings patt item)))))
 (defun get-token-type (string)
   "Returns the token type of <string> by searching in *token-regex-alist*.
-   Note: only the first match is returned." 
-  (second (assoc string *token-regex-alist*
-		 :test #'(lambda (item patt) 
-			   (cl-ppcre:scan-to-strings patt item)))))
+   Note: only the first match is returned."
+  (get-regexp-in-alist string *token-regex-alist*))
+
+(defun get-line-type (string)
+  "Returns the line type of <string> by searching in *line-regex-alist*.
+   Note: only the first match is returned."
+  (get-regexp-in-alist string *line-regex-alist*))
+
+(defun string->token (string)
+  "Takes a string and converts it to a token. Returns an error if the
+   token is unrecognised."
+  (let ((token-type (get-token-type string)))
+    (make-instance token-type :text string)))
 
 ;;;======================
-;;;* Global variables *
+;;;* Classes *
 ;;;======================
 
-(defvar *unrecognised-tokens* '())         ;list of unrecognised tokens
-(defvar *file-number* 0)
-(defvar *file-name* nil)
-(defvar *line-number* 0)                   ;current line being parsed
-(defvar *line* nil)
-(defvar *lines* '())                       ;list of lines in the file being parsed
+(defclass reader ()
+  ((title :accessor title :documentation "Title of the song")
+   (artist :accessor artist :documentation "Artist of the song")
+   (global-metre
+    :initform nil :accessor global-metre
+    :documentation "Persistent metre; appears in line comments")
+   (local-metre
+    :initform nil :accessor local-metre
+    :documentation "Local metre; appears in individual bars")
+   (envir
+    :initarg :envir
+    :accessor envir
+    :documentation "List of current CHARM properties")
+   (output
+    :initform nil :accessor output
+    :documentation "List of processed events accrued in reverse order")))
 
-;;;======================
-;;;* Objects etc. *
-;;;======================
+(defclass line ()
+  ((text :initarg :text :accessor text)))
 
-(defstruct reader title artist metre num-beats-in-bar envir output)
+(defclass title-line (line)
+  ((title :initarg :title :accessor title)))
 
+(defclass artist-line (line)
+  ((artist :initarg :artist :accessor artist)))
+
+(defclass tonic-line (line)
+  ((tonic :initarg :tonic :accessor tonic)))
+
+(defclass metre-line (line)
+  ((metre :initarg :metre :accessor metre)))
+
+(defclass blank-line (line) ())
+
+(defclass body-line (line)
+  ((bars :initarg :bars :accessor bars :initform nil
+	 :documentation "Ordered list of bars present in the line.")
+   (num-reps :initarg :num-reps :accessor num-reps
+	     :initform 1
+	     :documentation "Number of times the line is to be played.")))
+
+(defclass unrecognised-line (line) ())
+
+(defclass bar ()
+  ((text :initarg :text :accessor text)
+   (metre :accessor metre :initform nil
+	  :documentation "String describing metre, e.g. 4/4")
+   (tokens :accessor tokens
+	   :documentation "List of tokens in bar, without expansion.")))
+  
 (defclass token ()
   ((text :initarg :text :accessor text)))
 
@@ -191,13 +284,24 @@
    above middle C. This should be consistent across IDyOM import methods
    for chord sequences.")))
 
+(defclass repeat-chord-token (token) ())
+
 (defclass metre-token (token)
-  ((numerator :accessor :numerator)
-   (denominator :accessor :denominator)
-   (num-beats-in-bar :accessor :num-beats-in-bar)
-   (pulses :accessor pulses)         ; numerator of time signature
-   (barlength :accessor barlength)))
-						 
+  ((numerator :initform nil)
+   (denominator :initform nil)
+   (num-beats-in-bar :accessor num-beats-in-bar :initform nil)
+   (pulses :accessor pulses :initform nil)        
+   (barlength :accessor barlength :initform nil)))
+
+(defclass unrecognised-token (token) ())
+
+(defclass empty-token (token) ())
+
+(defclass complex-token (empty-token) ())
+(defclass null-token (empty-token) ())
+(defclass pause-token (empty-token) ())
+
+
 ;;;==================
 ;;;* Top level call *
 ;;;==================
@@ -206,15 +310,15 @@
   (idyom-db:insert-dataset (mcgill2db path description) id))
 
 (defun mcgill2db (file-or-dir-name description
-                &key (timesig *default-timesig*)
-                  (keysig *default-keysig*)
-		  (tonic *default-tonic*)
-                  (mode *default-mode*)
-                  (timebase *default-timebase*)
-                  (onset *default-onset*)
-                  (tempo *default-tempo*)
-                  (bioi *default-bioi*)
-                  (middle-c *middle-c*))
+		  &key (timesig *default-timesig*)
+		    (keysig *default-keysig*)
+		    (tonic *default-tonic*)
+		    (mode *default-mode*)
+		    (timebase *default-timebase*)
+		    (onset *default-onset*)
+		    (tempo *default-tempo*)
+		    (bioi *default-bioi*)
+		    (middle-c *middle-c*))
   "A top level call to convert a kern file or a directory of kern files
    <file-or-dir-name> to CHARM readable format. The keyword parameters
    allow the user to change the default parameters for the conversion."
@@ -267,27 +371,39 @@
    format using the default parameters."
   (let* ((raw-data (read-data file-name))
          (processed-data (process-data raw-data))
-	 (title (reader-title processed-data))
-	 (artist (reader-artist processed-data))
+	 (title (title processed-data))
+	 (artist (artist processed-data))
 	 (description (format nil "~A: ~A"
 			      (if artist artist "Unknown artist")
 			      (if title title "Unknown title")))
-	 (events (reader-output processed-data)))
+	 (events (output processed-data)))
     (cons description events)))
 
-(defun print-status ()
-  "Print message warning about unrecognised tokens."
-  (unless (null *unrecognised-tokens*)
-    (utils:message
-     (format nil "~%The following tokens were unrecognised: ~S"
-	     *unrecognised-tokens*)
-     :detail 1)))
+(defun process-data (raw-data)
+  (labels ((fun (remaining-lines reader)
+	     (if (null remaining-lines)
+		 (progn
+		   (setf (output reader)
+			 (reverse (output reader)))
+		   reader)
+		 (progn
+		   (setf *line-number* (first (car remaining-lines))
+			 *line* (second (car remaining-lines)))
+		   (fun (cdr remaining-lines)
+			(process (interpret-line (second (car remaining-lines)))
+				 reader))))))
+    (fun raw-data (initialise-reader))))
+
+(defun interpret-line (line)
+  (let ((line-type (get-line-type line)))
+    (make-instance line-type :text line)))
 
 ;;;================================
 ;;;* Reading data from file. * 
 ;;;================================
 
-;; Much of this code is similar to kern2db.lisp, and could be merged.
+;; Much of this code is similar to kern2db.lisp,
+;; and could be merged with it at some point.
 
 (defun read-data (file-name)
   "Reads data from a text file, returning a numbered
@@ -343,32 +459,32 @@
                    (t (find-words (cdr char-list) "" (cons word result))))))
     (find-words (coerce string 'list) "" '())))
 
-;;;====================
-;;;* Processing data. * 
-;;;====================
+;;;=======================
+;;;* Errors and warnings * 
+;;;=======================
 
 (define-condition line-read-error (error)
   ((text :initarg :text :reader text))
   (:report (lambda (condition stream)
-	     (format stream
-		     "Error parsing line ~A of file ~A.~%~A~%~%The line reads:~%~%~S"
-   		     *line-number*
- 		     *file-name*
- 		     (text condition)
-     		     *line*))))
+	     (format
+	      stream
+	      "Error parsing line ~A of file ~A.~%~A~%~%The line reads:~%~%~S"
+	      *line-number*
+	      *file-name*
+	      (text condition)
+	      *line*))))
 
-(defun process-data (raw-data)
-  (labels ((fun (remaining-lines reader)
-	     (if (null remaining-lines)
-		 (progn (setf (reader-output reader)
-			      (reverse (reader-output reader)))
-			reader)
-		 ;;(reverse (reader-output reader))
-		 (fun (cdr remaining-lines)
-		      (process-line (car remaining-lines) reader)))))
-    (fun raw-data (initialise-reader))))
+(defun print-status ()
+  "Print message warning about unrecognised tokens."
+  (unless (null *unrecognised-tokens*)
+    (utils:message
+     (format nil "~%The following tokens were unrecognised: ~S"
+	     *unrecognised-tokens*)
+     :detail 1)))
 
-
+;;;===========================
+;;;* Initialising instances *
+;;;===========================
 
 (defun initialise-envir ()
   (list (list :onset *default-onset*)
@@ -389,55 +505,323 @@
 	(list :subvoice *default-subvoice*)))
 
 (defun initialise-reader ()
-  (make-reader :envir (initialise-envir)))
+  (make-instance 'reader :envir (initialise-envir)))
 
-(defun process-line (line reader)
-  (setf *line-number* (first line)
-	*line* (second line))
-  (if (char-equal (char *line* 0) #\#)
-      (process-metadata *line* reader)
-      (process-body *line* reader)))
+;;;========================
+;;;* Initialising lines *
+;;;========================
 
-(defun process-metadata (line reader)
-  "Processes one <line> of metadata, returning an updated <reader>."
-  ;; A typical line looks like this:
-  ;; # title: Last Child
-  (if (not (cl-ppcre:scan-to-strings
-	    "^# .+: " line))
-      (error 'line-read-error :text "Found an unusual comment line."))
-  (let* ((no-comment (cl-ppcre:regex-replace-all "^# " line ""
-						 :preserve-case t))
-	 (type (cl-ppcre:regex-replace-all ":.*" no-comment ""
-					   :preserve-case t))
-	 (value (cl-ppcre:regex-replace-all "^[^:.]*: " no-comment ""
-					    :preserve-case t)))
-    (cond ((string= type "title") (process-title value reader))
-	  ((string= type "artist") (process-artist value reader))
-	  ((string= type "metre") (process-metre value reader))
-	  ((string= type "tonic") (process-tonic value reader))
-	  (t  (error 'line-read-error
-		     :text (format nil
-				   "Found unrecognised metadata type ~A."
-				   type))))))
+(defmethod initialize-instance :after ((line title-line) &key)
+  (let* ((text (text line))
+	 (title (cl-ppcre:regex-replace "^# title: " text
+					""
+					:preserve-case t)))
+    (setf (title line) title)))
 
-(defun process-title (value reader)
-  (setf (reader-title reader) value)
+(defmethod initialize-instance :after ((line artist-line) &key)
+  (let* ((text (text line))
+	 (artist (cl-ppcre:regex-replace "^# artist: " text
+					 ""
+					 :preserve-case t)))
+    (setf (artist line) artist)))
+
+(defmethod initialize-instance :after ((line tonic-line) &key)
+  (let* ((text (text line))
+	 (tonic (cl-ppcre:regex-replace "^# tonic: " text
+					""
+					:preserve-case t)))
+    (setf (tonic line) tonic)))
+
+(defmethod initialize-instance :after ((line metre-line) &key)
+  (let* ((text (text line))
+	 (metre (cl-ppcre:regex-replace "^# metre: " text
+					""
+					:preserve-case t))
+	 (metre-token (make-instance 'metre-token :text metre)))
+    (setf (metre line) metre-token)))
+
+(defmethod initialize-instance :after ((line body-line) &key)
+  ;; A body line typically looks something like this:
+  ;; 16.562811791	| D:maj/9 E:min | E:min C:maj |, (keyboard
+  ;; Note other possibilities:
+  ;; 0.000000000	silence
+  ;; 8.753378684	| N | N | N | N |, (drums)
+  (let* ((text (text line))
+	 ;; Remove everything before and after the first
+	 ;; and last | symbols
+	 (bars-regex "\\|.*\\|")
+	 (bars (cl-ppcre:scan-to-strings bars-regex text)))
+    ;; If there are no bars, skip the line
+    (if (null bars) (return-from initialize-instance))
+    ;; Check that bars looks something like this:
+    ;; "| Eb:7 | Eb:7 | Ab:maj | Ab:maj |"
+    (if (not (cl-ppcre:scan-to-strings "(^\\| .* )+\\|$" bars))
+	(error 'line-read-error "Found an unusual body line."))
+    (let* (;; Get everything after the end of the last bar
+	   (line-suffix (cl-ppcre:regex-replace ".*\\|" text ""
+						:preserve-case t))
+	   ;; Find the number of marked repetitions, if any
+	   ;; Repetition is defined inclusively, so two repetitions
+	   ;; is equivalent to x2, i.e. play twice.
+	   (rep-token (cl-ppcre:scan-to-strings "x[0-9]+"
+						line-suffix))
+	   (num-reps (if rep-token
+			 (parse-integer (cl-ppcre:scan-to-strings "[0-9]+"
+								  rep-token))
+			 1))
+	   ;; Split the rest into bars
+	   (bar-list (cl-ppcre:all-matches-as-strings "\\| [^\\|]*" bars))
+	   ;; Trim bars
+	   (bar-list (mapcar #'(lambda (x) (cl-ppcre:regex-replace-all
+					    "(^\\| )|( $)" x ""))
+			     bar-list))
+	   ;; Initialize bar objects
+	   (bar-list (mapcar #'(lambda (x) (make-instance 'bar :text x))
+			     bar-list)))
+      (setf (bars line) bar-list
+	    (num-reps line) num-reps))))
+
+;;;=======================
+;;;* Initialising bars *
+;;;=======================
+
+(defmethod initialize-instance :after ((bar bar) &key)
+  "Splits bar into tokens. Assumes that the | delimiters
+   and surrounding whitespace have already been removed."
+  (let* ((text (text bar))
+	 (token-strings (utils:split-string text " "))
+	 (tokens (mapcar #'string->token token-strings))
+	 (token-types (mapcar #'type-of tokens))
+	 (which-metre-tokens
+	  (utils:all-positions-if
+	   #'(lambda (x) (eql x 'metre-token))
+	   token-types)))
+    (if (some #'(lambda (x) (> x 0)) which-metre-tokens)
+	(error 'line-read-error
+	       :text "Encountered a metre token partway through a bar."))
+    (if (eql (car token-types) 'metre-token)
+	(setf (metre bar) (car tokens)))
+    (setf (tokens bar) tokens)))
+
+;;;========================
+;;;* Initialising tokens *
+;;;========================
+
+(defmethod initialize-instance :after ((token metre-token) &key)
+  "Abstracts information from a metre token.
+   Note: there is an independent function, process-metre, that gets
+   metre information from a metadata line."
+  (let ((text (text token)))
+    (if (not (eql (get-token-type text) 'metre-token))
+	(error 'line-read-error
+	       :text (format
+		      nil
+		      "Tried to parse an incorrectly formatted metre token: (~A)"
+		      text)))
+    (let* ((no-brackets (cl-ppcre:regex-replace-all "[\\(\\)]" text ""))
+	   (numerator (parse-integer
+		       (cl-ppcre:regex-replace-all "/[0-9]+$" no-brackets "")))
+	   (denominator (parse-integer
+			 (cl-ppcre:regex-replace-all "^[0-9]+/" no-brackets "")))
+	   (barlength (* (/ *default-timebase* denominator)
+			 numerator))
+	   (num-beats-in-bar (multiple-value-bind (result result-found?)
+				 (gethash no-brackets *num-beats-in-bar-dictionary*)
+			       (if result-found?
+				   result
+				   (error 'line-read-error
+					  :text (format nil "Didn't know how many beats in the bar for ~A."
+							no-brackets))))))
+      (setf (slot-value token 'numerator) numerator
+	    (slot-value token 'denominator) denominator
+	    (slot-value token 'pulses) numerator
+	    (slot-value token 'barlength) barlength
+	    (slot-value token 'num-beats-in-bar) num-beats-in-bar))))
+
+(defmethod initialize-instance :after ((token chord-token) &key)
+  "Finds the cpitch representation for a chord from its textual representation."
+  (let ((text (text token)))
+    (setf (slot-value token 'cpitch)
+	  (multiple-value-bind (root-token quality-token bass-token)
+	      (parse-chord-text text)
+	    (parsed-chord->cpitch root-token quality-token bass-token)))))
+
+;;;=========================
+;;;* Processing objects *
+;;;=========================
+
+(defgeneric process (object reader)
+  (:documentation "Processes <object> and returns an updated <reader>."))
+
+;;;=========================
+;;;* Processing lines *
+;;;=========================
+
+(defmethod process ((line title-line) reader)
+  (setf (title reader) (title line))
   reader)
 
-(defun process-artist (value reader)
-  (setf (reader-artist reader) value)
+(defmethod process ((line artist-line) reader)
+  (setf (artist reader) (artist line))
   reader)
 
-(defun process-tonic (value reader)
-  (setf (reader-envir reader)
-	(utils:update-alist (reader-envir reader)
-			    (list :tonic (process-pitch-class value))))
+(defmethod process ((line tonic-line) reader)
+  (setf (envir reader)
+	(utils:update-alist (envir reader)
+			    (list :tonic (process-pitch-class (tonic line)))))
   reader)
 
-(defun process-metre (value reader)
-  "Processes a metre string in a metadata line where the comment has been removed."
-  (let ((metre-token (make-instance 'metre-token :text value)))
-    (process-token metre-token reader)))
+(defmethod process ((line metre-line) reader)
+  (setf (global-metre reader) (metre line))
+  reader)
+
+(defmethod process ((line blank-line) reader)
+  reader)
+
+(defmethod process ((line unrecognised-line) reader)
+  (if *stop-on-unrecognised-lines*
+      (error 'line-read-error
+	     :text "Did not recognise line.")
+      (progn (pushnew line *unrecognised-lines*)
+	     reader)))
+
+(defmethod process ((line body-line) reader)
+  (let ((num-reps (num-reps line))
+	(bars (bars line)))
+    (dotimes (i num-reps reader)
+      (dolist (bar bars reader)
+	(setf reader (process bar reader))))))
+
+;;;=====================
+;;;* Processing bars *
+;;;=====================
+
+(defmethod process ((bar bar) reader)
+  (let ((local-metre (metre bar))
+	(global-metre (global-metre reader)))
+    (if (null global-metre)
+	(error 'line-read-error
+	       :text "No metre was defined before the first bar."))
+    (setf (local-metre reader) local-metre)
+    (setf reader (if local-metre
+		     (process local-metre reader)
+		     (process global-metre reader)))
+    (let* ((num-beats-in-bar (num-beats-in-bar (if local-metre
+						   local-metre
+						   global-metre)))
+	   (chord-tokens (remove-if-not
+			  #'(lambda (x) (typep x 'chord-token))
+			  (tokens bar)))
+	   (chord-tokens (expand-repeat-chord-tokens chord-tokens))
+	   (num-chord-tokens (length chord-tokens))
+	   (chord-tokens (cond
+			   ((eql num-chord-tokens 1)
+			    (make-list num-beats-in-bar
+				       :initial-element (car chord-tokens)))
+			   ((and (eql num-beats-in-bar 4)
+				 (eql num-chord-tokens 2))
+			    (append
+			     (make-list 2 :initial-element (first chord-tokens))
+			     (make-list 2 :initial-element (second chord-tokens))))
+			   (t chord-tokens)))
+	   (num-chord-tokens (length chord-tokens)))
+      (if (not (eql num-beats-in-bar num-chord-tokens))
+	  (error 'line-read-error
+		 :text "Metre incompatible with number of chords provided."))
+      (dolist (chord-token chord-tokens reader)
+	(setf reader (process chord-token reader))))))
+
+;;;========================
+;;;* Processing tokens *
+;;;========================
+			   
+(defmethod process ((token metre-token) reader)
+  "Updates the envir slot of <reader> according to <token>.
+   Does not change the global-metre or local-metre slots,
+   of <reader>, which should instead be updated by the process-line
+   and process-bar methods."
+  (setf (envir reader)
+	(utils:update-alist (envir reader)
+			    (list :pulses (pulses token))
+			    (list :barlength (barlength token))))
+  reader)
+
+(defmethod process ((token chord-token) reader)
+  "Processes <token> and updates <reader>. Assumes that any implicit
+   chord repeats have been expanded already, meaning that <chord>
+   corresponds to exactly one beat in duration."
+  (let* ((envir (envir reader))
+	 (num-beats-in-bar (num-beats-in-bar reader))
+	 (barlength (second (assoc :barlength envir)))
+	 (dur (/ barlength num-beats-in-bar))
+	 (cpitch (cpitch token))
+	 (new-events
+	  (mapcar #'(lambda (x) (append (list (list :dur dur)
+					      (list :cpitch x))
+					envir))
+		  cpitch))
+	 (old-onset (second (assoc :onset envir)))
+	 (new-onset (+ old-onset dur))
+	 (new-envir (utils:update-alist envir
+					(list :onset new-onset)
+					(list :bioi dur))))
+    (setf (output reader) (append new-events (output reader))
+	  (envir reader) new-envir)
+    reader))
+
+(defmethod process ((token empty-token) reader)
+  "Processes an <empty-token> and updates <reader>. 
+   Assumes that the duration of <empty-token> follows
+   the same rules as durations of chord-tokens, though
+   according to the McGill corpus specification this 
+   is not always the case."
+  (let* ((envir (envir reader))
+	 (num-beats-in-bar (num-beats-in-bar reader))
+	 (barlength (second (assoc :barlength envir)))
+	 (dur (/ barlength num-beats-in-bar))
+	 (old-deltast (second (assoc :deltast envir)))
+	 (old-bioi (second (assoc :bioi envir)))
+	 (old-onset (second (assoc :onset envir)))
+	 (new-deltast (+ old-deltast dur))
+	 (new-bioi (+ old-bioi dur))
+	 (new-onset (+ old-onset dur))
+	 (new-envir (utils:update-alist envir
+					(list :onset new-onset)
+					(list :bioi new-bioi)
+					(list :deltast new-deltast))))
+    (setf (envir reader) new-envir)
+    reader))
+
+(defmethod process ((token unrecognised-token) reader)
+  (if *stop-on-unrecognised-tokens* 
+      (error 'line-read-error
+	     :text (format nil "Unrecognised token: ~A" token))
+      (progn (pushnew token *unrecognised-tokens*)
+	     reader)))
+
+;;;=========================
+;;;* Supporting functions *
+;;;=========================
+
+(defun expand-repeat-chord-tokens (token-list)
+  "Takes a list of chord-tokens and repeat-chord-tokens and 
+   replaces any repeat-chord-tokens with a copy of the chord-token
+   from the previous chord."
+  (labels ((repeat-chord-token-p (token)
+	     (typep token 'repeat-chord-token))
+	   (fun (input accumulator)
+	     (if (null input)
+		 (reverse accumulator)
+		 (if (repeat-chord-token-p (car input))
+		     (if (null accumulator)
+			 (error 'line-read-error
+				:text "Bar cannot begin with \".\" symbol.")
+			 (fun (cdr input)
+			      (cons (car accumulator)
+				    accumulator)))
+		     (fun (cdr input)
+			  (cons (car input) accumulator))))))
+    (fun token-list nil)))
 
 (defun process-pitch-class (string)
   (if (not (cl-ppcre:scan-to-strings
@@ -459,79 +843,6 @@
 	 (pc (- (+ letter-pc num-sharps) num-flats)))
     pc))
 
-(defun process-body (line reader)
-  "Processes one <line> of body, returning an updated <reader>."
-  ;; A body line typically looks something like this:
-  ;; 16.562811791	| D:maj/9 E:min | E:min C:maj |, (keyboard
-  ;; Note other possibilities:
-  ;; 0.000000000	silence
-  ;; 8.753378684	| N | N | N | N |, (drums)
-  (let* (;; Remove everything before and after the first
-	 ;; and last | symbols
-	 (bars-regex "\\|.*\\|")
-	 (bars (cl-ppcre:scan-to-strings bars-regex line)))
-    ;; If there are no bars, skip the line
-    (if (null bars) (return-from process-body reader))
-    ;; Check that bars looks something like this:
-    ;; "| Eb:7 | Eb:7 | Ab:maj | Ab:maj |"
-    (if (not (cl-ppcre:scan-to-strings "(^\\| .* )+\\|$" bars))
-	(error 'line-read-error "Found an unusual body line."))
-    (let* (;; Get everything after the end of the last bar
-	   (line-suffix (cl-ppcre:regex-replace ".*\\|" line ""
-						:preserve-case t))
-	   ;; Find the number of marked repetitions, if any
-	   ;; Repetition is defined inclusively, so two repetitions
-	   ;; is equivalent to x2, i.e. play twice.
-	   (rep-token (cl-ppcre:scan-to-strings "x[0-9]+"
-						line-suffix))
-	   (num-reps (if rep-token
-			 (parse-integer (cl-ppcre:scan-to-strings "[0-9]+"
-								  rep-token))
-			 1))
-	   ;; Split into bars
-	   (bar-list (cl-ppcre:all-matches-as-strings "\\| [^\\|]*" bars))
-	   ;; Trim bars
-	   (trim-bar-list (mapcar #'(lambda (x) (cl-ppcre:regex-replace-all
-						 "(^\\| )|( $)" x ""))
-				  bar-list))
-	   ;; Split each bar into a list of chords
-	   (chord-list (mapcar #'(lambda (x) (utils:split-string x " "))
-			       trim-bar-list)))
-      
-      
-      (values chord-list num-reps reader))))
-
-;; (defclass ())
-
-;; (defun classify-token (token)
-  
-;;   )
-
-;; (defun parse-token (token)
-	       
-
-      
-;;;======================
-;;;* Token matching  *
-;;;======================
-
-(defgeneric process-token (token reader)
-  (:documentation "Processes a <token> and returns an updated <reader>."))
-
-;;; Chord tokens
-
-(defmethod initialize-instance :after ((token chord-token) &key)
-  "Finds the cpitch representation for a chord from its textual representation."
-  (let ((text (text token)))
-    (if (not (eql (get-token-type text) 'chord-token))
-	(error 'line-read-error
-	       :text "Tried to parse an incorrectly formatted chord token."))
-    (setf (slot-value token 'cpitch)
-	  (multiple-value-bind (root-token quality-token bass-token)
-	      (parse-chord-text text)
-	    (parsed-chord->cpitch root-token quality-token bass-token)))))
-
-
 (defun parse-chord-text (text)
   "Parses the <text> for a chord token (note: assumes correct syntax)."
   (let* ((root-regex "^[A-G][#b]*")
@@ -549,7 +860,6 @@
 			 "" :preserve-case t)))
     (values root-token quality-token bass-token)))
 
-;; This function is similar to one in kern2db.lisp.
 (defun parsed-chord->cpitch (root-token quality-token bass-token)
   (let* ((cpitch-middle-c (nth 0 *middle-c*))
 	 (root-pc (process-pitch-class root-token))
@@ -585,48 +895,10 @@
 			 *minor-scale-degree-dictionary*
 			 *major-scale-degree-dictionary*)))
     (multiple-value-bind (result result-found?)
-	      (gethash bass-token dictionary)
-	    (if result-found?
-		result
-		(error 'line-read-error
-		       :text (format nil "Unrecognised bass token: ~A"
-				     bass-token))))))
-    
-;;; Metre tokens
+	(gethash bass-token dictionary)
+      (if result-found?
+	  result
+	  (error 'line-read-error
+		 :text (format nil "Unrecognised bass token: ~A"
+			       bass-token))))))
 
-(defmethod initialize-instance :after ((token metre-token) &key)
-  "Abstracts information from a metre token.
-   Note: there is an independent function, process-metre, that gets
-   metre information from a metadata line."
-  (let ((text (text token)))
-    (if (not (eql (get-token-type text) 'metre-token))
-	(error 'line-read-error
-	       :text "Tried to parse an incorrectly formatted metre token."))
-    (let* ((no-brackets (cl-ppcre:regex-replace-all "[\\(\\)]" text ""))
-	   (numerator (parse-integer
-		       (cl-ppcre:regex-replace-all "/[0-9]+$" no-brackets "")))
-	   (denominator (parse-integer
-			 (cl-ppcre:regex-replace-all "^[0-9]+/" no-brackets "")))
-	   (barlength (* (/ *default-timebase* denominator)
-			 numerator))
-	   (num-beats-in-bar (multiple-value-bind (result result-found?)
-				 (gethash no-brackets *num-beats-in-bar-dictionary*)
-			       (if result-found?
-				   result
-				   (error 'line-read-error
-					  :text (format nil "Didn't know how many beats in the bar for ~A."
-							no-brackets))))))
-      (setf (slot-value token 'numerator) numerator
-	    (slot-value token 'denominator) denominator
-	    (slot-value token 'pulses) numerator
-	    (slot-value token 'barlength) barlength
-	    (slot-value token 'num-beats-in-bar) num-beats-in-bar))))
-
-(defmethod process-token ((token metre-token) reader)
-  (setf (reader-envir reader)
-	(utils:update-alist (reader-envir reader)
-			    (list :pulses (pulses token))
-			    (list :barlength (barlength token))))
-  (setf (reader-metre reader) value)
-  (setf (reader-num-beats-in-bar reader) (num-beats-in-bar token))
-  token)
