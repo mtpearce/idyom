@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-02-20 17:39:23 peter>                           
+;;;; Time-stamp: <2017-02-20 18:03:39 peter>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -241,6 +241,7 @@
 
 (defvar *unrecognised-representations* '());list of unrecognised representations
 (defvar *unrecognised-tokens* '())         ;list of unrecognised tokens
+(defvar *warnings* '())                    ;list of warnings
 (defvar *voices* '())                      ;list of assigned voices
 (defvar *voice-counter* 0)                 ;counts the number of voices assigned so far
 
@@ -316,7 +317,8 @@
         *default-bioi* bioi
         *middle-c* middle-c
         *unrecognised-representations* '()
-        *unrecognised-tokens* '())
+        *unrecognised-tokens* '()
+	*warnings* '())
   (let ((directory (not (pathname-name file-or-dir-name))))
     (prog1 
         (append (list description *default-timebase* (car *middle-c*))
@@ -381,7 +383,10 @@
     (utils:message
      (format nil "~%The following tokens were unrecognised: ~S"
 	     *unrecognised-tokens*)
-     :detail 1)))
+     :detail 1))
+  (unless (null *warnings*)
+    (mapcar #'(lambda (x) (utils:message x :detail 1))
+	    *warnings*)))
 
 
 ;;;===========================
@@ -992,8 +997,8 @@ tie-offset tie-closed (reverse tie-tokens)))))))
 					 ((and (= p1 0) (= p2 0))
 					  0)
 					 (t 
-					  (utils:message "Warning: unexpected phrase token within tied note."
-							 :detail 1)
+					  (push "Warning: unexpected phrase token within tied note."
+							 *warnings*)
 					  -1)))))))))
 
 (defun update-alist (alist &rest new-entries)
