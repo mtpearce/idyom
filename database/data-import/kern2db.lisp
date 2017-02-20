@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-02-20 17:13:32 peter>                           
+;;;; Time-stamp: <2017-02-20 17:39:23 peter>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -992,7 +992,8 @@ tie-offset tie-closed (reverse tie-tokens)))))))
 					 ((and (= p1 0) (= p2 0))
 					  0)
 					 (t 
-					  (print "Warning: unexpected phrase token within tied note.")
+					  (utils:message "Warning: unexpected phrase token within tied note."
+							 :detail 1)
 					  -1)))))))))
 
 (defun update-alist (alist &rest new-entries)
