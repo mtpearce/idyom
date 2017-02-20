@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-02-17 16:47:01 peter>                           
+;;;; Time-stamp: <2017-02-20 17:13:32 peter>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -750,7 +750,7 @@
    number of <humdrum-states>."
   (if (not (eql (length humdrum-states) (length record)))
       (error 'kern-line-read-error
-	     :text (format nil "Expected ~A tokens, but only found ~A."
+	     :text (format nil "Expected ~A tokens, but found ~A."
 			   (length humdrum-states) (length record)))))
 
 (defun initialise-environment (voice &optional subvoice)
