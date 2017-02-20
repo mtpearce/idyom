@@ -2,7 +2,7 @@
 ;;;; File:       IDyOM.asd
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-05-04 21:29:04 marcusp>
-;;;; Time-stamp: <2017-02-09 14:02:30 peter>
+;;;; Time-stamp: <2017-02-20 14:06:04 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -39,7 +39,8 @@
 		      ((:file "kern2db")
 		       (:file "midi2db")
 		       (:file "text2db")
-		       (:file "conklin2db")))
+		       (:file "conklin2db")
+		       (:file "mcgill2db")))
 	     ;; Data export 
 	     (:module data-export
 		      :components 

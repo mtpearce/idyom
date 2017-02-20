@@ -2,7 +2,7 @@
 ;;;; File:       mcgill2db.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-02-16 15:38:15 peter>                           
-;;;; Time-stamp: <2017-02-19 23:07:38 peter>                           
+;;;; Time-stamp: <2017-02-20 16:23:12 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -28,8 +28,8 @@
 ;; line/token is encountered. If true, unrecognised lines/tokens throw an error.
 ;; If nil, the import process continues, but a warning is given
 ;; to the user afterwards.
-(defparameter *stop-on-unrecognised-lines* nil)
-(defparameter *stop-on-unrecognised-tokens* nil)
+(defparameter *stop-on-unrecognised-lines* t)
+(defparameter *stop-on-unrecognised-tokens* t)
 
 ;; Whether or not to expand repeated lines.
 (defparameter *expand-repeated-lines* t)
@@ -188,7 +188,7 @@
 	    ("^# tonic: " tonic-line)
 	    ("^# metre: " metre-line)
 	    ("^$" blank-line)
-	    ("^[0-9]+\\.[0-9]+\\t" body-line)
+	    ("^[0-9e\\.-]+\\t" body-line)
 	    (".*" unrecognised-line))))
 
 (defun get-regexp-in-alist (string alist)
@@ -269,7 +269,23 @@
 (defclass token ()
   ((text :initarg :text :accessor text)))
 
-(defclass chord-token (token)
+;; Event tokens are tokens which correspond to finite periods of musical time.
+;; The most common event token is the chord token. Chord tokens are transcribed
+;; as CHARM events. The other main class of event token is the empty token, which
+;; constitutes a family of event tokens that are transcribed as musical rests.
+(defclass event-token (token) ())
+
+;; Environment tokens are the complement of the set of event tokens within the
+;; family of tokens. They correspond to tokens which do not correspond themselves
+;; to finite periods of musical time. The main example of an environment token
+;; is the metre token, which changes how event tokens are transcribed, but
+;; does not itselt correspond to any time interval.
+(defclass envir-token (token) ())
+
+;; Unrecognised tokens are tokens not recognised by the parser.
+(defclass unrecognised-token (token) ())
+
+(defclass chord-token (event-token)
   ((cpitch
     :accessor cpitch
     :documentation "List of cpitch values that represent the pitch
@@ -284,22 +300,23 @@
    above middle C. This should be consistent across IDyOM import methods
    for chord sequences.")))
 
-(defclass repeat-chord-token (token) ())
+(defclass repeat-chord-token (event-token) ())
 
-(defclass metre-token (token)
+;; Empty tokens are tokens that are transcribed as musical rests,
+;; even if they do not necessarily correspond directly to rests
+;; in the original syntax definition.
+(defclass empty-token (event-token) ())
+
+(defclass complex-token (empty-token) ())
+(defclass null-token (empty-token) ())
+(defclass pause-token (empty-token) ())
+
+(defclass metre-token (envir-token)
   ((numerator :initform nil)
    (denominator :initform nil)
    (num-beats-in-bar :accessor num-beats-in-bar :initform nil)
    (pulses :accessor pulses :initform nil)        
    (barlength :accessor barlength :initform nil)))
-
-(defclass unrecognised-token (token) ())
-
-(defclass empty-token (token) ())
-
-(defclass complex-token (empty-token) ())
-(defclass null-token (empty-token) ())
-(defclass pause-token (empty-token) ())
 
 
 ;;;==================
@@ -340,10 +357,14 @@
 
 (defun process-files (file-or-dir directory)
   "If <file-or-dir> is a directory all the files in that directory
-   are converted -- if it is a filename that file is processed."
+   are converted. The file search is recursive, meaning that 
+   subdirectories and subdirectories of subdirectories etc
+   are searched. If <file-or-dir> is a filename that file is processed."
   (load-dictionaries)
   (setf *file-number* 0)
   (setf *file-name* nil)
+  (setf *unrecognised-tokens* nil)
+  (setf *unrecognised-lines* nil)
   (if directory
       (let* ((files (utils:recursively-list-files
 		     file-or-dir
@@ -446,18 +467,20 @@
   "Removes empty strings from a numbered list of strings."
   (remove-if #'(lambda (x) (string= (second x)  "")) list))
 
-;; This is already defined in utils?
+;; This is already defined in utils? But without returning nil for a nil input.
 (defun split-string (string separator)
-  "Takes a string object and returns a list of strings corresponding to each
-   <separator> delimited sequence of characters in that string."
-  (labels ((find-words (char-list word result)
-             (cond ((null char-list) (reverse (cons word result)))
-                   ((not (string= (car char-list) separator))
-                    (find-words (cdr char-list)
-                                (concatenate 'string word (list (car char-list)))
-                                result))
-                   (t (find-words (cdr char-list) "" (cons word result))))))
-    (find-words (coerce string 'list) "" '())))
+  "Takes a <string> as input and returns a list of strings corresponding to each
+   <separator> delimited sequence of characters in that string. If the input
+   is null, then returns null."
+  (if string
+      (labels ((find-words (char-list word result)
+		 (cond ((null char-list) (reverse (cons word result)))
+		       ((not (string= (car char-list) separator))
+			(find-words (cdr char-list)
+				    (concatenate 'string word (list (car char-list)))
+				    result))
+		       (t (find-words (cdr char-list) "" (cons word result))))))
+	(find-words (coerce string 'list) "" '()))))
 
 ;;;=======================
 ;;;* Errors and warnings * 
@@ -475,11 +498,16 @@
 	      *line*))))
 
 (defun print-status ()
-  "Print message warning about unrecognised tokens."
+  "Print message warning about unrecognised tokens/lines."
   (unless (null *unrecognised-tokens*)
     (utils:message
      (format nil "~%The following tokens were unrecognised: ~S"
 	     *unrecognised-tokens*)
+     :detail 1))
+  (unless (null *unrecognised-lines*)
+    (utils:message
+     (format nil "~%The following lines were unrecognised: ~S"
+	     (mapcar #'text *unrecognised-lines*))
      :detail 1)))
 
 ;;;===========================
@@ -642,9 +670,11 @@
   "Finds the cpitch representation for a chord from its textual representation."
   (let ((text (text token)))
     (setf (slot-value token 'cpitch)
-	  (multiple-value-bind (root-token quality-token bass-token)
+	  (multiple-value-bind (root-token quality-base-token
+					   quality-added-tokens bass-token)
 	      (parse-chord-text text)
-	    (parsed-chord->cpitch root-token quality-token bass-token)))))
+	    (parsed-chord->cpitch root-token quality-base-token
+				  quality-added-tokens bass-token)))))
 
 ;;;=========================
 ;;;* Processing objects *
@@ -709,27 +739,27 @@
     (let* ((num-beats-in-bar (num-beats-in-bar (if local-metre
 						   local-metre
 						   global-metre)))
-	   (chord-tokens (remove-if-not
-			  #'(lambda (x) (typep x 'chord-token))
+	   (event-tokens (remove-if-not
+			  #'(lambda (x) (typep x 'event-token))
 			  (tokens bar)))
-	   (chord-tokens (expand-repeat-chord-tokens chord-tokens))
-	   (num-chord-tokens (length chord-tokens))
-	   (chord-tokens (cond
-			   ((eql num-chord-tokens 1)
+	   (event-tokens (expand-repeat-chord-tokens event-tokens))
+	   (num-event-tokens (length event-tokens))
+	   (event-tokens (cond
+			   ((eql num-event-tokens 1)
 			    (make-list num-beats-in-bar
-				       :initial-element (car chord-tokens)))
+				       :initial-element (car event-tokens)))
 			   ((and (eql num-beats-in-bar 4)
-				 (eql num-chord-tokens 2))
+				 (eql num-event-tokens 2))
 			    (append
-			     (make-list 2 :initial-element (first chord-tokens))
-			     (make-list 2 :initial-element (second chord-tokens))))
-			   (t chord-tokens)))
-	   (num-chord-tokens (length chord-tokens)))
-      (if (not (eql num-beats-in-bar num-chord-tokens))
+			     (make-list 2 :initial-element (first event-tokens))
+			     (make-list 2 :initial-element (second event-tokens))))
+			   (t event-tokens)))
+	   (num-event-tokens (length event-tokens)))
+      (if (not (eql num-beats-in-bar num-event-tokens))
 	  (error 'line-read-error
-		 :text "Metre incompatible with number of chords provided."))
-      (dolist (chord-token chord-tokens reader)
-	(setf reader (process chord-token reader))))))
+		 :text "Metre incompatible with number of event tokens provided."))
+      (dolist (event-token event-tokens reader)
+	(setf reader (process event-token reader))))))
 
 ;;;========================
 ;;;* Processing tokens *
@@ -765,7 +795,8 @@
 	 (new-envir (utils:update-alist envir
 					(list :onset new-onset)
 					(list :bioi dur))))
-    (setf (output reader) (append new-events (output reader))
+    (setf (output reader) (append (reverse new-events)
+				  (output reader))
 	  (envir reader) new-envir)
     reader))
 
@@ -799,14 +830,35 @@
       (progn (pushnew token *unrecognised-tokens*)
 	     reader)))
 
+;;;=============================
+;;;* Getting reader properties *
+;;;=============================
+
+(defgeneric num-beats-in-bar (object)
+  (:documentation
+   "Processes <object> and returns the current number of beats in a bar.
+    Gets updated every time the reader begins processing a new bar,
+    at the beginning of the process-bar method."))
+
+(defmethod num-beats-in-bar ((reader reader))
+  (let ((local-metre (local-metre reader))
+	(global-metre (global-metre reader)))
+    (if (null global-metre)
+	(error 'line-read-error
+	       :text "Global metre undefined."))
+    (num-beats-in-bar (if local-metre
+			  local-metre
+			  global-metre))))
+		      
+
 ;;;=========================
 ;;;* Supporting functions *
 ;;;=========================
 
 (defun expand-repeat-chord-tokens (token-list)
-  "Takes a list of chord-tokens and repeat-chord-tokens and 
-   replaces any repeat-chord-tokens with a copy of the chord-token
-   from the previous chord."
+  "Takes a list of tokens and replaces any repeat-chord-tokens
+   with a copy of the most recent token that was not a 
+   repeat-chord-token."
   (labels ((repeat-chord-token-p (token)
 	     (typep token 'repeat-chord-token))
 	   (fun (input accumulator)
@@ -844,7 +896,8 @@
     pc))
 
 (defun parse-chord-text (text)
-  "Parses the <text> for a chord token (note: assumes correct syntax)."
+  "Parses the <text> for a chord token (note: assumes correct syntax).
+   Based on the syntax used in the Harte et al. 2005 ISMIR paper."
   (let* ((root-regex "^[A-G][#b]*")
 	 (root-token  (cl-ppcre:scan-to-strings
 		       root-regex text))                         ; e.g. Db
@@ -855,27 +908,34 @@
 	 (slash-token (cl-ppcre:scan-to-strings                  ; e.g. /b7
 		       slash-regex remaining-token))             ; e.g. nil
 	 (bass-token (if slash-token (subseq slash-token 1) nil)); e.g. b7
-	 (quality-token (cl-ppcre:regex-replace-all              ; e.g. maj
+	 (quality-token (cl-ppcre:regex-replace-all              ; e.g. maj(b5,b7)
 			 slash-regex remaining-token
-			 "" :preserve-case t)))
-    (values root-token quality-token bass-token)))
+			 "" :preserve-case t))
+	 (added-notes-regex "\\(.+\\)$")
+	 (quality-base-token (cl-ppcre:regex-replace-all               ; e.g. maj
+			      added-notes-regex quality-token
+			      "" :preserve-case t))
+	 (remaining-token (cl-ppcre:scan-to-strings              ; e.g. (b5,b7)
+			   added-notes-regex quality-token))
+	 (quality-added-token (cl-ppcre:regex-replace-all
+			       "[\\(\\)]" remaining-token
+			       "" :preserve-case t))
+	 (quality-added-tokens (split-string quality-added-token ",")))
+    (values root-token quality-base-token quality-added-tokens bass-token)))
 
-(defun parsed-chord->cpitch (root-token quality-token bass-token)
+(defun parsed-chord->cpitch (root-token quality-base-token quality-added-tokens bass-token)
   (let* ((cpitch-middle-c (nth 0 *middle-c*))
 	 (root-pc (process-pitch-class root-token))
 	 (bass-relative-pc (if bass-token
 			       (bass-token->relative-pc
-				bass-token quality-token)
+				bass-token quality-base-token)
 			       0))
 	 (bass-pc (mod (+ root-pc bass-relative-pc) 12))
-	 (quality-relative-pc
-	  (multiple-value-bind (result result-found?)
-	      (gethash quality-token *chord-quality-dictionary*)
-	    (if result-found?
-		result
-		(error 'line-read-error
-		       :text (format nil "Unrecognised chord quality: ~A"
-				     quality-token)))))
+	 (quality-base-relative-pc (quality-token->relative-pc quality-base-token))
+	 (quality-added-relative-pc (mapcar #'scale-degree->relative-pc
+					    quality-added-tokens))
+	 (quality-relative-pc (remove-duplicates (append quality-base-relative-pc
+							 quality-added-relative-pc)))
 	 (quality-absolute-pc (mapcar #'(lambda (x)
 					  (mod (+ x root-pc) 12))
 				      quality-relative-pc))
@@ -889,8 +949,14 @@
 	 (cpitch (sort cpitch #'<)))
     cpitch))
 
-(defun bass-token->relative-pc (bass-token quality-token)
-  (let* ((minor-chord? (cl-ppcre:scan-to-strings "^min" quality-token))
+(defun bass-token->relative-pc (bass-token quality-base-token)
+  "Finds the relative pitch class of a <bass-token>.
+   Refers to <quality-token> to make a guess at 
+   the accidental when none is provided (e.g. 
+   min/3 is assumed to have a minor third as the root,
+   whereas maj/3 is assumed to have a major third as 
+   the root."
+  (let* ((minor-chord? (cl-ppcre:scan-to-strings "^min" quality-base-token))
 	 (dictionary (if minor-chord?
 			 *minor-scale-degree-dictionary*
 			 *major-scale-degree-dictionary*)))
@@ -902,3 +968,23 @@
 		 :text (format nil "Unrecognised bass token: ~A"
 			       bass-token))))))
 
+(defun scale-degree->relative-pc (string)
+  "Maps a scale degree (as a string) to a relative pitch class
+   (as an integer)."
+  (multiple-value-bind (result result-found?)
+      (gethash string *major-scale-degree-dictionary*)
+    (if result-found?
+	result
+	(error 'line-read-error
+	       :text (format nil "Unrecognised scale degree: ~A"
+			     string)))))
+
+(defun quality-token->relative-pc (quality-token)
+  "Maps a <quality-token> to a list of relative pitch classes."
+  (multiple-value-bind (result result-found?)
+      (gethash quality-token *chord-quality-dictionary*)
+    (if result-found?
+	result
+	(error 'line-read-error
+	       :text (format nil "Unrecognised chord quality: ~A"
+			     quality-token)))))
