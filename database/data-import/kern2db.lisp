@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-02-21 10:48:05 peter>                           
+;;;; Time-stamp: <2017-02-21 15:38:10 peter>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -76,7 +76,7 @@
 ;;;; 2. deal with other event tokens
 ;;;; 3. deal with nested or overlapping phrases
 ;;;; 4. explicitly expand repeated sections
-;;;; 5. add intelligent tie correction
+;;;; 5. deal with semicolons in **jazz spines (they should mark pauses)
 ;;;;
 ;;;; ======================================================================
 ;;;; Todo (coding) ========================================================
