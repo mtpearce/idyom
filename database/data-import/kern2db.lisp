@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-02-20 18:03:39 peter>                           
+;;;; Time-stamp: <2017-02-21 10:48:05 peter>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -142,6 +142,14 @@
 
 (defvar *known-exclusive-interpretations* (list "**kern" "**jazz"))
 
+;; Regular expressions for lines that should be skipped in the
+;; data import step.
+(defparameter *skip-line-alist*
+  (mapcar #'(lambda (x) 
+              (list (cl-ppcre:create-scanner (car x) :single-line-mode t) 
+                    (cadr x)))
+          '(("^@CONTENT" ignore-line))))
+	    
 (defparameter *humdrum-token-alist*
   (mapcar #'(lambda (x) 
               (list (cl-ppcre:create-scanner (car x) :single-line-mode t) 
@@ -447,7 +455,8 @@
    into a list of its component tokens."
   (setf *lines* (reverse (get-lines file-name)))
   (let* ((records (remove-empty-strings *lines*))
-	 (records (remove-line-comments records)))
+	 (records (remove-line-comments records))
+	 (records (remove-skip-lines records)))
     (mapcar #'(lambda (record)
 		(setf (second record) (split-string
 				       (second record)
@@ -493,6 +502,14 @@
   "Removes line comments from a list of strings."
   (remove-if #'(lambda (x) (line-comment-p (second x))) list))
 
+(defun remove-skip-lines (list)
+  "Removes lines identified by *skip-line-alist* from 
+   a numbered list of strings. Could be merged with
+   the function remove-line-comments."
+  (remove-if #'(lambda (x) (get-regexp-in-alist (second x)
+						*skip-line-alist*))
+	     list))
+
 (defun split-string (string separator)
   "Takes a string object and returns a list of strings corresponding to each
    <separator> delimited sequence of characters in that string."
@@ -516,6 +533,7 @@
   (let ((interpretations (car records))
 	(records-to-parse (cdr records))
 	(processed-events nil))
+    (setf *line-number* (car interpretations))
     (check-interpretations interpretations)
     (setf *first-barline-reached* nil)
     (setf *ties* nil)
@@ -554,7 +572,7 @@
 			  (process-kern-token humdrum-state processed-events token))
 			 ((string= excl-interpret "**jazz")
 			  (process-jazz-token humdrum-state processed-events token))
-			 (t (values humdrum-state processed-events)))
+			 (t (values (list humdrum-state) processed-events)))
 		(setf next-humdrum-states (append new-humdrum-states
 						  next-humdrum-states))
 		;;(format t "New processed events after state ~A: ~A~%"
