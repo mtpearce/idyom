@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-02-21 15:38:10 peter>                           
+;;;; Time-stamp: <2017-02-21 16:03:58 peter>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -766,7 +766,8 @@
   (dolist (interpretation (second interpretations))
     (if (not (member interpretation *known-exclusive-interpretations*
 		     :test #'string=))
-	(pushnew interpretation *unrecognised-representations*))))
+	(pushnew interpretation *unrecognised-representations*
+		 :test #'string=))))
 
 (defun check-num-tokens (humdrum-states record)
   "Checks that the number of tokens in <record> matches the
@@ -1048,7 +1049,8 @@ tie-offset tie-closed (reverse tie-tokens)))))))
   "Return nil for ignored tokens, and adds them 
    to the unrecognised tokens list."
   (declare (ignore environment))
-  (pushnew token *unrecognised-tokens*))
+  (pushnew token *unrecognised-tokens*
+	   :test #'string=))
 
 (defun first-barline (token environment)
   "Returns nil."
