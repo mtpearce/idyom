@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-02-21 16:03:58 peter>                           
+;;;; Time-stamp: <2017-02-22 15:05:28 peter>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -126,7 +126,7 @@
 (defparameter *correct-onsets-to-first-barline* t)
 
 ;; This parameter determines whether ties are allowed to cross voices.
-(defparameter *ties-may-cross-voices* t)
+(defparameter *ties-may-cross-voices* nil)
 
 ;; This parameter determines whether ties are allowed to cross subvoices
 ;; (ignored if *ties-may-cross-voices* is true).
