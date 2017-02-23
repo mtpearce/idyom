@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-02-22 15:05:28 peter>                           
+;;;; Time-stamp: <2017-02-23 14:50:00 peter>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -88,6 +88,7 @@
 ;;;; 4. make use of *unrecognised-representations* and *unrecognised-tokens*
 ;;;; 5. combine the two parallel sets of token processing functions
 ;;;; 6. update the viewpoint documentation above (e.g. add tempo)
+;;;; 7. remove redundant <tied-events> slot from humdrum-state
 ;;;;
 ;;;; =======================================================================
 
@@ -126,7 +127,7 @@
 (defparameter *correct-onsets-to-first-barline* t)
 
 ;; This parameter determines whether ties are allowed to cross voices.
-(defparameter *ties-may-cross-voices* nil)
+(defparameter *ties-may-cross-voices* t)
 
 ;; This parameter determines whether ties are allowed to cross subvoices
 ;; (ignored if *ties-may-cross-voices* is true).
@@ -652,7 +653,8 @@
    and joins all sets of adjacent states that all have :cued-for-join
    as true. Joining is only permitted if the states to be joined
    have the same exclusive interpretation. The join preserves only
-   the properties of the first state in the collection to be joined.
+   the properties of the first state in the collection to be joined,
+   except for tie lists, which are combined.
    Note 1: joining just one state to itself is not an error.
    Note 2: joining more than two states to one state is not an error."
   (if (null humdrum-states)
@@ -693,9 +695,11 @@
 	       (combine-specific-states (state-list)
 		 "Combines a list of states specifically identified
                   for combination into one state."
-		 (let ((out-state (car (last state-list))))
-		   (setf (humdrum-state-cued-for-join out-state)
-			 nil)
+		 (let ((out-state (car (last state-list)))
+		       (tied-events (remove-duplicates (mapcan #'humdrum-state-tied-events
+							       state-list))))
+		   (setf (humdrum-state-cued-for-join out-state) nil
+			 (humdrum-state-tied-events out-state) tied-events)
 		   out-state)))
 	(fun humdrum-states nil nil))))
 
@@ -1441,8 +1445,8 @@ in a phrase, and 0 otherwise."
 	;; No matching ties found
 	(error 'kern-line-read-error
 	       :text (format nil
-			     "Tie continuation indicated (~S) but could not find any ties to continue."
-			     kern-token)))
+			     "Tie continuation indicated (~S) at onset ~A but could not find any ties to continue."
+			     kern-token new-onset)))
     (dolist (i index-matching-ties)
       (let ((tied-note-position (get-tie-position-in-processed-events
 				 (nth i *ties*) processed-events)))
