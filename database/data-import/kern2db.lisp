@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-02-23 14:50:00 peter>                           
+;;;; Time-stamp: <2017-02-23 15:02:29 peter>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -654,7 +654,8 @@
    as true. Joining is only permitted if the states to be joined
    have the same exclusive interpretation. The join preserves only
    the properties of the first state in the collection to be joined,
-   except for tie lists, which are combined.
+   except for tie lists, which are combined, and onset, bioi,
+   and deltast, which take the lowest values found in all states to be joined.
    Note 1: joining just one state to itself is not an error.
    Note 2: joining more than two states to one state is not an error."
   (if (null humdrum-states)
@@ -697,9 +698,21 @@
                   for combination into one state."
 		 (let ((out-state (car (last state-list)))
 		       (tied-events (remove-duplicates (mapcan #'humdrum-state-tied-events
-							       state-list))))
+							       state-list)))
+		       (onset (apply 'min (mapcar #'(lambda(x)
+					       (get-from-humdrum-state-envir 'onset x))
+					   state-list)))
+		       (bioi (apply 'min (mapcar #'(lambda(x)
+					      (get-from-humdrum-state-envir 'bioi x))
+					  state-list)))
+		       (deltast (apply 'min (mapcar #'(lambda(x)
+						 (get-from-humdrum-state-envir 'deltast x))
+					     state-list))))
 		   (setf (humdrum-state-cued-for-join out-state) nil
 			 (humdrum-state-tied-events out-state) tied-events)
+		   (setf-in-humdrum-state-envir 'onset out-state onset)
+		   (setf-in-humdrum-state-envir 'bioi out-state bioi)
+		   (setf-in-humdrum-state-envir 'deltast out-state deltast)
 		   out-state)))
 	(fun humdrum-states nil nil))))
 
