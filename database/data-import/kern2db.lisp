@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-02-23 15:02:29 peter>                           
+;;;; Time-stamp: <2017-02-23 16:05:05 peter>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -1251,8 +1251,16 @@ tie-offset tie-closed (reverse tie-tokens)))))))
   (labels ((get-dotted-dur (dur num-dots)
              (if (< num-dots 0) 0
                  (+ dur (get-dotted-dur (/ dur 2) (- num-dots 1))))))
-    (let* ((dur-token (cl-ppcre:scan-to-strings "[0-9]+[.]*" event-token))
-           (dur (parse-integer (cl-ppcre:scan-to-strings "[0-9]+" dur-token)))
+    (let* ((dur-token (cl-ppcre:scan-to-strings "[0-9]+%?[0-9]*[.]*" event-token))
+	   (dur-token-no-dots (cl-ppcre:scan-to-strings "[0-9]+%?[0-9]*" dur-token))
+	   (dur-token-split (split-string dur-token-no-dots "%"))
+	   (dur-token-split (mapcar #'parse-integer dur-token-split))
+	   (dur (case (length dur-token-split)
+		  (1 (first dur-token-split))
+		  (2 (/ (first dur-token-split) (second dur-token-split)))
+		  (otherwise (error 'kern-line-read-error
+				    :text (format nil "Couldn't parse duration of token: ~A"
+						  event-token)))))
            (dur (if (zerop dur) (/ 1 2) dur))
            (dur (* (/ 1 dur) (cadr (assoc 'timebase environment))))
            (num-dots (length (cl-ppcre:scan-to-strings "[.]+" dur-token))))
