@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2016-10-24 15:54:37 peter>
+;;;; Time-stamp: <2017-02-24 17:52:01 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -91,6 +91,8 @@ fff = 7; ffff = 9; fffff = 11")
 		 :documentation "0 = no articulation mark; 1 = staccato; 2 = staccatissimo; 3 = sforzando; 4 = marcato")
    (vertint12 :initarg :vertint12 :accessor vertint12)
    (voice :initarg :voice :accessor voice :documentation "Voice number in a score (Voice 1 assumed to be the monody)")))
+
+(defclass continuation-event (music-event) ())
 
 
 ;;; Identifiers 
@@ -209,7 +211,7 @@ fff = 7; ffff = 9; fffff = 11")
 ;;; Getting music objects from the database
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun get-music-objects (dataset-indices composition-indices &key voices (texture :melody))
+(defun get-music-objects (dataset-indices composition-indices &key voices (texture :melody) (polyphonic-expansion :full))
   "Returns music objects from the database corresponding to
 DATASET-INDICES, COMPOSITION-INDICES which may be single numeric IDs
 or lists of IDs. COMPOSITION-INDICES is only considered if
@@ -231,38 +233,45 @@ extracted or the harmony corresponding to all voices is used."
         ((eq texture :harmony)
          (if (numberp dataset-indices)
              (cond ((null composition-indices)
-                    (get-harmonic-sequences dataset-indices :voices voices))
+                    (get-harmonic-sequences dataset-indices
+					    :voices voices :expansion polyphonic-expansion))
                    ((numberp composition-indices)
-                    (get-harmonic-sequence dataset-indices composition-indices :voices voices))
+                    (get-harmonic-sequence dataset-indices composition-indices
+					   :voices voices :expansion polyphonic-expansion))
                    (t 
-                    (mapcar #'(lambda (c) (get-harmonic-sequence dataset-indices c :voices voices)) composition-indices)))
-             (get-harmonic-sequences dataset-indices :voices voices)))
+                    (mapcar #'(lambda (c) (get-harmonic-sequence dataset-indices c
+								 :voices voices
+								 :expansion polyphonic-expansion))
+			    composition-indices)))
+             (get-harmonic-sequences dataset-indices
+				     :voices voices :expansion polyphonic-expansion)))
         (t 
-         (print "Unrecognised texture for the music object. Current options are :melody or :harmony."))))
+         (error "Unrecognised texture for the music object. Current options are :melody or :harmony."))))
 
 
 ;; harmonic sequences
 
-(defun get-harmonic-sequence (dataset-index composition-index &key voices)
+(defun get-harmonic-sequence (dataset-index composition-index &key voices (expansion :full))
   "Gets harmonic sequences from a given composition indexed
 by DATASET-INDEX and COMPOSITION-INDEX"
   (composition->harmony 
    (get-composition (lookup-composition dataset-index composition-index))
-   :voices voices))
+   :voices voices :expansion expansion))
                     
-(defun get-harmonic-sequences (dataset-ids &key voices)
+(defun get-harmonic-sequences (dataset-ids &key voices (expansion :full))
   "Gets harmonic sequences for all compositions contained within
 a set of datasets indexed by DATASET-IDS"
     (let ((compositions '()))
     (dolist (dataset-id dataset-ids (nreverse compositions))
       (let ((d (get-dataset (lookup-dataset dataset-id))))
         (sequence:dosequence (c d)
-          (push (composition->harmony c :voices voices) compositions))))))
+          (push (composition->harmony c :voices voices :expansion expansion)
+		compositions))))))
 
-(defun composition->harmony (composition &key voices)
+(defun composition->harmony (composition &key voices (expansion :full))
    "Extract a sequence of harmonic slices from a composition according
-to the VOICE argument, which should be a list of integers. This uses
-full expansion (cf. Conklin, 2002)."
+   to the <voice> argument, which either should be nil (extract all voices)
+   or a list of integers identifying the voices to be extracted."
    (let* ((hs (make-instance 'harmonic-sequence
                              :onset 0
                              :duration (duration composition)
@@ -282,44 +291,71 @@ full expansion (cf. Conklin, 2002)."
      (dotimes (i l)
        ;; For each onset
        (let* ((onset (nth i onsets))
-              ;; find the events that are sounding at that onset
-              (matching-events (remove-if-not #'(lambda (x) 
-                                                  (and (<= (onset x) onset) 
-                                                       (> (onset (end-time x)) onset)))
-                                              event-list))
-              ;; change onset and, if necessary, shorten duration to avoid overlap with next onset
-              (matching-events (mapcar #'(lambda (x) 
-                                           (let ((e (md:copy-event x)))
-                                             (md:set-attribute e 'onset onset)
-                                             (if (< i (1- l))
-                                                 (md:set-attribute e 'dur (min (duration x) (- (nth (1+ i) onsets) onset)))
-                                                 (md:set-attribute e 'dur (apply #'max (mapcar #'duration matching-events))))
-                                             e))
-                                       matching-events))
-              ;; sort them by voice
-              (matching-events (sort matching-events #'< :key #'voice))
-              ;; create a slice object containing those events
-              (slice (make-instance 'music-slice 
-                                    :onset onset 
-                                    :duration (apply #'max (mapcar #'duration matching-events))
-                                    :tempo (tempo (car matching-events))
-                                    :barlength (barlength (car matching-events))
-                                    :pulses (pulses (car matching-events))
-                                    :keysig (key-signature (car matching-events))
-                                    :mode (mode (car matching-events))
-                                    :midc (midc composition)
-                                    :id (copy-identifier (get-identifier composition))
-                                    :description (description composition)
-                                    :timebase (timebase composition))))
-         (sequence:adjust-sequence 
-          slice (length matching-events)
-          :initial-contents (sort matching-events #'< :key #'voice))
-         (push slice slices)))
+	      (matching-events (get-matching-events event-list onset :expansion expansion))
+	      ;; change onset and, if necessary, shorten duration to avoid overlap with next onset
+	      (matching-events (if (member expansion '(:continuation :full))
+				   (mapcar #'(lambda (x) 
+					       (let ((e (md:copy-event x)))
+						 (md:set-attribute e 'onset onset)
+						 (if (< i (1- l))
+						     (md:set-attribute e 'dur (min (duration x)
+										   (- (nth (1+ i) onsets)
+										      onset)))
+						     (md:set-attribute e 'dur (apply #'max
+										     (mapcar #'duration
+											     matching-events))))
+						 e))
+					   matching-events)
+				   matching-events))
+	      ;; sort events by voice
+	      (matching-events (sort matching-events #'< :key #'voice))
+	      ;; create a slice object containing those events
+	      (slice (make-instance 'music-slice 
+				    :onset onset 
+				    :duration (apply #'max (mapcar #'duration matching-events))
+				    :tempo (tempo (car matching-events))
+				    :barlength (barlength (car matching-events))
+				    :pulses (pulses (car matching-events))
+				    :keysig (key-signature (car matching-events))
+				    :mode (mode (car matching-events))
+				    :midc (midc composition)
+				    :id (copy-identifier (get-identifier composition))
+				    :description (description composition)
+				    :timebase (timebase composition))))
+	 (sequence:adjust-sequence  slice (length matching-events)
+				    :initial-contents (sort matching-events #'< :key #'voice))
+	 (push slice slices)))
      ;; return the new harmonic sequence
-     (sequence:adjust-sequence 
-      hs (length slices)
-      :initial-contents (sort slices #'< :key #'onset))
-     hs))
+     (sequence:adjust-sequence hs (length slices)
+	:initial-contents (sort slices #'< :key #'onset))
+       hs))
+
+(defun get-matching-events (event-list onset &key (expansion :full))
+  "Gets matching events from <event-list> at time <onset>
+   using <expansion> method."
+  (case expansion
+    (:full            ; Full expansion (see e.g. Conklin, 2002)
+     ;; find the events that are sounding at that onset
+     (remove-if-not #'(lambda (x) 
+			(and (<= (onset x) onset) 
+			     (> (onset (end-time x)) onset)))
+		    event-list))
+    (:continuation    ; Continuation expansion (citation?)
+     (let* ((begin-events (remove-if-not #'(lambda (x)
+					     (and (= (onset x) onset)
+						  (> (onset (end-time x)) onset)))
+					 event-list))
+	    ;; find the events that continue into that onset
+	    (continuation-events (remove-if-not #'(lambda (x)
+						  (and (< (onset x) onset)
+						       (> (onset (end-time x)) onset)))
+					      event-list))
+	    (continuation-events (mapcar #'(lambda (e) (change-class e 'continuation-event))
+				       continuation-events)))
+       (append begin-events continuation-events)))
+    (:natural
+     (remove-if-not #'(lambda (x) (eql (onset x) onset)) event-list))
+    (otherwise (error "<expansion> currently can only be :full or :continuation."))))
 
 
 ;; melodic sequences
