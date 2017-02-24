@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-02-23 16:12:37 peter>                           
+;;;; Time-stamp: <2017-02-24 09:45:00 peter>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -755,7 +755,8 @@
 	     (format stream
 		     "Error parsing line ~A of file ~A.~%~A~%~%The line reads:~%~%~S"
 		     *line-number*
-		     *file-name*
+		     (namestring (make-pathname :name (pathname-name *file-name*)
+						:type (pathname-type *file-name*)))
 		     (text condition)
 		     (ignore-errors (get-line *line-number*))))))
 
@@ -765,7 +766,8 @@
 	     (format stream
 		     "Error parsing line ~A of file ~A.~%~A~%~%The line reads:~%~%~S"
 		     *line-number*
-		     *file-name*
+		     (namestring (make-pathname :name (pathname-name *file-name*)
+						:type (pathname-type *file-name*)))
 		     (text condition)
 		     (ignore-errors (get-line *line-number*))))))
 
@@ -1212,11 +1214,11 @@ tie-offset tie-closed (reverse tie-tokens)))))))
    and morphetic pitch given *middle-c*." 
   (let* ((c-middle-c (nth 0 *middle-c*))
          (m-middle-c (nth 1 *middle-c*))
-         (pitch-token (cl-ppcre:scan-to-strings "[a-gA-G]+[-#n]*" event-token))
-         (pitch (cl-ppcre:scan-to-strings "[a-gA-G]+" pitch-token))
+         ;; (pitch-token (cl-ppcre:scan-to-strings "[a-gA-G]+[-#n]*" event-token))
+         (pitch (cl-ppcre:scan-to-strings "[a-gA-G]+" event-token))
          (num-octaves (- (length pitch) 1))
-         (num-sharps (length (cl-ppcre:scan-to-strings "[#]+" pitch-token)))
-         (num-flats (length (cl-ppcre:scan-to-strings "[-]+" pitch-token)))
+         (num-sharps (length (cl-ppcre:scan-to-strings "[#]+" event-token)))
+         (num-flats (length (cl-ppcre:scan-to-strings "[-]+" event-token)))
          (c-interval (case (char-downcase (char pitch 0))
                        (#\c 0)
                        (#\d 2)
