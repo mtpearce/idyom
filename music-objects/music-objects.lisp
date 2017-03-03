@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2017-02-24 17:52:01 peter>
+;;;; Time-stamp: <2017-03-03 12:28:36 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -211,7 +211,7 @@ fff = 7; ffff = 9; fffff = 11")
 ;;; Getting music objects from the database
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun get-music-objects (dataset-indices composition-indices &key voices (texture :melody) (polyphonic-expansion :full))
+(defun get-music-objects (dataset-indices composition-indices &key voices (texture :melody) (polyphonic-expansion :continuation))
   "Returns music objects from the database corresponding to
 DATASET-INDICES, COMPOSITION-INDICES which may be single numeric IDs
 or lists of IDs. COMPOSITION-INDICES is only considered if
