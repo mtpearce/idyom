@@ -2,7 +2,7 @@
 ;;;; File:       key-finding.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-03-01 14:58:07 peter>                             
-;;;; Time-stamp: <2017-03-02 14:56:30 peter>                           
+;;;; Time-stamp: <2017-03-03 10:06:12 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -47,6 +47,8 @@
 ;;;* Derived viewpoints *
 ;;;======================
 
+;;;; Key
+
 ;; Method 3 (hybrid algorithm)
 
 (define-viewpoint (local-key-method=3-context=short derived (h-cpitch))
@@ -66,6 +68,60 @@
     ((events md:harmonic-sequence) element)
   :function (kf-events->local-key-method-3
 	     events *key-finding-long-window-size*))
+
+;;;; Tonic
+
+;; Method 3 (hybrid algorithm)
+(define-viewpoint (local-tonic-method=3-context=short derived (h-cpitch))
+    ((events md:harmonic-sequence) element)
+  :function (let ((key (local-key-method=3-context=short
+			events)))
+	      (if (undefined-p key)
+		  +undefined+
+		  (cdr (assoc :tonic key)))))
+
+(define-viewpoint (local-tonic-method=3-context=medium derived (h-cpitch))
+    ((events md:harmonic-sequence) element)
+  :function (let ((key (local-key-method=3-context=medium
+			events)))
+	      (if (undefined-p key)
+		  +undefined+
+		  (cdr (assoc :tonic key)))))
+
+(define-viewpoint (local-tonic-method=3-context=long derived (h-cpitch))
+    ((events md:harmonic-sequence) element)
+  :function (let ((key (local-key-method=3-context=long
+			events)))
+	      (if (undefined-p key)
+		  +undefined+
+		  (cdr (assoc :tonic key)))))
+
+;;;; Mode
+
+;; Method 3 (hybrid algorithm)
+(define-viewpoint (local-mode-method=3-context=short derived (h-cpitch))
+    ((events md:harmonic-sequence) element)
+  :function (let ((key (local-key-method=3-context=short
+			events)))
+	      (if (undefined-p key)
+		  +undefined+
+		  (cdr (assoc :mode key)))))
+
+(define-viewpoint (local-mode-method=3-context=medium derived (h-cpitch))
+    ((events md:harmonic-sequence) element)
+  :function (let ((key (local-key-method=3-context=medium
+			events)))
+	      (if (undefined-p key)
+		  +undefined+
+		  (cdr (assoc :mode key)))))
+
+(define-viewpoint (local-mode-method=3-context=long derived (h-cpitch))
+    ((events md:harmonic-sequence) element)
+  :function (let ((key (local-key-method=3-context=long
+			events)))
+	      (if (undefined-p key)
+		  +undefined+
+		  (cdr (assoc :mode key)))))
 
 
 ;;;================
@@ -202,24 +258,25 @@
   (let ((context-pc-profile (kf-events->context-pc-profile
 			     events window-size)))
     (if context-pc-profile
-	(let* ((last-event (car (last (coerce events 'list))))
-	       (last-bass-note (apply #'min (mapcar #'md:chromatic-pitch
-						    (coerce last-event 'list))))
-	       (last-bass-pc (mod last-bass-note 12))
-	       (albrecht-key (kf-events->local-key-method-1
-			      nil nil context-pc-profile))
-	       (aarden-key (kf-events->local-key-method-2
+	(let* ;; ((last-event (car (last (coerce events 'list))))
+	    ((last-event (car (last events)))
+	     (last-bass-note (apply #'min (mapcar #'md:chromatic-pitch
+						  (coerce last-event 'list))))
+	     (last-bass-pc (mod last-bass-note 12))
+	     (albrecht-key (kf-events->local-key-method-1
 			    nil nil context-pc-profile))
-	       (albrecht-tonic (cdr (assoc :tonic albrecht-key)))
-	       (aarden-tonic (cdr (assoc :tonic aarden-key)))
-	       (albrecht-mode (cdr (assoc :mode albrecht-key)))
-	       (aarden-mode (cdr (assoc :mode aarden-key)))
-	       (albrecht-confidence (cdr (assoc :confidence albrecht-key)))
-	       (aarden-confidence (cdr (assoc :confidence aarden-key)))
-	       (albrecht-output (list (cons :tonic albrecht-tonic)
-				      (cons :mode albrecht-mode)))
-	       (aarden-output (list (cons :tonic aarden-tonic)
-				    (cons :mode aarden-mode))))
+	     (aarden-key (kf-events->local-key-method-2
+			  nil nil context-pc-profile))
+	     (albrecht-tonic (cdr (assoc :tonic albrecht-key)))
+	     (aarden-tonic (cdr (assoc :tonic aarden-key)))
+	     (albrecht-mode (cdr (assoc :mode albrecht-key)))
+	     (aarden-mode (cdr (assoc :mode aarden-key)))
+	     (albrecht-confidence (cdr (assoc :confidence albrecht-key)))
+	     (aarden-confidence (cdr (assoc :confidence aarden-key)))
+	     (albrecht-output (list (cons :tonic albrecht-tonic)
+	     			    (cons :mode albrecht-mode)))
+	     (aarden-output (list (cons :tonic aarden-tonic)
+	     			  (cons :mode aarden-mode))))
 	  (cond ((and (eql albrecht-tonic aarden-tonic)
 		      (eql albrecht-mode aarden-mode))
 		 albrecht-output)
@@ -331,7 +388,8 @@
 				 (< (md::onset (md::end-time x)) window-open))
 			     events))
 	 (pc-durs (make-array 12 :initial-element 0)))
-    (dolist (e (coerce context 'list))
+    ;; (dolist (e (coerce context 'list))
+    (dolist (e context)
       ;;  (dolist (e (md::%list-slot-sequence-data context) pc-durs)
       (let* ((note-on (max window-open (md::onset e)))
 	     (note-off (min window-close (md::onset (md::end-time e))))
