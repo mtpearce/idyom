@@ -2,19 +2,21 @@
 ;;;; File:       general-chord-type.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-03-01 14:58:07 peter>                             
-;;;; Time-stamp: <2017-03-06 09:53:17 peter>                           
+;;;; Time-stamp: <2017-03-06 10:03:27 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
 ;;;; ======================================================================
 ;;;;
 ;;;; This code defines derived viewpoints corresponding to the General 
-;;;; Chord Type representation of Cambouropoulos (2016).
+;;;; Chord Type (GCT) representation of Cambouropoulos (2016).
 ;;;; 
 ;;;; Cambouropoulos, E. (2015). The Harmonic Musical Surface and Two
 ;;;; Novel Chord Representation Schemes. In Meredith, D., editor,
 ;;;; Computational Music Analysis, pages 31–56. Springer.
 ;;;;
+;;;; Non-integer pitches are rounded to the nearest integer
+;;;; before processing according to the GCT algorithm.
 
 (cl:in-package #:viewpoints)
 
@@ -53,6 +55,7 @@
     ;; GCT representation
     ((events md:harmonic-sequence) element)
   :function (let* ((pitch-class-set (h-cpitch-class-set events))
+		   (pitch-class-set (mapcar #'round pitch-class-set))
                    (mode (mode events))
                    (tonic (referent events))
                    (pitch-scale-hierarchy 
