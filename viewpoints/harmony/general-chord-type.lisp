@@ -2,7 +2,7 @@
 ;;;; File:       general-chord-type.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-03-01 14:58:07 peter>                             
-;;;; Time-stamp: <2017-03-01 15:11:27 peter>                           
+;;;; Time-stamp: <2017-03-06 09:53:17 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -34,17 +34,17 @@
     ((events md:harmonic-sequence) element)
   :function (sort (remove-duplicates (h-cpitch-class events) :test #'=) #'<))
 
-(define-viewpoint (h-root derived (h-cpitch))
+(define-viewpoint (h-gct-root derived (h-cpitch))
     ;; Root of chord (GCT representation)
     ((events md:harmonic-sequence) element)
   :function (root (h-gct events)))
 
-(define-viewpoint (h-base derived (h-cpitch))
+(define-viewpoint (h-gct-base derived (h-cpitch))
     ;; Base of chord (GCT representation)
     ((events md:harmonic-sequence) element)
   :function (base (h-gct events)))
 
-(define-viewpoint (h-extension derived (h-cpitch))
+(define-viewpoint (h-gct-extension derived (h-cpitch))
     ;; Extension of chord (GCT representation)
     ((events md:harmonic-sequence) element)
   :function (extension (h-gct events)))
