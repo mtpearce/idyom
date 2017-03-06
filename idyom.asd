@@ -2,7 +2,7 @@
 ;;;; File:       IDyOM.asd
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-05-04 21:29:04 marcusp>
-;;;; Time-stamp: <2017-03-01 15:13:37 peter>
+;;;; Time-stamp: <2017-03-06 09:59:32 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -78,7 +78,9 @@
 	     (:module harmony :serial t
 		      :components
 		      ((:file "basic-viewpoints")
-		       (:file "general-chord-type")))
+		       (:file "general-chord-type")
+		       (:file "key-finding")
+		       (:file "pitch")))
              ;; useful extensions for modelling 
              ;; (not strictly part of the representation scheme)
 	     (:file "extensions")))
