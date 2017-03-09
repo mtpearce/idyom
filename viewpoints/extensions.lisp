@@ -7,10 +7,6 @@
 
 (cl:in-package #:viewpoints) 
 
-(defparameter *alphabet-dir* 
-  (ensure-directories-exist
-   (merge-pathnames "data/alphabets/" (utils:ensure-directory utils:*root-dir*))))
-
 (defparameter grid-basic-viewpoints '(:is-onset :pos :onset))
 (defparameter melody-basic-viewpoints '(:ARTICULATION :COMMA :VOICE :ORNAMENT :DYN :PHRASE
  :BIOI :DELTAST :ACCIDENTAL :MPITCH :CPITCH :BARLENGTH :PULSES :TEMPO :MODE

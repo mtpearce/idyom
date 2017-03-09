@@ -8,11 +8,23 @@
 (cl:in-package #:apps) 
 
 ;;; Paths 
+;;;
+;;; All users should define the path *idyom-root* as a 'working
+;;; directory' for IDyOM, e.g. using (setq "path") in their .sbclrc
+;;;
 (eval-when (:compile-toplevel :load-toplevel :execute)
+  ;; *root-dir* provides a location for IDyOM's caches etc.
+  (defvar *root-dir* 
+    (if (boundp 'common-lisp-user::*idyom-root*)
+	;; Use *idyom-root* if defined
+	common-lisp-user::*idyom-root*
+	;; Else use home directory
+        (ensure-directories-exist
+         (merge-pathnames "idyom/" (user-homedir-pathname)))))
   ;; *ep-cache-dir* 
   (setf mvs:*ep-cache-dir* (ensure-directories-exist
                             (merge-pathnames "data/cache/"
-                                             (utils:ensure-directory utils:*root-dir*)))))
+                                             (utils:ensure-directory *root-dir*)))))
 
 ;;; A way of generating filenames to store results, cached data etc.
 (defun dataset-modelling-filename (dataset-id basic-attributes attributes

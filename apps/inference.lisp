@@ -7,7 +7,7 @@
 ; Directory for caching counts
 (defparameter *counts-dir* 
   (ensure-directories-exist
-   (merge-pathnames "data/counts/" (utils:ensure-directory utils:*root-dir*))))
+   (merge-pathnames "data/counts/" (utils:ensure-directory apps:*root-dir*))))
 
 (defgeneric infer-category (training-set target-viewpoints source-viewpoints test-sequence
 			&key &allow-other-keys))

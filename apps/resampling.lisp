@@ -16,11 +16,11 @@
 
 (defparameter *model-dir* 
   (ensure-directories-exist
-   (merge-pathnames "data/models/" (utils:ensure-directory utils:*root-dir*))))
+   (merge-pathnames "data/models/" (utils:ensure-directory apps:*root-dir*))))
 
 (defparameter *resampling-dir*
   (ensure-directories-exist
-   (merge-pathnames "data/resampling/" (utils:ensure-directory utils:*root-dir*))))
+   (merge-pathnames "data/resampling/" (utils:ensure-directory apps:*root-dir*))))
 
 ;;;===========================================================================
 ;;; Dataset Prediction 
