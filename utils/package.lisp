@@ -2,28 +2,30 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-12-31 19:22:37 marcusp>                           
+;;;; Time-stamp: <2017-02-16 18:30:05 peter>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
 
 (defpackage #:utils
   (:use #:cl)
-  (:export "ROUND-TO-NEAREST-DECIMAL-PLACE" "AVERAGE" "GENERATE-INTEGERS"
+  (:export "ASK-USER-Y-N-QUESTION" "MESSAGE"
+	   "INITIALISE-PROGRESS-BAR" "UPDATE-PROGRESS-BAR"
+	   "DOLIST-PB" "UPDATE-ALIST"
+           "ROUND-TO-NEAREST-DECIMAL-PLACE" "AVERAGE" "GENERATE-INTEGERS"
 	   "POWERSET" "QUOTIENT" "FACTORIAL" "N-PERMUTATIONS" "N-COMBINATIONS"
-	   "CUMSUM" "MD5-SUM-OF-LIST"
-           "NTH-ROOT" "STRING-APPEND" "SPLIT-STRING" 
+           "CUMSUM" "NTH-ROOT" "STRING-APPEND" "SPLIT-STRING" 
            "INSERTION-SORT" "CARTESIAN-PRODUCT" "FLATTEN" "COMBINATIONS"
 	   "FLATTEN-ORDER" "COUNT-FREQUENCIES" "NUMERIC-FREQUENCIES"
-           "FIND-DUPLICATES" "ROTATE" "PERMUTATIONS"
-           "COPY-INSTANCE"
+           "FIND-DUPLICATES" "ROTATE" "PERMUTATIONS" "REMOVE-BY-POSITION"
+           "COPY-INSTANCE" "INSERT-AFTER" "ALL-EQL" "ALL-POSITIONS-IF"
+	   "REMOVE-NTH" "CSV->HASH-TABLE"
            "LAST-ELEMENT" "PENULTIMATE-ELEMENT" "LAST-N" "BUTLAST-N"
 	   "NMAPCAR" "NPOSITION" "NPOSITIONS" "NMEMBER" "NMIN" "NSELECTFIRST"
            "ALIST->HASH-TABLE" "HASH-TABLE->ALIST" "HASH-TABLE->SORTED-ALIST"
            "READ-OBJECT-FROM-FILE" "FILE-EXISTS" "WRITE-OBJECT-TO-FILE"
-           "CD" "PWD" "ENSURE-DIRECTORY"
-           "COLLECT-GARBAGE" "SHELL-COMMAND"
-	   "*ROOT-DIR*")
+           "CD" "PWD" "ENSURE-DIRECTORY" "COPY-FILE" "RECURSIVELY-LIST-FILES"
+           "COLLECT-GARBAGE" "SHELL-COMMAND" "MD5-SUM-OF-LIST")
   (:documentation "Utility functions of general use."))
 
 (defpackage #:python
@@ -36,6 +38,4 @@
   (:export "MAKE-PROMISE" "PROMISE" "RETRIEVE" "GET-IDENTIFIER")
   (:documentation "Objects for postponing calling resource intensive functions until
 their result is required because of cache misses."))
-
-
 
