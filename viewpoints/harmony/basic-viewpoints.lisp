@@ -2,10 +2,15 @@
 ;;;; File:       basic-viewpoints.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-25 19:09:17 marcusp>                           
-;;;; Time-stamp: <2017-03-01 15:11:28 peter>                           
+;;;; Time-stamp: <2017-03-14 09:48:02 peter>                           
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
+
+;; This parameter determines whether all cpitch values
+;; are rounded to the nearest integer before incorporation
+;; in h-cpitch.
+(defparameter *h-cpitch-round-to-int* t)
 
 (defvar *common-practice-consonance-vector* '(1 0 0 1 1 1 0 1 1 1 0 0))
 
@@ -42,4 +47,9 @@
 
 (define-basic-viewpoint h-cpitch ((events md:harmonic-sequence))
   ;; Pitches present in harmonic slice
-  (mapcar #'md:chromatic-pitch (coerce (car (last events)) 'list)))
+  (let* ((pitches (mapcar #'md:chromatic-pitch
+			  (coerce (car (last events)) 'list)))
+	 (pitches (if *h-cpitch-round-to-int*
+		      (mapcar #'round pitches)
+		      pitches)))
+    pitches))
