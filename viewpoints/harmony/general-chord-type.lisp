@@ -2,7 +2,7 @@
 ;;;; File:       general-chord-type.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-03-01 14:58:07 peter>                             
-;;;; Time-stamp: <2017-03-14 11:03:26 peter>                           
+;;;; Time-stamp: <2017-03-14 12:08:32 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -56,14 +56,19 @@
     ((events md:harmonic-sequence) element)
   :function (let* ((pitch-class-set (h-cpitch-class-set events))
 		   (pitch-class-set (mapcar #'round pitch-class-set))
-                   (mode (mode events))
-                   (tonic (referent events))
+		   (key (local-key-method=3-context=long events))
+		   (tonic (cdr (assoc :tonic key)))
+		   (mode (cdr (assoc :mode key)))
+                   ;; (mode (mode events))
+                   ;; (tonic (referent events))
                    (pitch-scale-hierarchy 
-                    (list tonic (if (= mode 9)
+                    (list tonic (if (eql mode 'minor)
                                     ;; (0 2 3 5 7 8 10)   ;; natural minor (2 1 2 2 1 2 2)
                                     '(0 2 3 5 7 8 11)     ;; harmonic minor (2 1 2 2 1 3 1)
                                     '(0 2 4 5 7 9 11)))))  ;; major
-              (general-chord-type pitch-class-set pitch-scale-hierarchy *common-practice-consonance-vector*)))
+	      (if (undefined-p key)
+		  +undefined+
+		  (general-chord-type pitch-class-set pitch-scale-hierarchy *common-practice-consonance-vector*))))
 
 ;;;========================
 ;;;* Supporting functions *

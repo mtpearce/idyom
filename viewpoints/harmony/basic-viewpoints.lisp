@@ -2,7 +2,7 @@
 ;;;; File:       basic-viewpoints.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-25 19:09:17 marcusp>                           
-;;;; Time-stamp: <2017-03-14 09:48:02 peter>                           
+;;;; Time-stamp: <2017-03-14 10:14:18 peter>                           
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
@@ -49,6 +49,7 @@
   ;; Pitches present in harmonic slice
   (let* ((pitches (mapcar #'md:chromatic-pitch
 			  (coerce (car (last events)) 'list)))
+	 (pitches (sort pitches #'<))
 	 (pitches (if *h-cpitch-round-to-int*
 		      (mapcar #'round pitches)
 		      pitches)))
