@@ -2,7 +2,7 @@
 ;;;; File:       key-finding.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-03-01 14:58:07 peter>                             
-;;;; Time-stamp: <2017-03-03 10:06:12 peter>                           
+;;;; Time-stamp: <2017-03-28 22:15:36 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -43,11 +43,78 @@
 (defparameter *key-finding-medium-window-size* (* 8 24))  ; 8 crotchet beats
 (defparameter *key-finding-long-window-size* (* 16 24))   ; 16 crotchet beats
 
-;;;======================
-;;;* Derived viewpoints *
-;;;======================
+;;;===============================================
+;;;* Derived viewpoints (generic implementation) *
+;;;===============================================
 
-;;;; Key
+;; Generic implementation, used by most other derived viewpoints
+
+(define-viewpoint (local-key derived (h-cpitch))
+    ((events md:harmonic-sequence) element)
+  :function (kf-events->local-key-method-1
+	     events *key-finding-long-window-size*))
+
+(define-viewpoint (local-tonic derived (h-cpitch))
+    ((events md:harmonic-sequence) element)
+  :function (let ((key (local-key events)))
+	      (if (undefined-p key)
+		  +undefined+
+		  (cdr (assoc :tonic key)))))
+
+(define-viewpoint (local-mode derived (h-cpitch))
+    ((events md:harmonic-sequence) element)
+  :function (let ((key (local-key events)))
+	      (if (undefined-p key)
+		  +undefined+
+		  (cdr (assoc :mode key)))))
+
+;;;===============================================
+;;;* Derived viewpoints (specific algorithms) *
+;;;===============================================
+
+;; These viewpoints correspond to specific implementations of particular
+;; key-finding algorithms with particular context lengths.
+
+;;;  Key
+;;   Method 1 (Albrecht and Shanahan's 2013 Euclidean distance algorithm)
+
+(define-viewpoint (local-key-method=1-context=short derived (h-cpitch))
+    ;; Estimates the local key based using method 1 and a short context.
+    ((events md:harmonic-sequence) element)
+  :function (kf-events->local-key-method-1
+	     events *key-finding-short-window-size*))
+
+(define-viewpoint (local-key-method=1-context=medium derived (h-cpitch))
+    ;; Estimates the local key based using method 1 and a medium context.
+    ((events md:harmonic-sequence) element)
+  :function (kf-events->local-key-method-1
+	     events *key-finding-medium-window-size*))
+
+(define-viewpoint (local-key-method=1-context=long derived (h-cpitch))
+    ;; Estimates the local key based using method 1 and a long context.
+    ((events md:harmonic-sequence) element)
+  :function (kf-events->local-key-method-1
+	     events *key-finding-long-window-size*))
+
+;; Method 2 (Aarden's 2003 algorithm)
+
+(define-viewpoint (local-key-method=2-context=short derived (h-cpitch))
+    ;; Estimates the local key based using method 2 and a short context.
+    ((events md:harmonic-sequence) element)
+  :function (kf-events->local-key-method-2
+	     events *key-finding-short-window-size*))
+
+(define-viewpoint (local-key-method=2-context=medium derived (h-cpitch))
+    ;; Estimates the local key based using method 2 and a medium context.
+    ((events md:harmonic-sequence) element)
+  :function (kf-events->local-key-method-2
+	     events *key-finding-medium-window-size*))
+
+(define-viewpoint (local-key-method=2-context=long derived (h-cpitch))
+    ;; Estimates the local key based using method 2 and a long context.
+    ((events md:harmonic-sequence) element)
+  :function (kf-events->local-key-method-2
+	     events *key-finding-long-window-size*))
 
 ;; Method 3 (hybrid algorithm)
 
@@ -69,7 +136,7 @@
   :function (kf-events->local-key-method-3
 	     events *key-finding-long-window-size*))
 
-;;;; Tonic
+;;; Tonic
 
 ;; Method 3 (hybrid algorithm)
 (define-viewpoint (local-tonic-method=3-context=short derived (h-cpitch))
@@ -96,7 +163,7 @@
 		  +undefined+
 		  (cdr (assoc :tonic key)))))
 
-;;;; Mode
+;;; Mode
 
 ;; Method 3 (hybrid algorithm)
 (define-viewpoint (local-mode-method=3-context=short derived (h-cpitch))
