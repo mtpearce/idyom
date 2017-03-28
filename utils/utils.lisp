@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2017-02-16 18:50:28 peter>
+;;;; Time-stamp: <2017-03-28 18:55:06 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -640,3 +640,35 @@
              (apply #'string-append command 
                     (mapcar #'(lambda (x) (format nil " ~A" x)) args)))
   ) 
+
+;;;===========================================================================
+;;; Testing 
+;;;===========================================================================
+
+(defun add-test-dependency (a b)
+  "Make test-suite <a> depend on test-suite <b> by making every test in <a> depend
+   on every test in <b>, within the FiveAM regression testing framework.
+   Code borrowed and modified slightly from
+   http://uint32t.blogspot.co.uk/2007/12/my-thoughts-about-fiveam-common-lisp.html."
+  (let* ((suite-a (5am:get-test a))
+         (suite-b (5am:get-test b))
+	 suite-a-tests suite-b-tests)
+    (maphash #'(lambda (sym obj)
+                 (declare (ignore obj))
+                 (push sym suite-b-tests))
+             (5am::tests suite-b))
+    (maphash #'(lambda (sym obj)
+                 (declare (ignore sym))
+                 (push obj suite-a-tests))
+             (5am::tests suite-a))
+    (loop for test-name in suite-a-tests
+       do
+         (let* ((test (5am:get-test test-name))
+                (depends-on (5am::depends-on test)))
+           (let ((new-depends-on
+                  (if depends-on 
+                      `(and ,depends-on ,suite-b-tests)
+                      `(and ,@suite-b-tests))))
+             (print test)
+             (print new-depends-on)
+             (setf (5am::depends-on test) new-depends-on))))))
