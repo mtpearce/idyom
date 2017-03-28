@@ -2,7 +2,7 @@
 ;;;; File:       IDyOM.asd
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-05-04 21:29:04 marcusp>
-;;;; Time-stamp: <2017-03-06 09:59:32 peter>
+;;;; Time-stamp: <2017-03-20 20:23:45 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -16,7 +16,7 @@
   :author "Marcus Pearce"
   :licence "GPL (see COPYING file for details)"
   :description "Information Dynamics of Music (see README for details)"
-  :depends-on (clsql cl-ppcre midi closer-mop psgraph cl-csv)
+  :depends-on (clsql cl-ppcre midi closer-mop psgraph cl-csv fiveam)
   :serial t
   :components
   (;; General utilities  
