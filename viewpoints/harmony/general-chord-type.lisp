@@ -2,7 +2,7 @@
 ;;;; File:       general-chord-type.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-03-01 14:58:07 peter>                             
-;;;; Time-stamp: <2017-03-14 12:08:32 peter>                           
+;;;; Time-stamp: <2017-03-28 21:12:51 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -22,6 +22,7 @@
 
 (defvar *common-practice-consonance-vector* '(1 0 0 1 1 1 0 1 1 1 0 0))
 
+
 ;;;======================
 ;;;* Derived viewpoints *
 ;;;======================
@@ -29,7 +30,9 @@
 (define-viewpoint (h-cpitch-class derived (h-cpitch))
     ;; Pitches present in harmonic slice, mod 12, including duplicates
     ((events md:harmonic-sequence) element)
-  :function (mapcar #'(lambda (x) (mod x 12)) (h-cpitch events)))
+  :function (let* ((pc (mapcar #'(lambda (x) (mod x 12)) (h-cpitch events)))
+		   (sort-pc (sort pc #'<)))
+	      sort-pc))
 
 (define-viewpoint (h-cpitch-class-set derived (h-cpitch))
     ;; Pitches present in harmonic slice, mod 12, not including duplicates
@@ -69,6 +72,7 @@
 	      (if (undefined-p key)
 		  +undefined+
 		  (general-chord-type pitch-class-set pitch-scale-hierarchy *common-practice-consonance-vector*))))
+
 
 ;;;========================
 ;;;* Supporting functions *
@@ -273,6 +277,7 @@
 (defun pairwise-consonant-p (x y consonance-vector)
   "Determines whether two pitch classes X and Y are pairwise consonant with respect to CONSONANCE-VECTOR."
   (= 1 (elt consonance-vector (abs (- x y)))))
+
 
 ;;;===============
 ;;;* Unused code *
