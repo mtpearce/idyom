@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2017-03-28 18:55:06 peter>
+;;;; Time-stamp: <2017-03-28 21:16:38 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -669,6 +669,4 @@
                   (if depends-on 
                       `(and ,depends-on ,suite-b-tests)
                       `(and ,@suite-b-tests))))
-             (print test)
-             (print new-depends-on)
              (setf (5am::depends-on test) new-depends-on))))))
