@@ -2,7 +2,7 @@
 ;;;; File:       IDyOM.asd
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-05-04 21:29:04 marcusp>
-;;;; Time-stamp: <2017-03-20 20:23:45 peter>
+;;;; Time-stamp: <2017-03-28 21:15:16 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -83,7 +83,8 @@
 		       (:file "pitch")))
              ;; useful extensions for modelling 
              ;; (not strictly part of the representation scheme)
-	     (:file "extensions")))
+	     (:file "extensions")
+	     (:file "tests")))
    ;; PPM* Statistical Models
    (:module ppm-star
 	    :serial t
