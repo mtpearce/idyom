@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2017-03-30 12:24:20 peter>
+;;;; Time-stamp: <2017-03-30 17:16:07 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -645,28 +645,33 @@
 ;;; Testing 
 ;;;===========================================================================
 
-(defun add-test-suite-dependency (a b)
-  "Make test-suite <a> depend on test-suite <b> by making every test in <a> depend
-   on every test in <b>, within the FiveAM regression testing framework.
-   Code borrowed and modified slightly from
+(defun set-test-suite-dependencies (suite suite-dependencies)
+  "Make test-suite <suite> depend on test suites <suite-dependencies>
+   by making every test in <a> depend on every test in <b>,
+   within the FiveAM regression testing framework. <suite> should
+   be a symbol. <suite-dependencies> should be either a symbol
+   or a list of symbols.
+   Code inspired by:
    http://uint32t.blogspot.co.uk/2007/12/my-thoughts-about-fiveam-common-lisp.html."
-  (let* ((suite-a (5am:get-test a))
-         (suite-b (5am:get-test b))
-	 suite-a-tests suite-b-tests)
-    (maphash #'(lambda (sym obj)
-                 (declare (ignore obj))
-                 (push sym suite-b-tests))
-             (5am::tests suite-b))
-    (maphash #'(lambda (sym obj)
-                 (declare (ignore sym))
-                 (push obj suite-a-tests))
-             (5am::tests suite-a))
-    (loop for test-name in suite-a-tests
-       do
-         (let* ((test (5am:get-test test-name))
-                (depends-on (5am::depends-on test)))
-           (let ((new-depends-on
-                  (if depends-on 
-                      `(and ,depends-on ,suite-b-tests)
-                      `(and ,@suite-b-tests))))
-             (setf (5am::depends-on test) new-depends-on))))))
+  (let* ((suite-dependencies-list
+	  (cond ((listp suite-dependencies) suite-dependencies)
+		((symbolp suite-dependencies) (list suite-dependencies))
+		(t (error "<suite-dependencies> must either be a symbol or a list."))))
+	 (suite-tests (get-all-test-symbols suite))
+	 (dependency-tests (mapcan #'get-all-test-symbols suite-dependencies-list)))
+    (loop for test-name in suite-tests
+       do (let* ((test (5am:get-test test-name)))
+	    (let ((new-depends-on `(and ,@dependency-tests)))
+	      (setf (5am::depends-on test) new-depends-on))))))
+
+(defun get-all-test-symbols (suite-or-test-symbol)
+  (let* ((suite-or-test (5am:get-test suite-or-test-symbol))
+	 test-symbols)
+    (if (typep suite-or-test '5am::test-case)
+	(push suite-or-test-symbol test-symbols)
+	(maphash #'(lambda (sym obj)
+		     (declare (ignore obj))
+		     (setf test-symbols (append (get-all-test-symbols sym)
+						test-symbols)))
+		 (5am::tests suite-or-test)))
+    test-symbols))
