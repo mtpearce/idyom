@@ -2,7 +2,7 @@
 ;;;; File:       general-chord-type.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-03-01 14:58:07 peter>                             
-;;;; Time-stamp: <2017-03-28 21:12:51 peter>                           
+;;;; Time-stamp: <2017-03-30 12:05:54 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -21,6 +21,8 @@
 (cl:in-package #:viewpoints)
 
 (defvar *common-practice-consonance-vector* '(1 0 0 1 1 1 0 1 1 1 0 0))
+(defvar *harmonic-minor-scale-degrees* '(0 2 3 5 7 8 11))
+(defvar *major-scale-degrees* '(0 2 4 5 7 9 11))
 
 
 ;;;======================
@@ -39,54 +41,98 @@
     ((events md:harmonic-sequence) element)
   :function (sort (remove-duplicates (h-cpitch-class events) :test #'=) #'<))
 
-(define-viewpoint (h-gct-root derived (h-cpitch))
-    ;; Root of chord (GCT representation)
+(define-viewpoint (h-gct-root-csd derived (h-cpitch))
+    ;; Chromatic scale degree of root of chord (GCT representation)
+    ;; Note that if the tonic is undefined then h-gct-root-csd
+    ;; will be undefined.
     ((events md:harmonic-sequence) element)
-  :function (root (h-gct events)))
+  :function (let* ((gct (h-gct events))
+		   (tonic (cdr (assoc :tonic gct))))
+	      (if tonic
+		  (cdr (assoc :root-csd gct))
+		  +undefined+)))
+
+(define-viewpoint (h-gct-root-cpc derived (h-cpitch))
+    ;; Chromatic pitch class of root of chord (GCT representation)
+    ((events md:harmonic-sequence) element)
+  :function (let* ((gct (h-gct events))
+		   (tonic (cdr (assoc :tonic gct)))
+		   (root-csd (cdr (assoc :root-csd gct))))
+	      (if tonic
+		  (mod (+ tonic root-csd) 12)
+		  root-csd)))
+
+(define-viewpoint (h-gct-root-cpcint derived (h-cpitch))
+    ;; Chromatic interval between the root of the current chord
+    ;; and the root of the previous chord. Returns +undefined+
+    ;; if the root of the previous chord is undefined.
+    ((events md:harmonic-sequence) element)
+  :function (multiple-value-bind (e1 e2)
+                (values-list (last events 2))
+              (if (or (null e1) (null e2)) +undefined+
+                  (let ((root1 (h-gct-root-cpc (list e1)))
+                        (root2 (h-gct-root-cpc (list e2))))
+                    (if (undefined-p root1 root2) +undefined+
+                        (mod (- root2 root1) 12))))))
 
 (define-viewpoint (h-gct-base derived (h-cpitch))
-    ;; Base of chord (GCT representation)
+    ;; Base of chord (GCT representation) (chromatic scale degrees relative to root)
     ((events md:harmonic-sequence) element)
-  :function (base (h-gct events)))
+  :function (cdr (assoc :base (h-gct events))))
 
 (define-viewpoint (h-gct-ext derived (h-cpitch))
-    ;; Extension of chord (GCT representation)
+    ;; Extension of chord (GCT representation) (chromatic scale degrees relative to root)
     ((events md:harmonic-sequence) element)
-  :function (extension (h-gct events)))
+  :function (cdr (assoc :ext (h-gct events))))
 
 (define-viewpoint (h-gct derived (h-cpitch))
     ;; GCT representation
     ((events md:harmonic-sequence) element)
   :function (let* ((pitch-class-set (h-cpitch-class-set events))
 		   (pitch-class-set (mapcar #'round pitch-class-set))
-		   (key (local-key-method=3-context=long events))
-		   (tonic (cdr (assoc :tonic key)))
-		   (mode (cdr (assoc :mode key)))
+		   (bass-pc (h-bass-cpc events))
+		   (key (local-key events))
+		   (key (if (undefined-p key)
+			    nil
+			    key))
+		   (tonic (if key
+			      (cdr (assoc :tonic key))
+			      nil))
+		   (mode (if key
+			     (cdr (assoc :mode key))
+			     nil))
                    ;; (mode (mode events))
                    ;; (tonic (referent events))
                    (pitch-scale-hierarchy 
                     (list tonic (if (eql mode 'minor)
-                                    ;; (0 2 3 5 7 8 10)   ;; natural minor (2 1 2 2 1 2 2)
-                                    '(0 2 3 5 7 8 11)     ;; harmonic minor (2 1 2 2 1 3 1)
-                                    '(0 2 4 5 7 9 11)))))  ;; major
-	      (if (undefined-p key)
-		  +undefined+
-		  (general-chord-type pitch-class-set pitch-scale-hierarchy *common-practice-consonance-vector*))))
+                                    *harmonic-minor-scale-degrees*
+                                    *major-scale-degrees*))))
+	      (general-chord-type pitch-class-set bass-pc pitch-scale-hierarchy
+				  *common-practice-consonance-vector*)))
 
 
 ;;;========================
 ;;;* Supporting functions *
 ;;;========================
 
-(defun general-chord-type (pitch-class-set pitch-scale-hierarchy consonance-vector)
-  "Computes the GCT representation of PITCH-CLASS-SET, given PITCH-SCALE-HIERARCHY and CONSONANCE-VECTOR."
-  (let* ((maximal-subsets (maximal-subsets pitch-class-set consonance-vector))
+(defun general-chord-type (pitch-class-set bass-pc pitch-scale-hierarchy consonance-vector)
+  "Computes the GCT representation of PITCH-CLASS-SET, given BASS-PC, PITCH-SCALE-HIERARCHY and CONSONANCE-VECTOR.
+   PITCH-SCALE-HIERARCHY can optionally be null, in which case the choose-best-chord function may produce
+   slightly different results, and root-csd will be expressed relative to a tonic of C major."
+  (let* ((pitch-class-set (sort pitch-class-set #'<))
+	 (pitch-class-set (remove-duplicates pitch-class-set))
+	 (maximal-subsets (maximal-subsets pitch-class-set consonance-vector))
          (base (mapcar #'make-compact maximal-subsets))
          (base-extension (mapcar #'(lambda (x) (add-extensions x pitch-class-set)) base))
          (root-base-extension (mapcar #'add-root base-extension))
          (relative-chord (mapcar #'(lambda (x) (relate-to-key x pitch-scale-hierarchy)) 
                                  root-base-extension))
-         (best-chord (choose-best-chord relative-chord base pitch-scale-hierarchy)))
+	 (tonic (first pitch-scale-hierarchy))
+	 (bass-csd (if tonic
+		       (mod (- bass-pc tonic) 12)
+		       bass-pc))
+         (best-chord (choose-best-chord relative-chord base bass-csd pitch-scale-hierarchy
+					pitch-class-set bass-pc consonance-vector)))
     ;; (when (> (length relative-chord) 1)
     ;;   (print (list pitch-class-set pitch-scale-hierarchy))
     ;;   (print maximal-subsets)
@@ -95,10 +141,13 @@
     ;;   (print root-base-extension)
     ;;   (print relative-chord)
     ;;   (print best-chord))
-    best-chord))
+    (list (cons :root-csd (first best-chord))
+	  (cons :base (sort (second best-chord) #'<))
+	  (cons :ext (sort (third best-chord) #'<))
+	  (cons :tonic (first pitch-scale-hierarchy)))))
 
 ;; (defun combine-base-and-extension (chord)
-;;  "This function is deprecated."
+;;  "This function is no longer needed."
 ;;  (if (= (length chord) 3)
 ;;      (list (root chord) (append (base chord) (extension chord)))
 ;;      chord))
@@ -119,12 +168,30 @@
          (base (base chord)))
     (mapcar #'(lambda (x) (mod (+ x root) 12)) base)))
 
-(defun choose-best-chord (chords bases pitch-scale-hierarchy)
-  "Given a list of candidate chord interpretations (CHORDS), and their respective bases (BASES), and the current pitch scale hierarchy (PITCH-SCALE-HIERARCHY), this function selects the best chord interpretation according to certain heuristics. Specifically, chord interpretations are preferred that maximise subset overlap and that avoid non-scale tones in the base (see Cambouropoulos et al., 2014). If more than one possible chord interpretation remains, the final chord interpretation is chosen pseudo-randomly, so that the interpretation should remain constant over different Lisp images."
+(defun choose-best-chord (chords bases bass-csd pitch-scale-hierarchy
+			  pitch-class-set bass-pc consonance-vector
+			  &key (prefer-bass-roots t) (prefer-subset-overlap nil)
+			    (prefer-scalar-base t))
+  "Given a list of candidate chord interpretations (CHORDS), and their respective bases (BASES), and the current pitch scale hierarchy (PITCH-SCALE-HIERARCHY), this function selects the best chord interpretation according to certain heuristics. Which heuristics are used can be customised by providing options. These heuristics are a) prefer roots that are bass notes (prefer-bass-roots), prefer interpretations that have maximal subset overlap (prefer-subset-overlap), and prefer interpretations that have all scale tones in the base (prefer-scalar-base). Note that the maximal subset overlap option can be prohibitively computationally expensive for large chords. If more than one possible chord interpretation remains, the final chord interpretation is chosen pseudo-randomly, so that the interpretation should remain constant over different Lisp images."
   (let* ((candidates chords)
+	 (candidate-bases bases)
          (n (length candidates)))
-    ;; 1. subset overlap 
-    (when (> n 1)
+    ;; 1. bass note
+    (when (and (> n 1) prefer-bass-roots)
+      (let ((new-candidates nil)
+	    (new-candidate-bases nil))
+	(loop
+	   for candidate in candidates
+	   for base in candidate-bases
+	   do (when (eql bass-csd (first candidate))
+		(push candidate new-candidates)
+		(push base new-candidate-bases)))
+	(when (not (null new-candidates))
+	  (setf candidates (reverse new-candidates))
+	  (setf candidate-bases (reverse new-candidate-bases))
+	  (setf n (length candidates)))))
+    ;; 2. subset overlap 
+    (when (and (> n 1) prefer-subset-overlap)
       (let* ((permutations (utils:permutations bases))
              (overlaps (mapcar #'total-overlap permutations))
              (max (apply #'max overlaps))
@@ -138,8 +205,8 @@
             (push chord candidates)))
 	(setf candidates (remove-duplicates candidates :test #'equalp))
 	(setf n (length candidates))))
-    ;; 2. avoid non-scale tones in the base
-    (when (> n 1)
+    ;; 3. avoid non-scale tones in the base, if pitch-scale-hierarchy was provided
+    (when (and (> n 1) pitch-scale-hierarchy prefer-scalar-base)
       (let ((pitch-scale-pc-set (as-pitch-class-set pitch-scale-hierarchy))
             (old-candidates candidates))
         (setf candidates 
@@ -151,10 +218,11 @@
         ;; (print (list "candidates" candidates))
         (when (null candidates) (setf candidates old-candidates))
         (setf n (length candidates))))
-    ;; 3. otherwise choose randomly
+    ;; 4. otherwise choose randomly
     (when (> n 1)
-      ; (format t "~&Warning: selecting chord pseudo-randomly from: ~A.~%" candidates)
-      (setf candidates (list (nth (mod (sxhash candidates) n) candidates))))
+      ;; (format t "~&Warning: selecting chord pseudo-randomly from: ~A.~%" candidates)
+      (let ((hash-input (list pitch-class-set bass-pc pitch-scale-hierarchy consonance-vector)))
+	(setf candidates (list (nth (mod (sxhash hash-input) n) candidates)))))
     (car candidates)))
 
 (defun positions (item list &key from-end test)
