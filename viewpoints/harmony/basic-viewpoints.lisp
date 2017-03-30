@@ -2,7 +2,7 @@
 ;;;; File:       basic-viewpoints.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-25 19:09:17 marcusp>                           
-;;;; Time-stamp: <2017-03-28 17:52:10 peter>                           
+;;;; Time-stamp: <2017-03-30 15:00:36 peter>                           
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
@@ -59,7 +59,7 @@
 ;;;* Testing functions *
 ;;;==============================
 
-(defun make-harmonic-seq
+(defun harm-seq
     (cpitch &key onset dur)
   "Intended for testing purposes. Makes an object of class md:harmonic-sequence
 with attributes specified by <cpitch>, <onset>, and <dur>. <cpitch> should be
