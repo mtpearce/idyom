@@ -2,7 +2,7 @@
 ;;;; File:       pitch.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-03-03 10:13:20 peter>                              
-;;;; Time-stamp: <2017-03-14 11:47:20 peter>                           
+;;;; Time-stamp: <2017-03-29 15:44:59 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -101,16 +101,9 @@
 
 ;;;;  * Properties of the chord root *
     
-;; We have h-gct-root from general-chord-type.lisp
+;; We have h-gct-root-cpc, h-gct-root-csd,
+;; and h-gct-root-cpc-int from general-chord-type.lisp
 
-(define-viewpoint (h-gct-root-csd derived (h-cpitch))
-    ;; Chromatic scale degree of the chord root
-    ((events md:harmonic-sequence) element)
-  :function (let ((local-tonic (local-tonic-method=3-context=long events))
-		  (root (h-gct-root events)))
-	      (if (undefined-p local-tonic)
-		  +undefined+
-		  (mod (- root local-tonic) 12))))
 
 ;;;;  * Aspects of chord quality *
 
@@ -146,18 +139,7 @@
 ;;;;   * Between bass notes *
 ;;;;   * Between chord roots *
 
-(define-viewpoint (h-gct-root-cpcint derived (h-cpitch))
-    ;; Chromatic interval between the root of the current chord
-    ;; and the root of the previous chord. Returns +undefined+
-    ;; if the root of the previous chord is undefined.
-    ((events md:harmonic-sequence) element)
-  :function (multiple-value-bind (e1 e2)
-                (values-list (last events 2))
-              (if (or (null e1) (null e2)) +undefined+
-                  (let ((root1 (h-gct-root (list e1)))
-                        (root2 (h-gct-root (list e2))))
-                    (if (undefined-p root1 root2) +undefined+
-                        (mod (- root2 root1) 12))))))
+
   
 
 ;;;========================
