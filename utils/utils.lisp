@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2017-03-28 21:16:38 peter>
+;;;; Time-stamp: <2017-03-30 12:24:20 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -645,7 +645,7 @@
 ;;; Testing 
 ;;;===========================================================================
 
-(defun add-test-dependency (a b)
+(defun add-test-suite-dependency (a b)
   "Make test-suite <a> depend on test-suite <b> by making every test in <a> depend
    on every test in <b>, within the FiveAM regression testing framework.
    Code borrowed and modified slightly from
