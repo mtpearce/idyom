@@ -2,7 +2,7 @@
 ;;;; File:       pitch.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-03-03 10:13:20 peter>                              
-;;;; Time-stamp: <2017-03-29 15:44:59 peter>                           
+;;;; Time-stamp: <2017-03-31 15:24:12 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -35,7 +35,7 @@
     ;; Set of chromatic scale degrees present in the harmonic slice,
     ;; relative to local tonic
     ((events md:harmonic-sequence) element)
-  :function (let ((local-tonic (local-tonic-method=3-context=long events)))
+  :function (let ((local-tonic (local-tonic events)))
 	      (if (undefined-p local-tonic)
 		  +undefined+
 		  (sort (mapcar #'(lambda (x) (mod (- x local-tonic) 12))
@@ -85,7 +85,7 @@
 (define-viewpoint (h-bass-csd derived (h-cpitch))
     ;; Chromatic scale degree of the bass note
     ((events md:harmonic-sequence) element)
-  :function (let ((local-tonic (local-tonic-method=3-context=long events)))
+  :function (let ((local-tonic (local-tonic events)))
 	      (if (undefined-p local-tonic)
 		  +undefined+
 		  (mod (- (h-bass-cpitch events)
