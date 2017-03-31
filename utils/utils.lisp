@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2017-03-30 17:16:07 peter>
+;;;; Time-stamp: <2017-03-30 22:08:51 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -675,3 +675,51 @@
 						test-symbols)))
 		 (5am::tests suite-or-test)))
     test-symbols))
+
+;; (defun make-function-tests (function test-specs
+;; 			    &key (test #'equal) (parent-suite 'viewpoints)
+;; 			      depends-on)
+;;   "Defines a set of tests for <viewpoint>. Each test takes the form 
+;;    of a given input, a musical sequence which the viewpoint will be
+;;    computed on, and a desired output, which will be checked for equality
+;;    with the result of applying <viewpoint> to the input using equality
+;;    predicate <test>. <viewpoint> should be a symbol identifying the viewpoint
+;;    to be tested. <test-specs> should be a list identifying the set 
+;;    of tests to be run. Each element of <test-specs> should itself be 
+;;    a list corresponding to exactly one test. The first element of this
+;;    element should be the test input; the second element should be the 
+;;    desired output; the third element (optional) should be a string
+;;    providing a written description of the input. Tests will be defined
+;;    using the 5am package, and will have labels corresponding to the 
+;;    name of the viewpoint followed by 'ex' followed by a unique identifying 
+;;    number. All created tests will be put in a suite named after the viewpoint;
+;;    by default this suite will be a child of the viewpoints test suite,
+;;    but by specifying <parent-suite> it is possible to nest the tests
+;;    within a different suite, which should be defined in advance. If not
+;;    null, <depends-on> should be either a symbol or a list of
+;;    symbols identifying viewpoints which the current viewpoint 
+;;    depends on, and hence the current viewpoint's tests should 
+;;    depend on this viewpoint. Note: tests must have already been defined
+;;    for the viewpoint which is depended on (e.g. higher up the code page).
+;;    Example usage:
+;;    (make-viewpoint-tests 
+;;      'local-tonic
+;;      '(((harm-seq '((0 5 9) (2 5 7 11) (0 4 7) (0))) 0 \"a IV-V-I cadence\")
+;;        ((harm-seq '((0 5 8) (2 5 7 11) (0 3 7) (0))) 0 \"a iv-V-i cadence\")))"
+;;   (eval `(5am:def-suite ,function :in ,parent-suite))
+;;   (eval `(5am:in-suite ,function))
+;;   (loop
+;;      for test-spec in test-specs
+;;      for n from 1
+;;      do (eval 
+;; 	 (let* ((test-name (intern (format nil "~A-EX-~A" (symbol-name viewpoint) n)))
+;; 		(input (first test-spec))
+;; 		(desired-output (second test-spec))
+;; 		(description (third test-spec))
+;; 		(fail-msg (format nil "Failed to compute ~A for ~A."
+;; 				  viewpoint
+;; 				  (if description description input))))
+;; 	   `(5am:test ,test-name
+;; 	      (5am:is (funcall ,test (,viewpoint ,input) ,desired-output)
+;; 		      ,fail-msg)))))
+;;   (eval `(utils::set-test-suite-dependencies ',viewpoint ',depends-on)))
