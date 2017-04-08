@@ -2,7 +2,7 @@
 ;;;; File:       general-chord-type.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-03-01 14:58:07 peter>                             
-;;;; Time-stamp: <2017-03-30 12:05:54 peter>                           
+;;;; Time-stamp: <2017-04-08 19:38:02 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -205,8 +205,10 @@
             (push chord candidates)))
 	(setf candidates (remove-duplicates candidates :test #'equalp))
 	(setf n (length candidates))))
-    ;; 3. avoid non-scale tones in the base, if pitch-scale-hierarchy was provided
-    (when (and (> n 1) pitch-scale-hierarchy prefer-scalar-base)
+    ;; 3. avoid non-scale tones in the base, if tonic was provided
+    (when (and (> n 1)
+	       (first pitch-scale-hierarchy)  ; i.e. tonic
+	       prefer-scalar-base)
       (let ((pitch-scale-pc-set (as-pitch-class-set pitch-scale-hierarchy))
             (old-candidates candidates))
         (setf candidates 
