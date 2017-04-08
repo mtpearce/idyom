@@ -2,7 +2,7 @@
 ;;;; File:       basic-viewpoints.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-25 19:09:17 marcusp>                           
-;;;; Time-stamp: <2017-03-30 15:00:36 peter>                           
+;;;; Time-stamp: <2017-04-08 18:30:22 peter>                           
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
@@ -60,19 +60,20 @@
 ;;;==============================
 
 (defun harm-seq
-    (cpitch &key onset dur)
+    (cpitch &key onset dur (ref-pitch 0))
   "Intended for testing purposes. Makes an object of class md:harmonic-sequence
-with attributes specified by <cpitch>, <onset>, and <dur>. <cpitch> should be
-a list of lists, with the ith element of the jth list corresponding to the
-ith chromatic pitch in the jth chord. By default, each chord
-has duration 100 and onset 100 basic time units after the onset of
-the previous chord. It is possible to specify <onset> manually, 
-in which case <onset> should be a list with the ith element
-being the onset of the ith chord. Chords should be listed in order
+with attributes specified by <cpitch>, <onset>, <dur>, and <ref-pitch>.
+<cpitch> should be a list of lists, with the ith element of the jth list
+corresponding to the ith chromatic pitch in the jth chord, after transposition
+by <ref-pitch>. By default, each chord has duration 100 and onset 100 basic
+time units after the onset of the previous chord. It is possible to
+specify <onset> manually, in which case <onset> should be a list with the ith
+element being the onset of the ith chord. Chords should be listed in order
 of increasing onset. In this case the duration of each
 chord will default to the inter-onset interval between each chord,
 unless <dur> is specified manually, in which case <dur> should 
-be a list the ith element of which is the duration of the ith chord."
+be a list the ith element of which is the duration of the ith chord.
+"
   (if (or (null cpitch) (not (listp cpitch)))
       (error "<cpitch> must be a non-empty list."))
   (let* ((num-chords (length cpitch))
@@ -105,8 +106,9 @@ be a list the ith element of which is the duration of the ith chord."
 	 for d in dur
 	 do (progn
 	      (let ((events (mapcar #'(lambda (pitch)
-					(let ((event (make-instance 'md::music-event
-								    :cpitch pitch)))
+					(let ((event (make-instance
+						      'md::music-event
+						      :cpitch (+ ref-pitch pitch))))
 					  (md:set-attribute event 'onset o)
 					  (md:set-attribute event 'dur d)
 					  event))
