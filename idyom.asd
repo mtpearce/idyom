@@ -2,7 +2,7 @@
 ;;;; File:       IDyOM.asd
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-05-04 21:29:04 marcusp>
-;;;; Time-stamp: <2017-03-28 21:15:16 peter>
+;;;; Time-stamp: <2017-04-10 19:04:52 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -80,7 +80,8 @@
 		      ((:file "basic-viewpoints")
 		       (:file "general-chord-type")
 		       (:file "key-finding")
-		       (:file "pitch")))
+		       (:file "pitch")
+		       (:file "psychoacoustic-models")))
              ;; useful extensions for modelling 
              ;; (not strictly part of the representation scheme)
 	     (:file "extensions")

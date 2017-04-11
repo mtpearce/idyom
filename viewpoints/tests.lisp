@@ -2,7 +2,7 @@
 ;;;; File:       tests.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-03-28 21:04:43 peter>                             
-;;;; Time-stamp: <2017-04-08 22:44:28 peter>                           
+;;;; Time-stamp: <2017-04-11 14:36:53 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -311,7 +311,7 @@
  :parent-suite 'gct
  :depends-on '(general-chord-type key-finding))
 
-(5am:in-suite h-gct)
+(5am:in-suite gct)
 (5am:test h-gct-ex-3
   (5am:for-all ((cpitch (5am:gen-list
 			 :length (5am:gen-integer :min 1 :max 10)
@@ -542,3 +542,248 @@
  :depends-on 'h-cpc-int-from-gct-root)
 
 
+;;;=========================
+;;;* Psychoacoustic models *
+;;;=========================
+
+(5am:def-suite psychoacoustic
+    :description "Psychoacoustic models"
+    :in harmony)
+
+(5am:def-suite midi->freq :in psychoacoustic)
+(5am:in-suite psychoacoustic)
+(5am:test midi-freq-ex-1
+  (5am:is (equalp (midi->freq 69) 440)))
+(5am:test midi-freq-ex-2
+  (5am:is (equalp (midi->freq 81) 880)))
+(5am:test midi-freq-ex-3
+  (5am:is (equalp (midi->freq 57) 220)))
+(5am:test midi-freq-ex-4
+  (5am:is (equalp (round-to-nearest-decimal-place
+		   (midi->freq 20) 4)
+		  25.9565)))
+
+
+;;;; Hutchinson & Knopoff's roughness model
+
+(5am:def-suite hutch-knopoff
+    :description "Hutchinson & Knopoff's roughness model"
+    :in psychoacoustic)
+
+;; sum-amplitudes
+(5am:def-suite sum-amplitudes :in hutch-knopoff)
+(5am:in-suite sum-amplitudes)
+(5am:test sum-amplitudes-ex-1
+  (5am:is (equal (sum-amplitudes 0 0 :coherent t) 0.0)))
+(5am:test sum-amplitudes-ex-2
+  (5am:is (equal (sum-amplitudes 1.5 2.5 :coherent t) 4.0)))
+(5am:test sum-amplitudes-ex-3
+  (5am:is (equal (sum-amplitudes 0.7 0.3 :coherent t) 1.0)))
+(5am:test sum-amplitudes-ex-4
+  (5am:is (equal (sum-amplitudes 2.5 2.5 :coherent t) 5.0)))
+(5am:test sum-amplitudes-ex-5
+  (5am:is (equal (sum-amplitudes 0 0 :coherent nil) 0.0)))
+(5am:test sum-amplitudes-ex-6
+  (5am:is (equal (round-to-nearest-decimal-place
+		  (sum-amplitudes 1 1 :coherent nil) 3)
+		 1.414)))
+(5am:test sum-amplitudes-ex-7
+  (5am:is (equal (round-to-nearest-decimal-place
+		  (sum-amplitudes 1 0.5 :coherent nil) 4)
+		 1.118)))
+
+;; combine-pure-tones
+(5am:def-suite combine-pure-tones :in hutch-knopoff)
+(5am:in-suite combine-pure-tones)
+(5am:test combine-pure-tones-ex-1
+  (5am:is (equal (combine-pure-tones nil) nil)))
+(5am:test combine-pure-tones-ex-2
+  (5am:is (equalp (combine-pure-tones
+		  '((1 1) (2 1) (3 1)))
+		 '((1 1) (2 1) (3 1)))))
+(5am:test combine-pure-tones-ex-3
+  (5am:is (equalp (combine-pure-tones
+		  '((1 1) (3 1) (2 1)))
+		 (list '(1 1) '(2 1) '(3 1)))))
+(5am:test combine-pure-tones-ex-4
+  (5am:is (equalp (combine-pure-tones
+		  '((1 1) (3 1) (1 1))
+		  :coherent t)
+		 (list (list 1 2) (list 3 1)))))
+(5am:test combine-pure-tones-ex-5
+  (5am:is (equalp (combine-pure-tones
+		  (list '(1 1) '(3 1.0) '(1 1))
+		  :coherent nil)
+		  `((1 ,(sqrt 2)) (3 1)))))
+
+;; freq->harmonics
+(5am:def-suite freq->harmonics :in hutch-knopoff)
+(5am:in-suite freq->harmonics)
+(5am:test freq->harmonics-ex-1
+  (5am:is (equalp (freq->harmonics 10 :num-harmonics 0)
+		  '((10 1)))))
+(5am:test freq->harmonics-ex-2
+  (5am:is (equalp (freq->harmonics 20 :num-harmonics 3)
+		  '((20 1) (40 1/2) (60 1/3) (80 1/4)))))
+(5am:test freq->harmonics-ex-3
+  (5am:is (equalp (freq->harmonics
+		   20 :num-harmonics 3
+		   :roll-off #'(lambda (n) (/ 1 (1+ n))))
+		  '((20 1) (40 1/2) (60 1/3) (80 1/4)))))
+
+;; freq-list->harmonics
+(5am:def-suite freq-list->harmonics :in hutch-knopoff)
+(5am:in-suite freq-list->harmonics)
+(5am:test freq-list->harmonics-ex-1
+  (5am:is (equalp (freq-list->harmonics '(1 2) :num-harmonics 0)
+		  '((1 1) (2 1)))))
+(5am:test freq-list->harmonics-ex-2
+  (5am:is (equalp (freq-list->harmonics '(1 2)
+					 :num-harmonics 4
+					 :coherent t)
+		  `((1 1) (2 ,(+ 1/2 1)) (3 1/3) (4 ,(+ 1/4 1/2))
+		    (5 1/5) (6 1/3) (8 1/4) (10 1/5)))))
+(5am:test freq-list->harmonics-ex-3
+  (5am:is (equalp (freq-list->harmonics '(1 2)
+					 :num-harmonics 2
+					 :coherent nil)
+		  `((1 1) (2 ,(sqrt (+ (* 1/2 1/2) (* 1 1))))
+		    (3 1/3) (4 1/2) (6 1/3)))))
+(utils:set-test-suite-dependencies
+ 'freq-list->harmonics 'freq->harmonics)
+
+;; hutch-cbw
+(5am:def-suite hutch-cbw :in hutch-knopoff)
+(5am:in-suite hutch-cbw)
+(5am:test hutch-cbw-ex-1
+  (5am:is (equalp (hutch-cbw 1 1) 1.72)))
+(5am:test hutch-cbw-ex-2
+  (5am:is (equalp (hutch-cbw 150 200) (* 1.72 (expt 175 0.65)))))
+
+;; hutch-y
+(5am:def-suite hutch-y :in hutch-knopoff)
+(5am:in-suite hutch-y)
+(5am:test hutch-y-ex-1
+  (5am:is (equalp (hutch-y 1 1) 0)))
+(5am:test hutch-y-ex-2
+  (5am:is (equalp (hutch-y 150 200) (/ 50 (hutch-cbw 150 200)))))
+(utils:set-test-suite-dependencies
+ 'hutch-y 'hutch-cbw)
+
+;; hutch-g
+(5am:def-suite hutch-g :in hutch-knopoff)
+(5am:in-suite hutch-g)
+(5am:test hutch-g-ex-1
+  (5am:is (equalp (hutch-g 0) 0)))
+(5am:test hutch-g-ex-2
+  (5am:is (equalp (hutch-g 1) (expt (* 4 (exp -3)) 2))))
+
+;; hutch-d
+(5am:def-suite hutch-d :in hutch-knopoff)
+(5am:in-suite hutch-d)
+(5am:test hutch-d-ex-1
+  (5am:is (equalp (hutch-d (freq-list->harmonics '(440) :num-harmonics 0))
+		  0)))
+;; The following examples are taken from Mashinter (2006).
+;; Note the incorporation of custom harmonic roll-off
+;; and cbw-cut-off values to match Mashinter's original
+;; implementation.
+;; Note 1: I can't replicate Mashinter's values for
+;; (60 60) or for (60 62), for some reason.
+;; Note 2: We replicate to three decimal places, it looks
+;; like rounding errors etc. introduce some slight
+;; discrepancies when we do four decimal places.
+(5am:test hutch-d-ex-mashinter-1
+  (5am:is (equalp (round-to-nearest-decimal-place
+		   (hutch-d (freq-list->harmonics
+			     (mapcar #'midi->freq '(60 61))
+			     :num-harmonics 10
+			     :roll-off #'(lambda (n) (/ 1 n)))
+			    :cbw-cut-off 1.2)
+		   3)
+		  0.478)))
+(5am:test hutch-d-ex-mashinter-2
+  (5am:is (equalp (round-to-nearest-decimal-place
+		   (hutch-d (freq-list->harmonics
+			     (mapcar #'midi->freq '(60 63))
+			     :num-harmonics 10
+			     :roll-off #'(lambda (n) (/ 1 n)))
+			    :cbw-cut-off 1.2)
+		   3)
+		  0.092)))
+(5am:test hutch-d-ex-mashinter-3
+  (5am:is (equalp (round-to-nearest-decimal-place
+		   (hutch-d (freq-list->harmonics
+			     (mapcar #'midi->freq '(60 64))
+			     :num-harmonics 10
+			     :roll-off #'(lambda (n) (/ 1 n)))
+			    :cbw-cut-off 1.2)
+		   3)
+		  0.067)))
+(5am:test hutch-d-ex-mashinter-4
+  (5am:is (equalp (round-to-nearest-decimal-place
+		   (hutch-d (freq-list->harmonics
+			     (mapcar #'midi->freq '(62 65 70))
+			     :num-harmonics 10
+			     :roll-off #'(lambda (n) (/ 1 n)))
+			    :cbw-cut-off 1.2)
+		   3)
+		  0.166)))
+(5am:test hutch-d-ex-mashinter-5
+  (5am:is (equalp (round-to-nearest-decimal-place
+		   (hutch-d (freq-list->harmonics
+			     (mapcar #'midi->freq '(60 64 67 70))
+			     :num-harmonics 10
+			     :roll-off #'(lambda (n) (/ 1 n)))
+			    :cbw-cut-off 1.2)
+		   3)
+		  0.233)))
+(utils:set-test-suite-dependencies
+ 'hutch-d 'freq-list->harmonics)
+
+;;;; h-hutch-rough
+;; Our implementation uses slightly different options to
+;; Mashinter (2006), so we have no absolute references
+;; against which to compare our viewpoint values.
+;; However, we can still compare the relative roughness of
+;; different chords, to check that we get appropriate
+;; trends.
+
+(5am:def-suite h-hutch-rough :in hutch-knopoff)
+(5am:in-suite h-hutch-rough)
+
+(5am:test h-hutch-rough-ex-1
+  (5am:is (< (h-hutch-rough
+	      (harm-seq '((60))))
+	     (h-hutch-rough
+	      (harm-seq '((60 67)))))
+	  "A fifth should be less consonant than a unison."))
+(5am:test h-hutch-rough-ex-2
+  (5am:is (> (h-hutch-rough
+	      (harm-seq '((60 61))))
+	     (h-hutch-rough
+	      (harm-seq '((60 62)))))
+	  "A semitone should be rougher than a tone."))
+(5am:test h-hutch-rough-ex-3
+  (5am:is (> (h-hutch-rough
+	      (harm-seq '((60 63))))
+	     (h-hutch-rough
+	      (harm-seq '((60 64)))))
+	  "A minor third should be rougher than a major third."))
+(5am:test h-hutch-rough-ex-4
+  (5am:is (> (h-hutch-rough
+	      (harm-seq '((60 63 66))))
+	     (h-hutch-rough
+	      (harm-seq '((60 64 67)))))
+	  "A diminished triad should be rougher than a major triad."))
+(5am:test h-hutch-rough-ex-5
+  (5am:is (> (h-hutch-rough
+	      (harm-seq '((64 67 72))))
+	     (h-hutch-rough
+	      (harm-seq '((60 64 67)))))
+	  "A first inversion major triad should be rougher than a second inversion major triad."))
+
+
+
+;;(utils:set-test-suite-dependencies
+;; 'h-gct '(general-chord-type key-finding))

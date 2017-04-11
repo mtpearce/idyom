@@ -2,7 +2,7 @@
 ;;;; File:       pitch.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-03-03 10:13:20 peter>                              
-;;;; Time-stamp: <2017-04-08 22:35:16 peter>                           
+;;;; Time-stamp: <2017-04-10 19:06:24 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -213,7 +213,7 @@
 	     (error
 	      (format
 	       nil
-	       "Invalid h-gct-root-cpcint value: ~A" int)))))))
+	       "Invalid h-gct-root-cpcint value: ~A" int))))))))
 
 (define-viewpoint (h-gct-meeus-int derived (h-cpitch))
     ;; Categories of root progressions,
