@@ -2,7 +2,7 @@
 ;;;; File:       tests.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-03-28 21:04:43 peter>                             
-;;;; Time-stamp: <2017-04-11 14:36:53 peter>                           
+;;;; Time-stamp: <2017-04-12 17:46:17 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -41,7 +41,8 @@
    null, <depends-on> should be either a symbol or a list of
    symbols identifying viewpoints which the current viewpoint 
    depends on, and hence the current viewpoint's tests should 
-   depend on this viewpoint. Note: tests must have already been defined
+   depend on this viewpoint.
+   Note: tests must have already been defined
    for the viewpoint which is depended on (e.g. higher up the code page).
    Example usage:
    (make-viewpoint-tests 
@@ -62,7 +63,9 @@
 				  viewpoint
 				  (if description description input))))
 	   `(5am:test ,test-name
-	      (5am:is (funcall ,test (,viewpoint ,input) ,desired-output)
+	      (5am:is (funcall ,test
+			       (,viewpoint ,input)
+			       ,desired-output)
 		      ,fail-msg)))))
   (eval `(utils::set-test-suite-dependencies ',viewpoint ',depends-on)))
       
@@ -543,15 +546,16 @@
 
 
 ;;;=========================
-;;;* Psychoacoustic models *
+;;;* Hutchinson & Knopoff *
 ;;;=========================
 
-(5am:def-suite psychoacoustic
-    :description "Psychoacoustic models"
+(5am:def-suite hutch-knopoff
+    :description "Hutchinson & Knopoff's roughness model"
     :in harmony)
 
-(5am:def-suite midi->freq :in psychoacoustic)
-(5am:in-suite psychoacoustic)
+;; midi->freq
+(5am:def-suite midi->freq :in hutch-knopoff)
+(5am:in-suite midi->freq)
 (5am:test midi-freq-ex-1
   (5am:is (equalp (midi->freq 69) 440)))
 (5am:test midi-freq-ex-2
@@ -562,13 +566,6 @@
   (5am:is (equalp (round-to-nearest-decimal-place
 		   (midi->freq 20) 4)
 		  25.9565)))
-
-
-;;;; Hutchinson & Knopoff's roughness model
-
-(5am:def-suite hutch-knopoff
-    :description "Hutchinson & Knopoff's roughness model"
-    :in psychoacoustic)
 
 ;; sum-amplitudes
 (5am:def-suite sum-amplitudes :in hutch-knopoff)
@@ -787,3 +784,141 @@
 
 ;;(utils:set-test-suite-dependencies
 ;; 'h-gct '(general-chord-type key-finding))
+
+
+;;;===========================
+;;;* Milne's spectral model *
+;;;===========================
+
+(5am:def-suite milne
+    :description "Milne's spectral model"
+    :in harmony)
+
+;; gaussian-pdf
+(5am:def-suite gaussian-pdf :in milne)
+(5am:in-suite gaussian-pdf)
+(5am:test gaussian-pdf-ex-1
+  (5am:is (= (round-to-nearest-decimal-place
+		   (gaussian 0 0 1) 4)
+		  0.3989d0)))
+(5am:test gaussian-pdf-ex-2
+  (5am:is (= (round-to-nearest-decimal-place
+		   (gaussian -1 0 1) 4)
+		  0.2420d0)))
+(5am:test gaussian-pdf-ex-3
+  (5am:is (= (round-to-nearest-decimal-place
+		   (gaussian 1.5 0.25 1) 4)
+		  0.1826d0)))
+(5am:test gaussian-pdf-ex-4
+  (5am:is (= (round-to-nearest-decimal-place
+		   (gaussian -1.7 0.4 5.5) 4)
+		  0.0674d0)))
+		  
+;;;; make-gaussian-spectral-template
+(5am:def-suite make-gaussian-spectral-template :in milne)
+(5am:in-suite make-gaussian-spectral-template)
+;; These tests aren't very complete.
+;; Annoyingly, 5am doesn't work for let bindings.
+(5am:test make-gaussian-spectral-template-ex-1
+  (5am:is (vectorp (make-gaussian-spectral-template 1200 6.93))))
+(5am:test make-gaussian-spectral-template-ex-2
+  (5am:is (equal (svref (make-gaussian-spectral-template
+			 1200 6.93)
+			0)
+		 (apply #'max
+			(coerce (make-gaussian-spectral-template
+				 1200 6.93)
+				'list)))
+	  "The first element of the template should be the largest."))
+
+		
+;;;; make-gaussian-spectrum
+(5am:def-suite make-gaussian-spectrum :in milne)
+(5am:in-suite make-gaussian-spectrum)
+
+(5am:test make-gaussian-spectrum-ex-1
+  (5am:is (equalp
+	   (make-gaussian-spectrum 120 0 1 0.5)
+	   (make-gaussian-spectral-template 120 0.5))
+	  "A spectrum with mean 0 and mass 1 should be equal to the template."))
+(5am:test make-gaussian-spectrum-ex-2
+  (5am:is (equalp
+	   (make-gaussian-spectrum 1200 0 1 0.3)
+	   (make-gaussian-spectral-template 1200 0.3))
+	  "A spectrum with mean 0 and mass 1 should be equal to the template."))
+
+(5am:def-suite cosine-similarity :in milne)
+(5am:in-suite cosine-similarity)
+(5am:test cosine-similarity-ex-1
+  (5am:is (equalp (round-to-nearest-decimal-place
+		   (cosine-similarity
+		    (vector 5 0 3 0 2 0 0 2 0 0)
+		    (vector 3 0 2 0 1 1 0 1 0 1))
+		   2)
+		  0.94)))
+(5am:test cosine-similarity-ex-2
+  (5am:is (equalp (round-to-nearest-decimal-place
+		   (cosine-similarity
+		    (vector 2 1 0 2 0 1 1 1)
+		    (vector 2 1 1 1 1 0 1 1))
+		   3)
+		  0.822)))
+
+;;;; h-cpc-milne-sd-cont=min
+(5am:def-suite h-cpc-milne-sd-cont=min :in milne)
+(5am:in-suite h-cpc-milne-sd-cont=min)
+
+(5am:test h-cpc-milne-sd-cont=min-ex-1
+  (5am:is (equal (h-cpc-milne-sd-cont=min
+		  (harm-seq '((0 4 7))))
+		 +undefined+)))
+(5am:test h-cpc-milne-sd-cont=min-ex-2
+  (5am:is (= (round-to-nearest-decimal-place
+		   (h-cpc-milne-sd-cont=min
+		    (harm-seq '((0 4 7) (0 4 7))))
+		   4)
+		  0)))
+(5am:test h-cpc-milne-sd-cont=min-ex-3
+  (5am:is (= (round-to-nearest-decimal-place
+		   (h-cpc-milne-sd-cont=min
+		    (harm-seq '((0 4 7) (0 3 7))))
+		   4)
+		  0.2597d0)))
+(5am:test h-cpc-milne-sd-cont=min-ex-4
+  (5am:is (= (round-to-nearest-decimal-place
+		   (h-cpc-milne-sd-cont=min
+		    (harm-seq '((0 4 7) (0 2 7))))
+		   4)
+		  0.2201d0)))
+(5am:test h-cpc-milne-sd-cont=min-ex-5
+  (5am:is (= (round-to-nearest-decimal-place
+		   (h-cpc-milne-sd-cont=min
+		    (harm-seq '((0 4 7) (1 5 8))))
+		   4)
+		  0.8527d0)))
+(5am:test h-cpc-milne-sd-cont=min-ex-6
+  (5am:is (= (round-to-nearest-decimal-place
+		   (h-cpc-milne-sd-cont=min
+		    (harm-seq '((0 4 7) (2 7 11))))
+		   4)
+		  0.4155d0)))
+(5am:test h-cpc-milne-sd-cont=min-ex-7
+  (5am:is (= (round-to-nearest-decimal-place
+		   (h-cpc-milne-sd-cont=min
+		    (harm-seq '((0 4 7) (0 5 9))))
+		   4)
+		  0.4155d0)))
+(5am:test h-cpc-milne-sd-cont=min-ex-8
+  (5am:is (= (round-to-nearest-decimal-place
+		   (h-cpc-milne-sd-cont=min
+		    (harm-seq '((2 7 8) (3 4 8 9))))
+		   4)
+		  0.5619d0)))
+(5am:test h-cpc-milne-sd-cont=min-ex-9
+  (5am:is (= (round-to-nearest-decimal-place
+		   (h-cpc-milne-sd-cont=min
+		    (harm-seq '((2 6 8 9) (1 4))))
+		   4)
+		  0.5940d0)))
+    
+
