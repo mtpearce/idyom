@@ -1,15 +1,16 @@
 ;;;; ======================================================================
-;;;; File:       psychoacoustic-models.lisp
+;;;; File:       hutchinson-knopoff.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-04-10 16:20:11 peter>                       
-;;;; Time-stamp: <2017-04-11 14:36:30 peter>                           
+;;;; Time-stamp: <2017-04-12 11:34:55 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
 ;;;; ======================================================================
 ;;;;
-;;;; This code defines derived viewpoints corresponding to implementations
-;;;; of various psychoacoustic models.
+;;;; This code defines a derived viewpoint corresponding to the
+;;;; sensory roughness model of Hutchinson & Knopoff (1979, 1978),
+;;;; as revised by Mashinter (2006).
 ;;;;
 ;;;; Unless otherwise specified, the code should allow both integer
 ;;;; and non-integer pitch values as inputs.
@@ -47,8 +48,6 @@
 	      (hutch-d (freq-list->harmonics
 			freq-list :num-harmonics 10)
 		       :cbw-cut-off nil)))
-
-
 
 ;;;========================
 ;;;* Supporting functions *
@@ -209,15 +208,3 @@ coherent or incoherent phases, according to the argument <coherent>."
   (if coherent
       (float (+ amp-1 amp-2))
       (float (sqrt (+ (* amp-1 amp-1) (* amp-2 amp-2))))))
-
-;; (defun cpitch->harmonics (cpitch &key num-harmonics
-;; 					     (roll-off #'(lambda (n) (/ 1 n))))
-
-
-;; (define-viewpoint (h-cpitch-class derived (h-cpitch))
-;;     ;; Pitches present in harmonic slice, mod 12, including duplicates
-;;     ((events md:harmonic-sequence) element)
-;;   :function (let* ((pc (mapcar #'(lambda (x) (mod x 12)) (h-cpitch events)))
-;; 		   (sort-pc (sort pc #'<)))
-;; 	      sort-pc))
-
