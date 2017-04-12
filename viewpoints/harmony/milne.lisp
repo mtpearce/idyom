@@ -2,7 +2,7 @@
 ;;;; File:       milne.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-04-12 11:41:38 peter>                      
-;;;; Time-stamp: <2017-04-12 17:20:29 peter>                          
+;;;; Time-stamp: <2017-04-12 19:07:49 peter>                          
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -39,7 +39,8 @@
 (defparameter *milne-array-dim* 1200)   ; dimension of the expectation arrays
 (defparameter *milne-sigma* 6.83)       ; SD of the smoothing Gaussian
 (defparameter *milne-rho* 0.75)         ; roll-off for harmonic salience
-(defparameter *milne-num-harmonics* 11)  ; number of harmonics in each complex tone
+(defparameter *milne-num-harmonics* 11) ; number of harmonics in each complex tone
+                                        ; (excluding the fundamental)
 
 ;; Note that sigma is expressed in units of <array-dim>.
 
