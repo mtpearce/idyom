@@ -2,7 +2,7 @@
 ;;;; File:       pitch.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-03-03 10:13:20 peter>                              
-;;;; Time-stamp: <2017-04-10 19:06:24 peter>                           
+;;;; Time-stamp: <2017-04-13 18:21:20 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -17,9 +17,20 @@
 ;;;* Derived viewpoints *
 ;;;======================
 
-;;;; *** Properties of individual chords ***
-;;;;  ** Properties of the whole chord **
-;;;;   * Pitch content *
+;; We also have h-gct-base and g-gct-ext from general-chord-type.lisp
+;; We have h-gct-root-cpc, h-gct-root-csd,
+;; and h-gct-root-cpcint from general-chord-type.lisp
+
+(define-viewpoint (h-cpitch-identity derived (h-cpitch))
+    ;; Returns t if h-cpitch is the same as the previous chord,
+    ;; nil otherwise.
+    ((events md:harmonic-sequence) element)
+  :function (multiple-value-bind (e1 e2)
+                (values-list (last events 2))
+	      (if (or (null e1) (null e2)) +undefined+
+		  (let ((p-set-1 (h-cpitch (list e1)))
+			(p-set-2 (h-cpitch (list e2))))
+		    (if (equalp p-set-1 p-set-2) t nil)))))
 
 (define-viewpoint (h-cpitch-class derived (h-cpitch))
     ;; Pitches present in harmonic slice, mod 12, including duplicates
@@ -30,6 +41,17 @@
     ;; Pitches present in harmonic slice, mod 12, not including duplicates
     ((events md:harmonic-sequence) element)
   :function (sort (remove-duplicates (h-cpitch-class events) :test #'=) #'<))
+
+(define-viewpoint (h-cpc-identity derived (h-cpitch))
+    ;; Returns t if h-cpitch-class-set is the same as the previous chord,
+    ;; nil otherwise.
+    ((events md:harmonic-sequence) element)
+  :function (multiple-value-bind (e1 e2)
+                (values-list (last events 2))
+	      (if (or (null e1) (null e2)) +undefined+
+		  (let ((pc-set-1 (h-cpitch-class-set (list e1)))
+			(pc-set-2 (h-cpitch-class-set (list e2))))
+		    (if (equalp pc-set-1 pc-set-2) t nil)))))
 
 (define-viewpoint (h-csd derived (h-cpitch))
     ;; Set of chromatic scale degrees present in the harmonic slice,
@@ -67,10 +89,6 @@
 		   (no-duplicates (remove-duplicates non-root))
 		   (sorted (sort no-duplicates #'<)))
 	      sorted))
-
-;; We also have h-gct-base and g-gct-ext from general-chord-type.lisp
-
-;;;;  * Properties of the bass note *
 
 (define-viewpoint (h-bass-cpitch derived (h-cpitch))
     ;; Lowest chromatic pitch present in harmonic slice
@@ -126,14 +144,6 @@
 		  (root (h-gct-root-cpc events)))
 	      (mod (- bass root) 12)))
 
-
-;;;;  * Properties of the chord root *
-    
-;; We have h-gct-root-cpc, h-gct-root-csd,
-;; and h-gct-root-cpcint from general-chord-type.lisp
-
-;;;;  * Aspects of chord quality *
-
 (define-viewpoint (h-hedges-chord-type derived (h-cpitch))
     ;; Chord type, after Hedges & Wiggins (2016, JNMR)
     ((events md:harmonic-sequence) element)
@@ -181,12 +191,6 @@
 					   :test #'equalp)))
 		(if (test-pc 10)
 		    'min-7-present 'min-7-absent))))
-
-;;;; *** Relationships between successive chords ***
-;;;;  ** Distance metrics **
-;;;;  ** Non-metrics **
-;;;;   * Between bass notes *
-;;;;   * Between chord roots *
 
 (define-viewpoint (h-gct-root-5ths-dist derived (h-cpitch))
     ;; Distance between successive chord roots along
@@ -237,15 +241,3 @@
 		 nil
 		 "Invalid h-gct-root-cpcint value: ~A"
 		 int))))))))
-  
-
-;;;========================
-;;;* Supporting functions *
-;;;========================
-
-;;(defun csd (cpitch events)
-;;  "Represents <cpitch> (which can be a pitch or a pitch class
-;;   as a chromatic scale degree, given the local key at the
-;;   end of <events>."
-;;  (let 
-  

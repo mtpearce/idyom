@@ -2,7 +2,7 @@
 ;;;; File:       tests.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-03-28 21:04:43 peter>                             
-;;;; Time-stamp: <2017-04-13 18:07:50 peter>                           
+;;;; Time-stamp: <2017-04-13 18:22:11 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -88,6 +88,15 @@
    ((harm-seq '((40 30 20))) '(20 30 40)))
  :parent-suite 'harmony)
 
+;; h-cpitch-identity
+(make-viewpoint-tests 
+ 'h-cpitch-identity
+ '(((harm-seq '((0 4 10))) +undefined+)
+   ((harm-seq '((4 10 0) (4 10 0))) t)
+   ((harm-seq '((40 30 20) (40 20 30))) t)
+   ((harm-seq '((4 10 0) (4 10 1))) nil))
+   :parent-suite 'harmony)
+
 ;; h-cpitch-class
 (make-viewpoint-tests 
  'h-cpitch-class
@@ -106,6 +115,15 @@
    ((harm-seq '((0 4 10) (12 26 53) (53 41 31))) '(5 7)))
  :parent-suite 'harmony
  :depends-on 'h-cpitch-class)
+
+;; h-cpc-identity
+(make-viewpoint-tests 
+ 'h-cpc-identity
+ '(((harm-seq '((0 4 10))) +undefined+)
+   ((harm-seq '((0 4 10) (0 4 10))) t)
+   ((harm-seq '((0 3 7) (60 63 67))) t)
+   ((harm-seq '((0 3 7) (60 64 67))) nil))
+   :parent-suite 'harmony)
 
 ;; h-bass-cpitch
 (make-viewpoint-tests 
