@@ -2,7 +2,7 @@
 ;;;; File:       tests.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-03-28 21:04:43 peter>                             
-;;;; Time-stamp: <2017-04-12 17:46:17 peter>                           
+;;;; Time-stamp: <2017-04-13 18:07:50 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -799,19 +799,19 @@
 (5am:in-suite gaussian-pdf)
 (5am:test gaussian-pdf-ex-1
   (5am:is (= (round-to-nearest-decimal-place
-		   (gaussian 0 0 1) 4)
+		   (gaussian-pdf 0 0 1) 4)
 		  0.3989d0)))
 (5am:test gaussian-pdf-ex-2
   (5am:is (= (round-to-nearest-decimal-place
-		   (gaussian -1 0 1) 4)
+		   (gaussian-pdf -1 0 1) 4)
 		  0.2420d0)))
 (5am:test gaussian-pdf-ex-3
   (5am:is (= (round-to-nearest-decimal-place
-		   (gaussian 1.5 0.25 1) 4)
+		   (gaussian-pdf 1.5 0.25 1) 4)
 		  0.1826d0)))
 (5am:test gaussian-pdf-ex-4
   (5am:is (= (round-to-nearest-decimal-place
-		   (gaussian -1.7 0.4 5.5) 4)
+		   (gaussian-pdf -1.7 0.4 5.5) 4)
 		  0.0674d0)))
 		  
 ;;;; make-gaussian-spectral-template
@@ -872,6 +872,9 @@
   (5am:is (equal (h-cpc-milne-sd-cont=min
 		  (harm-seq '((0 4 7))))
 		 +undefined+)))
+
+;; These examples were derived from Milne's
+;; MATLAB implementation.
 (5am:test h-cpc-milne-sd-cont=min-ex-2
   (5am:is (= (round-to-nearest-decimal-place
 		   (h-cpc-milne-sd-cont=min
@@ -920,5 +923,239 @@
 		    (harm-seq '((2 6 8 9) (1 4))))
 		   4)
 		  0.5940d0)))
-    
+   
+
+;;;==================================
+;;;* Tymoczko's voice-leading model *
+;;;==================================
+
+(5am:def-suite tymoczko
+    :description "Tymoczko's voice-leading model"
+    :in harmony)
+
+;;;; vl-ascending-distance
+(5am:def-suite vl-ascending-distance :in tymoczko)
+(5am:in-suite vl-ascending-distance)
+(5am:test vl-ascending-distance-ex-1
+  (5am:is (eql (vl-ascending-distance 60 70 :pitch) 10)))
+(5am:test vl-ascending-distance-ex-2
+  (5am:is (eql (vl-ascending-distance 1 5 :pitch-class) 4)))
+(5am:test vl-ascending-distance-ex-3
+  (5am:is (eql (vl-ascending-distance 7 10 :pitch-class) 3)))
+(5am:test vl-ascending-distance-ex-4
+  (5am:is (eql (vl-ascending-distance 11 0 :pitch-class) 1)))
+(5am:test vl-ascending-distance-ex-5
+  (5am:is (eql (vl-ascending-distance 7 1 :pitch-class) 6)))
+
+
+
+
+;; vl-elt-distance
+(5am:def-suite vl-elt-distance :in tymoczko)
+(5am:in-suite vl-elt-distance)
+(5am:test vl-elt-distance-ex-1
+  (5am:is (eql (vl-elt-distance 60 64 :pitch) 4)))
+(5am:test vl-elt-distance-ex-2
+  (5am:is (eql (vl-elt-distance 50 47 :pitch) 3)))
+(5am:test vl-elt-distance-ex-3
+  (5am:is (eql (vl-elt-distance 10 7 :pitch-class) 3)))
+(5am:test vl-elt-distance-ex-4
+  (5am:is (eql (vl-elt-distance 11 0 :pitch-class) 1)))
+(5am:test vl-elt-distance-ex-5
+  (5am:is (eql (vl-elt-distance 7 1 :pitch-class) 6)))
+
+;;;; vl-set-distance
+(5am:def-suite vl-set-distance :in tymoczko)
+(5am:in-suite vl-set-distance)
+
+;; These examples are taken from Figure S12 in
+;; Tymoczko (2006).
+(5am:test vl-set-distance-ex-1
+  (5am:is (eql (vl-set-distance
+		'(4 7 11) '(4 4 4)
+		:pitch-class
+		:taxicab)
+	       8)))
+(5am:test vl-set-distance-ex-2
+  (5am:is (eql (vl-set-distance
+		'(4 7 7 7) '(4 8 11 3)
+		:pitch-class
+		:taxicab)
+	       9)))
+(5am:test vl-set-distance-ex-3
+  (5am:is (eql (vl-set-distance
+		'(4 7 11 0) '(4 8 11 11)
+		:pitch-class
+		:taxicab)
+	       2)))
+
+;; These examples are made up
+(5am:test vl-set-distance-ex-4
+  (5am:is (eql (vl-set-distance
+		'(60 64 67) '(60 63 67)
+		:pitch
+		:taxicab)
+	       1)))
+(5am:test vl-set-distance-ex-5
+  (5am:is (eql (vl-set-distance
+		'(58 64 67) '(60 63 67)
+		:pitch
+		:taxicab)
+	       3)))
+(5am:test vl-set-distance-ex-4
+  (5am:is (equalp (vl-set-distance
+		   '(60 64 67) '(60 63 67)
+		   :pitch
+		   :euclidean)
+		  1)))
+(5am:test vl-set-distance-ex-5
+  (5am:is (equalp (vl-set-distance
+		   '(58 64 67) '(55 68 67)
+		   :pitch
+		   :euclidean)
+		  5)))
+(5am:test vl-set-distance-ex-6
+  (5am:is (equalp (vl-set-distance
+		   '(11 0 4) '(2 0 8)
+		   :pitch-class
+		   :euclidean)
+		  5)))
+(5am:test vl-set-distance-ex-7
+  (5am:is (equalp (vl-set-distance
+		   '(37 38 45) '(47 40 42)
+		   :pitch
+		   :infinity)
+		  10)))
+(5am:test vl-set-distance-ex-8
+  (5am:is (equalp (vl-set-distance
+		   '(11 0 4) '(5 0 8)
+		   :pitch-class
+		   :infinity)
+		  6)))
+
+;;;; vl-set-distance
+(5am:def-suite vl-array :in tymoczko)
+(5am:in-suite vl-array)
+
+;; These examples are taken from Figure S12 in
+;; Tymoczko (2006).
+
+(5am:test vl-array-ex-1
+  (5am:is (eql (cdr (assoc :size
+			    (minimal-vl
+			     (make-instance 'vl-array
+					    :set-1 '(4 7 11 0 4)
+					    :set-2 '(4 8 11 3 4)
+					    :elt-type :pitch-class
+					    :norm :taxicab))))
+	       3)))
+(5am:test vl-array-ex-2
+  (5am:is (equal (cdr (assoc :start
+			      (minimal-vl
+			       (make-instance 'vl-array
+					      :set-1 '(4 7 11 0 4)
+					      :set-2 '(4 8 11 3 4)
+					      :elt-type :pitch-class
+					      :norm :taxicab))))
+		 '(4 7 11 0 4))))
+(5am:test vl-array-ex-3
+  (5am:is (equal (cdr (assoc :end
+			      (minimal-vl
+			       (make-instance 'vl-array
+					      :set-1 '(4 7 11 0 4)
+					      :set-2 '(4 8 11 3 4)
+					      :elt-type :pitch-class
+					      :norm :taxicab))))
+		 '(4 8 11 11 3))))
+(5am:test vl-array-ex-4
+  (5am:is (eql (extract-cell
+		(make-instance 'vl-array
+			       :set-1 '(4 7 11 0 4)
+			       :set-2 '(4 8 11 3 4)
+			       :elt-type :pitch-class
+			       :norm :taxicab)
+		2 0 :values t)
+	       8)))
+(5am:test vl-array-ex-5
+  (5am:is (eql (extract-cell
+		(make-instance 'vl-array
+			       :set-1 '(4 7 11 0 4)
+			       :set-2 '(4 8 11 3 4)
+			       :elt-type :pitch-class
+			       :norm :taxicab)
+		1 3 :values t)
+	       9)))
+
+(5am:test vl-array-ex-6
+  (5am:is (eql (extract-cell
+		(make-instance 'vl-array
+			       :set-1 '(4 7 11 0 4)
+			       :set-2 '(4 8 11 3 4)
+			       :elt-type :pitch-class
+			       :norm :taxicab)
+		3 1 :values t)
+	       8)))
+
+;;;; vl-get-minimal-voice-leading
+(5am:def-suite vl-get-minimal-voice-leading :in tymoczko)
+(5am:in-suite vl-get-minimal-voice-leading)
+
+(5am:test vl-get-minimal-voice-leading-ex-1
+  (5am:is (eql (cdr (assoc :size (vl-get-minimal-voice-leading
+				  '(0 4 7) '(0 3 7)
+				  :pitch-class :taxicab)))
+	       1)))
+(5am:test vl-get-minimal-voice-leading-ex-2
+  (5am:is (eql (cdr (assoc :size (vl-get-minimal-voice-leading
+				  '(0 4 7) '(0 5 9)
+				  :pitch-class :taxicab)))
+	       3)))
+(5am:test vl-get-minimal-voice-leading-ex-3
+  (5am:is (eql (cdr (assoc :size (vl-get-minimal-voice-leading
+				  '(0 4 7) '(0 3 8)
+				  :pitch-class :euclidean)))
+	       (sqrt 2))))
+(5am:test vl-get-minimal-voice-leading-ex-4
+  (5am:is (eql (cdr (assoc :size (vl-get-minimal-voice-leading
+				  '(0 4 7) '(0 3 9)
+				  :pitch-class :infinity)))
+	       2)))
+(5am:test vl-get-minimal-voice-leading-ex-5
+  (5am:is (eql (cdr (assoc :size (vl-get-minimal-voice-leading
+				  '(50 60 65) '(48 62 67)
+				  :pitch :taxicab)))
+	       6)))
+(5am:test vl-get-minimal-voice-leading-ex-6
+  (5am:is (eql (cdr (assoc :size (vl-get-minimal-voice-leading
+				  '(40 60 65) '(50 60)
+				  :pitch :taxicab)))
+	       15)))
+
+;; Viewpoints
+(make-viewpoint-tests
+ 'h-cpc-vl-dist-p=1
+ '(((harm-seq '((0 4 7) (0 3 7))) 1)
+   ((harm-seq '((0 2 5 7) (0 4 7))) 3)
+   ((harm-seq '((2 5 8) (2 5 9))) 1))
+ :parent-suite 'tymoczko)
+(make-viewpoint-tests
+ 'h-cpc-vl-dist-p=2
+ '(((harm-seq '((0 4 7) (0 3 8))) (sqrt 2))
+   ((harm-seq '((0 2 5 7) (0 4 7))) (sqrt 5))
+   ((harm-seq '((2 5 8) (2 5 9))) 1))
+ :test #'equalp
+ :parent-suite 'tymoczko)
+(make-viewpoint-tests
+ 'h-cpitch-vl-dist-p=1
+ '(((harm-seq '((40 41) (38 42))) 3)
+   ((harm-seq '((16 20 25 26) (16 19 25))) 2)
+   ((harm-seq '((15) (14 16))) 2))
+ :parent-suite 'tymoczko)
+(make-viewpoint-tests
+ 'h-cpitch-vl-dist-p=2
+ '(((harm-seq '((40 41) (37 45))) 5)
+   ((harm-seq '((16 20 25 26) (16 19 25))) (sqrt 2))
+   ((harm-seq '((15) (14 16))) (sqrt 2)))
+ :test #'equalp
+ :parent-suite 'tymoczko)
 

@@ -2,7 +2,7 @@
 ;;;; File:       IDyOM.asd
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-05-04 21:29:04 marcusp>
-;;;; Time-stamp: <2017-04-12 11:35:51 peter>
+;;;; Time-stamp: <2017-04-13 14:40:03 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -81,7 +81,9 @@
 		       (:file "general-chord-type")
 		       (:file "key-finding")
 		       (:file "pitch")
-		       (:file "hutchinson-knopoff")))
+		       (:file "hutchinson-knopoff")
+		       (:file "milne")
+		       (:file "tymoczko")))
              ;; useful extensions for modelling 
              ;; (not strictly part of the representation scheme)
 	     (:file "extensions")
