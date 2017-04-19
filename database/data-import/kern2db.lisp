@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-02-24 09:45:00 peter>                           
+;;;; Time-stamp: <2017-04-19 22:54:29 peter>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -13,7 +13,7 @@
 ;;;; each event is a list of attribute values:
 ;;;;
 ;;;;    (<onset> <cpitch> <mpitch> <dur> <keysig> <tonic> <mode> <barlength>
-;;;;     <phrase> <voice>)
+;;;;     <phrase> <voice> <bar> <posinbar>)
 ;;;; 
 ;;;; where: <onset>      is a number using *default-onset* as the onset of
 ;;;;                     of the start of the piece and *default-timebase* as
@@ -63,10 +63,16 @@
 ;;;;                             so as to represent each spine split uniquely.
 ;;;;        <instrument-group>   is a list of strings containing each instrument
 ;;;;                             group associated with the event.
+;;;;        <bar>        is an integer corresponding to the bar number. Typically
+;;;;                     begins at 1, or alternatively 0 for an anacrusis.
+;;;;        <posinbar>   is a number corresponding to the time interval
+;;;;                     between the start of the current bar and the present
+;;;;                     event, expressed in basic time units.
 ;;;;
 ;;;; Note that all these values are derived directly from a score-like
 ;;;; representation (not a performance), rests are not explicitly encoded
-;;;; and repeated sections are not explicitly expanded. 
+;;;; and repeated sections are not explicitly expanded.
+;;;;
 ;;;;
 ;;;; Todo (features) ======================================================
 ;;;; ======================================================================
@@ -90,7 +96,42 @@
 ;;;; 6. update the viewpoint documentation above (e.g. add tempo)
 ;;;; 7. remove redundant <tied-events> slot from humdrum-state
 ;;;;
-;;;; =======================================================================
+;;;; ======================================================================
+;;;; Assumptions that need error checks ===================================
+;;;; ======================================================================
+;;;;
+;;;; 1. Bar lengths are consistent with time signatures
+;;;; 2. Anacruses do not exceed one bar in length
+;;;;
+;;;; ======================================================================
+;;;; Algorithm outline ====================================================
+;;;; ======================================================================
+;;;;
+;;;; The algorithm proceeds line by line through the **kern file, processing
+;;;; events into CHARM format and storing them in a list. Separate states
+;;;; (called <humdrum-state>s) are maintained for each ongoing spine; this
+;;;; allows the algorithm to keep track of persistent spine attributes
+;;;; such as instrumentation and time signature. After each line is
+;;;; imported, the algorithm checks to ensure that the onsets of all new
+;;;; events created during that line are equal; otherwise, this indicates
+;;;; that something has gone wrong, usually an inconsistent **kern file.
+;;;;
+;;;; Barlines are surprisingly complicated to deal with, especially if you
+;;;; don't want to rely on the time signature being known, and if you
+;;;; want to allow **kern note events to span barlines.
+;;;; When a barline is encountered, the next available bar number is pushed
+;;;; to the front of the list *bar-nums*, and nil is pushed to the front
+;;;; of the list *bar-onsets*. The next time a kern event or a rest is
+;;;; encountered, we get the onset of this event, and set (car *bar-onsets*)
+;;;; to this value. This variable
+;;;; can then be used to define posinbar for all subsequent events in
+;;;; in the bar. If another barline happens before any other events have happned,
+;;;; the new barline is ignored - this would be a weird situation anyway.
+
+;;;; The definition of posinbar is slightly complicated for anacruses.
+;;;; We correct posinbar for the anacrusis bar (bar 0) in the same
+;;;; way that we correct onset in the anacrusis bar, by adding
+;;;; *onset-correction*.
 
 (cl:in-package #:kern2db)
 
@@ -190,7 +231,7 @@
             ("^\\*M(FREI)?[0-9?XZ]" timesig)       ;timesig token
 	    ("^=[a-z;=|!'`:-]*1[a-z;=|!'`:-]*$"    ;first barline
 	     first-barline)     
-            ("^=" ignore-token)                    ;ignore the other barlines 
+            ("^=" other-barline)                   ;ignore the other barlines 
             ("^[^!=.*].*r" musical-rest)           ;rests 
             ("^[^!=.*].* .+" chord)                ;chords
             ("^[^!=.*]" kern-event)                ;events
@@ -262,6 +303,8 @@
 (defvar *onset-correction* 0)              ;correction which will be applied to all onsets
 (defvar *ties* nil)                        ;list of ties currently available
 (defvar *record-onsets* nil)               ;list of onsets derived for the current record
+(defvar *bar-nums* nil)                    ;list of bar numbers, accumulated in reverse order
+(defvar *bar-onsets* nil)                  ;list of bar onsets, accumulated in reverse order
 
 ;;;==================
 ;;;* Structures *
@@ -377,7 +420,8 @@
    format using the default parameters."
   (let* ((kern-data (read-kern-data file-name))
          (processed-data (process-kern-data kern-data)))
-    (cons (pathname-name file-name) processed-data)))
+    (cons (cons :file-name (pathname-name file-name))
+	  processed-data)))
 
 (defun print-status ()
   "Print message warning about unrecognised representations or tokens.
@@ -538,6 +582,8 @@
     (check-interpretations interpretations)
     (setf *first-barline-reached* nil)
     (setf *ties* nil)
+    (setf *bar-onsets* (list 0))
+    (setf *bar-nums* (list 0))
     (let ((humdrum-states (initialise-humdrum-states
 			   interpretations))
 	  (next-humdrum-states nil))
@@ -587,10 +633,16 @@
 	  (setf next-humdrum-states (exchange-states next-humdrum-states))
 	  (setf humdrum-states (reverse next-humdrum-states)
 		next-humdrum-states nil))))
+    (when (null (car *bar-onsets*))
+      ;; Remove trailing barlines
+      (pop *bar-onsets*)
+      (pop *bar-nums*))
     (if *correct-onsets-to-first-barline*
 	(setf processed-events (correct-onsets processed-events
 					       *onset-correction*)))
-    (reverse processed-events)))
+    (list (cons :events (reverse processed-events))
+	  (cons :bar-nums (reverse *bar-nums*))
+	  (cons :bar-onsets (reverse *bar-onsets*)))))
 
 (defun process-kern-token
     (humdrum-state processed-events kern-token)
@@ -612,6 +664,8 @@
       (chord (process-chord
 	      kern-token humdrum-state processed-events))	  
       (first-barline (process-first-barline
+		      humdrum-state processed-events))
+      (other-barline (process-other-barline
 		      humdrum-state processed-events))
       (musical-rest (process-musical-rest
 		     kern-token humdrum-state processed-events))
@@ -754,10 +808,11 @@
   (:report (lambda (condition stream)
 	     (format stream
 		     "Error parsing line ~A of file ~A.~%~A~%~%The line reads:~%~%~S"
-		     *line-number*
-		     (namestring (make-pathname :name (pathname-name *file-name*)
-						:type (pathname-type *file-name*)))
-		     (text condition)
+		     (ignore-errors *line-number*)
+		     (ignore-errors
+		       (namestring (make-pathname :name (pathname-name *file-name*)
+						:type (pathname-type *file-name*))))
+		     (ignore-errors (text condition))
 		     (ignore-errors (get-line *line-number*))))))
 
 (define-condition jazz-line-read-error (error)
@@ -1174,7 +1229,7 @@ tie-offset tie-closed (reverse tie-tokens)))))))
 
 (defun kern-event (event environment)
   "Extracts and converts the pitch, duration and phrasing from event
-   tokens." 
+   tokens."
   (let* (;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
          ;; deal with other event tokens here ;;
          ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1204,10 +1259,17 @@ tie-offset tie-closed (reverse tie-tokens)))))))
          (voice (list :voice (cadr (assoc 'voice environment))))
 	 (subvoice (list :subvoice (cadr (assoc 'subvoice environment))))
 	 (instrument (list :instrument (cadr (assoc 'instrument environment))))
-	 (instrument-class (list :instrument-class (cadr (assoc 'instrument-class environment))))
-	 (instrument-group (list :instrument-group (cadr (assoc 'instrument-group environment)))))
+	 (instrument-class (list :instrument-class
+				 (cadr (assoc 'instrument-class environment))))
+	 (instrument-group (list :instrument-group
+				 (cadr (assoc 'instrument-group environment))))
+	 (bar (list :bar (car *bar-nums*)))
+	 (posinbar (if (null (car *bar-onsets*))
+		       (list :posinbar nil)
+		       (list :posinbar (- (second onset) (car *bar-onsets*))))))
     (list onset dur deltast bioi cpitch mpitch accidental keysig tonic mode barlength
-          pulses phrase voice (copy-list subvoice) tempo instrument instrument-class instrument-group)))
+          pulses phrase voice (copy-list subvoice) tempo instrument
+	  instrument-class instrument-group bar posinbar)))
 
 (defun process-pitch (event-token)    
   "Converts a kern pitch token <pitch-token> into a chromatic pitch
@@ -1373,19 +1435,25 @@ in a phrase, and 0 otherwise."
 		       humdrum-state))
 	 (new-event (funcall 'kern-event kern-token
 			     environment))
-	 (new-onset (second (assoc :onset new-event)))
-	 (new-processed-events
-	  (cond ((open-tie-p kern-token)
-		 (process-open-tie->processed-event
-		  kern-token humdrum-state processed-events))
-		((or (middle-tie-p kern-token)
-		     (close-tie-p kern-token))
-		 (process-continue-tie->processed-event
-		  kern-token humdrum-state processed-events))
-		(t (process-no-tie->processed-event
-		    kern-token humdrum-state processed-events)))))
+	 (new-onset (second (assoc :onset new-event))))
     (push new-onset *record-onsets*)
-    new-processed-events))
+    (when (null (car *bar-onsets*))
+      ;; If we've just had a new barline, but we don't know
+      ;; what the onset of the barline is, record the barline's
+      ;; onset as being the current event onset.
+      (assert (not (null new-onset)))
+      (setf (car *bar-onsets*) new-onset))
+    (let ((new-processed-events
+	   (cond ((open-tie-p kern-token)
+		  (process-open-tie->processed-event
+		   kern-token humdrum-state processed-events))
+		 ((or (middle-tie-p kern-token)
+		      (close-tie-p kern-token))
+		  (process-continue-tie->processed-event
+		   kern-token humdrum-state processed-events))
+		 (t (process-no-tie->processed-event
+		     kern-token humdrum-state processed-events)))))
+      new-processed-events)))
 
 (defun process-open-tie->processed-event
     (kern-token humdrum-state processed-events)
@@ -1600,6 +1668,16 @@ in a phrase, and 0 otherwise."
 	 (current-envir-onset (cadr (assoc 'onset environment)))
 	 (new-processed-events processed-events)
 	 (bar-length (calculate-bar-length environment)))
+    (when (not (null (car *bar-onsets*)))
+      ;; If we haven't triggered the first barline yet...
+      (if (null processed-events)
+	  ;; If there weren't any anacrusis events...
+	  (setf (car *bar-nums*) 1
+		(car *bar-onsets*) nil)
+	  ;; Otherwise...
+	  (progn
+	    (push 1 *bar-nums*)
+	    (push nil *bar-onsets*))))
     (if (and (not *first-barline-reached*)
 	     (not (null bar-length)) t)
 	(let* ((first-bar-onset (* (ceiling (/ current-envir-onset
@@ -1611,15 +1689,49 @@ in a phrase, and 0 otherwise."
     (values (list humdrum-state)
 	    new-processed-events)))
 
+(defun process-other-barline
+    (humdrum-state processed-events)
+  "Process barline other than the first barline."
+  (when (not (null (car *bar-onsets*)))
+    ;; If we've had a new rest or musical event since the
+    ;; last barline
+    (push (1+ (car *bar-nums*)) *bar-nums*)
+    (push nil *bar-onsets*))
+  (values (list humdrum-state)
+	  processed-events))
+
 (defun correct-onsets (events correction)
   "Corrects the onsets of a converted piece by adding
-   <correction> to the :onset slot of each event."
-  (mapcar #'(lambda (event)
-	      (let ((current-onset (cadr (assoc :onset event))))
-		(update-alist event
-			      (list :onset (+ current-onset
-					      correction)))))
-	  events))
+   <correction> to the :onset slot of each event. Also 
+   corrects posinbar for the first bar by the same amount.
+   Also corrects *bar-onsets*."
+  (if (= correction 0)
+      events
+      (progn
+	;; Note: the first bar onset (0) doesn't need correcting,
+	;; and that because the list is in reverse order,
+	;; the first bar onset is actually at the end of the list
+	(setf *bar-onsets*
+	      (append (mapcar #'(lambda (x) (+ x correction))
+		      (butlast *bar-onsets*))
+		      (last *bar-onsets*)))
+	(mapcar
+	 #'(lambda (event)
+	     (let* ((onset (cadr (assoc :onset event)))
+		    (posinbar (cadr (assoc :posinbar event)))
+		    (bar (cadr (assoc :bar event)))
+		    (event (update-alist
+			    event
+			    (list :onset (+ onset
+					    correction))))
+		    (event (if (= bar 0)
+			       (update-alist
+				event
+				(list :posinbar (+ posinbar
+						   correction)))
+			       event)))
+	       event))
+	 events))))
 
 (defun process-musical-rest
     (kern-token humdrum-state processed-events)
@@ -1654,6 +1766,11 @@ in a phrase, and 0 otherwise."
 	 ;;		    (t 0))))
 	 (new-environment
 	  (update-alist environment onset pause deltast bioi)))
+    (if (null (car *bar-onsets*))
+	;; If we've just had a new barline, but we don't know
+	;; what the onset of the barline is, record the barline's
+	;; onset as being the current event onset.
+	(setf (car *bar-onsets*) current-onset))
     (setf (humdrum-state-environment humdrum-state)
 	  new-environment)
     (values (list humdrum-state) new-processed-events)))
@@ -1843,12 +1960,20 @@ in a phrase, and 0 otherwise."
 								  environment))))
 	   (instrument-group (list :instrument-group (cadr (assoc 'instrument-group
 								  environment)))))
+      (if (null (car *bar-onsets*))
+	;; If we've just had a new barline, but we don't know
+	;; what the onset of the barline is, record the barline's
+	;; onset as being the current event onset.
+	  (setf (car *bar-onsets*) onset))
+      (let ((bar (list :bar (car *bar-nums*)))
+	    (posinbar (list :posinbar (- (second onset) (car *bar-onsets*)))))
       (dolist (cpitch cpitch-list new-processed-events)
 	(push (list onset dur deltast bioi (list :cpitch cpitch)
 		    mpitch accidental keysig tonic mode barlength
 		    pulses phrase voice (copy-list subvoice)
-		    tempo instrument instrument-class instrument-group)
-	      new-processed-events)))))
+		    tempo instrument instrument-class instrument-group
+		    bar posinbar)
+	      new-processed-events))))))
 
 (defun process-jazz-chord->environment
     (jazz-token humdrum-state)
