@@ -2,7 +2,7 @@
 ;;;; File:       generics.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2004-10-28 11:56:59 marcusp>
-;;;; Time-stamp: <2017-02-16 14:41:42 peter>
+;;;; Time-stamp: <2017-04-20 11:41:58 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:idyom-db)
@@ -14,6 +14,7 @@
 (defgeneric import-data (type path description id))
 (defgeneric insert-composition (dataset composition id))
 (defgeneric insert-event (composition event id))
+(defgeneric insert-barline (composition bar-num onset))
 (defgeneric get-attribute (event attribute))
 (defgeneric set-attribute (event attribute value))
 (defgeneric copy-event (object))

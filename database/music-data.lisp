@@ -2,7 +2,7 @@
 ;;;; File:       music-data.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-02-16 16:50:07 peter>                           
+;;;; Time-stamp: <2017-04-20 12:35:54 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -27,6 +27,7 @@
 ;;;; 1. Rewrite with less copying and pasting.
 ;;;; 2. Update status messages to use utils:message
 ;;;; 3. Incorporate additional progress bars where appropriate
+;;;; 4. Equate mtp-event class with music-event
 ;;;;
 
 (cl:in-package #:idyom-db)
@@ -58,6 +59,8 @@
 		(db-check-attribute-existence "MTP_EVENT" "INSTRUMENT")
 		(db-check-attribute-existence "MTP_EVENT" "INSTRUMENT_CLASS")
 		(db-check-attribute-existence "MTP_EVENT" "INSTRUMENT_GROUP")
+		(db-check-attribute-existence "MTP_EVENT" "BAR")
+		(db-check-attribute-existence "MTP_EVENT" "POSINBAR")
 		(db-check-attribute-class "MTP_EVENT" "ONSET" :float)
 		(db-check-attribute-class "MTP_EVENT" "CPITCH" :float)
 		(db-check-attribute-class "MTP_EVENT" "DUR" :float)
@@ -66,13 +69,14 @@
 		(db-check-attribute-class "MTP_EVENT" "BARLENGTH" :float)
 		(db-check-attribute-class "MTP_EVENT" "PULSES" :float)
 		(db-check-attribute-class "MTP_EVENT" "TEMPO" :float)
-		(db-check-attribute-class "MTP_EVENT" "VERTINT12" :float)))
+		(db-check-attribute-class "MTP_EVENT" "VERTINT12" :float)
+		(db-check-table-existence "MTP_BARLINE")))
       (if (utils:ask-user-y-n-question
 	   "Old database structure detected. Would you like to upgrade it?")
 	  (progn
 	    (db-backup)
-	    (format t "Attempting to upgrade database.~%")
-	    (format t "Adding new event attributes...~%")
+	    (utils:message "Attempting to upgrade database.")
+	    (utils:message "Adding new event attributes...")
 	    ;; When adding new basic viewpoints, new db-check-attribute-existence
 	    ;; functions should be added to the END of the current block.
 	    (db-check-attribute-existence "MTP_EVENT" "SUBVOICE"
@@ -90,12 +94,20 @@
 	    (db-check-attribute-existence "MTP_EVENT" "TONIC"
 					  :desired-attribute-type "INTEGER"
 					  :update t)
-	    (format t "Changing event attribute types...~%")
+	    (db-check-attribute-existence "MTP_EVENT" "BAR"
+					  :desired-attribute-type "INTEGER"
+					  :update t)
+	    (db-check-attribute-existence "MTP_EVENT" "POSINBAR"
+					  :desired-attribute-type "FLOAT"
+					  :update t)
+	    (utils:message "Changing event attribute types...")
 	    ;; Warning: an error will be thrown if the old database
 	    ;; (with the columns just added) doesn't have a matching
 	    ;; column structure to that specified in this package.
 	    (db-update-types "MTP_EVENT" 'mtp-event :verbose nil)
-	    (format t "Database upgrade complete.~%"))
+	    (utils:message "Adding barlines database...")
+	    (db-check-table-existence "MTP_BARLINE" :update t)
+	    (utils:message "Database upgrade complete."))
 	  (format t "Old database left unmodified."))))
 
 (defun db-check-attribute-existence (table-sqlite-name
@@ -123,6 +135,13 @@
 				   desired-attribute-type :verbose verbose))
 	  nil)
 	t)))
+
+(defun db-check-table-existence (table-sqlite-name
+				 &key (update nil) (db *default-database*))
+  (if (member table-sqlite-name (clsql:list-tables) :test #'string=)
+      t
+      (if update
+	  (create-view-from-class 'mtp-barline :database db))))
 
 (defun db-check-attribute-class (table-sqlite-name
 				 attribute-name desired-attribute-type
@@ -425,7 +444,17 @@ each table."))
     :type integer
     :initarg :tonic
     :initform 0
-    :reader event-tonic))
+    :reader event-tonic)
+   (bar
+    :type integer
+    :initarg :bar
+    :initform nil
+    :reader event-bar)
+   (posinbar
+    :type float
+    :initarg :posinbar
+    :initform nil
+    :reader event-posinbar))
   (:base-table mtp_event)
   (:documentation "A view class defining a table for events. The
 <dataset-id>, <composition-id> and <event-id> slots are integers which
@@ -442,7 +471,45 @@ first in a phrase and 0 otherwise; <tempo> is the tempo in crotchet bpm;
 no. in which the event occurs; <subvoice> identifies the subvoice 
 in which the event occurs; <instrument>, <instrument-class>, and
 <instrument-group> are strings describing the instrumentation
-of the musical event at various levels of detail." ))
+of the musical event at various levels of detail; <bar> identifies
+the bar in which the event occurs; <posinbar> indicates the distance
+of the current event from the start of the current bar in basic
+time units." ))
+
+(clsql:def-view-class mtp-barline (thread-safe-db-obj)
+  ((bar 
+    :db-kind :key
+    :db-constraints :not-null
+    :initarg :bar
+    :column bar
+    :type integer
+    :reader bar
+    :initarg bar)
+   (dataset-id
+    :db-kind :key
+    :db-constraints :not-null
+    :initarg :dataset-id 
+    :column dataset_id
+    :reader dataset-id 
+    :type integer)
+   (composition-id
+    :db-kind :key
+    :db-constraints :not-null
+    :initarg :composition-id 
+    :column composition_id
+    :reader composition-id 
+    :type integer)
+   (onset
+    :type float
+    :initarg :onset
+    :column onset
+    :reader onset))
+  (:base-table mtp_barline)
+  (:documentation "A view class for a table containing barline
+information. <bar> corresponds to the bar number under consideration.
+<dataset-id> and <composition-id> identify which composition we 
+are talking about. <onset> identifies the onset of the bar
+under consideration."))
 
 (defmethod make-load-form ((e mtp-event) &optional environment)
   (declare (ignore environment))
@@ -473,7 +540,9 @@ of the musical event at various levels of detail." ))
 		  :subvoice       ',(event-subvoice e)
 		  :instrument     ',(event-instrument e)
 		  :instrument-class      ',(event-instrument-class e)
-		  :instrument-group      ',(event-instrument-group e)))
+		  :instrument-group      ',(event-instrument-group e)
+		  :bar            ',(event-bar e)
+		  :posinbar       ',(event-posinbar e)))
 
 
 ;; Inserting and deleting datasets 
@@ -540,7 +609,9 @@ to exclude for each dataset specified in SOURCE-IDS."
 		      (list :subvoice (event-subvoice e))
 		      (list :instrument (event-instrument e))
 		      (list :instrument-class (event-instrument-class e))
-		      (list :instrument-group (event-instrument-group e)))
+		      (list :instrument-group (event-instrument-group e))
+		      (list :bar (event-bar e))
+		      (list :posinbar (event-posinbar e)))
                 composition))
         (push (nreverse composition) dataset)))
     (append (list (dataset-description mtp-dataset) 
@@ -584,8 +655,27 @@ to exclude for each dataset specified in SOURCE-IDS."
    dataset-id as <dataset> and inserts it into the composition table of
    the default database. Calls <insert-event> to insert each
    event of <composition> into the event table."
-  (let ((description (format nil "~D" (car composition)))
-        (events (cdr composition)))
+  ;; Originally <composition> objects took the form of a cons cell
+  ;; the first element of which was the file description and the
+  ;; second element of which was the list of processed events.
+  ;; We are in the process of upgrading to a new format where
+  ;; <composition> objects take the form of assoc-lists.
+  ;; However, not all import modules support this format, so
+  ;; currently both formats must be supported in this function.
+  ;; We can test for the new format by seeing if <composition>
+  ;; is of type list.
+  (let* ((format (if (listp composition) :new :old))
+	 (description (case format
+			(:old (format nil "~D" (car composition)))
+			(:new (cdr (assoc :description composition)))
+			(otherwise (error "Invalid case"))))
+	 (events (case format
+		   (:old (cdr composition))
+		   (:new (cdr (assoc :events composition)))
+		   (otherwise (error "Invalid case"))))
+	 (bar-nums (if (eql format :new) (cdr (assoc :bar-nums composition))))
+	 (bar-onsets (if (eql format :new) (cdr (assoc :bar-onsets composition)))))
+    (assert (eql (length bar-nums) (length bar-onsets)))
     (if (null events)
         (format t "~&Skipping empty composition: ~A.~%" description)
         (let ((count (length events))
@@ -597,7 +687,11 @@ to exclude for each dataset specified in SOURCE-IDS."
           (setf (slot-value composition-object 'dataset-id) (dataset-id d))
           (clsql:update-records-from-instance composition-object)
           (dotimes (event-id count)
-            (insert-event composition-object (nth event-id events) event-id))))))
+            (insert-event composition-object (nth event-id events) event-id))
+	  (loop
+	     for bar-num in bar-nums
+	     for bar-onset in bar-onsets
+	     do (insert-barline composition-object bar-num bar-onset))))))
 
 (defmethod insert-event ((composition mtp-composition) event id)
   "Takes a preprocessed event tuple <event> and
@@ -637,25 +731,45 @@ to exclude for each dataset specified in SOURCE-IDS."
 	    :subvoice   (coerce-to-string (cadr (assoc :subvoice event)))
 	    :instrument       (coerce-to-string (cadr (assoc :instrument event)))
 	    :instrument-class (coerce-to-string (cadr (assoc :instrument-class event)))
-	    :instrument-group (coerce-to-string (cadr (assoc :instrument-group event))))))
+	    :instrument-group (coerce-to-string (cadr (assoc :instrument-group event)))
+	    :bar (cadr (assoc :bar event))
+	    :posinbar (coerce-to-float (cadr (assoc :posinbar event))))))
       (clsql:update-records-from-instance event-object))))
 
- 
+(defmethod insert-barline ((composition mtp-composition) bar onset)
+  "Inserts a barline into MTP_BARLINE with the same dataset-id and 
+composition-id as <composition>.
+<bar> is an integer corresponding to the bar number; <onset> is a number
+corresponding to the onset of that bar."
+  ;;(assert integerp bar) ;; for some reason these assertions cause compilation errors
+  ;;(assert numberp onset)
+  (flet ((coerce-to-float (x)
+	   (if (null x) x (coerce x 'float))))
+    (let ((barline-object (make-instance 'mtp-barline
+					 :dataset-id (dataset-id composition)
+					 :composition-id (composition-id composition)
+					 :bar bar
+					 :onset (coerce-to-float onset))))
+      (clsql:update-records-from-instance barline-object))))
+
 (defun delete-dataset (dataset-id)
   "Deletes the dataset and all compositions and events whose dataset-id
    key value is <dataset-id> from the database." 
   (if (clsql:select 'mtp-dataset :where [= [slot-value 'mtp-dataset 'dataset-id]
-                                       dataset-id])
+		    dataset-id])
       (progn 
         (clsql:delete-records :from 'mtp_dataset
                               :where [= [slot-value 'mtp-dataset 'dataset-id]
-                                        dataset-id])
+			      dataset-id])
         (clsql:delete-records :from 'mtp_composition
                               :where [= [slot-value 'mtp-composition 'dataset-id]
-                                        dataset-id])
+			      dataset-id])
         (clsql:delete-records :from 'mtp_event
                               :where [= [slot-value 'mtp-event 'dataset-id]
-                                        dataset-id])
+			      dataset-id])
+	(clsql:delete-records :from 'mtp_barline
+                              :where [= [slot-value 'mtp-barline 'dataset-id]
+			      dataset-id])
         (format t "~%Dataset ~S deleted from the database." dataset-id))
       (format t "~%Dataset ~S does not exist in the database." dataset-id)))
 
@@ -799,7 +913,9 @@ a list containing the dataset-id is returned."))
 		 :subvoice (event-subvoice e)
 		 :instrument (event-instrument e)
 		 :instrument-class (event-instrument-class e)
-		 :instrument-group (event-instrument-group e)))
+		 :instrument-group (event-instrument-group e)
+		 :bar (event-bar e)
+		 :posinbar (event-posinbar e)))
 
 
 ;; Utility functions
