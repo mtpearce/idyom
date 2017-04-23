@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2017-03-03 12:28:36 peter>
+;;;; Time-stamp: <2017-04-23 09:03:58 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -44,10 +44,15 @@
 
 (defclass music-temporal-object (music-object anchored-time-interval) ())
 
-(defclass music-sequence (list-slot-sequence music-temporal-object) ()) ; a sequence of music objects ordered in time 
+(defclass music-sequence (list-slot-sequence music-temporal-object)     ; a sequence of music objects ordered in time
+  ((bars :initarg :bars :accessor bars :initform nil
+	 :documentation "List of bar numbers present in the object")
+   (bar-onsets :initarg :bar-onsets :accessor bar-onsets :initform nil
+	       :documentation "List of bar onsets, synchronised with bars slot")))
 (defclass music-composition (music-sequence) ())                        ; a composition is an unconstrained sequence of music objects
 (defclass melodic-sequence (music-sequence) ())                         ; a sequence of non-overlapping notes
 (defclass harmonic-sequence (music-sequence) ())                        ; a sequence of harmonic slices
+(defclass harmonic-sequence-bar (harmonic-sequence) ())                 ; a bar of a harmonic sequence
 
 (defclass key-signature ()
   ((keysig :initarg :keysig :accessor key-signature :documentation "Number of sharps (+ve) or flats (-ve) in key signature")
@@ -211,7 +216,8 @@ fff = 7; ffff = 9; fffff = 11")
 ;;; Getting music objects from the database
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun get-music-objects (dataset-indices composition-indices &key voices (texture :melody) (polyphonic-expansion :continuation))
+(defun get-music-objects (dataset-indices composition-indices
+			  &key voices (texture :melody) (polyphonic-expansion :continuation))
   "Returns music objects from the database corresponding to
 DATASET-INDICES, COMPOSITION-INDICES which may be single numeric IDs
 or lists of IDs. COMPOSITION-INDICES is only considered if
@@ -251,12 +257,119 @@ extracted or the harmony corresponding to all voices is used."
 
 ;; harmonic sequences
 
-(defun get-harmonic-sequence (dataset-index composition-index &key voices (expansion :full))
+(defun get-harmonic-sequence (dataset-index composition-index
+			      &key voices (expansion :full)
+				(reduction :none))
   "Gets harmonic sequences from a given composition indexed
-by DATASET-INDEX and COMPOSITION-INDEX"
-  (composition->harmony 
-   (get-composition (lookup-composition dataset-index composition-index))
-   :voices voices :expansion expansion))
+by DATASET-INDEX and COMPOSITION-INDEX. <expansion> determines
+the expansion method. <reduction> describes how (if at all)
+the harmonic sequence is reduced down to underlying structure,
+and can take values :none, i.e. no reduction, or :regular-harmonic-rhythm,
+i.e. reduce to the level of a regular harmonic rhythm."
+  (assert (member reduction (list :none :regular-harmonic-rhythm)
+		  :test #'string=))
+  (let ((slices (composition->harmony 
+		 (get-composition (lookup-composition dataset-index
+						      composition-index))
+		 :voices voices :expansion expansion)))
+    (case reduction
+      (:none (values slices
+		     (list (cons :reduction :none))))
+      (:beats (values (multiple-value-bind (chords info)
+				    (reduce-by-beats slices)
+				  (values slices info))))
+      (:regular-harmonic-rhythm (multiple-value-bind (chords info)
+				    (reduce-with-regular-harmonic-rhythm slices)
+				  (values slices info)))
+      (otherwise (error "Invalid case.")))))
+
+(defgeneric split-into-bars (sequence)
+  :documentation "Splits a given music sequence into bars.")
+
+(defmethod split-into-bars ((sequence harmonic-sequence))
+  (let ((bar-nums (bars sequence))
+	(bar-onsets (bar-onsets sequence))
+	(output))
+    (if (or (null bars) (null bar-onsets))
+	(error "Bar information is required to split a sequence into bars."))
+    (assert (eql (length bar-nums) (length bar-onsets)))
+    (let ((bar-offsets (append (cdr bar-onsets)
+			       (list nil))))
+      (loop
+	 for bar-num in bar-nums
+	 for bar-onset in bar-onsets
+	 for bar-offset in bar-offsets
+	 collect (let* ((matching-slices (get-sounding-objects sequence))
+			(trimmed-slices (
+			  )))
+	   ))))
+
+(defgeneric get-sounding-objects (sequence start end)
+  :documentation "Returns a list of all music objects within <sequence>
+that are sounding at some point at or after (>=) <onset> and 
+before (<) offset.")
+
+(defmethod get-sounding-objects
+    ((sequence music-sequence) start end)
+  (remove-if-not #'(lambda (o)
+		     (let* ((onset (onset o))
+			    (dur (dur o))
+			    (offset (+ onset dur)))
+		       (and (> offset start)
+			    (< onset end))))
+		 (coerce sequence 'list)))
+
+(defgeneric trim (object onset offset)
+  :documentation "Trims a music object so that its onset falls
+at <onset> or later and its offset falls at <offset> or earlier.")
+
+(defmethod trim ((slice music-slice) onset offset))
+
+(defmethod trim ((event music-event) onset offset))
+
+
+(defun get-matching-slices (sequences 
+    
+
+
+(defgeneric reduce-by-beats (events))
+(defmethod reduce-by-beats ((events harmonic-sequence))
+  (let*
+      ;; Split the events into bars
+      ((split-into-bars (split-into-bars (events)))
+       
+
+  ;; For each bar, find the canonic beat segmentation for that time signature
+  ;; Segment each bar
+
+(defun reduce-finding-best-regular-harmonic-rhythm
+    (events)
+  (let ((rhythm-candidates (get-harmonic-rhythm-candidates events))
+	(best-score) (best-solution-chords) (best-solution-info))
+    (dolist (rhythm-candidate rhythm-candidates)
+      (multiple-value-bind (chords info)
+	  (reduce-with-regular-harmonic-rhythm events rhythm-candidate)
+	(let ((score (cdr (assoc :score info))))
+	  (if (or (null best-score) (> score best-score))
+	      (setf best-score (cdr (assoc :score info))
+		    best-solution-chords chords
+		    best-solution-info info)))))
+    (values best-solution-chords best-solution-info)))
+
+(defun reduce-with-regular-harmonic-rhythm
+    (events rhythm)
+  "Reduces <events>, which should be a harmonic sequence, into a 
+series of chords, according to a repeating harmonic rhythm
+specified by 
+					  
+      
+       
+    
+
+
+(defgeneric get-harmonic-reduction (events &key 
+(defun get-harmonic-reduction slices
+  "Gets a harmonic reduction 
                     
 (defun get-harmonic-sequences (dataset-ids &key voices (expansion :full))
   "Gets harmonic sequences for all compositions contained within
