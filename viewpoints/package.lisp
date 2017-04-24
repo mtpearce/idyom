@@ -14,5 +14,6 @@
 	   #:list-threaded #:list-test #:predictors #:predictable
            #:attribute-equal #:viewpoint #:viewpoint-equal #:basic-p 
            #:in-typeset-p #:alphabet->events #:viewpoint-element-equal
-	   #:composition-viewpoint #:dataset-viewpoint)
+	   #:composition-viewpoint #:dataset-viewpoint
+	   #:harm-seq)
   (:documentation "Multiple viewpoint framework for music representation."))
