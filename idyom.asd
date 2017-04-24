@@ -2,7 +2,7 @@
 ;;;; File:       IDyOM.asd
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-05-04 21:29:04 marcusp>
-;;;; Time-stamp: <2017-04-19 13:11:11 peter>
+;;;; Time-stamp: <2017-04-24 20:52:17 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -56,7 +56,8 @@
 	    ((:file "package")
 	     (:file "extended-sequence")
 	     (:file "time")
-             (:file "music-objects")))
+             (:file "music-objects")
+	     (:file "tests")))
    ;; Viewpoints
    (:module viewpoints
 	    :serial t
