@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2017-04-23 09:03:58 peter>
+;;;; Time-stamp: <2017-04-25 17:30:53 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -14,7 +14,8 @@
 	[mpitch] [accidental] [keysig] [mode]
         [barlength] [pulses] [phrase] [tempo] [dyn] [voice] [bioi] 
         [ornament] [comma] [articulation][vertint12]))
-#.(clsql:restore-sql-reader-syntax-state)
+;;#.(clsql:restore-sql-reader-syntax-state)
+#.(clsql:disable-sql-reader-syntax)
 
 ; the order must match *event-attributes*
 (defvar *music-slots* '(onset dur deltast cpitch mpitch accidental 
@@ -37,34 +38,46 @@
 (defclass music-object ()
   ((identifier :initarg :id :accessor get-identifier :type identifier)
    (description :initarg :description :accessor description)
-   (timebase :initarg :timebase :accessor timebase :documentation "Number of time units in a semibreve")
-   (midc :initarg :midc :accessor midc :documentation "MIDI note number corresponding to middle C")))
+   (timebase :initarg :timebase :accessor timebase
+	     :documentation "Number of time units in a semibreve")
+   (midc :initarg :midc :accessor midc
+	 :documentation "MIDI note number corresponding to middle C")))
 
 (defclass music-dataset (list-slot-sequence music-object) ())
 
 (defclass music-temporal-object (music-object anchored-time-interval) ())
 
-(defclass music-sequence (list-slot-sequence music-temporal-object)     ; a sequence of music objects ordered in time
+(defclass music-sequence (list-slot-sequence music-temporal-object)
+  ;; a sequence of music objects ordered in time
   ((bars :initarg :bars :accessor bars :initform nil
 	 :documentation "List of bar numbers present in the object")
    (bar-onsets :initarg :bar-onsets :accessor bar-onsets :initform nil
 	       :documentation "List of bar onsets, synchronised with bars slot")))
-(defclass music-composition (music-sequence) ())                        ; a composition is an unconstrained sequence of music objects
-(defclass melodic-sequence (music-sequence) ())                         ; a sequence of non-overlapping notes
-(defclass harmonic-sequence (music-sequence) ())                        ; a sequence of harmonic slices
-(defclass harmonic-sequence-bar (harmonic-sequence) ())                 ; a bar of a harmonic sequence
+(defclass music-composition (music-sequence) ())
+;; a composition is an unconstrained sequence of music objects
+(defclass melodic-sequence (music-sequence) ())
+;; a sequence of non-overlapping notes
+(defclass harmonic-sequence (music-sequence) ())
+;; a sequence of harmonic slices
+(defclass harmonic-sequence-bar (harmonic-sequence) ())
+;; a bar of a harmonic sequence
 
 (defclass key-signature ()
-  ((keysig :initarg :keysig :accessor key-signature :documentation "Number of sharps (+ve) or flats (-ve) in key signature")
-   (mode :initarg :mode :accessor mode :documentation "Mode: 0 = major, 9 = minor, etc.")))
+  ((keysig :initarg :keysig :accessor key-signature
+	   :documentation "Number of sharps (+ve) or flats (-ve) in key signature")
+   (mode :initarg :mode :accessor mode
+	 :documentation "Mode: 0 = major, 9 = minor, etc.")))
 
 (defclass time-signature ()
-  ((barlength :initarg :barlength :accessor barlength :documentation "Number of basic time units (ticks) in bar")
-   (pulses :initarg :pulses :accessor pulses :documentation "Number of basic pulses/tactus units in bar")))
+  ((barlength :initarg :barlength :accessor barlength
+	      :documentation "Number of basic time units (ticks) in bar")
+   (pulses :initarg :pulses :accessor pulses
+	   :documentation "Number of basic pulses/tactus units in bar")))
 
 (defclass tempo ()
-  ((tempo :initarg :tempo :accessor tempo :documentation "Tempo in beats per minute")))
-  
+  ((tempo :initarg :tempo :accessor tempo
+	  :documentation "Tempo in beats per minute")))
+
 (defclass music-environment (key-signature time-signature tempo) ())
 
 (defclass music-phrase ()
@@ -72,30 +85,44 @@
 
 (defclass music-element (music-temporal-object music-environment music-phrase) ())
 
-(defclass music-slice (list-slot-sequence music-element) ())  ; set of music objects overlapping in time, ordered by voice
+(defclass music-slice (list-slot-sequence music-element) ())
+;; set of music objects overlapping in time, ordered by voice
 
 (defclass music-event (music-element)
-  ((bioi :initarg :bioi :accessor bioi
-	 :documentation "Basic interonset interval between last note and its predecessor")
-   (deltast :initarg :deltast :accessor deltast :documentation
-	    "Length of immediately preceding rest")
-   (cpitch :initarg :cpitch :accessor chromatic-pitch
-	   :documentation "MIDI pitch number")
-   (mpitch :initarg :mpitch :accessor morphetic-pitch
-	   :documentation "Meredith's morphetic pitch")
-   (accidental :initarg :accidental :accessor accidental
-	       :documentation "Inflection of named note: 0 = natural, 1 = single sharp,
+  ((bioi
+    :initarg :bioi :accessor bioi
+    :documentation "Basic interonset interval between last note and its predecessor")
+   (deltast
+    :initarg :deltast :accessor deltast :documentation
+    "Length of immediately preceding rest")
+   (cpitch
+    :initarg :cpitch :accessor chromatic-pitch
+    :documentation "MIDI pitch number")
+   (mpitch
+    :initarg :mpitch :accessor morphetic-pitch
+    :documentation "Meredith's morphetic pitch")
+   (accidental
+    :initarg :accidental :accessor accidental
+    :documentation "Inflection of named note: 0 = natural, 1 = single sharp,
 2 = double sharp, -1 = single flat , etc.")
-   (dyn :initarg :dyn :accessor dynamics
-	:documentation "ppppp = -11; pppp = -9; ppp = -7; pp = -5; p = -3; mp = -1; mf = 1; f = 3; ff = 5;
-fff = 7; ffff = 9; fffff = 11")
-   (ornament :initarg :ornament :accessor ornament
-	     :documentation "0 = no ornament; 1 = accacciatura; 2 = mordent; 3 = trill")
-   (comma :initarg :comma :accessor comma :documentation "0 = no comma; 1 = comma (breath mark)")
-   (articulation :initarg :articulation :accessor articulation
-		 :documentation "0 = no articulation mark; 1 = staccato; 2 = staccatissimo; 3 = sforzando; 4 = marcato")
+   (dyn
+    :initarg :dyn :accessor dynamics
+    :documentation "ppppp = -11; pppp = -9; ppp = -7; pp = -5; p = -3;
+mp = -1; mf = 1; f = 3; ff = 5; fff = 7; ffff = 9; fffff = 11")
+   (ornament
+    :initarg :ornament :accessor ornament
+    :documentation "0 = no ornament; 1 = accacciatura; 2 = mordent; 3 = trill")
+   (comma
+    :initarg :comma :accessor comma
+    :documentation "0 = no comma; 1 = comma (breath mark)")
+   (articulation
+    :initarg :articulation :accessor articulation
+    :documentation "0 = no articulation mark; 1 = staccato;
+2 = staccatissimo; 3 = sforzando; 4 = marcato")
    (vertint12 :initarg :vertint12 :accessor vertint12)
-   (voice :initarg :voice :accessor voice :documentation "Voice number in a score (Voice 1 assumed to be the monody)")))
+   (voice
+    :initarg :voice :accessor voice
+    :documentation "Voice number in a score (Voice 1 assumed to be the monody)")))
 
 (defclass continuation-event (music-event) ())
 
@@ -104,10 +131,12 @@ fff = 7; ffff = 9; fffff = 11")
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defclass dataset-identifier ()
-  ((dataset-id :initarg :dataset-index :accessor get-dataset-index :type (integer 0 *))))
-   
+  ((dataset-id :initarg :dataset-index :accessor get-dataset-index
+	       :type (integer 0 *))))
+
 (defclass composition-identifier (dataset-identifier)
-  ((composition-id :initarg :composition-index :accessor get-composition-index :type (integer 0 *))))
+  ((composition-id :initarg :composition-index :accessor get-composition-index
+		   :type (integer 0 *))))
 
 (defclass event-identifier (composition-identifier)
   ((event-id :initarg :event-index :accessor get-event-index :type (integer 0 *))))
@@ -193,7 +222,7 @@ fff = 7; ffff = 9; fffff = 11")
 (defmethod copy-event ((e music-element))
   (utils:copy-instance e))
 (defmethod copy-event ((ms music-slice))
-  (let ((ms-copy (utils:copy-instance ms)))
+  (let ((ms-copy (utils:copy-instance ms :check-atomic nil)))
     (setf (%list-slot-sequence-data ms-copy)
           (mapcar #'md:copy-event (coerce ms 'list)))
     ms-copy))
@@ -227,32 +256,39 @@ sequence of harmonic slices using full expansion (cf. Conklin,
 2002). The voices specified by VOICES are used. If VOICES is nil,
 the melody corresponding to the voice of the first event is
 extracted or the harmony corresponding to all voices is used."
-  (cond ((eq texture :melody)
-         (if (numberp dataset-indices)
-             (cond ((null composition-indices)
-                    (get-event-sequences dataset-indices :voices voices))
-                   ((numberp composition-indices)
-                    (get-event-sequence dataset-indices composition-indices :voices voices))
-                   (t 
-                    (mapcar #'(lambda (c) (get-event-sequence dataset-indices c :voices voices)) composition-indices)))
-             (get-event-sequences dataset-indices :voices voices)))
-        ((eq texture :harmony)
-         (if (numberp dataset-indices)
-             (cond ((null composition-indices)
-                    (get-harmonic-sequences dataset-indices
-					    :voices voices :expansion polyphonic-expansion))
-                   ((numberp composition-indices)
-                    (get-harmonic-sequence dataset-indices composition-indices
-					   :voices voices :expansion polyphonic-expansion))
-                   (t 
-                    (mapcar #'(lambda (c) (get-harmonic-sequence dataset-indices c
-								 :voices voices
-								 :expansion polyphonic-expansion))
-			    composition-indices)))
-             (get-harmonic-sequences dataset-indices
-				     :voices voices :expansion polyphonic-expansion)))
-        (t 
-         (error "Unrecognised texture for the music object. Current options are :melody or :harmony."))))
+  (cond
+    ((eq texture :melody)
+     (if (numberp dataset-indices)
+	 (cond ((null composition-indices)
+		(get-event-sequences dataset-indices :voices voices))
+	       ((numberp composition-indices)
+		(get-event-sequence dataset-indices composition-indices
+				    :voices voices))
+	       (t 
+		(mapcar #'(lambda (c) (get-event-sequence dataset-indices c
+							  :voices voices))
+			composition-indices)))
+	 (get-event-sequences dataset-indices :voices voices)))
+    ((eq texture :harmony)
+     (if (numberp dataset-indices)
+	 (cond ((null composition-indices)
+		(get-harmonic-sequences dataset-indices
+					:voices voices
+					:expansion polyphonic-expansion))
+	       ((numberp composition-indices)
+		(get-harmonic-sequence dataset-indices composition-indices
+				       :voices voices
+				       :expansion polyphonic-expansion))
+	       (t 
+		(mapcar #'(lambda (c)
+			    (get-harmonic-sequence dataset-indices c
+						   :voices voices
+						   :expansion polyphonic-expansion))
+			composition-indices)))
+	 (get-harmonic-sequences dataset-indices
+				 :voices voices :expansion polyphonic-expansion)))
+    (t 
+     (error "Unrecognised texture for the music object. Current options are :melody or :harmony."))))
 
 
 ;; harmonic sequences
@@ -268,108 +304,308 @@ and can take values :none, i.e. no reduction, or :regular-harmonic-rhythm,
 i.e. reduce to the level of a regular harmonic rhythm."
   (assert (member reduction (list :none :regular-harmonic-rhythm)
 		  :test #'string=))
-  (let ((slices (composition->harmony 
-		 (get-composition (lookup-composition dataset-index
-						      composition-index))
-		 :voices voices :expansion expansion)))
+  (let* ((input (composition->harmony (get-composition
+				       (lookup-composition dataset-index
+							   composition-index))
+				      :voices voices :expansion expansion))
+	 (slices (cdr (assoc :slices input)))
+	 (bars (cdr (assoc :bars input)))
+	 (bar-onsets (cdr assoc :bar-onsets input)))
     (case reduction
       (:none (values slices
 		     (list (cons :reduction :none))))
       (:beats (values (multiple-value-bind (chords info)
-				    (reduce-by-beats slices)
-				  (values slices info))))
-      (:regular-harmonic-rhythm (multiple-value-bind (chords info)
-				    (reduce-with-regular-harmonic-rhythm slices)
-				  (values slices info)))
+			  (reduce-by-beats slices)
+			(values slices info))))
+      (:regular-harmonic-rhythm
+       (progn
+	 (if (or (null bars) (bar-onsets))
+	     (error "Couldn't find barline information."))
+	 (multiple-value-bind (chords info)
+	     (reduce-with-regular-harmonic-rhythm slices bars bar-onsets)
+	   (values slices info))))
       (otherwise (error "Invalid case.")))))
 
-(defgeneric split-into-bars (sequence)
-  :documentation "Splits a given music sequence into bars.")
+(defun reduce-with-regular-harmonic-rhythm
+    (slices bars bar-onsets)
+  (assert (listp slices))
+  (assert (listp bars))
+  (assert (listp bar-onsets))
+  (assert (not (or (null bars) (null bar-onsets))))
+  (assert (eql (length bars) (length bar-onsets)))
+  (assert (every #'(lambda (s) (typep s 'music-slice)) slices))
+  (assert (every #'(lambda (x) (numberp x)) bars))
+  (assert (every #'(lambda (x) (numberp x)) bar-onsets))
+  (let ((slices-by-bar (slices->bars slices bars bar-onsets)))
+    (mapcar #'reduce-bar slices-by-bar)))
 
-(defmethod split-into-bars ((sequence harmonic-sequence))
-  (let ((bar-nums (bars sequence))
-	(bar-onsets (bar-onsets sequence))
-	(output))
-    (if (or (null bars) (null bar-onsets))
-	(error "Bar information is required to split a sequence into bars."))
-    (assert (eql (length bar-nums) (length bar-onsets)))
-    (let ((bar-offsets (append (cdr bar-onsets)
-			       (list nil))))
-      (loop
-	 for bar-num in bar-nums
-	 for bar-onset in bar-onsets
-	 for bar-offset in bar-offsets
-	 collect (let* ((matching-slices (get-sounding-objects sequence))
-			(trimmed-slices (
-			  )))
-	   ))))
+(defun reduce-bar (bar)
+  (let* ((slices (cdr (assoc :slices bar)))
+	 (barlengths (mapcar #'barlength slices))
+	 (pulses (mapcar #'pulses slices))
+	 (timebases (mapcar #'timebase slices)))
+    (assert (utils:all-eql barlengths))
+    (assert (utils:all-eql pulses))
+    (assert (utils:all-eql timebases))
+    (let ((barlength (car barlengths))
+	  (pulses (car pulses))
+	  (timebase (car timebases)))
+      (assert (not (null barlength)))
+      (assert (not (null pulses)))
+      (assert (not (null timebase)))
+      (let ((reduced-slices
+	     (multiple-value-bind
+		   (segment-starts segment-ends)
+		 (find-harmonic-rhythm pulses barlength timebase slices)
+	       (loop
+		  for segment-start in segment-starts
+		  for segment-end in segment-ends
+		  collect
+		    (let* ((matching-slices (get-sounding-objects
+					     slices segment-start segment-end))
+			   (trimmed-slices (mapcar
+					    #'(lambda (s)
+						(trim s segment-start segment-end))
+					    matching-slices)))
+		      (slices->slice trimmed-slices
+				     segment-start segment-end))))))
+	(append (cons :reduced-slices reduced-slices)
+		(cons :barlength barlength) (cons :pulses pulses)
+		(cons :timebase timebase)
+		(cons :segment-starts segment-starts)
+		(cons :segment-ends segment-ends)
+		bar)))))
 
-(defgeneric get-sounding-objects (sequence start end)
-  :documentation "Returns a list of all music objects within <sequence>
-that are sounding at some point at or after (>=) <onset> and 
-before (<) offset.")
+(defun slices->slice (slices onset offset &key (weight :duration))
+  "Uses Pardo and Birmingham's (2002) chord labelling
+algorithm to reduce <slices> to one <slice> with onset
+<onset> and offset <offset>. If <weight> is :duration, pitch classes
+are weighted by their duration; if <weight> is :num-segments, pitch 
+classes are weighted by the number of segments they occur in."
+  (assert (listp slices))
+  (assert (every #'(lambda (s) (typep s 'music-slice)) slices))
+  (assert (numberp onset)) (assert (numberp offset))
+  (assert (> offset onset))
+  (assert (member weight (list :duration :num-segments)))
+  )
 
-(defmethod get-sounding-objects
-    ((sequence music-sequence) start end)
-  (remove-if-not #'(lambda (o)
-		     (let* ((onset (onset o))
-			    (dur (dur o))
-			    (offset (+ onset dur)))
-		       (and (> offset start)
-			    (< onset end))))
-		 (coerce sequence 'list)))
+(defun slices->pc-weights (slices &key (weight :duration))
+  "Gets pitch-class weights from <slices>, which should be 
+a list of harmonic slices.  If <weight> is :duration, pitch classes
+are weighted by their duration; if <weight> is :num-segments, pitch 
+classes are weighted by the number of segments they occur in."
+  (assert (listp slices))
+  (assert (every #'(lambda (s) (typep s 'music-slice)) slices))
+  (assert (member weight (list :duration :num-segments)))
+  (let* ((events (mapcan #'(lambda (slice) (coerce slice 'list)) slices))
+	 (pc-weights (make-array 12 :initial-element 0)))
+    (dolist (event events pc-weights)
+      (let* ((cpitch (get-attribute event 'cpitch))
+	     (cpc (mod cpitch 12))
+	     (round-cpc (round cpc))
+	     (dur (get-attribute event 'dur)))
+	(assert (equalp round-cpc cpc))
+	(incf (svref pc-weights round-cpc)
+	      (case weight
+		(:duration dur)
+		(:num-segments 1)
+		(otherwise (error "Invalid <weight> argument."))))))))
 
-(defgeneric trim (object onset offset)
-  :documentation "Trims a music object so that its onset falls
-at <onset> or later and its offset falls at <offset> or earlier.")
-
-(defmethod trim ((slice music-slice) onset offset))
-
-(defmethod trim ((event music-event) onset offset))
-
-
-(defun get-matching-slices (sequences 
+(defun find-harmonic-rhythm (pulses barlength &key slices)
+  "Finds the harmonic rhythm for a bar given the <slices>
+that make up that <bar>, and the attributes <pulses>
+and <barlength> which are basic event attributes. <pulses>
+corresponds to the denominator of the time signature;
+if a compound time is detected, then pulses will not correspond
+directly to the number of beats in the bar.
+Returns two lists, the first corresponding to the starts of 
+each harmonic segment in basic time units, the second 
+corresponding to the ends of these harmonic segments."
+  (declare (ignore slices))
+  (let* ((num-pulses-in-bar (if (and (> pulses 5)
+				     (eql (mod pulses 3) 0))
+				(/ pulses 3)
+				pulses))
+	 (pulse-length (/ barlength num-pulses-in-bar))
+	 (segment-starts (loop for i from 0 to (1- num-pulses-in-bar)
+			    collect (* i pulse-length)))
+	 (segment-ends (loop for i from 1 to num-pulses-in-bar
+			  collect (* i pulse-length))))
+    (values segment-starts segment-ends)))
     
 
 
-(defgeneric reduce-by-beats (events))
-(defmethod reduce-by-beats ((events harmonic-sequence))
-  (let*
-      ;; Split the events into bars
-      ((split-into-bars (split-into-bars (events)))
+  (defun get-timesig (pulses barlength timebase)
+    "Converts <pulses> and <barlength>, basic event attributes,
+to a time signature."
+    (let* ((numerator pulses)
+	   (denominator (/ timebase (/ barlength numerator))))
+      (values numerator denominator)))
+  
+
+
+    (let* ((timesig (cadr (assoc 'timesig environment)))
+         (timebase (cadr (assoc 'timebase environment)))
+         (numerator (car timesig))
+         (denominator (cadr timesig)))
+    (if (null denominator) nil (* (/ timebase denominator) numerator))))
+
+;; (defun reduce-finding-best-regular-harmonic-rhythm
+;;     (events)
+;;   (let ((rhythm-candidates (get-harmonic-rhythm-candidates events))
+;; 	(best-score) (best-solution-chords) (best-solution-info))
+;;     (dolist (rhythm-candidate rhythm-candidates)
+;;       (multiple-value-bind (chords info)
+;; 	  (reduce-with-regular-harmonic-rhythm events rhythm-candidate)
+;; 	(let ((score (cdr (assoc :score info))))
+;; 	  (if (or (null best-score) (> score best-score))
+;; 	      (setf best-score (cdr (assoc :score info))
+;; 		    best-solution-chords chords
+;; 		    best-solution-info info)))))
+;;     (values best-solution-chords best-solution-info)))
+
+(defun slices->bars (slices bars bar-onsets)
+  "Takes as input a list of music slices, <slices>,
+a list of bar numbers, <bars>, and a matching list 
+giving the onsets of these bars, <bar-onsets>."
+  (assert (listp slices))
+  (assert (listp bars))
+  (assert (listp bar-onsets))
+  (assert (not (or (null bars) (null bar-onsets))))
+  (assert (eql (length bars) (length bar-onsets)))
+  (assert (every #'(lambda (s) (typep s 'music-slice)) slices))
+  (assert (every #'(lambda (x) (numberp x)) bars))
+  (assert (every #'(lambda (x) (numberp x)) bar-onsets))
+  (let ((bar-offsets (append (cdr bar-onsets)
+			     (list nil))))
+    (loop
+       for bar in bars
+       for bar-onset in bar-onsets
+       for bar-offset in bar-offsets
+       collect (let* ((matching-slices (get-sounding-objects
+					slices bar-onset bar-offset))
+		      (trimmed-slices (mapcar #'(lambda (s)
+						  (trim s bar-onset bar-offset))
+					      matching-slices)))
+		 (list (cons :bar bar) (cons :slices trimmed-slices))))))
+
+(defgeneric get-sounding-objects (sequence start end)
+  (:documentation "Returns a list of all music objects within <sequence>
+that are sounding at some point at or after (>=) <onset> and 
+before (<) offset. One of <start> or <end> may be nil, in which 
+case only the other boundary is used (e.g. if start is nil,
+then the only filtering criterion is that the <event> should be 
+sounding at some point before <end>."))
+
+(defmethod get-sounding-objects
+    ((events list) start end)
+  (assert (or (numberp start) (null start)))
+  (assert (or (numberp end) (null end)))
+  (assert (or (numberp start) (numberp end)))
+  (assert (if (and (numberp start) (numberp end))
+	      (> (- end start) 0)
+	      t))
+  (remove-if-not
+   #'(lambda (o)
+       (let* ((onset (onset o))
+	      (dur (duration o))
+	      (offset (+ onset dur)))
+	 (cond ((null start) (< onset end))
+	       ((null end) (> offset start))
+	       (t (and (> offset start)
+		       (< onset end))))))
+   events))
+
+(defmethod get-sounding-objects
+    ((sequence music-sequence) start end)
+  (get-sounding-objects (coerce sequence 'list)
+			start end))
+
+(defgeneric trim (object onset offset)
+  (:documentation "Non-destructively trims a music object
+so that its onset falls at <onset> or later and its offset falls
+at <offset> or earlier. One of <onset> or <offset> may be nil,
+in which case the corresponding trim for that end of the object
+is ignored."))
+
+(defmethod trim ((slice music-slice) onset offset)
+  (assert (or (numberp onset) (null onset)))
+  (assert (or (numberp offset) (null offset)))
+  (assert (or (numberp onset) (numberp offset)))
+  (assert (if (and (numberp onset) (numberp offset))
+  	      (> (- offset onset) 0)
+  	      t))
+  (let* ((original-onset (onset slice))
+	 (original-dur (duration slice))
+	 (original-offset (+ original-onset
+			     original-dur)))
+    (assert (every #'(lambda (e)
+    		       (eql (onset e) original-onset))
+    		   (coerce slice 'list)))
+    (assert (every #'(lambda (e)
+    		       (eql (duration e) original-dur))
+    		   (coerce slice 'list)))
+    (let* ((new-onset (if onset (max original-onset onset) original-onset))
+	   (new-offset (if offset (min original-offset offset) original-offset))
+	   (new-dur (- new-offset new-onset))
+	   (new-slice (copy-event slice)))
+      (assert (> new-dur 0))
+      ;; Set attributes for the overall slice
+      (set-attribute new-slice 'onset new-onset)
+      (set-attribute new-slice 'dur new-dur)
+      ;; Set attributes for the component events
+      (setf (%list-slot-sequence-data new-slice)
+      	    (mapcar #'(lambda (e) (trim e onset offset))
+      		    (%list-slot-sequence-data new-slice)))
+  new-slice)))
+    
+(defmethod trim ((event music-event) onset offset)
+  ;; Check for cases where a trim would produce an event of zero
+  ;; duration; we throw an error if so.
+  (assert (or (numberp onset) (null onset)))
+  (assert (or (numberp offset) (null offset)))
+  (assert (or (numberp onset) (numberp offset)))
+  (assert (if (and (numberp onset) (numberp offset))
+	      (> (- offset onset) 0)
+	      t))
+  (let* ((original-onset (onset event))
+	 (original-dur (duration event))
+	 (original-offset (+ original-onset
+			     original-dur)))
+	(let* ((new-onset (if onset (max original-onset onset) original-onset))
+	       (new-offset (if offset (min original-offset offset) original-offset))
+	       (new-dur (- new-offset new-onset))
+	       (new-event (copy-event event)))
+	  (assert (> new-dur 0))
+	  (setf (onset new-event) new-onset
+		(duration new-event) new-dur)
+	  new-event))))
+
+
+;; (defun get-matching-slices (sequences 
+    
+
+
+;; (defgeneric reduce-by-beats (events))
+;; (defmethod reduce-by-beats ((events harmonic-sequence))
+;;   (let*
+;;       ;; Split the events into bars
+;;       ((split-into-bars (split-into-bars (events)))
        
 
-  ;; For each bar, find the canonic beat segmentation for that time signature
-  ;; Segment each bar
+;;   ;; For each bar, find the canonic beat segmentation for that time signature
+;;   ;; Segment each bar
 
-(defun reduce-finding-best-regular-harmonic-rhythm
-    (events)
-  (let ((rhythm-candidates (get-harmonic-rhythm-candidates events))
-	(best-score) (best-solution-chords) (best-solution-info))
-    (dolist (rhythm-candidate rhythm-candidates)
-      (multiple-value-bind (chords info)
-	  (reduce-with-regular-harmonic-rhythm events rhythm-candidate)
-	(let ((score (cdr (assoc :score info))))
-	  (if (or (null best-score) (> score best-score))
-	      (setf best-score (cdr (assoc :score info))
-		    best-solution-chords chords
-		    best-solution-info info)))))
-    (values best-solution-chords best-solution-info)))
 
-(defun reduce-with-regular-harmonic-rhythm
-    (events rhythm)
-  "Reduces <events>, which should be a harmonic sequence, into a 
-series of chords, according to a repeating harmonic rhythm
-specified by 
 					  
       
        
     
 
 
-(defgeneric get-harmonic-reduction (events &key 
-(defun get-harmonic-reduction slices
-  "Gets a harmonic reduction 
+;; (defgeneric get-harmonic-reduction (events &key 
+;; (defun get-harmonic-reduction slices
+;;   "Gets a harmonic reduction 
                     
 (defun get-harmonic-sequences (dataset-ids &key voices (expansion :full))
   "Gets harmonic sequences for all compositions contained within
@@ -396,7 +632,9 @@ a set of datasets indexed by DATASET-IDS"
           (event-list (coerce sorted-composition 'list))
           (event-list (if (null voices) 
                           event-list 
-                          (remove-if #'(lambda (x) (not (member x voices))) event-list :key #'md:voice)))
+                          (remove-if #'(lambda (x)
+					 (not (member x voices)))
+				     event-list :key #'md:voice)))
           (onsets (remove-duplicates (mapcar #'onset event-list)))
           (l (length onsets))
           (slices nil))
@@ -404,44 +642,54 @@ a set of datasets indexed by DATASET-IDS"
      (dotimes (i l)
        ;; For each onset
        (let* ((onset (nth i onsets))
-	      (matching-events (get-matching-events event-list onset :expansion expansion))
-	      ;; change onset and, if necessary, shorten duration to avoid overlap with next onset
-	      (matching-events (if (member expansion '(:continuation :full))
-				   (mapcar #'(lambda (x) 
-					       (let ((e (md:copy-event x)))
-						 (md:set-attribute e 'onset onset)
-						 (if (< i (1- l))
-						     (md:set-attribute e 'dur (min (duration x)
-										   (- (nth (1+ i) onsets)
-										      onset)))
-						     (md:set-attribute e 'dur (apply #'max
-										     (mapcar #'duration
-											     matching-events))))
-						 e))
-					   matching-events)
-				   matching-events))
+	      (matching-events (get-matching-events event-list
+						    onset :expansion expansion))
+	      ;; change onset and, if necessary, shorten duration
+	      ;; to avoid overlap with next onset
+	      (matching-events
+	       (if (member expansion '(:continuation :full))
+		   (mapcar
+		    #'(lambda (x) 
+			(let ((e (md:copy-event x)))
+			  (md:set-attribute e 'onset onset)
+			  (if (< i (1- l))
+			      (md:set-attribute
+			       e 'dur (min (duration x)
+					   (- (nth (1+ i) onsets)
+					      onset)))
+			      (md:set-attribute
+			       e 'dur (apply #'max
+					     (mapcar #'duration
+						     matching-events))))
+			  e))
+		    matching-events)
+		   matching-events))
 	      ;; sort events by voice
 	      (matching-events (sort matching-events #'< :key #'voice))
 	      ;; create a slice object containing those events
-	      (slice (make-instance 'music-slice 
-				    :onset onset 
-				    :duration (apply #'max (mapcar #'duration matching-events))
-				    :tempo (tempo (car matching-events))
-				    :barlength (barlength (car matching-events))
-				    :pulses (pulses (car matching-events))
-				    :keysig (key-signature (car matching-events))
-				    :mode (mode (car matching-events))
-				    :midc (midc composition)
-				    :id (copy-identifier (get-identifier composition))
-				    :description (description composition)
-				    :timebase (timebase composition))))
+	      (slice (make-instance
+		      'music-slice 
+		      :onset onset 
+		      :duration (apply #'max (mapcar #'duration matching-events))
+		      :tempo (tempo (car matching-events))
+		      :barlength (barlength (car matching-events))
+		      :pulses (pulses (car matching-events))
+		      :keysig (key-signature (car matching-events))
+		      :mode (mode (car matching-events))
+		      :midc (midc composition)
+		      :id (copy-identifier (get-identifier composition))
+		      :description (description composition)
+		      :timebase (timebase composition))))
 	 (sequence:adjust-sequence  slice (length matching-events)
-				    :initial-contents (sort matching-events #'< :key #'voice))
+				    :initial-contents
+				    (sort matching-events #'< :key #'voice))
 	 (push slice slices)))
      ;; return the new harmonic sequence
      (sequence:adjust-sequence hs (length slices)
-	:initial-contents (sort slices #'< :key #'onset))
-       hs))
+			       :initial-contents (sort slices #'< :key #'onset))
+     (list (cons :slices hs)
+	   (cons :bars (bars composition))
+	   (cons :bar-onsets (bar-onsets composition)))))
 
 (defun get-matching-events (event-list onset &key (expansion :full))
   "Gets matching events from <event-list> at time <onset>
@@ -460,11 +708,11 @@ a set of datasets indexed by DATASET-IDS"
 					 event-list))
 	    ;; find the events that continue into that onset
 	    (continuation-events (remove-if-not #'(lambda (x)
-						  (and (< (onset x) onset)
-						       (> (onset (end-time x)) onset)))
-					      event-list))
+						    (and (< (onset x) onset)
+							 (> (onset (end-time x)) onset)))
+						event-list))
 	    (continuation-events (mapcar #'(lambda (e) (change-class e 'continuation-event))
-				       continuation-events)))
+					 continuation-events)))
        (append begin-events continuation-events)))
     (:natural
      (remove-if-not #'(lambda (x) (eql (onset x) onset)) event-list))
@@ -538,7 +786,8 @@ the highest pitch sounding at that onset position."
           (when (not (= (bioi top) (- (onset top) (onset previous-event))))
             (md:set-attribute top 'bioi (- (onset top) (onset previous-event))))
           (when (before previous-event top)
-            (md:set-attribute top 'deltast (- (onset top) (onset (end-time previous-event))))))
+            (md:set-attribute top 'deltast (- (onset top)
+					      (onset (end-time previous-event))))))
         ;; (print (list top (chromatic-pitch top) (length slice)))
         (setf previous-event top)
         (push top result)))))
@@ -619,12 +868,20 @@ the highest pitch sounding at that onset position."
          (timebase 
           (car (clsql:select [timebase] :from [mtp-composition] 
                              :where where-clause :flatp t :field-names nil)))
-         (midc (car (clsql:select [midc] :from [mtp-dataset] :where [= [dataset-id] dataset-id] :flatp t)))
+         (midc (car (clsql:select [midc] :from [mtp-dataset]
+				  :where [= [dataset-id] dataset-id] :flatp t)))
          (db-events (apply #'clsql:select 
                            (append *event-attributes* 
                                    (list :from [mtp-event] 
                                          :order-by '(([event-id] :asc))
                                          :where where-clause))))
+	 (bar-lines (clsql:select
+		      [bar] [onset] :from [mtp-barline]
+		      :where [and [= [dataset-id] dataset-id]
+		      [= [composition-id] composition-id]]
+		      :field-names nil :flatp t))
+	 (bar-nums (mapcar #'first bar-lines))
+	 (bar-onsets (mapcar #'second bar-lines)) 
          (events nil))
     (when (and db-events timebase)
       (dolist (e db-events)
@@ -637,7 +894,9 @@ the highest pitch sounding at that onset position."
                              :duration interval
                              :description description
                              :midc midc
-                             :timebase timebase)))
+                             :timebase timebase
+			     :bars bar-nums
+			     :bar-onsets bar-onsets)))
         (sequence:adjust-sequence composition (length events)
                                   :initial-contents (nreverse events))
         composition))))
