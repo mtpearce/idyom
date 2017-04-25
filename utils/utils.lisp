@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2017-04-25 09:46:39 peter>
+;;;; Time-stamp: <2017-04-25 10:08:29 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -615,12 +615,18 @@
 ;;; Objects
 ;;;===========================================================================
 
-(defun copy-instance (object)
+(defun copy-instance (object &key (check-atomic t))
+  "Copies an instance <object>. Currently only supports the copying
+of objects where all slots are atomic. If <check-atomic>, then
+the function will check that all slots are atomic, and an error will
+be thrown if any are not atomic; if not, no checks will be carried out,
+and therefore non-atomic slots will still point to the data of the original
+object." 
   (let* ((class (class-of object))
          (copy (allocate-instance class)))
     (dolist (slot (mapcar #'sb-mop:slot-definition-name (sb-mop:class-slots class)))
       (when (slot-boundp object slot)
-	(if (not (atom (slot-value object slot)))
+	(if (and check-atomic (not (atom (slot-value object slot))))
 	    (error "Tried to a copy a non-atomic slot using copy-instance."))
         (setf (slot-value copy slot) (slot-value object slot))))
     copy))
