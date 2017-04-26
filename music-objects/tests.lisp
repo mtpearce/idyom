@@ -2,7 +2,7 @@
 ;;;; File:       tests.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-04-24 20:51:10 peter>                            
-;;;; Time-stamp: <2017-04-25 17:36:52 peter>                           
+;;;; Time-stamp: <2017-04-26 19:02:53 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -303,6 +303,148 @@ be a list the ith element of which is the duration of the ith chord.
 		   :weight :duration)
 		  (vector 201 0 0 200 0 1 0 200 1 0 0 0))))
 
+;;;; *pb-all-chord-templates*
+(5am:def-suite pb-all-chord-templates :in music-data)
+(5am:in-suite pb-all-chord-templates)
+
+;; *pb-all-chord-templates should be a list of 12 lists,
+;; each corresponding to templates for one particular root.
+
+;; Check for pitch classes not betwen 0 and 11, and for duplicated pitch classes
+(5am:test pb-all-chord-templates-ex-1
+  (5am:is (every #'(lambda (ct)
+		     (and (every #'(lambda (pc)
+				     (and (integerp pc) (>= pc 0) (< pc 12)))
+				 ct)
+			  (eql (length ct)
+			       (length (remove-duplicates ct)))))
+		 (mapcar #'(lambda (x) (cdr (assoc :pc x)))
+			 *pb-all-chord-templates*))))
+
+;;;; score-template
+(5am:def-suite score-template :in music-data)
+(5am:in-suite score-template)
+
+;; Example derived from Pardo and Birmingham (2002), p. 29
+(5am:test score-template-ex-1
+  (5am:is (eql (score-template (vector 4 0 1 0 4 0 0 0 0 0 0 0)
+			       (list (cons :root 9) (cons :pc (list 0 4 9))
+				     (cons :prior 0.194)))
+	       6)))
 
 
-(5am:explain! (5am:run 'music-data))
+;; Tie break by root weight
+(5am:def-suite tie-break-by-root-weight :in music-data)
+(5am:in-suite tie-break-by-root-weight)
+
+(5am:test tie-break-by-root-weight-ex-1
+  (5am:is (equal (tie-break-by-root-weight
+		  (list (list (cons :root 0))
+			(list (cons :root 7))
+			(list (cons :root 9)))
+		  (vector 5 0 0 0 0 0 0 0 0 2.5 0 0))
+		 (list (list (cons :root 0))))))
+(5am:test tie-break-by-root-weight-ex-2
+  (5am:is (equal (tie-break-by-root-weight
+		  (list (list (cons :root 0))
+			(list (cons :root 7))
+			(list (cons :root 9)))
+		  (vector 5 0 0 0 0 0 0 0 0 5 0 0))
+		 (list (list (cons :root 0))
+		       (list (cons :root 9))))))
+		  
+;; Tie break by prior
+(5am:def-suite tie-break-by-prior :in music-data)
+(5am:in-suite tie-break-by-prior)
+
+(5am:test tie-break-by-prior-ex-1
+  (5am:is (equal (tie-break-by-prior
+		  (list (list (cons :prior 0.5))
+			(list (cons :prior 1.3))
+			(list (cons :prior 0.2))))
+		 (list (list (cons :prior 1.3))))))
+(5am:test tie-break-by-prior-ex-2
+  (5am:is (equal (tie-break-by-prior
+		  (list (list (cons :tonic 0) (cons :prior 0.5))
+			(list (cons :tonic 7) (cons :prior 1.3))
+			(list (cons :tonic 9) (cons :prior 1.3))))
+		 (list (list (cons :tonic 7) (cons :prior 1.3))
+		       (list (cons :tonic 9) (cons :prior 1.3))))))
+
+;; Random tie break
+(5am:def-suite random-tie-break :in music-data)
+(5am:in-suite random-tie-break)
+
+(let ((templates (loop for template in *pb-all-chord-templates*
+		    if (= (random 2) 1) collect template)))
+  (eval
+   `(5am:test random-tie-break-ex-1
+      (5am:is 
+       (utils:all-eql (list (random-tie-break ',templates)
+			    (random-tie-break ',templates)
+			    (random-tie-break ',templates)
+			    (random-tie-break ',templates)
+			    (random-tie-break ',templates)
+			    (random-tie-break ',templates))
+		      :predicate #'equal)))))
+
+;;;; slices->slice
+(5am:def-suite slices->slice :in music-data)
+(5am:in-suite slices->slice)
+
+;; Test that plausible pitches are produced with pitch classes as input
+(5am:test slices->slice-ex-1
+  (5am:is (equal (mapcar
+		  #'chromatic-pitch
+		  (coerce 
+		   (slices->slice (coerce (harm-seq '((0) (4) (7) (12))) 'list)
+				  0 100)
+		   'list))
+		 (list 48 64 67))))
+;; Test that plausible pitches are produced with pitches as input
+(5am:test slices->slice-ex-2
+  (5am:is (equal (mapcar
+		  #'chromatic-pitch
+		  (coerce 
+		   (slices->slice (coerce (harm-seq
+					   '((60) (64) (67) (72)))
+					  'list)
+				  0 100)
+		   'list))
+		 (list 48 64 67))))
+;; Check slice onset
+(5am:test slices->slice-ex-3
+  (5am:is (equal (onset (slices->slice (coerce (harm-seq
+					   '((60) (64) (67) (72)))
+					  'list)
+				       250 300))
+		 250)))
+;; Check slice duration
+(5am:test slices->slice-ex-4
+  (5am:is (equal (duration (slices->slice (coerce (harm-seq
+					   '((60) (64) (67) (72)))
+					  'list)
+				       250 300))
+		 50)))
+;; Check event onsets
+(5am:test slices->slice-ex-5
+  (5am:is (equal (mapcar
+		  #'onset
+		  (coerce 
+		   (slices->slice (coerce (harm-seq
+					   '((60) (64) (67) (72)))
+					  'list)
+				  150 200)
+		   'list))
+		 (list 150 150 150))))
+;; Check event durations
+(5am:test slices->slice-ex-6
+  (5am:is (equal (mapcar
+		  #'duration
+		  (coerce 
+		   (slices->slice (coerce (harm-seq
+					   '((60) (64) (67) (72)))
+					  'list)
+				  150 200)
+		   'list))
+		 (list 50 50 50))))
