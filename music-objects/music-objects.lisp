@@ -2,19 +2,19 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2017-04-27 10:27:12 peter>
+;;;; Time-stamp: <2017-04-27 11:49:58 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
 
-#.(clsql:locally-enable-sql-reader-syntax)
-(defvar *event-attributes* 
-  (list [dataset-id] [composition-id] [event-id]
-        [onset] [dur] [deltast] [cpitch] 
-	[mpitch] [accidental] [keysig] [mode]
-        [barlength] [pulses] [phrase] [tempo] [dyn] [voice] [bioi] 
-        [ornament] [comma] [articulation][vertint12]))
-#.(clsql:restore-sql-reader-syntax-state)
+;; #.(clsql:locally-enable-sql-reader-syntax)
+;; (defvar *event-attributes* 
+;;   (list [dataset-id] [composition-id] [event-id]
+;;         [onset] [dur] [deltast] [cpitch] 
+;; 	[mpitch] [accidental] [keysig] [mode]
+;;         [barlength] [pulses] [phrase] [tempo] [dyn] [voice] [bioi] 
+;;         [ornament] [comma] [articulation][vertint12]))
+;; #.(clsql:restore-sql-reader-syntax-state)
 
 ; the order must match *event-attributes*
 (defvar *music-slots* '(onset dur deltast cpitch mpitch accidental 
@@ -245,7 +245,9 @@ mp = -1; mf = 1; f = 3; ff = 5; fff = 7; ffff = 9; fffff = 11")
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun get-music-objects (dataset-indices composition-indices
-			  &key voices (texture :melody) (polyphonic-expansion :continuation))
+			  &key voices (texture :melody)
+			    (polyphonic-expansion :continuation)
+			    (harmonic-reduction :none))
   "Returns music objects from the database corresponding to
 DATASET-INDICES, COMPOSITION-INDICES which may be single numeric IDs
 or lists of IDs. COMPOSITION-INDICES is only considered if
@@ -255,6 +257,7 @@ sequence of harmonic slices using full expansion (cf. Conklin,
 2002). The voices specified by VOICES are used. If VOICES is nil,
 the melody corresponding to the voice of the first event is
 extracted or the harmony corresponding to all voices is used."
+  (assert (member harmonic-reduction (list :none :regular-harmonic-rhythm)))
   (cond
     ((eq texture :melody)
      (if (numberp dataset-indices)
@@ -273,19 +276,23 @@ extracted or the harmony corresponding to all voices is used."
 	 (cond ((null composition-indices)
 		(get-harmonic-sequences dataset-indices
 					:voices voices
-					:expansion polyphonic-expansion))
+					:expansion polyphonic-expansion
+					:reduction harmonic-reduction))
 	       ((numberp composition-indices)
 		(get-harmonic-sequence dataset-indices composition-indices
 				       :voices voices
-				       :expansion polyphonic-expansion))
+				       :expansion polyphonic-expansion
+				       :reduction harmonic-reduction))
 	       (t 
 		(mapcar #'(lambda (c)
 			    (get-harmonic-sequence dataset-indices c
 						   :voices voices
-						   :expansion polyphonic-expansion))
+						   :expansion polyphonic-expansion
+						   :reduction harmonic-reduction))
 			composition-indices)))
 	 (get-harmonic-sequences dataset-indices
-				 :voices voices :expansion polyphonic-expansion)))
+				 :voices voices :expansion polyphonic-expansion
+				 :reduction harmonic-reduction)))
     (t 
      (error "Unrecognised texture for the music object. Current options are :melody or :harmony."))))
 
@@ -377,33 +384,25 @@ the expansion method. <reduction> describes how (if at all)
 the harmonic sequence is reduced down to underlying structure,
 and can take values :none, i.e. no reduction, or :regular-harmonic-rhythm,
 i.e. reduce to the level of a regular harmonic rhythm."
-  (assert (member reduction (list :none :regular-harmonic-rhythm)))
-  (let* ((input (composition->harmony (get-composition
-				       (lookup-composition dataset-index
-							   composition-index))
-				      :voices voices :expansion expansion))
-	 (harmonic-sequence (cdr (assoc :harmonic-sequence input)))
-	 (bars (cdr (assoc :bars input)))
-	 (bar-onsets (cdr (assoc :bar-onsets input))))
-    (case reduction
-      (:none harmonic-sequence)
-      (:regular-harmonic-rhythm
-       (if (or (null bars) (null bar-onsets))
-	   (error "Couldn't find barline information."))
-       (reduce-with-regular-harmonic-rhythm harmonic-sequence bars bar-onsets))
-      (otherwise (error "Invalid case.")))))
+  (composition->harmony (get-composition
+			 (lookup-composition dataset-index
+					     composition-index))
+			:voices voices :expansion expansion :reduction reduction))
 
-(defun get-harmonic-sequences (dataset-ids &key voices (expansion :full))
+(defun get-harmonic-sequences (dataset-ids &key voices (expansion :full)
+					     (reduction :none))
   "Gets harmonic sequences for all compositions contained within
 a set of datasets indexed by DATASET-IDS"
     (let ((compositions '()))
     (dolist (dataset-id dataset-ids (nreverse compositions))
       (let ((d (get-dataset (lookup-dataset dataset-id))))
         (sequence:dosequence (c d)
-          (push (composition->harmony c :voices voices :expansion expansion)
+          (push (composition->harmony c :voices voices :expansion expansion
+				      :reduction reduction)
 		compositions))))))
 
-(defun composition->harmony (composition &key voices (expansion :full))
+(defun composition->harmony (composition &key voices (expansion :full)
+					   (reduction :none))
    "Extract a sequence of harmonic slices from a composition according
    to the <voice> argument, which either should be nil (extract all voices)
    or a list of integers identifying the voices to be extracted."
@@ -470,12 +469,16 @@ a set of datasets indexed by DATASET-IDS"
 				    :initial-contents
 				    (sort matching-events #'< :key #'voice))
 	 (push slice slices)))
-     ;; return the new harmonic sequence
      (sequence:adjust-sequence hs (length slices)
 			       :initial-contents (sort slices #'< :key #'onset))
-     (list (cons :harmonic-sequence hs)
-	   (cons :bars (bars composition))
-	   (cons :bar-onsets (bar-onsets composition)))))
+     (case reduction
+       (:none hs)
+       (:regular-harmonic-rhythm
+	(if (or (null (bars composition)) (null (bar-onsets composition)))
+	    (error "Couldn't find barline information.")
+	    (reduce-with-regular-harmonic-rhythm hs (bars composition)
+						 (bar-onsets composition))))
+      (otherwise (error "Invalid case.")))))
 
 (defun get-matching-events (event-list onset &key (expansion :full))
   "Gets matching events from <event-list> at time <onset>
@@ -568,8 +571,12 @@ of its <harmonic-rhythm>, also an assoc-list."
 	 (segment-starts-abs (mapcar #'(lambda (x) (+ x bar-onset))
 				     segment-starts-relative))
 	 (segment-ends-abs (mapcar #'(lambda (x) (+ x bar-onset))
-				   segment-ends-relative))
-	 (reduced-slices
+				   segment-ends-relative)))
+    (utils:message (format nil "Number of slices in bar = ~A"
+			   (length segment-starts-abs)) :detail 2)
+    (utils:message (format nil "Segment starts (rel.) = ~A" segment-starts-relative))
+    (utils:message (format nil "Segment starts (abs.) = ~A" segment-starts-abs))
+    (let ((reduced-slices
 	  (loop
 	     for segment-start in segment-starts-abs
 	     for segment-end in segment-ends-abs
@@ -582,7 +589,7 @@ of its <harmonic-rhythm>, also an assoc-list."
 				       matching-slices)))
 		 (slices->slice trimmed-slices
 				segment-start segment-end)))))
-    (remove nil reduced-slices)))
+    (remove nil reduced-slices))))
   
 
 (defun slices->slice (slices onset offset &key (weight :num-segments))
@@ -754,9 +761,11 @@ Pardo & Birmingham's (2002) algorithm."
 	(list (cons :pc '(0 3 6 10)) (cons :name :hdim7)(cons :prior 0.037))
 	(list (cons :pc '(0 3 6))    (cons :name :dim)  (cons :prior 0.018))
 	;; The following chord templates are new additions.
-	(list (cons :pc '(0 4 7 11)) (cons :name :maj7)  (cons :prior 0.2))
-	(list (cons :pc '(0 3 7 10)) (cons :name :min7)  (cons :prior 0.2))
-	(list (cons :pc '(0 4 8))    (cons :name :aug)  (cons :prior 0.02))))
+	(list (cons :pc '(0 4 7 11)) (cons :name :maj7)    (cons :prior 0.2))
+	(list (cons :pc '(0 3 7 10)) (cons :name :min7)    (cons :prior 0.2))
+	(list (cons :pc '(0 4 8))    (cons :name :aug)     (cons :prior 0.02))
+	(list (cons :pc '(0 7))      (cons :name :no3)     (cons :prior 0.05))
+	(list (cons :pc '(0 7 10))   (cons :name :min7no3) (cons :prior 0.05))))
 (if (not (every #'(lambda (ct)
 		    (and (every #'(lambda (pc)
 				    (and (integerp pc) (>= pc 0) (< pc 12)))
@@ -831,8 +840,7 @@ Returns two lists, the first corresponding to the starts of
 each harmonic segment in basic time units, the second 
 corresponding to the ends of these harmonic segments."
   (declare (ignore slices))
-  (let* ((num-pulses-in-bar (if (and (> pulses 5)
-				     (eql (mod pulses 3) 0))
+  (let* ((num-pulses-in-bar (if (and (= (mod pulses 3) 0) t) ;;(> pulses 5)
 				(/ pulses 3)
 				pulses))
 	 (pulse-length (/ barlength num-pulses-in-bar))
@@ -840,6 +848,8 @@ corresponding to the ends of these harmonic segments."
 			    collect (* i pulse-length)))
 	 (segment-ends (loop for i from 1 to num-pulses-in-bar
 			  collect (* i pulse-length))))
+    (utils:message (format nil "Numerator = ~A" pulses))
+    (utils:message (format nil "Number of pulses in bar = ~A" num-pulses-in-bar))
     (list (cons :segment-starts-relative segment-starts)
 	  (cons :segment-ends-relative segment-ends))))
 
