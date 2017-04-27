@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2017-04-26 18:42:15 peter>
+;;;; Time-stamp: <2017-04-27 10:27:12 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -527,9 +527,12 @@ a set of datasets indexed by DATASET-IDS"
       (setf (%list-slot-sequence-data new-sequence) new-slices)
       new-sequence)))
 
-(defun reduce-bar (bar)
+(defun reduce-bar (bar &key (mode :canonic))
+  "Takes a <bar> object as input, which is an assoc list containing
+various elements including :slices, a list of slices, and :onset, the 
+onset of the bar. Reduces the bar to a list of slices corresponding
+to the harmonic rhythm."
   (let* ((slices (cdr (assoc :slices bar)))
-	 (bar-onset (cdr (assoc :onset bar)))
 	 (barlengths (mapcar #'barlength slices))
 	 (pulses (mapcar #'pulses slices))
 	 (timebases (mapcar #'timebase slices)))
@@ -541,34 +544,46 @@ a set of datasets indexed by DATASET-IDS"
       (assert (not (null barlength)))
       (assert (not (null pulses)))
       (assert (not (null timebase)))
-      (let ((reduced-slices
-	     (multiple-value-bind
-		   (segment-starts-relative segment-ends-relative)
-		 (find-harmonic-rhythm pulses barlength slices)
-	       (let ((segment-starts-abs (mapcar #'(lambda (x) (+ x bar-onset))
-						 segment-starts-relative))
-		     (segment-ends-abs (mapcar #'(lambda (x) (+ x bar-onset))
-						 segment-ends-relative)))
-	       (loop
-		  for segment-start in segment-starts-abs
-		  for segment-end in segment-ends-abs
-		  collect
-		    (let* ((matching-slices (get-sounding-objects
-					     slices segment-start segment-end))
-			   (trimmed-slices (mapcar
-					    #'(lambda (s)
-						(trim s segment-start segment-end))
-					    matching-slices)))
-		      (utils:message
-		       (format nil "Searching for chords between ~A and ~A"
-			       segment-start segment-end)
-		       :detail 3)
-		      (utils:message (format nil "~A matching slices found"
-					     (length matching-slices))
-				     :detail 3)
-		      (slices->slice trimmed-slices
-				     segment-start segment-end)))))))
-        (remove nil reduced-slices)))))
+      (case mode
+	(:canonic (reduce-bar-given-harmonic-rhythm
+		   bar (find-canonic-harmonic-rhythm pulses barlength)))
+	;; (:find-best-regular-rhythm
+	;;  (let ((candidate-rhythms (find-harmonic-rhythms pulses barlength))
+	;;        (candidate-reductions
+	;; 	(mapcar #'(lambda (rhythm) (reduce-bar-given-harmonic-rhythm
+	;; 				    bar rhythm))
+	;; 		candidate-rhythms))
+	;;        (best-score (apply #'max ...
+	 ))))
+	 
+(defun reduce-bar-given-harmonic-rhythm (bar harmonic-rhythm)
+  "Reduces a <bar> assoc-list to a set of reduced slices on the basis 
+of its <harmonic-rhythm>, also an assoc-list."
+  (let* ((segment-starts-relative (cdr (assoc :segment-starts-relative
+					      harmonic-rhythm)))
+	 (segment-ends-relative (cdr (assoc :segment-ends-relative
+					    harmonic-rhythm)))
+	 (slices (cdr (assoc :slices bar)))
+	 (bar-onset (cdr (assoc :onset bar)))
+	 (segment-starts-abs (mapcar #'(lambda (x) (+ x bar-onset))
+				     segment-starts-relative))
+	 (segment-ends-abs (mapcar #'(lambda (x) (+ x bar-onset))
+				   segment-ends-relative))
+	 (reduced-slices
+	  (loop
+	     for segment-start in segment-starts-abs
+	     for segment-end in segment-ends-abs
+	     collect
+	       (let* ((matching-slices (get-sounding-objects
+					slices segment-start segment-end))
+		      (trimmed-slices (mapcar
+				       #'(lambda (s)
+					   (trim s segment-start segment-end))
+				       matching-slices)))
+		 (slices->slice trimmed-slices
+				segment-start segment-end)))))
+    (remove nil reduced-slices)))
+  
 
 (defun slices->slice (slices onset offset &key (weight :num-segments))
   "Uses Pardo and Birmingham's (2002) chord labelling
@@ -805,8 +820,8 @@ be an assoc-list."
 	 :detail 3)
 	score))))
 
-(defun find-harmonic-rhythm (pulses barlength &optional slices)
-  "Finds the harmonic rhythm for a bar given the <slices>
+(defun find-canonic-harmonic-rhythm (pulses barlength &optional slices)
+  "Finds the canonic harmonic rhythm for a bar given the <slices>
 that make up that <bar>, and the attributes <pulses>
 and <barlength> which are basic event attributes. <pulses>
 corresponds to the denominator of the time signature;
@@ -825,7 +840,8 @@ corresponding to the ends of these harmonic segments."
 			    collect (* i pulse-length)))
 	 (segment-ends (loop for i from 1 to num-pulses-in-bar
 			  collect (* i pulse-length))))
-    (values segment-starts segment-ends)))
+    (list (cons :segment-starts-relative segment-starts)
+	  (cons :segment-ends-relative segment-ends))))
 
 (defun get-timesig (pulses barlength timebase)
   "Converts <pulses> and <barlength>, basic event attributes,

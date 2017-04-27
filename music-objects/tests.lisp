@@ -2,7 +2,7 @@
 ;;;; File:       tests.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-04-24 20:51:10 peter>                            
-;;;; Time-stamp: <2017-04-26 19:02:53 peter>                           
+;;;; Time-stamp: <2017-04-27 09:46:34 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -265,18 +265,30 @@ be a list the ith element of which is the duration of the ith chord.
 (5am:def-suite find-harmonic-rhythm :in music-data)
 (5am:in-suite find-harmonic-rhythm)
 
-(5am:test find-harmonic-rhythm-ex-1
-  (5am:is (equal (nth-value 0 (find-harmonic-rhythm 2 48)) '(0 24))))
-(5am:test find-harmonic-rhythm-ex-2
-  (5am:is (equal (nth-value 1 (find-harmonic-rhythm 2 48)) '(24 48))))
-(5am:test find-harmonic-rhythm-ex-3
-  (5am:is (equal (nth-value 0 (find-harmonic-rhythm 3 72)) '(0 24 48))))
-(5am:test find-harmonic-rhythm-ex-4
-  (5am:is (equal (nth-value 1 (find-harmonic-rhythm 3 72)) '(24 48 72))))
-(5am:test find-harmonic-rhythm-ex-5
-  (5am:is (equal (nth-value 0 (find-harmonic-rhythm 6 72)) '(0 36))))
-(5am:test find-harmonic-rhythm-ex-6
-  (5am:is (equal (nth-value 1 (find-harmonic-rhythm 6 72)) '(36 72))))
+(5am:test find-canonic-harmonic-rhythm-ex-1
+  (5am:is (equal (cdr (assoc :segment-starts-relative
+			     (find-canonic-harmonic-rhythm 2 48)))
+		 '(0 24))))
+(5am:test find-canonic-harmonic-rhythm-ex-2
+  (5am:is (equal (cdr (assoc :segment-ends-relative
+			     (find-canonic-harmonic-rhythm 2 48)))
+		 '(24 48))))
+(5am:test find-canonic-harmonic-rhythm-ex-3
+  (5am:is (equal (cdr (assoc :segment-starts-relative
+			     (find-canonic-harmonic-rhythm 3 72)))
+		 '(0 24 48))))
+(5am:test find-canonic-harmonic-rhythm-ex-4
+  (5am:is (equal (cdr (assoc :segment-ends-relative
+			     (find-canonic-harmonic-rhythm 3 72)))
+		 '(24 48 72))))
+(5am:test find-canonic-harmonic-rhythm-ex-5
+  (5am:is (equal (cdr (assoc :segment-starts-relative
+			     (find-canonic-harmonic-rhythm 6 72)))
+		 '(0 36))))
+(5am:test find-canonic-harmonic-rhythm-ex-6
+  (5am:is (equal (cdr (assoc :segment-ends-relative
+			     (find-canonic-harmonic-rhythm 6 72)))
+		 '(36 72))))
 
 ;;;; slices->pc-weights
 (5am:def-suite slices->pc-weights :in music-data)
