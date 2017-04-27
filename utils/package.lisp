@@ -2,7 +2,7 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-03-30 17:18:33 peter>                           
+;;;; Time-stamp: <2017-04-27 16:33:35 peter>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -21,6 +21,7 @@
            "COPY-INSTANCE" "INSERT-AFTER" "ALL-EQL" "ALL-POSITIONS-IF"
 	   "REMOVE-NTH" "CSV->HASH-TABLE"
            "LAST-ELEMENT" "PENULTIMATE-ELEMENT" "LAST-N" "BUTLAST-N"
+	   "QUANTILES"
 	   "NMAPCAR" "NPOSITION" "NPOSITIONS" "NMEMBER" "NMIN" "NSELECTFIRST"
            "ALIST->HASH-TABLE" "HASH-TABLE->ALIST" "HASH-TABLE->SORTED-ALIST"
            "READ-OBJECT-FROM-FILE" "FILE-EXISTS" "WRITE-OBJECT-TO-FILE"

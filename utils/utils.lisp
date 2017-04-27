@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2017-04-25 10:08:29 peter>
+;;;; Time-stamp: <2017-04-27 16:46:57 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -183,6 +183,36 @@
 (defun butlast-n (sequence &optional (n 1))
   "Return a sequence with the last n elements removed."
   (subseq sequence 0 (- (length sequence) n)))
+
+(defun quantiles (numbers num-quantiles)
+  "Takes a sequence of numbers, <numbers>, and computes the locations
+of <num-quantiles> quantiles of equal size. Returns an ordered list of the
+non-trivial thresholds for these quantiles (i.e. excludes the 0th percentile 
+and the 100th percentile). Uses linear interpolation of the 
+empirical distribution function."
+  (assert (every #'numberp numbers))
+  (let* ((sorted (sort (coerce numbers 'vector) #'<))
+	 (n (length sorted))
+	 (quantile-width (/ n num-quantiles))
+	 (quantile-positions (loop
+				for i from 1 to (- num-quantiles 1)
+				collect (1- (* quantile-width i))))
+	 (quantile-values
+	  (loop
+	     for exact-position in quantile-positions
+	     collect (if (= (round exact-position) exact-position)
+			 (svref sorted (round exact-position))
+			 (let* ((lower-pos (floor exact-position))
+				(higher-pos (ceiling exact-position))
+				(lower-value (svref sorted lower-pos))
+				(higher-value (svref sorted higher-pos))
+				(diff-value (- higher-value lower-value))
+				(fraction (- exact-position lower-pos)))
+			   (coerce (+ lower-value (* fraction diff-value))
+				   'float))))))
+    (utils:message (format nil "Quantile positions: ~A" quantile-positions))
+    quantile-values))
+	       
 
 
 ;;;===========================================================================

@@ -2,7 +2,7 @@
 ;;;; File:       IDyOM.asd
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-05-04 21:29:04 marcusp>
-;;;; Time-stamp: <2017-04-27 12:37:02 peter>
+;;;; Time-stamp: <2017-04-27 16:44:57 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -24,7 +24,8 @@
 	    :serial t
             :components 
             ((:file "package")
-             (:file "utils")))
+             (:file "utils")
+	     (:file "tests")))
    ;; Database for storage and retrieval of music
    (:module database
 	    :serial t
