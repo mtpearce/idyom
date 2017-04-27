@@ -2,7 +2,7 @@
 ;;;; File:       tests.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-04-24 20:51:10 peter>                            
-;;;; Time-stamp: <2017-04-27 09:46:34 peter>                           
+;;;; Time-stamp: <2017-04-27 14:59:11 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -126,10 +126,10 @@ be a list the ith element of which is the duration of the ith chord.
 				  100 225))
 		  25)))
 (5am:test trim-ex-4
-  ;; A trim producing an event of zero length should throw an error.
-  (5am:signals error (trim (make-instance 'music-event
-					  :onset 200 :duration 100)
-			   100 150)))
+  ;; A trim producing an event of zero length should result in nil.
+  (5am:is (null (trim (make-instance 'music-event
+				     :onset 200 :duration 100)
+		      100 150))))
 ;; Trimming music slices
 (5am:test trim-ex-5
   (5am:is (equalp (duration (trim (make-ex-harm-slice '(0 3 7) 0 100)
@@ -276,11 +276,11 @@ be a list the ith element of which is the duration of the ith chord.
 (5am:test find-canonic-harmonic-rhythm-ex-3
   (5am:is (equal (cdr (assoc :segment-starts-relative
 			     (find-canonic-harmonic-rhythm 3 72)))
-		 '(0 24 48))))
+		 '(0))))
 (5am:test find-canonic-harmonic-rhythm-ex-4
   (5am:is (equal (cdr (assoc :segment-ends-relative
 			     (find-canonic-harmonic-rhythm 3 72)))
-		 '(24 48 72))))
+		 '(72))))
 (5am:test find-canonic-harmonic-rhythm-ex-5
   (5am:is (equal (cdr (assoc :segment-starts-relative
 			     (find-canonic-harmonic-rhythm 6 72)))

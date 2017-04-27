@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2017-04-27 12:23:02 peter>
+;;;; Time-stamp: <2017-04-27 14:55:35 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -396,7 +396,9 @@ a set of datasets indexed by DATASET-IDS"
     (let ((compositions '()))
     (dolist (dataset-id dataset-ids (nreverse compositions))
       (let ((d (get-dataset (lookup-dataset dataset-id))))
+	(utils:message (format nil "Processing dataset ~A" d))
         (sequence:dosequence (c d)
+	  (utils:message (format nil "Processing composition ~A" c))
           (push (composition->harmony c :voices voices :expansion expansion
 				      :reduction reduction)
 		compositions))))))
@@ -412,7 +414,10 @@ a set of datasets indexed by DATASET-IDS"
                              :midc (midc composition)
                              :id (copy-identifier (get-identifier composition))
                              :description (description composition)
-                             :timebase (timebase composition)))
+                             :timebase (timebase composition)
+			     :bars (bars composition)
+			     :bar-onsets (bar-onsets composition)
+			     :description (description composition)))
           (sorted-composition (sort composition #'< :key #'md:onset))
           (event-list (coerce sorted-composition 'list))
           (event-list (if (null voices) 
@@ -850,8 +855,9 @@ corresponding to the ends of these harmonic segments."
 			    collect (* i pulse-length)))
 	 (segment-ends (loop for i from 1 to num-pulses-in-bar
 			  collect (* i pulse-length))))
-    (utils:message (format nil "Numerator = ~A" pulses))
-    (utils:message (format nil "Number of pulses in bar = ~A" num-pulses-in-bar))
+    (utils:message (format nil "Numerator = ~A" pulses) :detail 3)
+    (utils:message (format nil "Number of pulses in bar = ~A" num-pulses-in-bar)
+		   :detail 3)
     (list (cons :segment-starts-relative segment-starts)
 	  (cons :segment-ends-relative segment-ends))))
 
@@ -946,12 +952,22 @@ is ignored."))
 	 (original-dur (duration slice))
 	 (original-offset (+ original-onset
 			     original-dur)))
+    ;; Check that all events have onsets and offsets within
+    ;; the boundaries of the slice
     (assert (every #'(lambda (e)
-    		       (eql (onset e) original-onset))
+    		       (and (>= (onset e) original-onset)
+			    (<= (+ (onset e) (duration e)) original-offset)))
     		   (coerce slice 'list)))
-    (assert (every #'(lambda (e)
-    		       (eql (duration e) original-dur))
-    		   (coerce slice 'list)))
+    ;; (utils:message (format nil "Slice original onset = ~A" original-onset))
+    ;; (utils:message (format nil "Slice original offset = ~A" original-offset))
+    ;; (utils:message (format nil "Event original onsets = ~A"
+    ;; 			   (mapcar #'(lambda (e) (onset e))
+    ;; 				   (coerce slice 'list))))
+    ;; (utils:message (format nil "Event original durations = ~A"
+    ;; 			   (mapcar #'(lambda (e) (duration e))
+    ;; 				   (coerce slice 'list))))
+    ;; (utils:message (format nil "Desired slice onset = ~A" onset))
+    ;; (utils:message (format nil "Desired slice offset = ~A" offset))
     (let* ((new-onset (if onset (max original-onset onset) original-onset))
 	   (new-offset (if offset (min original-offset offset) original-offset))
 	   (new-dur (- new-offset new-onset))
@@ -962,8 +978,8 @@ is ignored."))
       (set-attribute new-slice 'dur new-dur)
       ;; Set attributes for the component events
       (setf (%list-slot-sequence-data new-slice)
-      	    (mapcar #'(lambda (e) (trim e onset offset))
-      		    (%list-slot-sequence-data new-slice)))
+      	    (remove nil (mapcar #'(lambda (e) (trim e onset offset))
+				(%list-slot-sequence-data new-slice))))
   new-slice)))
     
 (defmethod trim ((event music-event) onset offset)
@@ -980,13 +996,14 @@ is ignored."))
 	 (original-offset (+ original-onset
 			     original-dur)))
 	(let* ((new-onset (if onset (max original-onset onset) original-onset))
-	       (new-offset (if offset (min original-offset offset) original-offset))
+	       (new-offset (if offset (min original-offset offset)
+			       original-offset))
 	       (new-dur (- new-offset new-onset))
 	       (new-event (copy-event event)))
-	  (assert (> new-dur 0))
-	  (setf (onset new-event) new-onset
-		(duration new-event) new-dur)
-	  new-event)))
+	  (when (> new-dur 0)
+	    (setf (onset new-event) new-onset
+		  (duration new-event) new-dur)
+	    new-event))))
 
 ;;; Low-level database access functions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -999,58 +1016,87 @@ is ignored."))
 (defmethod get-dataset ((identifier dataset-identifier))
   (let* ((dataset-id (get-dataset-index identifier))
          (where-clause [= [dataset-id] dataset-id])
-         (db-dataset (car (clsql:select [*] :from [mtp-dataset] :where where-clause)))
+         (db-dataset (car (clsql:select [*] :from [mtp-dataset]
+					:where where-clause)))
          (midc (fourth db-dataset))
          (db-compositions (clsql:select [composition-id][description][timebase]
                                         :from [mtp-composition] 
                                         :order-by '(([composition-id] :asc))
                                         :where where-clause))
-         (db-events (apply #'clsql:select 
-                           (append *event-attributes* 
-                                   (list :from [mtp-event] 
-                                         :order-by '(([composition-id] :asc)
-                                                     ([event-id] :asc))
-                                         :where where-clause))))
 	 (dataset (make-instance 'music-dataset
 				 :id identifier
 				 :description (second db-dataset) 
 				 :timebase (third db-dataset) 
 				 :midc midc))
-         (compositions nil)
-         (events nil))
+         (compositions nil))
     (when db-dataset
       ;; for each db-composition 
       (dolist (dbc db-compositions)
-        (let ((composition-id (first dbc))
-              (description (second dbc))
-              (timebase (third dbc)))
-          ;; for each db-event 
-          (do* ((dbes db-events (cdr dbes))
-                (dbe (car dbes) (car dbes))
-                (cid (second dbe) (second dbe)))
-               ((or (null dbes) (not (= cid composition-id)))
-                (setf db-events dbes))
-            (when dbe
-              (push (db-event->music-event dbe timebase midc) events)))
-          (when events
-            (let* ((interval (onset (end-time (car events))))
-                   (comp-id (make-composition-id dataset-id composition-id))
-                   (composition
-                    (make-instance 'music-composition
-                                   :id comp-id
-                                   :description description
-                                   :onset 0
-                                   :duration interval
-                                   :midc midc
-                                   :timebase timebase)))
-              (sequence:adjust-sequence composition (length events)
-                                        :initial-contents (nreverse events))
-              (setf events nil)
-              (push composition compositions)))))
-      (sequence:adjust-sequence dataset (length compositions)
-                                :initial-contents (nreverse compositions))
-      dataset)))
+        (let* ((composition-id (first dbc))
+	       (comp-id (make-composition-id dataset-id composition-id))
+	       (composition (get-composition comp-id)))
+	  (push composition compositions))))
+    (sequence:adjust-sequence dataset (length compositions)
+			      :initial-contents (nreverse compositions))
+    dataset))
 #.(clsql:restore-sql-reader-syntax-state)
+
+;; #.(clsql:locally-enable-sql-reader-syntax)
+;; (defmethod get-dataset ((identifier dataset-identifier))
+;;   (let* ((dataset-id (get-dataset-index identifier))
+;;          (where-clause [= [dataset-id] dataset-id])
+;;          (db-dataset (car (clsql:select [*] :from [mtp-dataset] :where where-clause)))
+;;          (midc (fourth db-dataset))
+;;          (db-compositions (clsql:select [composition-id][description][timebase]
+;;                                         :from [mtp-composition] 
+;;                                         :order-by '(([composition-id] :asc))
+;;                                         :where where-clause))
+;;          (db-events (apply #'clsql:select 
+;;                            (append *event-attributes* 
+;;                                    (list :from [mtp-event] 
+;;                                          :order-by '(([composition-id] :asc)
+;;                                                      ([event-id] :asc))
+;;                                          :where where-clause))))
+;; 	 (dataset (make-instance 'music-dataset
+;; 				 :id identifier
+;; 				 :description (second db-dataset) 
+;; 				 :timebase (third db-dataset) 
+;; 				 :midc midc))
+;;          (compositions nil)
+;;          (events nil))
+;;     (when db-dataset
+;;       ;; for each db-composition 
+;;       (dolist (dbc db-compositions)
+;;         (let ((composition-id (first dbc))
+;;               (description (second dbc))
+;;               (timebase (third dbc)))
+;;           ;; for each db-event 
+;;           (do* ((dbes db-events (cdr dbes))
+;;                 (dbe (car dbes) (car dbes))
+;;                 (cid (second dbe) (second dbe)))
+;;                ((or (null dbes) (not (= cid composition-id)))
+;;                 (setf db-events dbes))
+;;             (when dbe
+;;               (push (db-event->music-event dbe timebase midc) events)))
+;;           (when events
+;;             (let* ((interval (onset (end-time (car events))))
+;;                    (comp-id (make-composition-id dataset-id composition-id))
+;;                    (composition
+;;                     (make-instance 'music-composition
+;;                                    :id comp-id
+;;                                    :description description
+;;                                    :onset 0
+;;                                    :duration interval
+;;                                    :midc midc
+;;                                    :timebase timebase)))
+;;               (sequence:adjust-sequence composition (length events)
+;;                                         :initial-contents (nreverse events))
+;;               (setf events nil)
+;;               (push composition compositions)))))
+;;       (sequence:adjust-sequence dataset (length compositions)
+;;                                 :initial-contents (nreverse compositions))
+;;       dataset)))
+;; #.(clsql:restore-sql-reader-syntax-state)
 
 #.(clsql:locally-enable-sql-reader-syntax)
 (defmethod get-composition ((identifier composition-identifier))
