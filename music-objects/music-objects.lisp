@@ -2,19 +2,19 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2017-04-27 15:08:27 peter>
+;;;; Time-stamp: <2017-04-27 16:55:09 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
 
-;; #.(clsql:locally-enable-sql-reader-syntax)
-;; (defvar *event-attributes* 
-;;   (list [dataset-id] [composition-id] [event-id]
-;;         [onset] [dur] [deltast] [cpitch] 
-;; 	[mpitch] [accidental] [keysig] [mode]
-;;         [barlength] [pulses] [phrase] [tempo] [dyn] [voice] [bioi] 
-;;         [ornament] [comma] [articulation][vertint12]))
-;; #.(clsql:restore-sql-reader-syntax-state)
+#.(clsql:locally-enable-sql-reader-syntax)
+(defvar *event-attributes* 
+  (list [dataset-id] [composition-id] [event-id]
+        [onset] [dur] [deltast] [cpitch] 
+	[mpitch] [accidental] [keysig] [mode]
+        [barlength] [pulses] [phrase] [tempo] [dyn] [voice] [bioi] 
+        [ornament] [comma] [articulation][vertint12]))
+#.(clsql:restore-sql-reader-syntax-state)
 
 ; the order must match *event-attributes*
 (defvar *music-slots* '(onset dur deltast cpitch mpitch accidental 
