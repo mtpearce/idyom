@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2017-04-27 16:46:57 peter>
+;;;; Time-stamp: <2017-04-27 17:00:08 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -210,7 +210,8 @@ empirical distribution function."
 				(fraction (- exact-position lower-pos)))
 			   (coerce (+ lower-value (* fraction diff-value))
 				   'float))))))
-    (utils:message (format nil "Quantile positions: ~A" quantile-positions))
+    (utils:message (format nil "Quantile positions: ~A" quantile-positions)
+		   :detail 3)
     quantile-values))
 	       
 
