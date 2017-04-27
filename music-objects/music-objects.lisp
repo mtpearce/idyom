@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2017-04-27 14:55:35 peter>
+;;;; Time-stamp: <2017-04-27 15:08:27 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -393,15 +393,17 @@ i.e. reduce to the level of a regular harmonic rhythm."
 					     (reduction :none))
   "Gets harmonic sequences for all compositions contained within
 a set of datasets indexed by DATASET-IDS"
-    (let ((compositions '()))
+  (utils:message
+   (format nil "Getting harmonic sequences for dataset(s) ~A." dataset-ids))
+  (let ((compositions '()))
     (dolist (dataset-id dataset-ids (nreverse compositions))
-      (let ((d (get-dataset (lookup-dataset dataset-id))))
-	(utils:message (format nil "Processing dataset ~A" d))
+      (let* ((d (get-dataset (lookup-dataset dataset-id)))
+	     (pb (utils:initialise-progress-bar (length d))))
         (sequence:dosequence (c d)
-	  (utils:message (format nil "Processing composition ~A" c))
           (push (composition->harmony c :voices voices :expansion expansion
 				      :reduction reduction)
-		compositions))))))
+		compositions)
+	  (utils:update-progress-bar pb (length compositions)))))))
 
 (defun composition->harmony (composition &key voices (expansion :full)
 					   (reduction :none))
