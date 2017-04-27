@@ -2,7 +2,7 @@
 ;;;; File:       IDyOM.asd
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-05-04 21:29:04 marcusp>
-;;;; Time-stamp: <2017-04-24 20:52:17 peter>
+;;;; Time-stamp: <2017-04-27 12:37:02 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -63,6 +63,7 @@
 	    :serial t
 	    :components
 	    ((:file "package")
+	     (:file "globals")
 	     (:file "generics")
 	     (:file "classes")
 	     (:file "methods")
