@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2017-04-27 11:49:58 peter>
+;;;; Time-stamp: <2017-04-27 12:23:02 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -573,9 +573,11 @@ of its <harmonic-rhythm>, also an assoc-list."
 	 (segment-ends-abs (mapcar #'(lambda (x) (+ x bar-onset))
 				   segment-ends-relative)))
     (utils:message (format nil "Number of slices in bar = ~A"
-			   (length segment-starts-abs)) :detail 2)
-    (utils:message (format nil "Segment starts (rel.) = ~A" segment-starts-relative))
-    (utils:message (format nil "Segment starts (abs.) = ~A" segment-starts-abs))
+			   (length segment-starts-abs)) :detail 3)
+    (utils:message (format nil "Segment starts (rel.) = ~A" segment-starts-relative)
+		   :detail 3)
+    (utils:message (format nil "Segment starts (abs.) = ~A" segment-starts-abs)
+		   :detail 3)
     (let ((reduced-slices
 	  (loop
 	     for segment-start in segment-starts-abs
