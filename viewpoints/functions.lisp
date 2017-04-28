@@ -1,9 +1,5 @@
 (cl:in-package #:viewpoints)
 
-(defconstant +undefined+ '@ "The undefined symbol.")
-
-(defvar *basic-types* nil) ;;(make-hash-table))
-
 (defun register-basic-type (type event) 
   (declare (ignore event))
   (pushnew (intern (symbol-name type) :keyword) *basic-types*))
