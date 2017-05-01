@@ -104,9 +104,6 @@ the original viewpoints are included."
 
 ;;;; Setting viewpoint quantiles
 
-(defun initialise-viewpoint-quantiles ()
-  (setf *viewpoint-quantiles* (make-hash-table :test #'string=)))
-
 (defun set-viewpoint-quantiles
     (viewpoint-name dataset-ids num-quantiles
      &optional (expansion-method :none))
