@@ -2,7 +2,7 @@
 ;;;; File:       ppm-io.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2016-04-20 16:52:15 marcusp>
+;;;; Time-stamp: <2017-05-01 13:47:48 peter>
 ;;;; ======================================================================
 
 (cl:in-package :ppm)
@@ -54,9 +54,11 @@
    it is constructed from the database and written to <filename>." 
   (unless (utils:file-exists filename)
     (let ((model (make-ppm alphabet)))
+      (utils:message (format nil "Training a PPM model."))
       (model-dataset model dataset :construct? t :predict? nil)
       (write-model-to-file model filename)
       (format t "~&Written PPM* model to ~A.~%" filename)))
+  (utils:message (format nil "Loading a PPM model from ~A." filename))
   (read-model-from-file filename :order-bound order-bound :mixtures mixtures
                         :escape escape :update-exclusion update-exclusion))
 

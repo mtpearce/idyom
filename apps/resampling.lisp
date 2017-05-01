@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-05-01 13:31:03 peter>                           
+;;;; Time-stamp: <2017-05-01 13:44:34 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -81,10 +81,14 @@
                                  resampling-indices))
          ;; the result
          (sequence-predictions))
+    (utils:message (format nil "Iterating over ~A resampling indice(s).")
+		   (length resampling-indices))
     (dolist (resampling-set resampling-sets sequence-predictions)
       ;; (format t "~&~0,0@TResampling set ~A: ~A~%" resampling-id resampling-set)
       ;(format t "~&Resampling ~A" resampling-id)
       (when (member resampling-id resampling-indices)
+	(utils:message (format nil "Modelling resampling fold ~A/~A."
+			       (1+ resampling-id) (length resampling-indices)))
         (let* ((training-set (get-training-set dataset resampling-set))
                (training-set (monodies-to-lists (append pretraining-set
 							training-set)))
@@ -290,6 +294,7 @@ dataset-id)."
 supplied keyword parameters. If <use-cache?> is T, models are written
 to file, and reused on subsequent calls, otherise they are constructed
 anew each time."
+  (utils:message (format nil "Getting long-term models."))
   (let ((constructor-fun
          (if use-cache?
              #'(lambda (viewpoint)

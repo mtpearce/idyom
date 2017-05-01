@@ -2,7 +2,7 @@
 ;;;; File:       multiple-viewpoint-system.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-27 18:54:17 marcusp>                           
-;;;; Time-stamp: <2016-04-20 16:54:42 marcusp>                           
+;;;; Time-stamp: <2017-05-01 13:49:01 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -233,6 +233,7 @@ See also VIEWPOINTS:SET-ALPHABET-FROM-CONTEXT."
   "Returns an mvs object initialised with <viewpoints>, a list of
 viewpoint objects, <ltm> and <stm> each of which is a list of ppm
 objects."
+  (utils:message "Initialising a multiple viewpoint system.")
   (flet ((sanity-check-basic-viewpoints ()
            (dolist (bv basic-viewpoints basic-viewpoints)
              (unless (find (type-of bv) viewpoints 
