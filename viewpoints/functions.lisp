@@ -107,6 +107,9 @@ the original viewpoints are included."
 (defun set-viewpoint-quantiles
     (viewpoint-name dataset-ids num-quantiles
      &optional (expansion-method :none))
+  "Gets viewpoint quantiles for viewpoint with name <viewpoint-name>
+on the basis of a list of dataset-ids, <dataset-ids>, using <num-quantiles>
+quantiles."
   (assert (integerp num-quantiles))
   (assert (symbolp viewpoint-name))
   (assert (listp dataset-ids))
