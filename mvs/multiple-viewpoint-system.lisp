@@ -2,7 +2,7 @@
 ;;;; File:       multiple-viewpoint-system.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-27 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-05-01 13:49:01 peter>                           
+;;;; Time-stamp: <2017-05-01 13:50:25 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -299,6 +299,7 @@ the supplied parameters."
 (defmethod model-dataset ((m mvs) dataset &key construct? predict?)
   "Models a dataset <dataset> (a vector of sequence vectors) given the
 multiple-viewpoint system <m>."
+  (utils:message "Modelling dataset with an MVS.")
   (labels ((model-d (dataset sequence-index prediction-sets)
              (when *debug* (format t "~&Composition ~A~%" sequence-index))
              (if (null dataset) (reverse prediction-sets)
