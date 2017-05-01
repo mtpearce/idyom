@@ -2,7 +2,7 @@
 ;;;; File:       main.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2010-11-01 15:19:57 marcusp>
-;;;; Time-stamp: <2017-05-01 13:27:59 peter>
+;;;; Time-stamp: <2017-05-01 13:29:08 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:idyom)
@@ -108,7 +108,7 @@
         (progn
           ;; Optionally select source viewpoints if requested
           (when (eq source-viewpoints :select)
-            (format t "~&Selecting viewpoints for the ~A model on dataset ~A predicting viewpoints ~A.~%" 
+            (utils:message (format t "~&Selecting viewpoints for the ~A model on dataset ~A predicting viewpoints ~A.~%"))
                     models dataset-id target-viewpoints)
             (let* (;; Generate candidate viewpoint systems
                    (sel-basis (find-selection-basis target-viewpoints basis))
