@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2016-04-28 09:25:49 marcusp>                           
+;;;; Time-stamp: <2017-05-01 13:31:03 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -59,17 +59,21 @@
          (mvs::*stm-update-exclusion* (getf stmo :update-exclusion))
          (mvs::*stm-escape* (getf stmo :escape))
          ;; data
-         (dataset (md:get-music-objects (if (listp dataset-id) dataset-id (list dataset-id))
+         (dataset (md:get-music-objects (if (listp dataset-id)
+					    dataset-id (list dataset-id))
                                         nil :voices voices :texture texture))
-         (pretraining-set (md:get-music-objects pretraining-ids nil :voices voices :texture texture))
+         (pretraining-set (md:get-music-objects
+			   pretraining-ids nil voices voices :texture texture))
          ;; viewpoints
          (sources (get-viewpoints source-viewpoints))
          (targets
-          (viewpoints:get-basic-viewpoints target-viewpoints (append dataset pretraining-set)))
+          (viewpoints:get-basic-viewpoints target-viewpoints
+					   (append dataset pretraining-set)))
          ;; resampling sets
          (k (if (eq k :full) (length dataset) k))
-         (resampling-sets (get-resampling-sets dataset-id :k k
-                                               :use-cache? use-resampling-set-cache?))
+         (resampling-sets (get-resampling-sets
+			   dataset-id :k k
+			   :use-cache? use-resampling-set-cache?))
          (resampling-id 0)
          ;; If no resampling sets specified, then use all sets
          (resampling-indices (if (null resampling-indices)
@@ -82,8 +86,10 @@
       ;(format t "~&Resampling ~A" resampling-id)
       (when (member resampling-id resampling-indices)
         (let* ((training-set (get-training-set dataset resampling-set))
-               (training-set (monodies-to-lists (append pretraining-set training-set)))
-               (test-set (monodies-to-lists (get-test-set dataset resampling-set)))
+               (training-set (monodies-to-lists (append pretraining-set
+							training-set)))
+               (test-set (monodies-to-lists (get-test-set dataset
+							  resampling-set)))
                (ltms (get-long-term-models sources training-set
                                            pretraining-ids dataset-id
                                            resampling-id k 
