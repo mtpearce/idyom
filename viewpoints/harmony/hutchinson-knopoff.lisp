@@ -2,7 +2,7 @@
 ;;;; File:       hutchinson-knopoff.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-04-10 16:20:11 peter>                       
-;;;; Time-stamp: <2017-04-12 11:34:55 peter>                           
+;;;; Time-stamp: <2017-05-01 12:17:21 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -47,7 +47,8 @@
 	      (assert (every #'(lambda (x) (> x 0)) freq-list))
 	      (hutch-d (freq-list->harmonics
 			freq-list :num-harmonics 10)
-		       :cbw-cut-off nil)))
+		       :cbw-cut-off nil))
+  :continuous t)
 
 ;;;========================
 ;;;* Supporting functions *

@@ -128,9 +128,8 @@ the original viewpoints are included."
 			      (viewpoints:viewpoint-sequences
 			       v (md:get-harmonic-sequences (list dataset-id)
 							    :reduction method)))))
-	   (quantiles (coerce (utils:quantiles viewpoint-elements
-					       num-quantiles)
-			      'vector)))
+	   (quantiles (utils:quantiles viewpoint-elements
+					       num-quantiles)))
       (setf (gethash (symbol-name viewpoint-name)
 		     *viewpoint-quantiles*)
 	    quantiles))))

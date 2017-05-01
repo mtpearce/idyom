@@ -2,7 +2,7 @@
 ;;;; File:       tymoczko.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-04-13 10:18:30 peter>                     
-;;;; Time-stamp: <2017-04-13 17:48:46 peter>                          
+;;;; Time-stamp: <2017-05-01 12:18:41 peter>                          
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -37,7 +37,8 @@
 		    (cdr (assoc :size
 				(vl-get-minimal-voice-leading
 				 pc-set-1 pc-set-2
-				 :pitch-class :taxicab)))))))
+				 :pitch-class :taxicab))))))
+  :continuous t)
 
 (define-viewpoint (h-cpc-vl-dist-p=2 derived (h-cpitch))
     ;; Pitch-class voice-leading distance between the preceding harmonic
@@ -52,7 +53,8 @@
 		    (cdr (assoc :size
 				(vl-get-minimal-voice-leading
 				 pc-set-1 pc-set-2
-				 :pitch-class :euclidean)))))))
+				 :pitch-class :euclidean))))))
+  :continuous t)
 
 (define-viewpoint (h-cpitch-vl-dist-p=1 derived (h-cpitch))
     ;; Pitch voice-leading distance between the preceding harmonic
@@ -67,7 +69,8 @@
 		    (cdr (assoc :size
 				(vl-get-minimal-voice-leading
 				 p-set-1 p-set-2
-				 :pitch :taxicab)))))))
+				 :pitch :taxicab))))))
+  :continuous t)
 
 (define-viewpoint (h-cpitch-vl-dist-p=2 derived (h-cpitch))
     ;; Pitch voice-leading distance between the preceding harmonic
@@ -82,7 +85,8 @@
 		    (cdr (assoc :size
 				(vl-get-minimal-voice-leading
 				 p-set-1 p-set-2
-				 :pitch :euclidean)))))))
+				 :pitch :euclidean))))))
+  :continuous t)
 
 ;;;===========
 ;;;* Classes *

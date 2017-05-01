@@ -4,28 +4,42 @@
 
 (defmacro define-viewpoint ((name superclass typeset) 
                             ((events class) element)
-                            &key function function*)
+                            &key function function* continuous)
+  "Defines a viewpoint.
+<continuous> should be a Boolean, identifying whether the viewpoint
+is a continuous viewpoint or not."
   (let ((f* function*))
     `(progn 
-      (defclass ,name (,superclass)
-        ((alphabet :allocation :class 
-                   :initform ,(when (eql superclass 'test) ''(0 1)))
-         (typeset :initform ',typeset :allocation :class)))
-      (defgeneric ,name (,events))
-      (defmethod ,name ((,events ,class))
-        (declare (ignorable ,events))
-        (let ((events (coerce ,events 'list)))
-          ,function))
-      (defmethod ,name ((,events list))
-        (declare (ignorable ,events))
-        ,function)
-      ,(when f*
-             (let ((fname `,(intern (concatenate 'string (symbol-name name) "*"))))
-               `(progn
-                  (defgeneric ,fname (,element ,events))
-                  (defmethod ,fname (,element ,events)
-                    (declare (ignorable events element))
-                    ,f*)))))))
+       (defclass ,name (,superclass)
+	 ((alphabet :allocation :class 
+		    :initform ,(when (eql superclass 'test) ''(0 1)))
+	  (typeset :initform ',typeset :allocation :class)))
+       (defgeneric ,name (,events))
+       (defmethod ,name ((,events ,class))
+	 (let ((events (coerce ,events 'list)))
+	   (,name events)))
+       (defmethod ,name ((,events list))
+	 (declare (ignorable ,events))
+	 ,(if continuous
+	      `(let ((continuous-output ,function))
+		 (if *discretise-viewpoints*
+		     (let ((quantiles (gethash (symbol-name ',name)
+					       *viewpoint-quantiles*)))
+		       (if quantiles
+			   (if (undefined-p continuous-output)
+			       continuous-output
+			       (utils:assign-to-quantile continuous-output
+							 quantiles))
+			   (error "Quantiles needed to discretise viewpoints.")))
+		     continuous-output))
+	      `,function))
+       ,(when f*
+	  (let ((fname `,(intern (concatenate 'string (symbol-name name) "*"))))
+	    `(progn
+	       (defgeneric ,fname (,element ,events))
+	       (defmethod ,fname (,element ,events)
+		 (declare (ignorable events element))
+		 ,f*)))))))
 
 (defmacro define-basic-viewpoint (name ((events class)) function)
   `(progn 

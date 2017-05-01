@@ -2,7 +2,7 @@
 ;;;; File:       milne.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-04-12 11:41:38 peter>                      
-;;;; Time-stamp: <2017-04-12 19:07:49 peter>                          
+;;;; Time-stamp: <2017-05-01 11:47:42 peter>                          
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -58,8 +58,9 @@
 	      (if (or (null e1) (null e2)) +undefined+
 		  (let ((pc-set-1 (h-cpitch-class-set (list e1)))
 			(pc-set-2 (h-cpitch-class-set (list e2))))
-		    (pc-set-spectral-distance pc-set-1 pc-set-2)))))
-		
+		    (pc-set-spectral-distance pc-set-1 pc-set-2))))
+  :continuous t)
+	
 
 ;;;========================
 ;;;* Supporting functions *
