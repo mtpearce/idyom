@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2017-04-27 17:00:08 peter>
+;;;; Time-stamp: <2017-05-01 10:27:49 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -213,7 +213,19 @@ empirical distribution function."
     (utils:message (format nil "Quantile positions: ~A" quantile-positions)
 		   :detail 3)
     quantile-values))
-	       
+
+(defun assign-to-quantile (number quantiles)
+  "Given a number <number> and a list <quantiles> identifying a set of 
+quantiles as produced by the function QUANTILES, returns the 1-indexed
+quantile into which <number> falls."
+  (assert (numberp number))
+  (assert (listp quantiles))
+  (assert (equal quantiles (sort quantiles #'<)))
+  (let* ((num-quantiles (1+ (length quantiles)))
+	 (match (position-if #'(lambda (x) (> x number)) quantiles)))
+    (if match
+	(1+ match)
+	num-quantiles)))	       
 
 
 ;;;===========================================================================
