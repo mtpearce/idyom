@@ -102,5 +102,36 @@ the original viewpoints are included."
       (if (not (null (predictors (list vp))))
 	  (push vp vps)))))
 
+;;;; Setting viewpoint quantiles
 
+(defun initialise-viewpoint-quantiles ()
+  (setf *viewpoint-quantiles* (make-hash-table :test #'string=)))
+
+(defun set-viewpoint-quantiles
+    (viewpoint-name dataset-ids num-quantiles
+     &optional (expansion-method :none))
+  (assert (integerp num-quantiles))
+  (assert (symbolp viewpoint-name))
+  (assert (listp dataset-ids))
+  (assert (every #'integerp dataset-ids))
+  (let ((v (get-viewpoint viewpoint-name))
+	(expansion-methods (if (not (listp expansion-method))
+			       (make-list (length dataset-ids)
+					  :initial-element expansion-method)
+			       expansion-method)))
+    (assert (eql (length expansion-methods) (length dataset-ids)))
+    (let* ((viewpoint-elements
+	    (loop
+	       for dataset-id in dataset-ids
+	       for method in expansion-methods
+	       append (mapcan #'identity
+			      (viewpoints:viewpoint-sequences
+			       v (md:get-harmonic-sequences (list dataset-id)
+							    :reduction method)))))
+	   (quantiles (coerce (utils:quantiles viewpoint-elements
+					       num-quantiles)
+			      'vector)))
+      (setf (gethash (symbol-name viewpoint-name)
+		     *viewpoint-quantiles*)
+	    quantiles))))
 
