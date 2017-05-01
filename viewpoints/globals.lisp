@@ -2,7 +2,7 @@
 ;;;; File:       globals.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-04-27 12:36:01 peter>                           
-;;;; Time-stamp: <2017-05-01 12:04:56 peter>                           
+;;;; Time-stamp: <2017-05-01 13:02:45 peter>                           
 ;;;; ======================================================================
 
 ;;;; This file contains global variables for the viewpoints package.
@@ -13,7 +13,7 @@
 (defvar *basic-types* nil) ;;(make-hash-table))
 
 ;; Hash table containing
-;; key strings corresponding to viewpoint names and value simple vectors
+;; key strings corresponding to viewpoint names and values being lists
 ;; corresponding to quantiles for continuous viewpoints
 (defparameter *viewpoint-quantiles* nil)
 (defun reset-viewpoint-quantiles ()
