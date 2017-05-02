@@ -2,7 +2,7 @@
 ;;;; File:       multiple-viewpoint-system.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-27 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-05-01 13:50:25 peter>                           
+;;;; Time-stamp: <2017-05-02 18:27:02 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -299,19 +299,35 @@ the supplied parameters."
 (defmethod model-dataset ((m mvs) dataset &key construct? predict?)
   "Models a dataset <dataset> (a vector of sequence vectors) given the
 multiple-viewpoint system <m>."
-  (utils:message "Modelling dataset with an MVS.")
-  (labels ((model-d (dataset sequence-index prediction-sets)
-             (when *debug* (format t "~&Composition ~A~%" sequence-index))
-             (if (null dataset) (reverse prediction-sets)
-                 (let ((prediction-set (model-sequence m (car dataset) 
-                                                       :construct? construct?
-                                                       :predict? predict?)))
-                   (unless (= sequence-index 1)
-                     (operate-on-models m #'increment-sequence-front))
-                   (operate-on-models m #'reinitialise-ppm :models 'stm)
+  (assert (listp dataset))
+  ;; dataset should be a list of lists of music elements (e.g. events, slices)
+  (assert (every #'(lambda (x)
+		     (every #'(lambda (y)
+				(typep y 'md::music-element))
+			    x))
+		 dataset))
+  (let ((num-compositions (length dataset)))
+    (utils:message (format nil "Modelling dataset (~A composition(s)) with an MVS."
+			   num-compositions))
+    ;; (utils:message (format nil "Dataset: ~A" dataset))
+    (labels ((model-d (dataset sequence-index prediction-sets)
+	       (utils:message (format nil "Modelling composition ~A/~A."
+				      (1+ (- num-compositions (length dataset)))
+				      num-compositions))
+	       ;; (require :sb-sprof)
+	       ;; (sb-sprof:start-profiling)
+	       (if (null dataset) (reverse prediction-sets)
+		   (let ((prediction-set (model-sequence m (car dataset) 
+							 :construct? construct?
+							 :predict? predict?)))
+		     (unless (= sequence-index 1)
+		       (operate-on-models m #'increment-sequence-front))
+		     (operate-on-models m #'reinitialise-ppm :models 'stm)
+		     ;; (sb-sprof:stop-profiling)
+		     ;; (sb-sprof:report)
                      (model-d (cdr dataset) (1- sequence-index)
                               (cons prediction-set prediction-sets))))))
-    (dataset-prediction-sets m (model-d dataset (length dataset) '()))))
+      (dataset-prediction-sets m (model-d dataset (length dataset) '())))))
 
 (defmethod model-sequence ((m mvs) sequence &key construct? predict? 
                            (construct-from 0) (predict-from 0))
@@ -326,8 +342,8 @@ appropriate sequence index before this method is called."
           (make-sequence 'vector viewpoint-count :initial-element (ppm:get-root)))
          (stm-locations
           (make-sequence 'vector viewpoint-count :initial-element (ppm:get-root))))
-    (dotimes (event-index event-count)
-      (when *debug* (format t "~&Event ~A~%" event-index))
+    (utils:message (format nil "Modelling ~A event(s)." event-count))
+    (utils:dotimes-pb (event-index event-count)
       (let* ((events (subseq sequence 0 (1+ event-index)))
              (event-array (get-event-array m events))
              (construct? (if (< event-index construct-from) nil construct?))
