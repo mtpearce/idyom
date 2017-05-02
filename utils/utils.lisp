@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2017-05-01 10:27:49 peter>
+;;;; Time-stamp: <2017-05-02 12:43:22 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -107,6 +107,17 @@
 	  (counter 0)
 	  (bar (initialise-progress-bar num-items)))
      (dolist (,var ,list ,result)
+       ,@body
+       (incf counter)
+       (update-progress-bar bar counter))))
+
+(defmacro dotimes-pb
+    ((var count &optional result) &body body)
+  "A version of dotimes that displays a progress
+   bar tracking the iterative process."
+  `(let* ((counter 0)
+	  (bar (initialise-progress-bar ,count)))
+     (dotimes (,var ,count ,result)
        ,@body
        (incf counter)
        (update-progress-bar bar counter))))
