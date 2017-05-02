@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-05-01 13:44:34 peter>                           
+;;;; Time-stamp: <2017-05-02 09:55:12 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -33,6 +33,8 @@
                          (stmo mvs::*stm-params*)
                          (voices nil)
                          (texture :melody)
+			 (polyphonic-expansion :full)
+			 (harmonic-reduction :regular-harmonic-rhythm)
                          (use-resampling-set-cache? t)
                          (use-ltms-cache? t))
   "IDyOM top level: returns the mean information content for
@@ -61,9 +63,14 @@
          ;; data
          (dataset (md:get-music-objects (if (listp dataset-id)
 					    dataset-id (list dataset-id))
-                                        nil :voices voices :texture texture))
+                                        nil :voices voices
+					:texture texture
+					:polyphonic-expansion polyphonic-expansion
+					:harmonic-reduction harmonic-reduction))
          (pretraining-set (md:get-music-objects
-			   pretraining-ids nil voices voices :texture texture))
+			   pretraining-ids nil :voices voices :texture texture
+			   :polyphonic-expansion polyphonic-expansion
+			   :harmonic-reduction harmonic-reduction))
          ;; viewpoints
          (sources (get-viewpoints source-viewpoints))
          (targets
@@ -81,8 +88,8 @@
                                  resampling-indices))
          ;; the result
          (sequence-predictions))
-    (utils:message (format nil "Iterating over ~A resampling indice(s).")
-		   (length resampling-indices))
+    (utils:message (format nil "Iterating over ~A resampling indice(s)."
+			   (length resampling-indices)))
     (dolist (resampling-set resampling-sets sequence-predictions)
       ;; (format t "~&~0,0@TResampling set ~A: ~A~%" resampling-id resampling-set)
       ;(format t "~&Resampling ~A" resampling-id)
