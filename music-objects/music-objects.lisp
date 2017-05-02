@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2017-04-27 16:55:09 peter>
+;;;; Time-stamp: <2017-05-02 09:48:30 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -211,10 +211,22 @@ mp = -1; mf = 1; f = 3; ff = 5; fff = 7; ffff = 9; fffff = 11")
 
 (defmethod set-attribute ((ms music-slice) attribute value)
   (if (string= (symbol-name attribute) "H-CPITCH")
-      (let ((i 0))
-        (sequence:dosequence (e ms)
-          (set-attribute e 'cpitch (nth i value))
-          (incf i)))
+      (let ((h-cpitch value)
+	    (onset (get-attribute ms 'onset))
+	    (dur (get-attribute ms 'dur))
+	    (template-event (copy-event (car (%list-slot-sequence-data ms)))))
+	(assert (listp h-cpitch))
+	(assert (every #'numberp h-cpitch))
+	(assert (typep template-event 'music-event))
+	(set-attribute template-event 'onset onset)
+	(set-attribute template-event 'dur dur)
+	(set-attribute template-event 'voice nil)
+	(setf (%list-slot-sequence-data ms)
+	      (loop
+		 for pitch in h-cpitch
+		 collect (let ((e (copy-event template-event)))
+			   (set-attribute e 'cpitch pitch)
+			   e))))
       (call-next-method)))
 
 (defgeneric copy-event (music-event))
@@ -246,8 +258,8 @@ mp = -1; mf = 1; f = 3; ff = 5; fff = 7; ffff = 9; fffff = 11")
 
 (defun get-music-objects (dataset-indices composition-indices
 			  &key voices (texture :melody)
-			    (polyphonic-expansion :continuation)
-			    (harmonic-reduction :none))
+			    (polyphonic-expansion :full)
+			    (harmonic-reduction :regular-harmonic-rhythm))
   "Returns music objects from the database corresponding to
 DATASET-INDICES, COMPOSITION-INDICES which may be single numeric IDs
 or lists of IDs. COMPOSITION-INDICES is only considered if
