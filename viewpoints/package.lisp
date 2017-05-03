@@ -12,7 +12,8 @@
            #:inverse-viewpoint-function-defined-p #:basic-element
 	   #:list-viewpoints #:list-basic #:list-derived
 	   #:list-threaded #:list-test #:predictors #:predictable
-           #:attribute-equal #:viewpoint #:viewpoint-equal #:basic-p 
+           #:attribute-equal #:viewpoint #:viewpoint-equal #:basic-p
+	   #:linked-p
            #:in-typeset-p #:alphabet->events #:viewpoint-element-equal
 	   #:composition-viewpoint #:dataset-viewpoint
 	   #:harm-seq)
