@@ -2,7 +2,7 @@
 ;;;; File:       IDyOM.asd
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-05-04 21:29:04 marcusp>
-;;;; Time-stamp: <2017-04-27 16:44:57 peter>
+;;;; Time-stamp: <2017-05-03 10:56:25 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -109,7 +109,8 @@
              (:file "params") 
              (:file "generics")
              (:file "prediction-sets")		
-             (:file "multiple-viewpoint-system")))
+             (:file "multiple-viewpoint-system")
+	     (:file "tests")))
    ;; Applications 
    (:module apps 
             :serial t
