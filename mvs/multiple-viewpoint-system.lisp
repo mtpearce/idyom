@@ -2,7 +2,7 @@
 ;;;; File:       multiple-viewpoint-system.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-27 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-05-02 18:27:02 peter>                           
+;;;; Time-stamp: <2017-05-03 12:56:57 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -604,20 +604,22 @@ elements of the alphabet of <basic-viewpoint> which map to the
 relevent derived alphabet given a list of events <sequence> and a set
 of single event continuations over the basic alphabet."
   (let* ((derived-alphabet (viewpoint-alphabet derived-viewpoint))
-         (continuations (viewpoints:alphabet->events basic-viewpoint events))
-         (mappings '()))
-    (dolist (derived-element derived-alphabet mappings)
-      (let ((mapping '()))
-        (dolist (continuation continuations)
-          (let* ((temp-comp (append (butlast events) (list continuation)))
-                 (viewpoint-element
-                  (viewpoint-element derived-viewpoint temp-comp))
-                 (basic-element (viewpoint-element basic-viewpoint temp-comp)))
-            (when (viewpoints:viewpoint-element-equal basic-viewpoint
-                                           derived-viewpoint
-                                           viewpoint-element
-                                           derived-element)
-              (push basic-element mapping))))
-        (unless (null mapping)
-          (push (list derived-element mapping) mappings))))))
-   
+	 (mappings (loop
+		      with table = (make-hash-table :test 'equal)
+		      for a in derived-alphabet
+		      do (setf (gethash a table) nil)
+		      finally (return table)))
+         (continuations (viewpoints:alphabet->events basic-viewpoint events)))
+    (dolist (continuation continuations)
+      (let* ((temp-comp (append (butlast events) (list continuation)))
+	     (basic-element (viewpoint-element basic-viewpoint temp-comp))
+	     (derived-viewpoint-element (viewpoint-element derived-viewpoint
+							   temp-comp)))
+	(assert (if (viewpoints:linked-p derived-viewpoint)
+		    (every #'(lambda (link) (in-typeset-p basic-viewpoint link))
+			   (viewpoint-links derived-viewpoint))
+		    (in-typeset-p basic-viewpoint derived-viewpoint)))
+	(if (nth-value 1 (gethash derived-viewpoint-element mappings))
+	    (push basic-element (gethash derived-viewpoint-element mappings)))))
+    (loop for derived-elt being the hash-keys in mappings using (hash-value basic-elts)
+       collect (list derived-elt basic-elts))))
