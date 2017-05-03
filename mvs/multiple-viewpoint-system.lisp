@@ -2,7 +2,7 @@
 ;;;; File:       multiple-viewpoint-system.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-27 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-05-03 12:56:57 peter>                           
+;;;; Time-stamp: <2017-05-03 13:36:50 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -311,13 +311,14 @@ multiple-viewpoint system <m>."
 			   num-compositions))
     ;; (utils:message (format nil "Dataset: ~A" dataset))
     (labels ((model-d (dataset sequence-index prediction-sets)
-	       (utils:message (format nil "Modelling composition ~A/~A."
-				      (1+ (- num-compositions (length dataset)))
-				      num-compositions))
 	       ;; (require :sb-sprof)
 	       ;; (sb-sprof:start-profiling)
 	       (if (null dataset) (reverse prediction-sets)
-		   (let ((prediction-set (model-sequence m (car dataset) 
+		   (progn
+		     (utils:message (format nil "Modelling composition ~A/~A."
+					    (1+ (- num-compositions (length dataset)))
+					    num-compositions))
+		     (let ((prediction-set (model-sequence m (car dataset) 
 							 :construct? construct?
 							 :predict? predict?)))
 		     (unless (= sequence-index 1)
@@ -326,7 +327,7 @@ multiple-viewpoint system <m>."
 		     ;; (sb-sprof:stop-profiling)
 		     ;; (sb-sprof:report)
                      (model-d (cdr dataset) (1- sequence-index)
-                              (cons prediction-set prediction-sets))))))
+                              (cons prediction-set prediction-sets)))))))
       (dataset-prediction-sets m (model-d dataset (length dataset) '())))))
 
 (defmethod model-sequence ((m mvs) sequence &key construct? predict? 
@@ -601,7 +602,7 @@ given a sequence of events <sequence>."
   "Returns an alist whose keys are the elements of the alphabet of
 <derived-viewpoint> and whose values are lists containing those
 elements of the alphabet of <basic-viewpoint> which map to the
-relevent derived alphabet given a list of events <sequence> and a set
+relevant derived alphabet given a list of events <sequence> and a set
 of single event continuations over the basic alphabet."
   (let* ((derived-alphabet (viewpoint-alphabet derived-viewpoint))
 	 (mappings (loop
