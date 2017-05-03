@@ -2,7 +2,7 @@
 ;;;; File:       multiple-viewpoint-system.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-27 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-05-03 13:36:50 peter>                           
+;;;; Time-stamp: <2017-05-03 15:18:43 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -311,7 +311,6 @@ multiple-viewpoint system <m>."
 			   num-compositions))
     ;; (utils:message (format nil "Dataset: ~A" dataset))
     (labels ((model-d (dataset sequence-index prediction-sets)
-	       ;; (require :sb-sprof)
 	       ;; (sb-sprof:start-profiling)
 	       (if (null dataset) (reverse prediction-sets)
 		   (progn
@@ -319,19 +318,19 @@ multiple-viewpoint system <m>."
 					    (1+ (- num-compositions (length dataset)))
 					    num-compositions))
 		     (let ((prediction-set (model-sequence m (car dataset) 
-							 :construct? construct?
-							 :predict? predict?)))
-		     (unless (= sequence-index 1)
-		       (operate-on-models m #'increment-sequence-front))
-		     (operate-on-models m #'reinitialise-ppm :models 'stm)
-		     ;; (sb-sprof:stop-profiling)
-		     ;; (sb-sprof:report)
-                     (model-d (cdr dataset) (1- sequence-index)
-                              (cons prediction-set prediction-sets)))))))
+							   :construct? construct?
+							   :predict? predict?)))
+		       (unless (= sequence-index 1)
+			 (operate-on-models m #'increment-sequence-front))
+		       (operate-on-models m #'reinitialise-ppm :models 'stm)
+		       ;;    (sb-sprof:stop-profiling)
+		       ;;    (sb-sprof:report)
+		       (model-d (cdr dataset) (1- sequence-index)
+				(cons prediction-set prediction-sets)))))))
       (dataset-prediction-sets m (model-d dataset (length dataset) '())))))
 
 (defmethod model-sequence ((m mvs) sequence &key construct? predict? 
-                           (construct-from 0) (predict-from 0))
+					      (construct-from 0) (predict-from 0))
   "Models a sequence <sequence> consisting of a vector of
 event-vectors given the multiple-viewpoint system <m>. The indices of
 the component models into the set of sequences must be set to the

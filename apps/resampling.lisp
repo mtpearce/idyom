@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-05-02 09:55:12 peter>                           
+;;;; Time-stamp: <2017-05-03 15:11:28 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -35,6 +35,7 @@
                          (texture :melody)
 			 (polyphonic-expansion :full)
 			 (harmonic-reduction :regular-harmonic-rhythm)
+			 (slices-or-chords :chords)
                          (use-resampling-set-cache? t)
                          (use-ltms-cache? t))
   "IDyOM top level: returns the mean information content for
@@ -66,11 +67,13 @@
                                         nil :voices voices
 					:texture texture
 					:polyphonic-expansion polyphonic-expansion
-					:harmonic-reduction harmonic-reduction))
+					:harmonic-reduction harmonic-reduction
+					:slices-or-chords slices-or-chords))
          (pretraining-set (md:get-music-objects
 			   pretraining-ids nil :voices voices :texture texture
 			   :polyphonic-expansion polyphonic-expansion
-			   :harmonic-reduction harmonic-reduction))
+			   :harmonic-reduction harmonic-reduction
+			   :slices-or-chords slices-or-chords))
          ;; viewpoints
          (sources (get-viewpoints source-viewpoints))
          (targets

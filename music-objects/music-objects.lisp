@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2017-05-02 09:48:30 peter>
+;;;; Time-stamp: <2017-05-03 15:25:41 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -86,6 +86,10 @@
 
 (defclass music-slice (list-slot-sequence music-element) ())
 ;; set of music objects overlapping in time, ordered by voice
+
+(defclass music-chord (music-element)
+  ((h-cpitch :initarg :h-cpitch :accessor h-cpitch
+	     :documentation "List of chromatic pitches present in chord")))
 
 (defclass music-event (music-element)
   ((bioi
@@ -237,6 +241,11 @@ mp = -1; mf = 1; f = 3; ff = 5; fff = 7; ffff = 9; fffff = 11")
     (setf (%list-slot-sequence-data ms-copy)
           (mapcar #'md:copy-event (coerce ms 'list)))
     ms-copy))
+(defmethod copy-event ((chord music-chord))
+  (let ((chord-copy (utils:copy-instance chord :check-atomic nil)))
+    (setf (h-cpitch chord)
+          (copy-list (h-cpitch chord)))
+    chord-copy))
 
 (defun count-compositions (dataset-id)
   "Gets the number of compositions in dataset indexed by DATASET-ID"
@@ -259,7 +268,8 @@ mp = -1; mf = 1; f = 3; ff = 5; fff = 7; ffff = 9; fffff = 11")
 (defun get-music-objects (dataset-indices composition-indices
 			  &key voices (texture :melody)
 			    (polyphonic-expansion :full)
-			    (harmonic-reduction :regular-harmonic-rhythm))
+			    (harmonic-reduction :regular-harmonic-rhythm)
+			    (slices-or-chords :slices))
   "Returns music objects from the database corresponding to
 DATASET-INDICES, COMPOSITION-INDICES which may be single numeric IDs
 or lists of IDs. COMPOSITION-INDICES is only considered if
@@ -289,22 +299,26 @@ extracted or the harmony corresponding to all voices is used."
 		(get-harmonic-sequences dataset-indices
 					:voices voices
 					:expansion polyphonic-expansion
-					:reduction harmonic-reduction))
+					:reduction harmonic-reduction
+					:slices-or-chords slices-or-chords))
 	       ((numberp composition-indices)
 		(get-harmonic-sequence dataset-indices composition-indices
 				       :voices voices
 				       :expansion polyphonic-expansion
-				       :reduction harmonic-reduction))
+				       :reduction harmonic-reduction
+				       :slices-or-chords slices-or-chords))
 	       (t 
 		(mapcar #'(lambda (c)
 			    (get-harmonic-sequence dataset-indices c
 						   :voices voices
 						   :expansion polyphonic-expansion
-						   :reduction harmonic-reduction))
+						   :reduction harmonic-reduction
+						   :slices-or-chords slices-or-chords))
 			composition-indices)))
 	 (get-harmonic-sequences dataset-indices
 				 :voices voices :expansion polyphonic-expansion
-				 :reduction harmonic-reduction)))
+				 :reduction harmonic-reduction
+				 :slices-or-chords slices-or-chords)))
     (t 
      (error "Unrecognised texture for the music object. Current options are :melody or :harmony."))))
 
@@ -389,7 +403,7 @@ the highest pitch sounding at that onset position."
 
 (defun get-harmonic-sequence (dataset-index composition-index
 			      &key voices (expansion :full)
-				(reduction :none))
+				(reduction :none) (slices-or-chords :slices))
   "Gets harmonic sequences from a given composition indexed
 by DATASET-INDEX and COMPOSITION-INDEX. <expansion> determines
 the expansion method. <reduction> describes how (if at all)
@@ -399,10 +413,11 @@ i.e. reduce to the level of a regular harmonic rhythm."
   (composition->harmony (get-composition
 			 (lookup-composition dataset-index
 					     composition-index))
-			:voices voices :expansion expansion :reduction reduction))
+			:voices voices :expansion expansion :reduction reduction
+			:slices-or-chords slices-or-chords))
 
 (defun get-harmonic-sequences (dataset-ids &key voices (expansion :full)
-					     (reduction :none))
+					     (reduction :none) (slices-or-chords :slices))
   "Gets harmonic sequences for all compositions contained within
 a set of datasets indexed by DATASET-IDS"
   (utils:message
@@ -413,15 +428,16 @@ a set of datasets indexed by DATASET-IDS"
 	     (pb (utils:initialise-progress-bar (length d))))
         (sequence:dosequence (c d)
           (push (composition->harmony c :voices voices :expansion expansion
-				      :reduction reduction)
+				      :reduction reduction :slices-or-chords slices-or-chords)
 		compositions)
 	  (utils:update-progress-bar pb (length compositions)))))))
 
 (defun composition->harmony (composition &key voices (expansion :full)
-					   (reduction :none))
+					   (reduction :none) (slices-or-chords :slices))
    "Extract a sequence of harmonic slices from a composition according
    to the <voice> argument, which either should be nil (extract all voices)
    or a list of integers identifying the voices to be extracted."
+   (assert (member slices-or-chords (list :slices :chords)))
    (let* ((hs (make-instance 'harmonic-sequence
                              :onset 0
                              :duration (duration composition)
@@ -490,14 +506,19 @@ a set of datasets indexed by DATASET-IDS"
 	 (push slice slices)))
      (sequence:adjust-sequence hs (length slices)
 			       :initial-contents (sort slices #'< :key #'onset))
-     (case reduction
-       (:none hs)
-       (:regular-harmonic-rhythm
-	(if (or (null (bars composition)) (null (bar-onsets composition)))
-	    (error "Couldn't find barline information.")
-	    (reduce-with-regular-harmonic-rhythm hs (bars composition)
-						 (bar-onsets composition))))
-      (otherwise (error "Invalid case.")))))
+     (let* ((hs (case reduction
+		  (:none hs)
+		  (:regular-harmonic-rhythm
+		   (if (or (null (bars composition)) (null (bar-onsets composition)))
+		       (error "Couldn't find barline information.")
+		       (reduce-with-regular-harmonic-rhythm hs (bars composition)
+							    (bar-onsets composition))))
+		  (otherwise (error "Invalid case.")))))
+       (if (eql slices-or-chords :chords)
+	   (setf (%list-slot-sequence-data hs)
+		 (mapcar #'slice->chord (%list-slot-sequence-data hs))))
+       hs)))
+       
 
 (defun get-matching-events (event-list onset &key (expansion :full))
   "Gets matching events from <event-list> at time <onset>
@@ -548,6 +569,12 @@ a set of datasets indexed by DATASET-IDS"
 					      :check-atomic nil)))
       (setf (%list-slot-sequence-data new-sequence) new-slices)
       new-sequence)))
+
+(defun slice->chord (slice)
+  "Destructively converts a music-slice object <slice> to a music-chord object."
+  (let* ((events (%list-slot-sequence-data slice))
+	 (h-cpitch (mapcar #'(lambda (x) (get-attribute x 'cpitch)) events)))
+    (change-class slice 'music-chord :h-cpitch h-cpitch)))
 
 (defun reduce-bar (bar &key (mode :canonic))
   "Takes a <bar> object as input, which is an assoc list containing
