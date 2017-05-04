@@ -13,8 +13,8 @@
 	   #:list-viewpoints #:list-basic #:list-derived
 	   #:list-threaded #:list-test #:predictors #:predictable
            #:attribute-equal #:viewpoint #:viewpoint-equal #:basic-p
-	   #:linked-p
+	   #:linked-p #:continuous-p #:set-viewpoint-quantiles
            #:in-typeset-p #:alphabet->events #:viewpoint-element-equal
 	   #:composition-viewpoint #:dataset-viewpoint
-	   #:harm-seq)
+	   #:harm-seq #:*discretise-viewpoints* #:reset-viewpoint-quantiles)
   (:documentation "Multiple viewpoint framework for music representation."))

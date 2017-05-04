@@ -2,7 +2,7 @@
 ;;;; File:       globals.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-04-27 12:36:01 peter>                           
-;;;; Time-stamp: <2017-05-01 13:02:45 peter>                           
+;;;; Time-stamp: <2017-05-04 11:34:47 peter>                           
 ;;;; ======================================================================
 
 ;;;; This file contains global variables for the viewpoints package.
@@ -17,6 +17,7 @@
 ;; corresponding to quantiles for continuous viewpoints
 (defparameter *viewpoint-quantiles* nil)
 (defun reset-viewpoint-quantiles ()
+  (utils:message "Resetting all viewpoint quantiles.")
   (setf *viewpoint-quantiles* (make-hash-table :test #'equalp)))
 (reset-viewpoint-quantiles)
 

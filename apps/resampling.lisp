@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-05-03 15:11:28 peter>                           
+;;;; Time-stamp: <2017-05-04 11:46:08 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -36,6 +36,7 @@
 			 (polyphonic-expansion :full)
 			 (harmonic-reduction :regular-harmonic-rhythm)
 			 (slices-or-chords :chords)
+			 (num-quantiles 10)
                          (use-resampling-set-cache? t)
                          (use-ltms-cache? t))
   "IDyOM top level: returns the mean information content for
@@ -48,6 +49,7 @@
    their predictions combined. The parameters
    <use-resampling-set-cache?> and <use-ltms-cache?> enable or disable
    respectively the caching of resampling-sets and LTMs."
+  (assert (integerp num-quantiles))
   (let* (;; Check model memory parameters
          (ltmo (apply #'check-model-defaults (cons mvs::*ltm-params* ltmo)))
          (stmo (apply #'check-model-defaults (cons mvs::*stm-params* stmo)))
@@ -91,6 +93,11 @@
                                  resampling-indices))
          ;; the result
          (sequence-predictions))
+    (discretise-viewpoints (append sources targets)
+			   (cons dataset-id pretraining-ids)
+			   num-quantiles
+			   slices-or-chords harmonic-reduction
+			   polyphonic-expansion)
     (utils:message (format nil "Iterating over ~A resampling indice(s)."
 			   (length resampling-indices)))
     (dolist (resampling-set resampling-sets sequence-predictions)
@@ -114,6 +121,23 @@
                 (mvs:model-dataset mvs test-set :construct? t :predict? t)))
           (push predictions sequence-predictions)))
       (incf resampling-id))))
+
+(defun discretise-viewpoints (viewpoints datasets num-quantiles
+			      slices-or-chords reduction expansion)
+  "Takes as input a list of viewpoints, <viewpoint-list>, and iterates
+over this list. Whenever a continuous viewpoint is found, viewpoint 
+quantiles are calculated for it."
+  (assert (not (null datasets)))
+  (assert (listp datasets))
+  (assert (every #'(lambda (v) (typep v 'viewpoints:viewpoint)) viewpoints))
+  (viewpoints:reset-viewpoint-quantiles)
+  (setf viewpoints:*discretise-viewpoints* nil)
+  (dolist (v viewpoints)
+    (when (viewpoints:continuous-p v)
+      (viewpoints:set-viewpoint-quantiles
+       v datasets num-quantiles :slices-or-chords slices-or-chords
+       :reduction reduction :expansion expansion)))
+  (setf viewpoints:*discretise-viewpoints* t))
 
 (defun check-model-defaults (defaults &key
 			      (order-bound (getf defaults :order-bound))
