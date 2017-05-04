@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2017-05-03 15:25:41 peter>
+;;;; Time-stamp: <2017-05-04 10:22:20 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -207,6 +207,11 @@ mp = -1; mf = 1; f = 3; ff = 5; fff = 7; ffff = 9; fffff = 11")
 (defmethod get-attribute ((e music-element) attribute)
   "Returns the value for slot <attribute> in event object <e>."
   (slot-value e (music-symbol attribute)))
+
+(defmethod get-attribute ((ms music-slice) attribute)
+  (if (string= (symbol-name attribute) "H-CPITCH")
+      (mapcar #'chromatic-pitch (coerce ms 'list))
+      (call-next-method)))
 
 (defgeneric set-attribute (event attribute value))
 (defmethod set-attribute ((e music-element) attribute value)
