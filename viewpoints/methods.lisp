@@ -63,6 +63,7 @@
 (defmethod test-p ((v viewpoint)) (typep v 'test))
 (defmethod linked-p ((v viewpoint)) (typep v 'linked))
 (defmethod threaded-p ((v viewpoint)) (typep v 'threaded))
+(defmethod continuous-p ((v viewpoint)) (typep v 'continuous))
 
 (defmethod viewpoint-name ((v viewpoint))
   (let* ((links (viewpoint-links v))

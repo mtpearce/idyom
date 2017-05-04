@@ -8,9 +8,11 @@
   "Defines a viewpoint.
 <continuous> should be a Boolean, identifying whether the viewpoint
 is a continuous viewpoint or not."
-  (let ((f* function*))
+  (let ((f* function*)
+	(superclasses (if continuous (list superclass 'continuous)
+			  (list superclass))))
     `(progn 
-       (defclass ,name (,superclass)
+       (defclass ,name (,@superclasses)
 	 ((alphabet :allocation :class 
 		    :initform ,(when (eql superclass 'test) ''(0 1)))
 	  (typeset :initform ',typeset :allocation :class)))

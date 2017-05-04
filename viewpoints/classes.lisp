@@ -42,3 +42,8 @@ viewpoints."))
   ()
   (:documentation "A threaded viewpoint represents an attribute whose
 values are only defined at designated points in a sequence."))
+
+(defclass continuous (viewpoint)
+  ()
+  (:documentation "A continuous viewpoint is one that represents
+a continuous-valued attribute."))
