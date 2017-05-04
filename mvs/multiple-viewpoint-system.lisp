@@ -2,7 +2,7 @@
 ;;;; File:       multiple-viewpoint-system.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-27 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-05-03 15:18:43 peter>                           
+;;;; Time-stamp: <2017-05-04 09:01:48 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -310,9 +310,12 @@ multiple-viewpoint system <m>."
     (utils:message (format nil "Modelling dataset (~A composition(s)) with an MVS."
 			   num-compositions))
     ;; (utils:message (format nil "Dataset: ~A" dataset))
+   ;; (sb-sprof:start-profiling)
     (labels ((model-d (dataset sequence-index prediction-sets)
-	       ;; (sb-sprof:start-profiling)
-	       (if (null dataset) (reverse prediction-sets)
+	       (if (null dataset) (progn
+				   ;; (sb-sprof:stop-profiling)
+				   ;; (sb-sprof:report)
+				    (reverse prediction-sets))
 		   (progn
 		     (utils:message (format nil "Modelling composition ~A/~A."
 					    (1+ (- num-compositions (length dataset)))
@@ -323,8 +326,6 @@ multiple-viewpoint system <m>."
 		       (unless (= sequence-index 1)
 			 (operate-on-models m #'increment-sequence-front))
 		       (operate-on-models m #'reinitialise-ppm :models 'stm)
-		       ;;    (sb-sprof:stop-profiling)
-		       ;;    (sb-sprof:report)
 		       (model-d (cdr dataset) (1- sequence-index)
 				(cons prediction-set prediction-sets)))))))
       (dataset-prediction-sets m (model-d dataset (length dataset) '())))))
