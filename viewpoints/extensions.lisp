@@ -2,7 +2,7 @@
 ;;;; File:       extensions.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2008-10-31 13:08:09 marcusp>
-;;;; Time-stamp: <2016-04-13 15:43:42 marcusp>
+;;;; Time-stamp: <2017-05-03 18:10:21 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints) 
@@ -57,13 +57,13 @@ in <events>."
            (let ((alphabets '()))
              (when (consp unconstrained)
                (setq unconstrained (mapcar #'viewpoint-type unconstrained)))
-             (dolist (a attributes (reverse alphabets))
-               (if (or (null unconstrained) (member a unconstrained))
+             (dolist (a attributes (reverse alphabets))  ; for each basic type in v's typeset
+               (if (or (null unconstrained) (member a unconstrained))  ; if the basic type is unconstrained
                    (if (eql a 'onset)
                        (push (onset-alphabet context) alphabets)
-                       (push (viewpoint-alphabet (get-viewpoint a)) 
+                       (push (viewpoint-alphabet (get-viewpoint a)) ; add the alphabet of the basic type to alphabets 
                              alphabets))
-                   (push (list (md:get-attribute (car (last events)) a))
+                   (push (list (md:get-attribute (car (last events)) a)) ; otherwise just add the value at the last elt
                          alphabets))))))
     (let* ((derived-alphabet '())
            (attributes (viewpoint-typeset v))
