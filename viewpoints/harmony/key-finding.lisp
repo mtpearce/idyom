@@ -2,7 +2,7 @@
 ;;;; File:       key-finding.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-03-01 14:58:07 peter>                             
-;;;; Time-stamp: <2017-03-28 22:15:36 peter>                           
+;;;; Time-stamp: <2017-05-04 21:07:13 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -452,16 +452,16 @@
   (let* ((window-close (onset events))
 	 (window-open (- window-close window-size))
 	 (context (remove-if #'(lambda (x)
-				 (< (md::onset (md::end-time x)) window-open))
+				 (< (md:onset (md:end-time x)) window-open))
 			     events))
 	 (pc-durs (make-array 12 :initial-element 0)))
     ;; (dolist (e (coerce context 'list))
     (dolist (e context)
       ;;  (dolist (e (md::%list-slot-sequence-data context) pc-durs)
-      (let* ((note-on (max window-open (md::onset e)))
-	     (note-off (min window-close (md::onset (md::end-time e))))
+      (let* ((note-on (max window-open (md:onset e)))
+	     (note-off (min window-close (md:onset (md:end-time e))))
 	     (dur (- note-off note-on))
-	     (cpitches (mapcar #'md::chromatic-pitch (coerce e 'list)))
+	     (cpitches (md:get-attribute e 'md:h-cpitch))
 	     (pitch-classes (mapcar #'(lambda (x) (mod (round x) 12))
 				    cpitches)))
 	(assert (>= dur 0))
