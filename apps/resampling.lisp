@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-05-04 11:46:08 peter>                           
+;;;; Time-stamp: <2017-05-04 19:39:36 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -308,10 +308,14 @@ dataset-id)."
             (print-header t))
         (dolist (entry sorted-results)
           (when print-header
-            (maphash #'(lambda (k v) (declare (ignore v)) (format stream "~A " (string-downcase (symbol-name k)))) (cdr entry))
+            (maphash #'(lambda (k v) (declare (ignore v))
+			       (format stream "~A~C" (string-downcase (symbol-name k)) #\tab))
+		     (cdr entry))
             (setf print-header nil))
           (format stream "~&")
-          (maphash #'(lambda (k v) (declare (ignore k)) (format stream "~A " (if v v "NA"))) (cdr entry)))))))
+          (maphash #'(lambda (k v) (declare (ignore k))
+			     (format stream "~A~C" (if v v "NA") #\tab))
+		   (cdr entry)))))))
 
 
 ;;;===========================================================================
