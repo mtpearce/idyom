@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-05-09 10:31:55 peter>                           
+;;;; Time-stamp: <2017-05-09 13:03:35 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -328,7 +328,6 @@ dataset-id)."
                      (mapc #'(lambda (key) (remhash key event-results)) distribution-keys)
                      (setf (gethash k results) event-results)))
                results)
-      (break)
       ;; Sort values and print
       (let ((sorted-results (utils:hash-table->sorted-alist results #'sort-function))
             (print-header t))
