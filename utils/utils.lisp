@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2016-05-27 12:45:32 marcusp>
+;;;; Time-stamp: <2017-05-09 18:40:44 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -91,6 +91,15 @@
 (defun butlast-n (sequence &optional (n 1))
   "Return a sequence with the last n elements removed."
   (subseq sequence 0 (- (length sequence) n)))
+
+(defun shuffle (sequence)
+  "Shuffles a sequence into a random order. 
+Borrowed from https://www.pvk.ca/Blog/Lisp/trivial_uniform_shuffling.html"
+  (map-into sequence #'car
+            (sort (map 'vector (lambda (x)
+                                 (cons x (random 1d0)))
+                       sequence)
+                  #'< :key #'cdr)))
 
 
 ;;;===========================================================================
@@ -199,6 +208,11 @@
                (find-duplicates (set-difference (rest list) matches)
                                 :test test :key key))
              (find-duplicates (rest list) :test test :key key)))))
+
+(defun any-duplicated (list &key (test #'eql) (key #'identity))
+  "Returns T if any elements of <list> are duplicated."
+  (not (eql (length list)
+	    (length (remove-duplicates list :test test :key key)))))
 
 (defun rotate (list n)
   (let ((n (mod n (length list))))
