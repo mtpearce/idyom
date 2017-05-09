@@ -2,14 +2,14 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                           
-;;;; Time-stamp: <2016-04-11 16:44:37 marcusp>                           
+;;;; Time-stamp: <2017-05-09 22:38:56 peter>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
 
 (defpackage :prediction-sets
   (:use #:cl #:utils #:viewpoints)
-  (:export "DATASET-PREDICTION" "COMPOSITION-PREDICTION" "EVENT-PREDICTION"
+  (:export "DATASET-PREDICTION" "SEQUENCE-PREDICTION" "EVENT-PREDICTION"
            "PREDICTION-VIEWPOINT" "PREDICTION-SET" "PREDICTION-ELEMENT"
            "PREDICTION-INDEX" "PREDICTION-WEIGHTS" "PREDICTION-EVENT" "PREDICTION-ORDER"
            "MAKE-EVENT-PREDICTION" "MAKE-DATASET-PREDICTION" "MAKE-SEQUENCE-PREDICTION"
