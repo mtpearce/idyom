@@ -2,7 +2,7 @@
 ;;;; File:       resampling-tests.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-05-09 14:00:34 peter>                             
-;;;; Time-stamp: <2017-05-09 15:59:17 peter>                           
+;;;; Time-stamp: <2017-05-09 18:56:58 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -11,6 +11,12 @@
 ;;;; This code defines tests for the resampling package.
 
 (cl:in-package #:resampling)
+
+;;;===========
+;;;* Options *
+;;;===========
+
+(defparameter *example-dataset-db-id* -999)
 
 ;;;=========
 ;;;* Tests *
@@ -24,12 +30,54 @@
 (5am:test output-format-ex-1
   (5am:is (idyom-compare-format-methods)))
 
+(5am:def-suite create-resampling-sets :in resampling)
+(5am:in-suite create-resampling-sets)
 
-;;;===========
-;;;* Options *
-;;;===========
-
-(defparameter *example-dataset-db-id* -999)
+;; Check number of test sets
+(5am:test create-resampling-sets-ex-1
+  (5am:is (eql (length (create-resampling-sets 10 5)) 5)))
+(5am:test create-resampling-sets-ex-2
+  (5am:is (eql (length (create-resampling-sets 100 7)) 7)))
+(5am:test create-resampling-sets-ex-3
+  (5am:is (eql (length (create-resampling-sets 99 35)) 35)))
+;; Check for repetition in the test sets
+(5am:test create-resampling-sets-ex-4
+  (5am:is (every #'(lambda (x) (let ((test-set (second (car x))))
+				 (not (utils:any-duplicated test-set))))
+		 (create-resampling-sets 80 13))))
+;; Check for repetition in the training sets
+(5am:test create-resampling-sets-ex-5
+  (5am:is (every #'(lambda (x) (let ((training-set (second (second x))))
+				 (not (utils:any-duplicated training-set))))
+		 (create-resampling-sets 80 13))))
+;; Check symbols
+(5am:test create-resampling-sets-ex-6
+  (5am:is (every #'(lambda (x) (eql (caar x) 'test)) (create-resampling-sets 12 2))))
+(5am:test create-resampling-sets-ex-7
+  (5am:is (every #'(lambda (x) (eql (car (second x)) 'train))
+		 (create-resampling-sets 40 3))))
+;; Check that no element appears in more than one test set
+(5am:test create-resampling-sets-ex-8
+  (5am:is (not (utils:any-duplicated (loop for resampling-set
+				  in (create-resampling-sets 20 6)
+				  append (second (car resampling-set)))))))
+;; Check that test sets are all approximately equal sizes
+(5am:test create-resampling-sets-ex-9
+  (5am:is (eval '(let* ((resampling-sets (create-resampling-sets 70 8))
+			(min-size (apply #'min (mapcar #'(lambda (x)
+							   (length (second (car x))))
+						       resampling-sets)))
+			(max-size (apply #'max (mapcar #'(lambda (x)
+							   (length (second (car x))))
+						       resampling-sets))))
+		  (< (- max-size min-size) 2)))))
+;; Check that no elements appear in both training and test sets
+(5am:test create-resampling-sets-ex-10
+  (5am:is (every #'(lambda (x) (let* ((test-set (second (car x)))
+				      (training-set (second (second x)))
+				      (combined (append test-set training-set)))
+				 (not (utils:any-duplicated combined))))
+		 (create-resampling-sets 120 14))))
 
 ;;;=====================
 ;;;* Files and folders *
@@ -102,10 +150,11 @@
 and compares the text files that they output. If the two text files
 are the same, returns T, otherwise NIL."
   (write-ex-compositions-to-file)
+  (import-ex-compositions)
   (flet ((run-idyom (output-path)
 	   (idyom:idyom *example-dataset-db-id*
 			'(cpitch onset)
-			'(cpint ioi)
+			'(cpint cpcint ioi ioi-contour)
 			:k 2
 			:use-resampling-set-cache? t
 			:use-ltms-cache? t
