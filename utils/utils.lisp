@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2017-05-02 12:43:22 peter>
+;;;; Time-stamp: <2017-05-09 18:40:44 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -225,6 +225,15 @@ empirical distribution function."
 		   :detail 3)
     quantile-values))
 
+(defun shuffle (sequence)
+  "Shuffles a sequence into a random order. 
+Borrowed from https://www.pvk.ca/Blog/Lisp/trivial_uniform_shuffling.html"
+  (map-into sequence #'car
+            (sort (map 'vector (lambda (x)
+                                 (cons x (random 1d0)))
+                       sequence)
+                  #'< :key #'cdr)))
+
 (defun assign-to-quantile (number quantiles)
   "Given a number <number> and a list <quantiles> identifying a set of 
 quantiles as produced by the function QUANTILES, returns the 1-indexed
@@ -346,6 +355,11 @@ quantile into which <number> falls."
                (find-duplicates (set-difference (rest list) matches)
                                 :test test :key key))
              (find-duplicates (rest list) :test test :key key)))))
+
+(defun any-duplicated (list &key (test #'eql) (key #'identity))
+  "Returns T if any elements of <list> are duplicated."
+  (not (eql (length list)
+	    (length (remove-duplicates list :test test :key key)))))
 
 (defun rotate (list n)
   (let ((n (mod n (length list))))
