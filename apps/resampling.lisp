@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-05-09 15:57:54 peter>                           
+;;;; Time-stamp: <2017-05-09 18:37:22 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -238,18 +238,24 @@ dataset-id)."
   (format-information-content-detail=2 stream resampling-predictions dataset-id))
 
 (defun format-information-content-detail=3 (stream resampling-predictions dataset-id)
+  ;(break)
   (if *use-new-format-method*
       (format-information-content-detail=3-new
        stream resampling-predictions dataset-id)
       (let ((results (make-hash-table :test #'equal))
-	    (features))
-	(flet ((create-key (feature attribute) (intern (concatenate 'string (symbol-name feature) "." (format nil "~A" attribute)) :keyword))
-	       (sort-function (x y) (let ((x1 (car x)) (x2 (cadr x)) (y1 (car y)) (y2 (cadr y))) (if (= x1 y1) (< x2 y2) (< x1 y1)))))
+	    (features))  ; accumulates a list of target viewpoints
+	(flet ((create-key (feature attribute)
+		 (intern (concatenate 'string (symbol-name feature) "."
+				      (format nil "~A" attribute)) :keyword))
+	       (sort-function (x y) (let ((x1 (car x)) (x2 (cadr x))
+					  (y1 (car y)) (y2 (cadr y)))
+				      (if (= x1 y1) (< x2 y2) (< x1 y1)))))
 	  ;; FOR EACH: resampling set prediction 
 	  (dolist (rsp resampling-predictions)
-	    ;; FOR EACH: feature prediction 
+	    ;; FOR EACH: feature prediction (e.g. cpitch, onset)
 	    (dolist (fp rsp)
-	      (let ((feature (viewpoints:viewpoint-type (prediction-sets:prediction-viewpoint fp))))
+	      (let ((feature (viewpoints:viewpoint-type
+			      (prediction-sets:prediction-viewpoint fp))))
 		(pushnew feature features)
 		;; FOR EACH: song prediction 
 		(dolist (sp (prediction-sets:prediction-set fp))
@@ -458,49 +464,17 @@ for <viewpoint> in <dataset-id>."
    complete partition of the integers from 0 to (- count 1) where the
    elements of the individual sets are randomly selected without
    replacement."
-  (if (= count k) 
-      (let ((list (generate-integers 0 (1- count))))
-        (mapcar #'(lambda (x) 
-                    (list (list 'test (list x)) 
-                          (list 'train (remove x list :test #'=))))
-                list))
-      (let* ((new-count (+ (- count (rem count k)) k))
-             (list (generate-integers 0 (1- new-count)))
-             (set-size (floor (length list) k))
-             (test-sets (remove-extras (partition-list list set-size) count)))
-        (mapcar #'(lambda (s) (list (list 'test s)
-                                    (list 'train (get-training-indices s count))))
-                test-sets))))
-
-(defun get-training-indices (test-indices composition-count)
-  "Removes members of <test-indices> from <all-indices>."
-  (remove-if #'(lambda (i) (member i test-indices))
-             (generate-integers 0 (- composition-count 1))))
-
-(defun remove-extras (sublists count)
-  "Removes all numbers greater than or equal to count from all sublists
-   of <sublists>." 
-  (mapcar #'(lambda (list)
-              (remove-if #'(lambda (n) (>= n count)) list))
-          sublists))
-
-(defun partition-list (list n &optional result)
-  "Returns a list of sublists each of which contains <n> elements of <list>
-   assigned randomly without replacement from <list>. <n> must be an integral
-   divisor of the length of <list>."
-  (cond ((null list) result)
-        ((< (length list) n) (cons list result))
-        (t (multiple-value-bind (r l)
-               (random-select list n)
-             (partition-list l n (cons r result))))))
-
-(defun random-select (list n &optional result new-list)
-  "Given a <list> and a number <n> returns two values: the first is a
-   list containing <n> elements drawn at random from
-   from <list> without replacement; and the second  is <list> with
-   those elements removed."
-  (cond ((= n 0) (values (reverse result) (reverse (append list new-list))))
-        ((< (random 1.0 (make-random-state t)) (/ n (length list)))
-         (random-select (cdr list) (- n 1) (cons (car list) result) new-list))
-        (t (random-select (cdr list) n result (cons (car list) new-list)))))
-
+  (let* ((test-sets (make-array k :initial-element nil))
+	 (indices (loop for i from 0 to (1- count) collect i))
+	 (shuffled-indices (utils:shuffle indices))
+	 (current-test-set 0))
+    (dolist (i shuffled-indices)
+      (push i (svref test-sets current-test-set))
+      (setf current-test-set (mod (1+ current-test-set) k)))
+    (loop for i from 0 to (1- k)
+       collect (let* ((test-set (sort (svref test-sets i) #'<))
+		      (train-set (sort (remove-if #'(lambda (x) (member x test-set))
+						  indices)
+				       #'<)))
+		 (list (list 'test test-set)
+		       (list 'train train-set))))))
