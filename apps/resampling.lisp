@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-05-04 19:39:36 peter>                           
+;;;; Time-stamp: <2017-05-09 10:31:55 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -234,13 +234,18 @@ dataset-id)."
 (defun format-information-content-detail=3 (stream resampling-predictions dataset-id) 
   (let ((results (make-hash-table :test #'equal))
         (features))
-    (flet ((create-key (feature attribute) (intern (concatenate 'string (symbol-name feature) "." (format nil "~A" attribute)) :keyword))
-           (sort-function (x y) (let ((x1 (car x)) (x2 (cadr x)) (y1 (car y)) (y2 (cadr y))) (if (= x1 y1) (< x2 y2) (< x1 y1)))))
+    (flet ((create-key (feature attribute)
+	     (intern (concatenate 'string (symbol-name feature) "."
+				  (format nil "~A" attribute)) :keyword))
+           (sort-function (x y) (let ((x1 (car x)) (x2 (cadr x))
+				      (y1 (car y)) (y2 (cadr y)))
+				  (if (= x1 y1) (< x2 y2) (< x1 y1)))))
       ;; FOR EACH: resampling set prediction 
       (dolist (rsp resampling-predictions)
         ;; FOR EACH: feature prediction 
         (dolist (fp rsp)
-          (let ((feature (viewpoints:viewpoint-type (prediction-sets:prediction-viewpoint fp))))
+          (let ((feature (viewpoints:viewpoint-type
+			  (prediction-sets:prediction-viewpoint fp))))
             (pushnew feature features)
             ;; FOR EACH: song prediction 
             (dolist (sp (prediction-sets:prediction-set fp))
@@ -248,13 +253,16 @@ dataset-id)."
                 ;; FOR EACH: event 
                 (dolist (ep (prediction-sets:prediction-set sp))
                   (let* ((event (prediction-sets:prediction-event ep))
-                         (event-id (md:get-event-index (md:get-attribute event 'identifier)))
+                         (event-id (md:get-event-index (md:get-attribute event
+									 'identifier)))
                          (probability (float (probability ep) 0.0))
                          (distribution (prediction-sets:prediction-set ep))
                          (orders (prediction-sets:prediction-order ep))
                          (weights (prediction-sets:prediction-weights ep))
-                         (existing-results (gethash (list composition-id event-id) results))
-                         (event-results (if existing-results existing-results (make-hash-table)))
+                         (existing-results (gethash (list composition-id event-id)
+						    results))
+                         (event-results (if existing-results existing-results
+					    (make-hash-table)))
                          (timebase (md:timebase event)))
                     ;; Store event information
                     (unless existing-results
@@ -265,7 +273,8 @@ dataset-id)."
                             (quote-string (md:get-description
                                            dataset-id
                                            composition-id)))
-                      ;; TODO - this needs to be specific to each type of music-object (music-event, music-slice etc.)
+                      ;; TODO - this needs to be specific to each type of
+		      ;; music-object (music-event, music-slice etc.)
                       (dolist (attribute (viewpoints:get-basic-types event))
                         (let ((value (md:get-attribute event attribute)))
                           (when (member attribute '(:dur :bioi :deltast :onset) :test #'eq)
@@ -277,39 +286,58 @@ dataset-id)."
                     (when weights
                       (dolist (w weights) ; weights
                         (setf (gethash (create-key feature (car w)) event-results) (cadr w))))
-                    (setf (gethash (create-key feature 'probability) event-results) probability)
-                    (setf (gethash (create-key feature 'information.content) event-results) (- (log probability 2)))
-                    (setf (gethash (create-key feature 'entropy) event-results) (float (prediction-sets:shannon-entropy distribution) 0.0))
-                    (setf (gethash (create-key feature 'distribution) event-results) distribution)
+                    (setf (gethash (create-key feature 'probability) event-results)
+			  probability)
+                    (setf (gethash (create-key feature 'information.content) event-results)
+			  (- (log probability 2)))
+                    (setf (gethash (create-key feature 'entropy) event-results)
+			  (float (prediction-sets:shannon-entropy distribution) 0.0))
+                    (setf (gethash (create-key feature 'distribution) event-results)
+			  distribution)
                     (dolist (p distribution)
                       (setf (gethash (create-key feature (car p)) event-results) (cadr p)))
-                    (setf (gethash (list composition-id event-id) results) event-results))))))))
+                    (setf (gethash (list composition-id event-id) results)
+			  event-results))))))))
       ;; Combine probabilities from different features
       (maphash #'(lambda (k v)
                    (let* ((event-results v)
-                          (probability-keys (mapcar #'(lambda (f) (create-key f 'probability)) features))
-                          (probabilities (mapcar #'(lambda (x) (gethash x v)) probability-keys))
+                          (probability-keys (mapcar #'(lambda (f)
+							(create-key f 'probability))
+						    features))
+                          (probabilities (mapcar #'(lambda (x) (gethash x v))
+						 probability-keys))
                           (probability (apply #'* probabilities))
-                          (distribution-keys (mapcar #'(lambda (f) (create-key f 'distribution)) features))
-                          (distributions (mapcar #'(lambda (x) (gethash x v)) distribution-keys))
-                          (distribution (mapcar #'(lambda (x) (let ((elements (mapcar #'first x))
-                                                                    (probabilities (mapcar #'second x)))
-                                                                (list elements (apply #'* probabilities))))
-                                                (apply #'utils:cartesian-product distributions))))
-                     (setf (gethash 'probability event-results) probability)
-                     (setf (gethash 'information.content event-results) (- (log probability 2)))
-                     (setf (gethash 'entropy event-results) (prediction-sets:shannon-entropy distribution))
+                          (distribution-keys (mapcar #'(lambda (f)
+							 (create-key f 'distribution))
+						     features))
+                          (distributions (mapcar #'(lambda (x) (gethash x v))
+						 distribution-keys))
+                          (distribution (mapcar
+					 #'(lambda (x)
+					     (let ((elements (mapcar #'first x))
+						   (probabilities (mapcar #'second x)))
+					       (list elements (apply #'* probabilities))))
+					 (apply #'utils:cartesian-product distributions))))
+                     (setf (gethash 'probability event-results)
+			   probability)
+                     (setf (gethash 'information.content event-results)
+			   (- (log probability 2)))
+                     (setf (gethash 'entropy event-results)
+			   (prediction-sets:shannon-entropy distribution))
                      ;; TODO elements of combined distribution
                      (mapc #'(lambda (key) (remhash key event-results)) distribution-keys)
                      (setf (gethash k results) event-results)))
                results)
+      (break)
       ;; Sort values and print
       (let ((sorted-results (utils:hash-table->sorted-alist results #'sort-function))
             (print-header t))
         (dolist (entry sorted-results)
           (when print-header
             (maphash #'(lambda (k v) (declare (ignore v))
-			       (format stream "~A~C" (string-downcase (symbol-name k)) #\tab))
+			       (format stream "~A~C"
+				       (string-downcase (symbol-name k))
+				       #\tab))
 		     (cdr entry))
             (setf print-header nil))
           (format stream "~&")
