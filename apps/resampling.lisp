@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-05-11 11:29:28 peter>                           
+;;;; Time-stamp: <2017-05-11 16:07:10 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -100,29 +100,30 @@
 			   num-quantiles
 			   slices-or-chords harmonic-reduction
 			   polyphonic-expansion)
-    (utils:message (format nil "Iterating over ~A resampling indice(s)."
-			   (length resampling-indices)))
-    (dolist (resampling-set resampling-sets sequence-predictions)
-      ;; (format t "~&~0,0@TResampling set ~A: ~A~%" resampling-id resampling-set)
-      ;(format t "~&Resampling ~A" resampling-id)
-      (when (member resampling-id resampling-indices)
-	(utils:message (format nil "Modelling resampling fold ~A/~A."
-			       (1+ resampling-id) (length resampling-indices)))
-        (let* ((training-set (get-training-set dataset resampling-set))
-               (training-set (monodies-to-lists (append pretraining-set
-							training-set)))
-               (test-set (monodies-to-lists (get-test-set dataset
-							  resampling-set)))
-               (ltms (get-long-term-models sources training-set
-                                           pretraining-ids dataset-id
-                                           resampling-id k 
-                                           voices texture
-                                           use-ltms-cache?))
-               (mvs (make-mvs targets sources ltms))
-               (predictions
-                (mvs:model-dataset mvs test-set :construct? t :predict? t)))
-          (push predictions sequence-predictions)))
-      (incf resampling-id))))
+    (let ((viewpoints:*discretise-viewpoints* t)) 
+      (utils:message (format nil "Iterating over ~A resampling indice(s)."
+			     (length resampling-indices)))
+      (dolist (resampling-set resampling-sets sequence-predictions)
+	;; (format t "~&~0,0@TResampling set ~A: ~A~%" resampling-id resampling-set)
+					;(format t "~&Resampling ~A" resampling-id)
+	(when (member resampling-id resampling-indices)
+	  (utils:message (format nil "Modelling resampling fold ~A/~A."
+				 (1+ resampling-id) (length resampling-indices)))
+	  (let* ((training-set (get-training-set dataset resampling-set))
+		 (training-set (monodies-to-lists (append pretraining-set
+							  training-set)))
+		 (test-set (monodies-to-lists (get-test-set dataset
+							    resampling-set)))
+		 (ltms (get-long-term-models sources training-set
+					     pretraining-ids dataset-id
+					     resampling-id k 
+					     voices texture
+					     use-ltms-cache?))
+		 (mvs (make-mvs targets sources ltms))
+		 (predictions
+		  (mvs:model-dataset mvs test-set :construct? t :predict? t)))
+	    (push predictions sequence-predictions)))
+	(incf resampling-id)))))
 
 (defun discretise-viewpoints (viewpoints datasets num-quantiles
 			      slices-or-chords reduction expansion)
@@ -138,8 +139,7 @@ quantiles are calculated for it."
     (when (viewpoints:continuous-p v)
       (viewpoints:set-viewpoint-quantiles
        v datasets num-quantiles :slices-or-chords slices-or-chords
-       :reduction reduction :expansion expansion)))
-  (setf viewpoints:*discretise-viewpoints* t))
+       :reduction reduction :expansion expansion))))
 
 (defun check-model-defaults (defaults &key
 			      (order-bound (getf defaults :order-bound))
