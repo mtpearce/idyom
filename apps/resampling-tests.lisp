@@ -2,7 +2,7 @@
 ;;;; File:       resampling-tests.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-05-09 14:00:34 peter>                             
-;;;; Time-stamp: <2017-05-11 11:30:34 peter>                           
+;;;; Time-stamp: <2017-05-11 15:56:50 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -155,15 +155,16 @@ are the same, returns T, otherwise NIL."
   (write-ex-compositions-to-file)
   (import-ex-compositions)
   (flet ((run-idyom (output-path)
-	   (idyom:idyom *example-dataset-db-id*
-			'(cpitch)
-			'(cpint cpcint)
-			:k 2
-			:use-resampling-set-cache? t
-			:use-ltms-cache? t
-			:output-path output-path
-			:overwrite t :detail 3
-			:separator #\tab)))
+	   (let ((viewpoints::*basic-types* '(cpitch)))
+	     (idyom:idyom *example-dataset-db-id*
+			  '(cpitch)
+			  '(cpint cpcint)
+			  :k 2
+			  :use-resampling-set-cache? t
+			  :use-ltms-cache? t
+			  :output-path output-path
+			  :overwrite t :detail 3
+			  :separator #\tab))))
     (let ((resampling::*use-old-format-method* t))
       (run-idyom *ex-idyom-output-dir-format=old*))
     (let ((resampling::*use-old-format-method* nil))
