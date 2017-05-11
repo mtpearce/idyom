@@ -2,7 +2,7 @@
 ;;;; File:       main.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2010-11-01 15:19:57 marcusp>
-;;;; Time-stamp: <2017-05-11 10:54:15 peter>
+;;;; Time-stamp: <2017-05-11 20:23:07 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:idyom)
@@ -68,6 +68,9 @@
                 ;; Number of voices and texture (e.g., :melody :harmony)
                 (voices nil)
                 (texture :melody)
+		(polyphonic-expansion :full)
+		(harmonic-reduction :none)
+		(slices-or-chords :chords)
                 ;; Output
                 (detail 3)
 		(return-predictions nil)
@@ -85,6 +88,9 @@
    dataset using k-fold cross validation (AKA resampling).  The
    parameters <use-resampling-set-cache?> and <use-ltms-cache?> enable
    or disable respectively the caching of resampling-sets and LTMs."
+  (assert (member texture '(:melody :harmony)))
+  (assert (member harmonic-reduction '(:none :regular-harmonic-rhythm)))
+  (assert (member polyphonic-expansion '(:full :continuation :natural)))
   (let* ((ltmo (apply #'resampling::check-model-defaults
 		      (cons mvs::*ltm-params* ltmo)))
          (stmo (apply #'resampling::check-model-defaults
@@ -114,7 +120,7 @@
 	    (let* (;; Generate candidate viewpoint systems
 		   (sel-basis (find-selection-basis target-viewpoints basis))
                    (viewpoint-systems (generate-viewpoint-systems
-				       sel-basis max-links min-link
+				       sel-basis max-links min-links
 				       vp-white vp-black))
                    ;; Select viewpoint system
                    (selected (viewpoint-selection:dataset-viewpoint-selection
@@ -132,6 +138,9 @@
 		   :k k :resampling-indices resampling-indices
 		   :models models :ltmo ltmo :stmo stmo
 		   :voices voices :texture texture
+		   :polyphonic-expansion polyphonic-expansion
+		   :harmonic-reduction harmonic-reduction
+		   :slices-or-chords slices-or-chords
 		   :use-resampling-set-cache? use-resampling-set-cache?
 		   :use-ltms-cache? use-ltms-cache?)))
             (when output-path
