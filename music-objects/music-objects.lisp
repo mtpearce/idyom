@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2017-05-08 16:41:32 peter>
+;;;; Time-stamp: <2017-05-11 20:38:34 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -594,7 +594,9 @@ event identifiers to every event, starting at 0."))
 (defun slice->chord (slice)
   "Destructively converts a music-slice object <slice> to a music-chord object."
   (let* ((events (%list-slot-sequence-data slice))
-	 (h-cpitch (mapcar #'(lambda (x) (get-attribute x 'cpitch)) events)))
+	 (h-cpitch (remove-duplicates (mapcar #'(lambda (x)
+						  (get-attribute x 'cpitch))
+					      events))))
     (change-class slice 'music-chord :h-cpitch h-cpitch)))
 
 (defun reduce-bar (bar &key (mode :canonic))
