@@ -2,7 +2,7 @@
 ;;;; File:       tymoczko.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-04-13 10:18:30 peter>                     
-;;;; Time-stamp: <2017-05-01 12:18:41 peter>                          
+;;;; Time-stamp: <2017-05-11 19:39:32 peter>                          
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -262,7 +262,8 @@ between <set-1> and <set-2>.")))
 
 ;; Remember to remove the last voice-leading from the array
 
-(defun vl-get-minimal-voice-leading (s1 s2 elt-type norm &key debug)
+(declaim (notinline vl-get-minimal-voice-leading))
+(fmemo:define-memo-function vl-get-minimal-voice-leading (s1 s2 elt-type norm &key debug)
   "Computes the minimal voice-leading between 
 two sets <s1> and <s2>. <s1> and <x2> should 
 be lists of numbers, with each number corresponding

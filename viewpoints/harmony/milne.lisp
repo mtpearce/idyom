@@ -2,7 +2,7 @@
 ;;;; File:       milne.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-04-12 11:41:38 peter>                      
-;;;; Time-stamp: <2017-05-01 11:47:42 peter>                          
+;;;; Time-stamp: <2017-05-11 19:31:11 peter>                          
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -206,7 +206,8 @@ vectors <x> and <y>."
 			(sqrt (loop for j across y summing (* j j))))))
     (/ numerator denominator)))
 
-(defun pc-set-spectral-distance
+(declaim (notinline pc-set-spectral-distance))
+(fmemo:define-memo-function pc-set-spectral-distance
     (pc-set-1 pc-set-2)
   "Calculates the spectral distance between two pitch
 class sets using Milne's spectral distance model."

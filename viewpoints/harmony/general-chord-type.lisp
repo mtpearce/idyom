@@ -2,7 +2,7 @@
 ;;;; File:       general-chord-type.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-03-01 14:58:07 peter>                             
-;;;; Time-stamp: <2017-04-08 19:38:02 peter>                           
+;;;; Time-stamp: <2017-05-11 19:27:44 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -24,6 +24,32 @@
 (defvar *harmonic-minor-scale-degrees* '(0 2 3 5 7 8 11))
 (defvar *major-scale-degrees* '(0 2 4 5 7 9 11))
 
+;;;======================
+;;;* Memoized functions *
+;;;======================
+
+(fmemo:define-memo-function general-chord-type (pitch-class-set bass-pc pitch-scale-hierarchy consonance-vector)
+  "Computes the GCT representation of PITCH-CLASS-SET, given BASS-PC, PITCH-SCALE-HIERARCHY and CONSONANCE-VECTOR.
+   PITCH-SCALE-HIERARCHY can optionally be null, in which case the choose-best-chord function may produce
+   slightly different results, and root-csd will be expressed relative to a tonic of C major."
+  (let* ((pitch-class-set (sort pitch-class-set #'<))
+	 (pitch-class-set (remove-duplicates pitch-class-set))
+	 (maximal-subsets (maximal-subsets pitch-class-set consonance-vector))
+         (base (mapcar #'make-compact maximal-subsets))
+         (base-extension (mapcar #'(lambda (x) (add-extensions x pitch-class-set)) base))
+         (root-base-extension (mapcar #'add-root base-extension))
+         (relative-chord (mapcar #'(lambda (x) (relate-to-key x pitch-scale-hierarchy)) 
+                                 root-base-extension))
+	 (tonic (first pitch-scale-hierarchy))
+	 (bass-csd (if tonic
+		       (mod (- bass-pc tonic) 12)
+		       bass-pc))
+         (best-chord (choose-best-chord relative-chord base bass-csd pitch-scale-hierarchy
+					pitch-class-set bass-pc consonance-vector)))
+    (list (cons :root-csd (first best-chord))
+	  (cons :base (sort (second best-chord) #'<))
+	  (cons :ext (sort (third best-chord) #'<))
+	  (cons :tonic (first pitch-scale-hierarchy)))))
 
 ;;;======================
 ;;;* Derived viewpoints *
@@ -114,43 +140,6 @@
 ;;;========================
 ;;;* Supporting functions *
 ;;;========================
-
-(defun general-chord-type (pitch-class-set bass-pc pitch-scale-hierarchy consonance-vector)
-  "Computes the GCT representation of PITCH-CLASS-SET, given BASS-PC, PITCH-SCALE-HIERARCHY and CONSONANCE-VECTOR.
-   PITCH-SCALE-HIERARCHY can optionally be null, in which case the choose-best-chord function may produce
-   slightly different results, and root-csd will be expressed relative to a tonic of C major."
-  (let* ((pitch-class-set (sort pitch-class-set #'<))
-	 (pitch-class-set (remove-duplicates pitch-class-set))
-	 (maximal-subsets (maximal-subsets pitch-class-set consonance-vector))
-         (base (mapcar #'make-compact maximal-subsets))
-         (base-extension (mapcar #'(lambda (x) (add-extensions x pitch-class-set)) base))
-         (root-base-extension (mapcar #'add-root base-extension))
-         (relative-chord (mapcar #'(lambda (x) (relate-to-key x pitch-scale-hierarchy)) 
-                                 root-base-extension))
-	 (tonic (first pitch-scale-hierarchy))
-	 (bass-csd (if tonic
-		       (mod (- bass-pc tonic) 12)
-		       bass-pc))
-         (best-chord (choose-best-chord relative-chord base bass-csd pitch-scale-hierarchy
-					pitch-class-set bass-pc consonance-vector)))
-    ;; (when (> (length relative-chord) 1)
-    ;;   (print (list pitch-class-set pitch-scale-hierarchy))
-    ;;   (print maximal-subsets)
-    ;;   (print base)
-    ;;   (print base-extension)
-    ;;   (print root-base-extension)
-    ;;   (print relative-chord)
-    ;;   (print best-chord))
-    (list (cons :root-csd (first best-chord))
-	  (cons :base (sort (second best-chord) #'<))
-	  (cons :ext (sort (third best-chord) #'<))
-	  (cons :tonic (first pitch-scale-hierarchy)))))
-
-;; (defun combine-base-and-extension (chord)
-;;  "This function is no longer needed."
-;;  (if (= (length chord) 3)
-;;      (list (root chord) (append (base chord) (extension chord)))
-;;      chord))
 
 (defun root (chord)
   "Get the root of CHORD (where root is the first element of CHORD)."

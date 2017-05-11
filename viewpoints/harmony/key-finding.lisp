@@ -2,7 +2,7 @@
 ;;;; File:       key-finding.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-03-01 14:58:07 peter>                             
-;;;; Time-stamp: <2017-05-04 21:07:13 peter>                           
+;;;; Time-stamp: <2017-05-11 19:55:50 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -293,7 +293,7 @@
 		   *kf-albrecht-pc-profiles-major*
 		   *kf-albrecht-pc-profiles-minor*
 		   'euclidean)
-		  nil)))
+		  +undefined+)))
     key))
 
 (defun kf-events->local-key-method-2 (events window-size
@@ -314,7 +314,7 @@
 		   *kf-aarden-pc-profiles-major*
 		   *kf-aarden-pc-profiles-minor*
 		   'pearson)
-		  nil)))
+		  +undefined+)))
     key))
 
 (defun kf-events->local-key-method-3 (events window-size)
@@ -490,7 +490,7 @@
   "Computes the Euclidean distance between two numeric sequences."
   (assert (eql (length x) (length y)))
   (sqrt (reduce #'+ (map 'vector
-			 #'(lambda (a b) (expt (- a b) 2))
+			 #'(lambda (a b) (expt (- a b) 2.0))
 			 x y))))
 
 (defun pearson-correlation (x y)

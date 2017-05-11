@@ -2,7 +2,7 @@
 ;;;; File:       hutchinson-knopoff.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-04-10 16:20:11 peter>                       
-;;;; Time-stamp: <2017-05-01 12:17:21 peter>                           
+;;;; Time-stamp: <2017-05-11 17:53:43 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -30,6 +30,34 @@
 ;;;; Hutchinson & Knopoff. Empirical Musicology Review, 1(2), 65–84.
 
 (cl:in-package #:viewpoints)
+
+;;;======================
+;;;* Memoized functions *
+;;;======================
+
+(fmemo:define-memo-function hutch-d (s &key cbw-cut-off)
+  "Calculates the overall dissonance in a spectrum <s>,
+after Hutchinson and Knopoff. <s> should be a list of lists where
+the inner lists have two elements, the first element of which is the frequency
+of the corresponding pure tone, and the second element is the amplitude of this
+pure tone."
+  (assert (listp s))
+  (let ((n (length s)))
+    (if (< n 2)
+	0
+	(let* ((freqs (coerce (mapcar #'car s) 'simple-vector))
+	       (amps (coerce (mapcar #'cadr s) 'simple-vector))
+	       (denom (loop for i across amps summing (expt i 2)))
+	       (num (loop for i from 1 to n summing
+			 (loop for j from (1+ i) to n summing
+			      (* (svref amps (- i 1))
+				 (svref amps (- j 1))
+				 (hutch-g (hutch-y (svref freqs (- i 1))
+						   (svref freqs (- j 1)))
+					  cbw-cut-off))))))
+	  (if (equalp denom 0)
+	      0
+	      (/ num denom))))))
 
 ;;;======================
 ;;;* Derived viewpoints *
@@ -98,30 +126,6 @@ is necessary for replicating Mashinter's results."
 	(expt (* (/ y a) (exp (- 1 (/ y a))))
 	      b))
       0.0))
-
-(defun hutch-d (s &key cbw-cut-off)
-  "Calculates the overall dissonance in a spectrum <s>,
-after Hutchinson and Knopoff. <s> should be a list of lists where
-the inner lists have two elements, the first element of which is the frequency
-of the corresponding pure tone, and the second element is the amplitude of this
-pure tone."
-  (assert (listp s))
-  (let ((n (length s)))
-    (if (< n 2)
-	0
-	(let* ((freqs (coerce (mapcar #'car s) 'simple-vector))
-	       (amps (coerce (mapcar #'cadr s) 'simple-vector))
-	       (denom (loop for i across amps summing (expt i 2)))
-	       (num (loop for i from 1 to n summing
-			 (loop for j from (1+ i) to n summing
-			      (* (svref amps (- i 1))
-				 (svref amps (- j 1))
-				 (hutch-g (hutch-y (svref freqs (- i 1))
-						   (svref freqs (- j 1)))
-					  cbw-cut-off))))))
-	  (if (equalp denom 0)
-	      0
-	      (/ num denom))))))
 
 (defun freq-list->harmonics (freq-list &key (num-harmonics 10)
 				       (roll-off #'(lambda (n) (/ 1 (1+ n))))
