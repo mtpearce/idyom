@@ -2,7 +2,7 @@
 ;;;; File:       music-data.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-04-20 12:35:54 peter>                           
+;;;; Time-stamp: <2017-05-11 16:14:49 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -780,10 +780,12 @@ corresponding to the onset of that bar."
   (ignore-errors
     (drop-table 'mtp-dataset :database db)
     (drop-table 'mtp-composition :database db)
-    (drop-table 'mtp-event :database db))
+    (drop-table 'mtp-event :database db)
+    (drop-table 'mtp-barline :database db))
   (create-view-from-class 'mtp-dataset :database db)
   (create-view-from-class 'mtp-composition :database db)
-  (create-view-from-class 'mtp-event :database db))
+  (create-view-from-class 'mtp-event :database db)
+  (create-view-from-class 'mtp-barline :database db))
 
 
 ;; selector functions
