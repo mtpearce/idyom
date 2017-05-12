@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-04-20 10:57:13 peter>                           
+;;;; Time-stamp: <2017-05-12 21:18:51 peter>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -640,6 +640,7 @@
     (if *correct-onsets-to-first-barline*
 	(setf processed-events (correct-onsets processed-events
 					       *onset-correction*)))
+    (assert (not (utils:any-duplicated *bar-nums*)))
     (list (cons :events (reverse processed-events))
 	  (cons :bar-nums (reverse *bar-nums*))
 	  (cons :bar-onsets (reverse *bar-onsets*)))))
@@ -695,6 +696,8 @@
       (jazz-key (process-jazz-key
 		 jazz-token humdrum-state processed-events))
       (first-barline (process-first-barline
+		      humdrum-state processed-events))
+      (other-barline (process-other-barline
 		      humdrum-state processed-events))
       (musical-rest (process-musical-rest
 		     jazz-token humdrum-state processed-events))
@@ -1964,7 +1967,7 @@ in a phrase, and 0 otherwise."
 	;; If we've just had a new barline, but we don't know
 	;; what the onset of the barline is, record the barline's
 	;; onset as being the current event onset.
-	  (setf (car *bar-onsets*) onset))
+	  (setf (car *bar-onsets*) (second onset)))
       (let ((bar (list :bar (car *bar-nums*)))
 	    (posinbar (list :posinbar (- (second onset) (car *bar-onsets*)))))
       (dolist (cpitch cpitch-list new-processed-events)

@@ -1,4 +1,4 @@
-This folder contains music intended to represent common-practice Western tonal music. It includes the following repertoires:
+This folder contains music intended to represent common-practice Western tonal music. It includes the following repertoires: (1021 pieces/movements in total)
 
 Bach chorales (1685-1750)– sourced from kernScores
 – 370 pieces (1 is missing)

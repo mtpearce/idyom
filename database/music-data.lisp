@@ -2,7 +2,7 @@
 ;;;; File:       music-data.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-05-11 16:14:49 peter>                           
+;;;; Time-stamp: <2017-05-12 21:07:29 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -31,6 +31,34 @@
 ;;;;
 
 (cl:in-package #:idyom-db)
+
+(defun import-common-practice-tonal (&key (id 1))
+  (idyom-db:import-data :krn (merge-pathnames
+			      (make-pathname :directory
+					     '(:relative "music-corpora"
+					       "polyphony" "common-practice-tonal-music"
+					       "krn"))
+			      cl-user::*idyom-code-root*)
+			"A selection of Western common-practice tonal music"
+			id))
+
+(defun import-pop (&key (id 2))
+  (idyom-db:import-data :mcgill (merge-pathnames
+			      (make-pathname :directory
+					     '(:relative "music-corpora"
+					       "polyphony" "pop-billboard"))
+			      cl-user::*idyom-code-root*)
+			"The McGill Billboard corpus"
+			id))
+
+(defun import-jazz (&key (id 3))
+  (idyom-db:import-data :jazz (merge-pathnames
+			      (make-pathname :directory
+					     '(:relative "music-corpora"
+					       "polyphony" "jazz-irb"))
+			      cl-user::*idyom-code-root*)
+			"The iRb jazz corpus"
+			id))
 
 (defun db-backup ()
   (let* ((db-filename (pathname (slot-value clsql-sys:*default-database*
@@ -655,16 +683,16 @@ to exclude for each dataset specified in SOURCE-IDS."
    dataset-id as <dataset> and inserts it into the composition table of
    the default database. Calls <insert-event> to insert each
    event of <composition> into the event table."
-  ;; Originally <composition> objects took the form of a cons cell
+  ;; Originally <composition> objects took the form of a list,
   ;; the first element of which was the file description and the
   ;; second element of which was the list of processed events.
   ;; We are in the process of upgrading to a new format where
   ;; <composition> objects take the form of assoc-lists.
   ;; However, not all import modules support this format, so
   ;; currently both formats must be supported in this function.
-  ;; We can test for the new format by seeing if <composition>
-  ;; is of type list.
-  (let* ((format (if (listp composition) :new :old))
+  ;; We can test for the new format by seeing if the first element
+  ;; of <composition> is of type list.
+  (let* ((format (if (listp (car composition)) :new :old))
 	 (description (case format
 			(:old (format nil "~D" (car composition)))
 			(:new (cdr (assoc :description composition)))
