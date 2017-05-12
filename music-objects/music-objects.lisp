@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2017-05-11 20:38:34 peter>
+;;;; Time-stamp: <2017-05-12 22:23:51 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -604,29 +604,36 @@ event identifiers to every event, starting at 0."))
 various elements including :slices, a list of slices, and :onset, the 
 onset of the bar. Reduces the bar to a list of slices corresponding
 to the harmonic rhythm."
-  (let* ((slices (cdr (assoc :slices bar)))
-	 (barlengths (mapcar #'barlength slices))
-	 (pulses (mapcar #'pulses slices))
-	 (timebases (mapcar #'timebase slices)))
-    (assert (utils:all-eql barlengths))
-    (assert (utils:all-eql pulses))
-    (assert (utils:all-eql timebases))
-    (let ((barlength (car barlengths)) (pulses (car pulses))
-	  (timebase (car timebases)))
-      (assert (not (null barlength)))
-      (assert (not (null pulses)))
-      (assert (not (null timebase)))
-      (case mode
-	(:canonic (reduce-bar-given-harmonic-rhythm
-		   bar (find-canonic-harmonic-rhythm pulses barlength)))
-	;; (:find-best-regular-rhythm
-	;;  (let ((candidate-rhythms (find-harmonic-rhythms pulses barlength))
-	;;        (candidate-reductions
-	;; 	(mapcar #'(lambda (rhythm) (reduce-bar-given-harmonic-rhythm
-	;; 				    bar rhythm))
-	;; 		candidate-rhythms))
-	;;        (best-score (apply #'max ...
-	))))
+  (let ((slices (cdr (assoc :slices bar))))
+    (if (null slices)
+	nil
+	;; For the time signature, we look to the slice with the
+	;; latest onset.
+	(let* ((barlengths (mapcar #'barlength slices))
+	       (pulses (mapcar #'pulses slices))
+	       (timebases (mapcar #'timebase slices))
+	       (onsets (mapcar #'onset slices))
+	       (max-onset (apply #'max onsets))
+	       (which-max-onset (position-if #'(lambda (x) (= x max-onset))
+					     onsets))
+	       (barlength (nth which-max-onset barlengths))
+	       (pulses (nth which-max-onset pulses))
+	       (timebase (nth which-max-onset timebases)))
+	    (assert (not (null barlength)))
+	    (assert (not (null pulses)))
+	    (assert (not (null timebase)))
+	    (case mode
+	      (:canonic (reduce-bar-given-harmonic-rhythm
+			 bar (find-canonic-harmonic-rhythm pulses barlength)))
+	      ;; (:find-best-regular-rhythm
+	      ;;  (let ((candidate-rhythms (find-harmonic-rhythms pulses barlength))
+	      ;;        (candidate-reductions
+	      ;; 	(mapcar #'(lambda (rhythm) (reduce-bar-given-harmonic-rhythm
+	      ;; 				    bar rhythm))
+	      ;; 		candidate-rhythms))
+	      ;;        (best-score (apply #'max ...
+	      (otherwise (error "Invalid mode selected."))
+	       ))))))
 
 (defun reduce-bar-given-harmonic-rhythm (bar harmonic-rhythm)
   "Reduces a <bar> assoc-list to a set of reduced slices on the basis 
@@ -980,7 +987,7 @@ sounding at some point before <end>."))
   (assert (or (numberp end) (null end)))
   (assert (or (numberp start) (numberp end)))
   (assert (if (and (numberp start) (numberp end))
-	      (> (- end start) 0)
+	      (>= (- end start) 0)
 	      t))
   (remove-if-not
    #'(lambda (o)
