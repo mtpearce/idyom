@@ -1,0 +1,116 @@
+!!!COM: Chopin, Frederic
+!!!CDT: 1810///-1849///
+!!!OTL: Prelude in C Minor, Op. 28, No. 20
+!!!OPS: Op. 28
+!!!ONM: No. 20
+!!!OMD: Largo
+!!!ONB: Original ending at beginning of bar 9
+!!!ODT: 1836///-1839///
+!!!PDT: 1839///
+!!!ENC: Craig Stuart Sapp
+!!!AIN: piano
+!!!EEV: 13 March 2001
+!!!YEC: Copyright 2001 by Craig Stuart Sapp
+!!!YEN: United States of America
+**kern	**kern
+*Ipiano	*Ipiano
+*lh	*rh
+*clefF4	*clefG2
+*k[b-e-a-]	*k[b-e-a-]
+*c:	*c:
+*met(C)	*met(C)
+*M4/4	*M4/4
+*MM52	*MM52
+4CC 4C	4G 4c 4e- 4g
+4FFF 4FF	4A- 4c 4e- 4a-
+*	*^
+4GGG 4GG	4G 4Bn	8.e- 8.g
+.	.	16d 16f
+*	*v	*v
+4CC 4GG 4C	4E- 4G 4c 4e-
+=2	=2
+4GGG# 4GG#	4E- 4A- 4c 4e-
+4CCC# 4CC#	4F 4A- 4d- 4f
+*	*^
+4EEE- 4EE-	4D- 4E- 4G	8.c 8.e-
+.	.	16B- 16d-
+*	*v	*v
+4GGG# 4GG#	4C 4E- 4A- 4c
+=3	=3
+4GGG 4GG	4Dn 4F 4Bn 4dn
+4CCC 4CC	4En 4G 4B- 4c 4en
+4FFF 4FF	8.A- 8.c 8.g
+.	16f
+4CC 4C	4G 4c 4e-
+=4	=4
+4DD 4AA 4D	4F# 4c 4d
+4GGG 4GG	4G 4Bn 4d 4g
+*	*^
+4DDD 4DD	4c 4d 4f#	8.bn
+.	.	16an
+*	*v	*v
+4GGG 4GG	4Bn 4d 4g
+=5	=5
+4CC 4C	4e- 4g 4ee-
+4C 4c	4e- 4a- 4ee-
+*	*^
+4BB 4B	4d 4dd	8.a-
+.	.	16f#
+*	*v	*v
+4BB- 4B-	4d 4g 4dd
+=6	=6
+4AA 4A	4c 4g 4cc
+4GG# 4G#	4c 4d 4f# 4dd
+4GG 4G	8.d 8.g 8.bn
+.	16c 16an
+4FF 4F	4Bn 4d 4g
+=7	=7
+4EE- 4E-	4c 4g 4cc
+4FF 4F	4A- 4c 4a-
+*	*^
+4BBB 4BB	4G 4d	8.g
+.	.	16f
+*	*v	*v
+4CC 4C	4G 4c 4e-
+=8	=8
+4GGG# 4GG#	4E- 4A- 4c 4e-
+4CCC# 4CC#	4F 4A- 4d- 4f
+*	*^
+4GGG 4GG	4F 4G 4B	8.e-
+.	.	16dn
+*	*v	*v
+4CCC 4CC	4E- 4G 4c
+=9	=9
+4CC 4C	4e- 4g 4ee-
+4C 4c	4e- 4a- 4ee-
+*	*^
+4BB 4B	4d 4dd	8.a-
+.	.	16f#
+*	*v	*v
+4BB- 4B-	4d 4g 4dd
+=10	=10
+4AA 4A	4c 4g 4cc
+4GG# 4G#	4c 4d 4f# 4dd
+4GG 4G	8.d 8.g 8.bn
+.	16c 16an
+4FF 4F	4Bn 4d 4g
+=11	=11
+4EE- 4E-	4c 4g 4cc
+4FF 4F	4A- 4c 4a-
+*	*^
+4BBB 4BB	4G 4d	8.g
+.	.	16f
+*	*v	*v
+4CC 4C	4G 4c 4e-
+=12	=12
+4GGG# 4GG#	4E- 4A- 4c 4e-
+4CCC# 4CC#	4F 4A- 4d- 4f
+*	*^
+4GGG 4GG	4F 4G 4Bn	8.e-
+.	.	16dn
+*	*v	*v
+4CCC 4CC	4E- 4G 4c
+=13	=13
+1C; 1G;	1c; 1e-; 1g; 1cc;
+==	==
+*-	*-

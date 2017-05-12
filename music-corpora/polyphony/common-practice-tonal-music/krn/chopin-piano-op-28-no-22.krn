@@ -1,0 +1,305 @@
+!!!COM: Chopin, Frederic
+!!!CDT: 1810///-1849///
+!!!OTL: Prelude in G Minor, Op. 28, No. 22
+!!!OPS: Op. 28
+!!!ONM: No. 22
+!!!OMD: Molto agitato
+!!!ODT: 1836///-1839///
+!!!PDT: 1839///
+!!!ENC: Craig Stuart Sapp
+!!!AIN: piano
+!!!EEV: 15 March 2001
+!!!YEC: Copyright 2008 by Craig Stuart Sapp
+!!!YEN: United States of America
+**kern	**kern	**kern
+*Ipiano	*Ipiano	*Ipiano
+*lh	*rh	*rh
+*clefF4	*clefG2	*clefG2
+*k[b-e-]	*k[b-e-]	*k[b-e-]
+*g:	*g:	*g:
+*M6/8	*M6/8	*M6/8
+*MM152	*MM152	*MM152
+8BBB- 8BB-	4r	4r
+8.AAA 8.AA	.	.
+.	8r	8r
+16GGG 16GG	.	.
+=1	=1	=1
+[4.GGG [4.GG	8r	8r
+.	8A	[4c 4e-
+.	8E-	.
+8GGG] 8GG]	4D	4A 4c] 4d
+8FFF# 8FF#	.	.
+8AAA 8AA	8r	8r
+=2	=2	=2
+[4.AAA [4.AA	8r	8r
+.	8c	[4e- 4f#
+.	8F#	.
+8AAA] 8AA]	4G	4e-] 4g
+8BBB- 8BB-	.	.
+8GGG 8GG	8r	8r
+=3	=3	=3
+[4.BBB- [4.BB-	8r	8r
+.	8c	[4e- 4g
+.	8G	.
+8BBB-] 8BB-]	4F#	4c 4e-] 4f#
+8AAA 8AA	.	.
+8CC 8C	8r	8r
+=4	=4	=4
+[4.CC [4.C	8r	8r
+.	8e-	4f# 4a
+.	8A	.
+8CC] 8C]	4B-	4g 4b-
+8DD 8D	.	.
+8BBB- 8BB-	8r	8r
+=5	=5	=5
+[4.C# [4.c#	8r	8r
+.	8b-	4ee- 4gg
+.	8g	.
+8C#] 8c#]	4f# 4a	4dd 4ff#
+8D 8d	.	.
+8AA 8A	8r	8r
+=6	=6	=6
+[4.BBn [4.Bn	8r	8r
+.	8a-	4dd- 4ffn
+.	8f	.
+8BB] 8B]	4en 4g	4cc 4een
+8C 8c	.	.
+8GG 8G	8r	8r
+=7	=7	=7
+[4.BBn [4.Bn	8r	8r
+.	8a-	4dd- 4ff
+.	8f	.
+8BB] 8B]	4en 4g	4cc 4een
+8C 8c	.	.
+8GG 8G	8r	8r
+=8	=8	=8
+8GG 8G	2.ryy	8r
+8FF# 8F#	.	8e- 8an 8cc 8ee-
+8GG 8G	.	8r
+8BB- 8B-	.	4r
+8AA 8A	.	.
+16r	.	8r
+16GG' 16G'	.	.
+=9	=9	=9
+[4.GG [4.G	8r	8r
+.	8a	[4cc 4ee-
+.	8e-	.
+8GG] 8G]	4d	4a 4cc] 4dd
+8FF# 8F#	.	.
+8AA 8A	8r	8r
+=10	=10	=10
+[4.AA [4.A	8r	8r
+.	8cc	[4ee- 4ff#
+.	8f#	.
+8AA] 8A]	4g	4ee-] 4gg
+8BB- 8B-	.	.
+8GG 8G	8r	8r
+=11	=11	=11
+[4.BB- [4.B-	8r	8r
+.	8cc	[4ee- 4gg
+.	8g	.
+8BB-] 8B-]	4f#	4cc 4ee-] 4ff#
+8AA 8A	.	.
+8C 8c	8r	8r
+=12	=12	=12
+[4.C [4.c	8r	8r
+.	8ee-	4ff# 4aa
+.	8a	.
+8C] 8c]	4b-	4gg 4bb-
+8D 8d	.	.
+8BB- 8B-	8r	8r
+=13	=13	=13
+8G 8g	8r	8r
+8E- 8e-	8gg	4bb-^
+8D 8d	8b-	.
+4D^ 4d^	8r	8r
+.	8ee	4gg 4aa^
+8C# 8c#	8a	.
+=14	=14	=14
+8F 8f	8r	8r
+8D- 8d-	8ff	4aa-^
+8C 8c	8a-	.
+4C^ 4c^	8r	8r
+.	8ddn	4ff 4gg^
+8BBn 8Bn	8g	.
+=15	=15	=15
+8E- 8e-	8r	8r
+8C 8c	8g	4cc 4ee-^
+8BB- 8B-	8e-	.
+8AA 8A	8r	8r
+8C 8c	8g-	8cc 8ee-^
+8AA- 8A-	8e-	8r
+=16	=16	=16
+8GG' 8G'	2.ryy	8e-' 8gn' 8cc' 8ee-'
+8GG-' 8G-'	.	8e-' 8a-' 8cc' 8ee-'
+8FF' 8F'	.	8r
+8EEn' 8En'	.	4r
+8EE-' 8E-'	.	.
+8DD' 8D'	.	8r
+=17	=17	=17
+8DD- 8D-	8r	8r
+8D- 8d-	8a-	4dd- 4ff
+8D- 8d-	8f	.
+8D- 8d-	8r	8r
+8D- 8d-	8b-	4ee- 4ggn
+8D- 8d-	8g	.
+=18	=18	=18
+8C 8c	8r	8r
+8BB- 8B-	8cc	4ee- 4aa-
+8AA- 8A-	8a-	.
+8GG 8G	8r	8r
+8FF 8F	8a-	4cc 4ee-
+8EE- 8E-	8e-	.
+=19	=19	=19
+8DD- 8D-	8r	8r
+8D- 8d-	8a-	4dd- 4ff
+8D- 8d-	8f	.
+8D- 8d-	8r	8r
+8D- 8d-	8b-	4ee- 4gg
+8D- 8d-	8g	.
+=20	=20	=20
+8C 8c	8r	8r
+8BB- 8B-	8cc	4ee- 4aa-
+8AA- 8A-	8a-	.
+8GG 8G	8r	8r
+8FF 8F	8cc	4ee- 4gg
+8EE- 8E-	8g	.
+=20	=21	=21
+8DDn 8Dn	8r	8r
+8C 8c	8a-	4ddn 4ff
+8C 8c	8f	.
+8C 8c	8r	8r
+8C 8c	8an	4dd 4ff#
+8C 8c	8f#	.
+=21	=22	=22
+8BB- 8B-	8r	8r
+8AA 8A	8b-	4dd 4gg
+8GG 8G	8g	.
+8EE- 8E-	8r	8r
+8DD 8D	8g	4a 4cc
+8CC 8C	8c	.
+=22	=23	=23
+4BBB- 4BB-	8r	8r
+.	8g	4b- 4dd
+8r	8d	.
+4EE- 4E-	8r	8r
+.	8B-	4e- 4g
+8r	8G	.
+=23	=24	=24
+4AAA 4AA	8r	8r
+.	8e-	4g 4cc
+8r	8c	.
+4DD 4D	4.ryy	8r
+.	.	8f#^ 8b-^
+8r	.	8c 8a
+=24	=25	=25
+8DD- 8D-	8r	8r
+8D- 8d-	8a-	4dd- 4ffn
+8D- 8d-	8f	.
+8D- 8d-	8r	8r
+8D- 8d-	8b-	4ee- 4gg
+8D- 8d-	8g	.
+=25	=26	=26
+8C 8c	8r	8r
+8BB- 8B-	8cc	4ee- 4aa-
+8AA- 8A-	8a-	.
+8GG 8G	8r	8r
+8FF 8F	8a-	4cc 4ee-
+8EE- 8E-	8e-	.
+=26	=27	=27
+8DD- 8D-	8r	8r
+8D- 8d-	8a-	4dd- 4ff
+8D- 8d-	8f	.
+8D- 8d-	8r	8r
+8D- 8d-	8b-	4ee- 4gg
+8D- 8d-	8g	.
+=27	=28	=28
+8C 8c	8r	8r
+8BB- 8B-	8cc	4ee- 4aa-
+8AA- 8A-	8a-	.
+8GG 8G	8r	8r
+8FF 8F	8cc	4ee- 4gg
+8EE- 8E-	8g	.
+=28	=29	=29
+8DDn 8Dn	8r	8r
+8C 8c	8a-	4ddn 4ff
+8C 8c	8f	.
+8C 8c	8r	8r
+8C 8c	8an	4dd 4ff#
+8C 8c	8f#	.
+=29	=30	=30
+8BB- 8B-	8r	8r
+8AA 8A	8b-	4dd 4gg
+8GG 8G	8g	.
+8EE- 8E-	8r	8r
+8DD 8D	8g	4a 4cc
+8CC 8C	8c	.
+=30	=31	=31
+4BBB- 4BB-	8r	8r
+.	8g	4b- 4dd
+8r	8d	.
+4EE- 4E-	8r	8r
+.	8B-	4e- 4g
+8r	8G	.
+=31	=32	=32
+4AAA 4AA	8r	8r
+.	8e-	4g 4cc
+8r	8c	.
+4DD 4D	4.ryy	8r
+.	.	8f# 8b-
+8r	.	8c 8a
+=32	=33	=33
+4BBB- 4BB-	8r	8r
+.	8g	4b- 4dd
+8r	8d	.
+4EE- 4E-	8r	8r
+.	8B-	4e- 4g
+8r	8G	.
+=33	=34	=34
+4.AAA 4.AA	8r	8r
+.	8e- 8g	4cc
+.	8c 8f#	.
+8BBB- 8BB-	8r	8r
+8AAA 8AA	8B-	4e- 4g
+16r	8G	.
+16GGG 16GG	.	.
+=34	=35	=35
+[4.GGG [4.GG	8r	8r
+.	8A	[4c 4e-
+.	8E-	.
+8GGG] 8GG]	4D	4A 4c] 4d
+8FFF# 8FF#	.	.
+8AAA 8AA	8r	8r
+=35	=36	=36
+[4.AAA [4.AA	8r	8r
+.	8c	[4e- 4f#
+.	8F#	.
+8AAA] 8AA]	4G	4e-] 4g
+8BBB- 8BB-	.	.
+8GGG 8GG	8r	8r
+=36	=37	=37
+[4.AAA [4.AA	8r	8r
+.	8c	[4e- 4f#
+.	8F#	.
+8AAA] 8AA]	4G	4e-] 4g
+8BBB- 8BB-	.	.
+8GGG 8GG	8r	8r
+=37	=38	=38
+[4.AAA [4.AA	8r	8r
+.	8cc	[4ee- 4ff#
+.	8f#	.
+8AAA] 8AA]	4g	4ee-] 4gg
+8BBB- 8BB-	.	.
+8GGG 8GG	8r	8r
+=38	=39	=39
+4CCC#' 4CC#'	2.ryy	4gg' 4bb-' 4eee-' 4ggg'
+8r	.	8r
+4r	.	4r
+8r	.	8r
+=39	=40	=40
+4.DD 4.D	2.ryy	4.d 4.g 4.b- 4.dd
+4.DD 4.AA 4.D	.	4.F# 4.cn 4.d 4.f#
+=40	=41	=41
+2.GG: 2.D:	2.ryy	2.G: 2.B-: 2.d: 2.g:
+==	==	==
+*-	*-	*-

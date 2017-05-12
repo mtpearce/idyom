@@ -1,0 +1,92 @@
+!!!COM:	Bach, Johann Sebastian
+!!!CDT:	1685/02/21/-1750/07/28/
+!!!OTL@@DE:	Vom Himmel hoch, da komm ich her
+!!!SCT:	BWV 248/9
+!!!PC#:	46
+!!!AGN:	chorale
+**kern	**kern	**kern	**kern
+*ICvox	*ICvox	*ICvox	*ICvox
+*Ibass	*Itenor	*Ialto	*Isoprn
+*I"Bass	*I"Tenor	*I"Alto	*I"Soprano
+*	*oclefC4	*oclefC3	*oclefC1
+*clefF4	*clefGv2	*clefG2	*clefG2
+*k[f#c#]	*k[f#c#]	*k[f#c#]	*k[f#c#]
+*D:	*D:	*D:	*D:
+*M4/4	*M4/4	*M4/4	*M4/4
+*met(c)	*met(c)	*met(c)	*met(c)
+*MM100	*MM100	*MM100	*MM100
+4D	4f#	4a	4dd
+=1	=1	=1	=1
+4.A	4e	8aL	4cc#
+.	.	8g#J	.
+.	4d	4f#	4b
+8G#	.	.	.
+8AL	4c#	4e	4cc#
+8GJ	.	.	.
+4F#	8dL	8f#L	4a
+.	8c#J	8eJ	.
+=2	=2	=2	=2
+8GL	8BL	4d	4b
+8F#J	8AJ	.	.
+4E	4G	4e	4cc#
+4D;	4A;	4f#;	4dd;
+8DL	4A	8f#L	4dd
+8EJ	.	8gJ	.
+=3	=3	=3	=3
+4F#	4d	8aL	4dd
+.	.	8gJ	.
+8F#L	4d	4f#	4a
+8GJ	.	.	.
+8AL	4c#	4e	4a
+8B	.	.	.
+8A	8cL	4d	8f#L
+8GJ	8BJ	.	8gJ
+=4	=4	=4	=4
+8F#L	4A	4d	4a
+8E	.	.	.
+8D	4A	4e	4g
+8C#XJ	.	.	.
+4D;	4A;	4d;	4f#;
+8DL	4A	8dL	4f#
+8C#J	.	8eJ	.
+=5	=5	=5	=5
+8D#L	4A	4f#	4b
+8BBJ	.	.	.
+8EL	4G#	4e	4b
+8DJ	.	.	.
+8C#L	8AL	8eL	8aL
+8BB	8d	8g#J	8bJ
+8AA	8c#	4a	4cc#
+8GG#XJ	8BJ	.	.
+=6	=6	=6	=6
+8FF#L	8AL	4.a	8ddL
+8EE	8c#	.	8cc#J
+8DD	8f#	.	4b
+8EEJ	8eJ	8g#	.
+4AA;	4c#;	4e;	4a;
+8AL	8dL	8f#L	4dd
+8G#J	[8BJ	8eJ	.
+=7	=7	=7	=7
+8AL	8BL]	8eL	4cc#
+8F#J	8AJ	[8f#J	.
+8DL	8AL	8f#L]	4b
+[8GnXJ	8GJ	8eJ	.
+8GL]	4A	8c#L	4a
+8F#J	.	8dJ	.
+8GL	8GL	8BL	8bL
+8AJ	8F#J	8c#J	8aJ
+=8	=8	=8	=8
+8BL	4D	4.d	8gL
+8GJ	.	.	8f#J
+8AL	8AL	.	4e
+8AAJ	8GJ	8c#	.
+4D;	4F#;	4A;	4d;
+==	==	==	==
+*-	*-	*-	*-
+!!!YOR1: 371 vierstimmige Choralges&auml;nge von Johann Sebastian Bach, 
+!!!YOR2: 4th ed. by Alfred D&ouml;rffel (Leipzig: Breitkopf und H&auml;rtel, 
+!!!YOR2: c.1875). 178 pp. Plate "V.A.10".  reprint: J.S. Bach, 371 Four-Part 
+!!!YOR4: Chorales (New York: Associated Music Publishers, Inc., c.1940).
+!!!SMS: B&H, 4th ed, Alfred D&ouml;rffel, c.1875, plate V.A.10
+!!!EED:  Craig Stuart Sapp
+!!!EEV:  2009/05/22

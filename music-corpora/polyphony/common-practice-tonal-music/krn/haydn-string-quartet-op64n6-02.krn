@@ -1,0 +1,670 @@
+!!!COM: Haydn, Franz Joseph
+!!!OTL: String Quartet in E-flat Major
+!!!OPS: Opus 64
+!!!ONM: No. 6
+!!!OMD: Andante
+!!!OMV: 2
+!!!SCT: H III:64
+!!!SCA: Thematisch-bibliographisches Werkevererzeichnis (A. van Hoboken)
+!!!YOR: Trautwein Edition
+!!!ENC: Frances Bennion
+!!!CDT: 1732/3/31/-1809/5/31/
+!!!CNT: Oesterreich
+!!!YEC: Copyright (c) 1994, 2000 Center for Computer Assisted Research in the Humanities
+!!!YEM: Rights to all derivative editions reserved.
+!!!YEM: Refer to licensing agreement for further details.
+!!!YEN: United States of America
+**kern	**kern	**kern	**kern
+*k[b-e-]	*k[b-e-]	*k[b-e-]	*k[b-e-]
+*B-:	*B-:	*B-:	*B-:
+*clefF4	*clefC3	*clefF	*clefF
+*M3/4	*M3/4	*M3/4	*M3/4
+4BB-	4D	2.r	8B-
+.	.	.	8d
+2r	2r	.	8f
+.	.	.	8b-
+.	.	.	8dd
+.	.	.	8ff
+=2	=2	=2	=2
+2.r	2.r	8G	2ff
+.	.	8B-	.
+.	.	8d	.
+.	.	8g	.
+.	.	8a	8ee-
+.	.	8b-	8dd
+=3	=3	=3	=3
+2.r	8E-	[2.g	2dd
+.	8G	.	.
+.	8B	.	.
+.	8d	.	.
+.	8e-	.	8cc
+.	8e	.	8b-
+=4	=4	=4	=4
+2.r	8f	4g]	4b-
+.	8E	.	.
+.	8F	8f	8a
+.	8F	8e-	8g
+.	8G	8d	8f
+.	8A	8c	8e-
+=5	=5	=5	=5
+2.r	[2B-	4d	8d
+.	.	.	8d
+.	.	4.dd	8f
+.	.	.	8b-
+.	8B-]	.	8dd
+.	8A	8cc	8ff
+=6	=6	=6	=6
+8CC	[2G	[2b-	4.ff
+8GG	.	.	.
+8C	.	.	.
+8D	.	.	8ee
+8E	8G]	8b-]	8dd
+8F	8A	8a	8cc
+=7	=7	=7	=7
+8BB-	4.d	4.a	4.cc
+8F#	.	.	.
+8G	.	.	.
+8E	8d-	8g	8b-
+8F	8c	8f	8a
+8C	8e	8B-	8e
+=8	=8	=8	=8
+2FF	4e	4B-	4g
+.	4f	8A	8f
+.	.	8c	8e-
+4r	4r	8B-	8d
+.	.	8A	8c
+=9	=9	=9	=9
+4BB-	8D	4B-	8B-
+.	8B-	.	8d
+2r	4.B-	4.d	8f
+.	.	.	8b-
+.	.	.	8dd
+.	8A	8c	8ff
+=10	=10	=10	=10
+2.r	8G	8B-	2ff
+.	8B-	8d	.
+.	8d	8g	.
+.	8g	8b-	.
+.	8a	8cc	8ee-
+.	8b-	8dd	8dd
+=11	=11	=11	=11
+8EE-	8G	2g	2dd
+8GG	8B	.	.
+8BB	8d	.	.
+8D	8f	.	.
+8E-	8g	8g	8cc
+8E	8g	8d-	8b-
+=12	=12	=12	=12
+2F	8g	2c	4b-
+.	8e	.	.
+.	8f	.	8a
+.	8e-	.	8g
+8G	8d	4r	8f
+8A	8c	.	8e-
+=13	=13	=13	=13
+4B-	[2B-	4r	8d
+.	.	.	8d
+2r	.	4.dd	8f
+.	.	.	8b-
+.	8B-]	.	8dd
+.	8A	8cc	8ff
+=14	=14	=14	=14
+8CC	[2G	[2b-	4.ff
+8GG	.	.	.
+8C	.	.	.
+8D	.	.	8ee
+8E	8G]	8b-]	8dd
+8F	8A	8a	8cc
+=15	=15	=15	=15
+8BB-	4.d	4.a	4.cc
+8F#	.	.	.
+8G	.	.	.
+8E	8d-	8g	8b-
+8F	8c	8f	8a
+8C	8e	8B-	8e
+=16	=16	=16	=16
+8FF	4e	4B-	4g
+8C	.	.	.
+8F	4f	4A	4f
+8F	.	.	.
+8C	4r	4r	4r
+8AA	.	.	.
+=17	=17	=17	=17
+[2.FF	4r	2.r	8A
+.	.	.	8c
+.	4e-	.	8f
+.	.	.	8a
+.	4d	.	8cc
+.	.	.	8b-
+=18	=18	=18	=18
+2.FF_	4r	8A	4ee-
+.	.	8c	.
+.	4e-	8f	8cc
+.	.	8a	16.a
+.	.	.	32ff
+.	4d	8cc	8ff
+.	.	16.b-	16.gg
+.	.	32ff	32ff
+=19	=19	=19	=19
+2.FF_	8G	4ff	4.bb-
+.	8B-	.	.
+.	8d-	8ee	.
+.	8e	8dd-	8bb-
+.	8f	8cc	8aa
+.	8d-	8b-	8ee
+=20	=20	=20	=20
+8FF]	4d-	4b-	8ee
+8E	.	.	8gg
+8F	4c	4a	4ff
+8A	.	.	.
+8c	4r	4r	4r
+8f	.	.	.
+=21	=21	=21	=21
+2f	2b	2g	8g
+.	.	.	8b
+.	.	.	8ee-
+.	.	.	8dd
+4e-	4cc	8ff	8aa-
+.	.	8ee-	8gg
+=22	=22	=22	=22
+2e-	2a	2f	8f
+.	.	.	8a
+.	.	.	8dd
+.	.	.	8cc
+4d	4b-	8ee-	8gg
+.	.	8dd	8ff
+=23	=23	=23	=23
+8e-	4.g	4.dd	4.ff
+8B	.	.	.
+8c	.	.	.
+8A	8g-	8cc	8ee-
+8B-	8f	8b-	8dd
+8F	8a	8e-	8a
+=24	=24	=24	=24
+4.BB-	4a	4e-	4cc
+.	8b-	8d	8b-
+8F	4.r	4.r	4.r
+8D	.	.	.
+8BB-	.	.	.
+=25	=25	=25	=25
+[2.FF	4r	2.r	8A
+.	.	.	8c
+.	4e-	.	8f
+.	.	.	8a
+.	4d	.	8cc
+.	.	.	8b-
+=26	=26	=26	=26
+2.FF_	4r	8A	4ee-
+.	.	8c	.
+.	4e-	8f	8cc
+.	.	8a	16.a
+.	.	.	32ff
+.	4d	8cc	8ff
+.	.	16.b-	16.gg
+.	.	32ff	32ff
+=27	=27	=27	=27
+2.FF_	8G	4ff	4.bb-
+.	8B-	.	.
+.	8d-	8ee	.
+.	8e	8dd-	8bb-
+.	8f	8cc	8aa
+.	8d-	8b-	8ee
+=28	=28	=28	=28
+8FF]	4d-	4b-	8ee
+8E	.	.	8gg
+8F	4c	4a	4ff
+8A	.	.	.
+8c	4r	4r	4r
+8f	.	.	.
+=29	=29	=29	=29
+2f	2b	2g	8g
+.	.	.	8b
+.	.	.	8ee-
+.	.	.	8dd
+4e-	4cc	8ff	8aa-
+.	.	8ee-	8gg
+=30	=30	=30	=30
+2e-	2a	2f	8f
+.	.	.	8a
+.	.	.	8dd
+.	.	.	8cc
+4d	4b-	8ee-	8gg
+.	.	8dd	8ff
+=31	=31	=31	=31
+8e-	4.g	4.dd	4.ff
+8B	.	.	.
+8c	.	.	.
+8A	8g-	8cc	8ee-
+8B-	8f	8b-	8dd
+8F	16a	8e-	8a
+.	16cc	.	.
+=32	=32	=32	=32
+16BB-	16b-	16d-	4b-
+16BB-	16d-	16f	.
+16BB-	16d-	16f	.
+16BB-	16d-	16f	.
+16BB-	16d-	16f	4B-
+16BB-	16d-	16f	.
+16BB-	16d-	16f	.
+16BB-	16d-	16f	.
+16BB-	16d-	16f	24d-
+.	.	.	24f
+16BB-	16d-	16f	.
+.	.	.	24a
+16BB-	16d-	16f	24b-
+.	.	.	24dd-
+16BB-	16d-	16f	.
+.	.	.	24ff
+=33	=33	=33	=33
+16BB-	16d-	16f	4bb-
+16BB-	16d-	16f	.
+16BB-	16d-	16f	.
+16BB-	16d-	16f	.
+16BB-	16d-	16f	8.ff
+16BB-	16d-	16f	.
+16BB-	16d-	16f	.
+16BB-	16d-	16f	16ff
+16BB-	16d-	16f	8.ddd-
+16BB-	16d-	16f	.
+16BB-	16d-	16f	.
+16BB-	16d-	16f	16bb-
+=34	=34	=34	=34
+16BB-	16d-	16f	4.fff
+16BB-	16d-	16f	.
+16BB-	16d-	16f	.
+16BB-	16d-	16f	.
+16BB-	16d-	16f	.
+16BB-	16d-	16f	.
+16BB-	16d-	16f	8fff
+16BB-	16d-	16f	.
+16BB-	16d-	16f	16eee-
+16BB-	16d-	16f	16ddd-
+16BB-	16d-	16f	16ccc
+16BB-	16d-	16f	16bb-
+=35	=35	=35	=35
+16BB-	16c 16e-	16g-	8bb-
+16BB-	16e- 16c	16g-	.
+16BB-	16c 16e-	16g-	32aa
+.	.	.	32ccc
+16BB-	16e- 16c	16g-	32bb-
+.	.	.	32ddd-
+16BB-	16e- 16c	16g-	8ccc
+16BB-	16c 16e-	16g-	.
+16BB-	16c 16e-	16g-	16.ccc
+16BB-	16c 16e-	16g-	.
+.	.	.	32ddd-
+16BB-	16c 16e-	16g-	8eee-
+16BB-	16e- 16c	16g-	.
+16BB-	16e- 16c	16g-	8aa
+16BB-	16c 16e-	16g-	.
+=36	=36	=36	=36
+16BB-	16d-	16f	8.bb-
+16BB-	16d-	16f	.
+16BB-	16d-	16f	.
+16BB-	16d-	16f	16ddd-
+16BB-	16d-	16f	8fff
+16BB-	16d-	16f	.
+16BB-	16d-	16f	8fff
+16BB-	16d-	16f	.
+16BB-	16d-	16f	8fff
+16BB-	16d-	16f	.
+16BB-	16d-	16f	8fff
+16BB-	16d-	16f	.
+=37	=37	=37	=37
+16BB-	16e- 16d-	16g	[6..fff
+16BB-	16e- 16d-	16g	.
+16BB-	16e- 16d-	16g	.
+16BB-	16e- 16d-	16g	.
+16BB-	16e- 16d-	16g	.
+.	.	.	48fff]
+16BB-	16e- 16d-	16g	16eee-
+16BB-	16e- 16d-	16g	16ddd-
+16BB-	16e- 16d-	16g	16ccc
+16BB-	16e- 16d-	16g	16bb-
+16BB-	16e- 16d-	16g	16aa-
+16BB-	16e- 16d-	16g	16gg
+16BB-	16d- 16e-	16g	16eee-
+=38	=38	=38	=38
+16AA-	16e- 16c	16g-	[6..eee-
+16AA-	16e- 16c	16g-	.
+16AA-	16e- 16c	16g-	.
+16AA-	16e- 16c	16g-	.
+16AA-	16e- 16c	16g-	.
+.	.	.	48eee-]
+16AA-	16e- 16c	16g-	16ddd-
+16AA-	16e- 16c	16g-	16ccc
+16AA-	16e- 16c	16g-	16bb-
+16C	16e- 16A-	16g-	16aa-
+16C	16e- 16A-	16g-	16gg-
+16C	16e- 16A-	16g-	16ff
+16C	16A- 16e-	16g-	16ee-
+=39	=39	=39	=39
+16D-	16d-	16f	16ff
+16D-	16d-	16f	16ddd-
+16G-	16G-	16g-	16bb-
+16G-	16G-	16e-	16gg-
+16A-	16A-	16d-	16ff
+16A-	16A-	16d-	16ff
+16A-	16A-	16f	16aa-
+16A-	16A-	16f	16dd-
+16AA-	16G-	16c	16ee-
+16AA-	16G-	16c	16ee-
+16AA-	16G-	16e-	16gg-
+16AA-	16G-	16e-	16cc
+=40	=40	=40	=40
+16D-	16F	16f	4dd-
+16D-	16A-	16f	.
+16D-	16A-	16f	.
+16D-	16A-	16f	.
+16D-	16A-	16f	4d-
+16D-	16A-	16f	.
+16D-	16A-	16f	.
+16D-	16A-	16f	.
+16D-	16A-	16f	24f
+.	.	.	24a-
+16D-	16A-	16f	.
+.	.	.	24cc
+16D-	16A-	16f	24dd-
+.	.	.	24ff
+16D-	16A-	16f	.
+.	.	.	24dd-
+=41	=41	=41	=41
+16C	16A-	16e-	4aa-
+16C	16A-	16e-	.
+16C	16A-	16e-	.
+16C	16A-	16e-	.
+16C	16A-	16e-	4a-
+16C	16A-	16e-	.
+16C	16A-	16e-	.
+16C	16A-	16e-	.
+16C	16A-	16e-	24c
+.	.	.	24e-
+16C	16A-	16e-	.
+.	.	.	24a-
+16C	16A-	16e-	24cc
+.	.	.	24ee-
+16C	16A-	16e-	.
+.	.	.	24gg
+=42	=42	=42	=42
+16C-	16A-	16e-	4aa-
+16C-	16A-	16e-	.
+16C-	16A-	16e-	.
+16C-	16A-	16e-	.
+16C-	16A-	16e-	4a-
+16C-	16A-	16e-	.
+16C-	16A-	16e-	.
+16C-	16A-	16e-	.
+16C-	16A-	16e-	24c-
+.	.	.	24e-
+16C-	16A-	16e-	.
+.	.	.	24a-
+16C-	16A-	16e-	24cc-
+.	.	.	24ee-
+16C-	16A-	16e-	.
+.	.	.	24gg
+=43	=43	=43	=43
+16BB-	16F	16d	4aa-
+16BB-	16F	16d	.
+16BB-	16F	16d	.
+16BB-	16F	16d	.
+16BB-	16F	16d	4B-
+16BB-	16F	16d	.
+16BB-	16F	16d	.
+16BB-	16F	16d	.
+16BB-	16F	16d	24d
+.	.	.	24f
+16BB-	16F	16d	.
+.	.	.	24b-
+16BB-	16F	16d	24dd
+.	.	.	24ff
+16BB-	16F	16d	.
+.	.	.	24aa-
+=44	=44	=44	=44
+16E-	16E-	16e-	4gg-
+16E-	16B-	16g-	.
+16E-	16B-	16g-	.
+16E-	16B-	16g-	.
+16E-	16B-	16g-	4e-
+16E-	16B-	16g-	.
+16E-	16B-	16g-	.
+16E-	16B-	16g-	.
+16E-	16B-	16g-	24d
+.	.	.	24e-
+16E-	16B-	16g-	.
+.	.	.	24g-
+16E-	16B-	16g-	24b-
+.	.	.	24ee-
+16E-	16B-	16g-	.
+.	.	.	24gg-
+=45	=45	=45	=45
+16E	16d-	16B- 16g	4bb-
+16E	16d-	16g 16B-	.
+16E	16d-	16B- 16g	.
+16E	16d-	16g 16B-	.
+16E	16d-	16B- 16g	4e
+16E	16d-	16g 16B-	.
+16E	16d-	16B- 16g	.
+16E	16d-	16B- 16g	.
+16E	16d-	16B- 16g	24dd-
+.	.	.	24b-
+16E	16d-	16B- 16g	.
+.	.	.	24g
+16E	16d-	16B- 16g	24e
+.	.	.	24dd-
+16E	16d-	16B- 16g	.
+.	.	.	24e
+=46	=46	=46	=46
+4F	4c	4f 4A	24f
+.	.	.	24a
+.	.	.	24cc
+.	.	.	24ff
+.	.	.	24aa
+.	.	.	24ccc
+2r	2r	2r	4fff
+.	.	.	24A
+.	.	.	24c
+.	.	.	24f
+.	.	.	24e-
+.	.	.	24c
+.	.	.	24A
+=47	=47	=47	=47
+4BB-	4D	2.r	8B-
+.	.	.	8d
+2r	2r	.	8f
+.	.	.	8b-
+.	.	.	8dd
+.	.	.	8ff
+=48	=48	=48	=48
+2.r	2.r	8G	2ff
+.	.	8B-	.
+.	.	8d	.
+.	.	8g	.
+.	.	8a	8ee-
+.	.	8b-	8dd
+=49	=49	=49	=49
+2.r	8E-	[2.g	2dd
+.	8G	.	.
+.	8B	.	.
+.	8d	.	.
+.	8e-	.	8cc
+.	8e	.	8b-
+=50	=50	=50	=50
+2.r	8f	4g]	4b-
+.	8E	.	.
+.	8F	8f	8a
+.	8F	8e-	8g
+.	8G	8d	8f
+.	8A	8c	8e-
+=51	=51	=51	=51
+2.r	[2B-	4d	8d
+.	.	.	8d
+.	.	4.dd	8f
+.	.	.	8b-
+.	8B-]	.	8dd
+.	8A	8cc	8ff
+=52	=52	=52	=52
+8CC	[2G	[2b-	4.ff
+8GG	.	.	.
+8C	.	.	.
+8D	.	.	8ee
+8E	8G]	8b-]	8dd
+8F	8A	8a	8cc
+=53	=53	=53	=53
+8BB-	4.d	4.a	4.cc
+8F#	.	.	.
+8G	.	.	.
+8E	8d-	8g	8b-
+8F	8c	8f	8a
+8C	8e	8B-	8e
+=54	=54	=54	=54
+8FF	4e	4B-	4g
+8C	.	.	.
+8F	4f	8A	8f
+8F	.	8c	8e-
+8G	4r	8B-	8d
+8A	.	8A	8c
+=55	=55	=55	=55
+4B-	2.r	8B-	4B-
+.	.	8d	.
+2r	.	8f	2r
+.	.	8b-	.
+.	.	8dd	.
+.	.	8ff	.
+=56	=56	=56	=56
+2.r	8G	2ff	[6..bb-
+.	8B-	.	.
+.	8d	.	.
+.	.	.	48bb-]
+.	.	.	32ccc
+.	.	.	32bb-
+.	8g	.	16aa
+.	.	.	16bb-
+.	8a	8ee-	8ccc
+.	8b-	8dd	16ff
+.	.	.	16ddd
+=57	=57	=57	=57
+8EE-	4b-	[2.gg	[6..ddd
+8GG	.	.	.
+8BB	4b	.	.
+.	.	.	48ddd]
+.	.	.	16ddd
+8D	.	.	16ggg
+.	.	.	16fff
+8E-	4cc	.	16eee-
+.	.	.	16ddd
+8E	.	.	16ccc
+.	.	.	16bb-
+=58	=58	=58	=58
+2.F	4.cc	8gg]	4bb-
+.	.	8ee	.
+.	.	8ff	8aa
+.	8f	8ee-	8gg
+.	8g	8dd	8ff
+.	8a	8cc	8ee-
+=59	=59	=59	=59
+8BB-	8b-	2cc	2.dd
+8D	2r	.	.
+8F	.	.	.
+8B-	.	.	.
+8d	.	4b-	.
+8f	8r	.	.
+=60	=60	=60	=60
+2.f	2.r	2b-	8cc
+.	.	.	8ee
+.	.	.	8gg
+.	.	.	8bb-
+.	.	4a	8ddd
+.	.	.	8ccc
+=61	=61	=61	=61
+2B-	2d	4a	8ccc
+.	.	.	8ff#
+.	.	4g	8aa
+.	.	.	8gg
+8G	4g	8dd	8bb-
+8c	.	8b-	8ee
+=62	=62	=62	=62
+2F	4e	8b-	4gg
+.	.	8cc	.
+.	4f	8g#	4ff
+.	.	8a	.
+8E	4r	4r	4r
+8F	.	.	.
+=63	=63	=63	=63
+[2.FF	4r	2.r	8A
+.	.	.	8c
+.	4e-	.	8f
+.	.	.	8a
+.	4d	.	8cc
+.	.	.	8b-
+=64	=64	=64	=64
+2.FF_	4r	8A	4ee-
+.	.	8c	.
+.	4E-	8f	8cc
+.	.	8a	16.a
+.	.	.	32ff
+.	4D	8cc	8ff
+.	.	16.b-	16.gg
+.	.	32ff	32ff
+=65	=65	=65	=65
+2.FF_	8G	4ff	4.bb-
+.	8B-	.	.
+.	8d-	8ee	.
+.	8e	8dd-	8bb-
+.	8f	8cc	8aa
+.	8d-	8b-	8ee
+=66	=66	=66	=66
+8FF]	4d-	4b-	8ee
+8E	.	.	8gg
+8F	4c	4a	4ff
+8A	.	.	.
+8c	4r	4r	4r
+8f	.	.	.
+=67	=67	=67	=67
+2f	2b	2g	8g
+.	.	.	8b
+.	.	.	8ee-
+.	.	.	8dd
+4e-	4cc	8ff	8aa-
+.	.	8ee-	8gg
+=68	=68	=68	=68
+2e-	2a	2f	8f
+.	.	.	8a
+.	.	.	8dd
+.	.	.	8cc
+4d	4b-	8ee-	8gg
+.	.	8dd	8ff
+=69	=69	=69	=69
+8e-	4.g	4.dd	4.ff
+8B	.	.	.
+8c	.	.	.
+8A	8g-	8cc	8ee-
+8B-	8f	8b-	8dd
+8F	8A	8e-	8a
+=70	=70	=70	=70
+4F#	4A	4e-	4cc
+4G	4B-	4d	4b-
+8r	8r	8r	8r
+8DD	8B	8f	8a-
+=71	=71	=71	=71
+2EE-	4B	4f	4a-
+.	8c	8e-	8g
+.	8G	8e-	8g
+4FF	8B-	8d	8f
+.	8E-	8c	8A
+=72	=72	=72	=72
+2.BB-	2E-	2A	2c
+.	8D	8B-	8B-
+.	8r	8r	8r
+==	==	==	==
+*-	*-	*-	*-
+!!!RWG1: This file contains only pitch and duration data.
+!!!RWG2: Transposing instruments are not transposed.
+!!!RWG3: Spines may have incompatible meters.
+!!!RWG4: Durations of rests and tied notes may be interpreted.
+!!!RWG: Key is interpreted using the Humdrum key tool.
+!!!GTL: 6 Quartetti ("Tost III")
+!!!AFT: stage1
+!!!END: 1997/04/15
+!!!KEY: 340036666
+!!!EMD: Converted from MuseData to Humdrum Dec 16, 2000, by Andreas Kornstaedt using muse2kern.
+!!!EMD: Manual editing by Craig Sapp, Nov 2001

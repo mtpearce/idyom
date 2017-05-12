@@ -1,0 +1,233 @@
+!!!COM: Chopin, Frederic
+!!!CDT: 1810///-1849///
+!!!OTL: Prelude in C-sharp Minor, Op. 28, No. 10
+!!!OPS: Op. 28
+!!!ONM: No. 10
+!!!OMD: Allegro molto
+!!!ODT: 1836///-1839///
+!!!PDT: 1839///
+!!!AIN: piano
+**kern	**kern	**dynam
+*staff2	*staff1	*staff1
+*clefF4	*clefG2	*clefG2
+*k[f#c#g#d#]	*k[f#c#g#d#]	*k[f#c#g#d#]
+*c#:	*c#:	*c#:
+*M3/4	*M3/4	*M3/4
+*MM124	*MM124	*MM124
+*	*8va	*
+4r	24ggg#^\LL	.
+.	(24aaa\	.
+.	24ggg#\	.
+.	24aaa\	.
+.	24ggg#\	.
+.	24fff##\JJ	.
+=1	=1	=1
+4C#\ 4G#\ 4e\	24ggg#\ 24cccc#\LL	p
+.	24aaa\	.
+.	24ggg#\J	.
+.	16eee\L	.
+.	16ddd#\JJ	.
+4r	24ccc#\ 24ggg#\LL	.
+.	24ddd#\	.
+.	24ccc#\	.
+.	16aa\	.
+.	16gg#\JJ	.
+*	*X8va	*
+8FF#/ 8C#/ 8A/	24ff#\ 24ccc#\LL	>
+.	&(24gg#\&)	.
+.	24ff#\	.
+8r	16ee\	.
+.	16dd#\JJ	.
+=2	=2	=2
+8C#\ 8G#\ 8e\	24cc#\ 24gg#\LL	>
+.	24dd#\	.
+.	24cc#\J	.
+8r	16a\L	.
+.	16g#\JJ	.
+8FF#/ 8C#/ 8A/	24f#/ 24cc#/LL	>
+.	24g#/	.
+.	24f#/J	.
+8r	16e/L	.
+.	16d#/JJ	.
+8CC#/ 8GG#/ 8E/	24c#/ 24g#/LL	>
+.	24d#/	.
+.	24c#/J	.
+8r	16B/L	.
+.	16A/JJ	.
+*	*clefF4	*clefF4
+=3	=3	=3
+*^	*^	*
+4r	2r	[2.G#^/)	4r	.
+2GG#/	.	.	(4D#\ 4B#\	.
+.	4GGG#\	.	4C#\ 4A#\	.
+=4	=4	=4	=4	=4
+&(8GG#/L&)	2r	2G#/]	8D#\ 8B#\L	<
+16r	.	.	16r	.
+16GG#/Jk	.	.	16E\ 16c#\Jk	.
+(2GG#/	.	.	4F#\ 4B#\ 4d#\	.
+.	4GGG#\)	4r	4G#^\) 4e^\	.
+*v	*v	*	*	*
+*	*v	*v	*
+*	*clefG2	*clefG2
+=5	=5	=5
+4C#\ 4G#\ 4e\	24gg#\ (24ccc#\LL	p
+.	24aa\	.
+.	24gg#\J	.
+.	16ee\L	.
+.	16dd#\JJ	>
+4r	24cc#\ 24gg#\LL	.
+.	24dd#\	.
+.	24cc#\J	.
+.	16a\L	.
+.	16g#\JJ	>
+8FF#/ 8C#/ 8A/	24ff#\ 24ccc#\LL	.
+.	24gg#\	.
+.	24ff#\J	.
+8r	16ee\L	.
+.	16dd#\JJ	.
+=6	=6	=6
+*	*8va	*
+8C#\ 8G#\ 8e\	24ccc#\ 24ggg#\LL	>
+.	24ddd#\	.
+.	24ccc#\J	.
+8r	16aa\L	.
+.	16gg#\JJ	.
+8FF#/ 8C#/ 8A/	24ff#/ 24ccc#/LL	>
+.	24gg#/	.
+.	24ff#/J	.
+8r	16ee/L	.
+.	16dd#/JJ	.
+*	*X8va	*
+8CC#/ 8GG#/ 8E/	24c#/ 24g#/LL	>
+.	24d#/	.
+.	24c#/J	.
+8r	16B/L	.
+.	16A#/JJ	.
+*	*clefF4	*clefF4
+=7	=7	=7
+*	*^	*
+4r	4r	4G#\)	.
+4DD#/	2D#^/ (2d#^/	4B\	.
+CC##q/LL	.	.	.
+DD#q/JJ	.	.	.
+EEq/	.	.	.
+4DD#/	.	4F##\ 4A#\	.
+=8	=8	=8	=8
+&(8GG#/L&)	8G#/ 8B/L)	8D#\L	.
+16r	16r	16r	.
+16GG#/Jk	16A#/ (16c#/Jk	16D#\Jk	.
+(4GG#/	4B/ 4d#/	4D#\	.
+4GGG#^/)	4r	4G#^\ 4g#^\)	.
+*	*v	*v	*
+*	*clefG2	*clefG2
+=9	=9	=9
+8FF#/ 8C#/ 8A/	24ff#\ (24ccc#\LL	>
+.	24gg#\	.
+.	24ff#\	.
+8r	16ddn\	.
+.	16cc#\JJ	.
+8BB\ 8F#\ 8dn\	24b\ 24ff#\LL	>
+.	24cc#\	.
+.	24b\	.
+8r	16a\	.
+.	16g#\JJ	.
+8FF#/ 8C#/ 8A/	24ff#\ 24ccc#\LL	>
+.	24gg#\	.
+.	24ff#\J	.
+8r	16ddn\L	.
+.	16cc#\JJ	.
+=10	=10	=10
+*	*8va	*
+8BB\ 8F#\ 8dn\	24bb\ 24fff#\LL	>
+.	24ccc#\	.
+.	24bb\	.
+8r	16aa\	.
+.	16gg#\JJ	.
+8FF#/ 8C#/ 8A/	24ff#/ 24ccc#/LL	>
+.	24gg#/	.
+.	24ff#/J	.
+*	*X8va	*
+8r	16dn/L	.
+.	16c#/JJ	.
+4r	24B/ 24f#/LL	>
+.	24c#/	.
+.	24B/J	.
+.	16A/L	.
+.	16G#/JJ	.
+*	*clefF4	*clefF4
+=11	=11	=11
+*^	*^	*
+4r	4r	4r	4F#\)	.
+2C#/	4FF#\	(4c#/	2A\	.
+.	4DD#\	4d#/	.	.
+=12	=12	=12	=12	=12
+&(8GG#'/L&)	2r	8G#/ 8B#/L)	8D#\L	.
+16r	.	16r	16r	.
+16GG#/Jk	.	16G#/ (16c#/Jk	16E\Jk	.
+(2GG#/	.	[4B#/ 4d#/	4F#\	.
+.	4GGG#\)	4B#^/] 4e^/)	4G##\	.
+*v	*v	*	*	*
+*	*v	*v	*
+*	*clefG2	*clefG2
+=13	=13	=13
+4C#\ 4G#\ 4e\	24gg#\ (24ccc#\LL	>
+.	24aa\	.
+.	24gg#\J	.
+.	16ee\L	.
+.	16dd#\JJ	.
+4r	24cc#\ 24gg#\LL	.
+.	24dd#\	.
+.	24cc#\J	.
+.	16a\L	.
+.	16g#\JJ	.
+8FF#/ 8C#/ 8A/	24ff#\ 24ccc#\LL	.
+.	24gg#\	.
+.	24ff#\	.
+8r	16ee\	.
+.	16dd#\JJ	.
+=14	=14	=14
+8C#\ 8G#\ 8e\	24cc#\ 24gg#\LL	>
+.	24dd#\	.
+.	24cc#\J	.
+8r	16a\L	.
+.	16g#\JJ	.
+8FF#/ 8C#/ 8A/	24f#/ 24cc#/LL	>
+.	24g#/	.
+.	24f#/	.
+8r	16e/	.
+.	16d#/JJ	.
+8CC#/ 8GG#/ 8E/	24c#/ 24g#/LL	>
+.	24d#/	.
+.	24c#/	.
+8r	16B/	.
+.	16A/JJ	.
+*	*clefF4	*clefF4
+=15	=15	=15
+*^	*^	*
+4r	2r	2.G#^/)	4r	.
+2GG#/	.	.	4D#\ (4B#\	.
+.	4GGG#\	.	4E\ 4c#\	.
+*v	*v	*	*	*
+=16	=16	=16	=16
+&(8GG#/L&)	2r	8F#\ 8B#\ 8d#\L)	.
+16r	.	16r	.
+(16GG#/Jk	.	16G#\ (16e\Jk	.
+4CC#/)	.	4E\ 4c#\)	.
+4r	[4a/	[4A\	.
+=17	=17	=17	=17
+*^	*	*	*
+4r	2r	4a/]	2.A\]	.
+2GG#/	.	4D#/ (4B#/	.	.
+.	4GGG#\	4E/ 4c#/	.	.
+*v	*v	*	*	*
+*	*v	*v	*
+=18	=18	=18
+&(8GG#/L&)	8F#\ 8G#\ 8B#\ 8d#\L)	.
+16r	16r	.
+(16GG#/Jk	16G#\ 16B#\ (16e\Jk	.
+4CC#/)	4E\ 4c#\)	.
+4r	4r	.
+==	==	==
+*-	*-	*-
+!!!ENC: Craig Stuart Sapp
+!!!END: 2004/12/22/

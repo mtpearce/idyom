@@ -1,0 +1,286 @@
+!!!COM: Haydn, Franz Joseph
+!!!OTL: String Quartet in B Minor
+!!!OPS: Opus 33
+!!!ONM: No. 1
+!!!OMD: Scherzo: Allegro
+!!!OMV: 2
+!!!SCT: H III:37
+!!!SCA: Thematisch-bibliographisches Werkevererzeichnis (A. van Hoboken)
+!!!YOR: Trautwein Edition
+!!!ENC: Frances Bennion
+!!!CDT: 1732/3/31/-1809/5/31/
+!!!CNT: Oesterreich
+!!!YEC: Copyright (c) 1994, 2000 Center for Computer Assisted Research in the Humanities
+!!!YEM: Rights to all derivative editions reserved.
+!!!YEM: Refer to licensing agreement for further details.
+!!!YEN: United States of America
+**kern	**kern	**kern	**kern
+*k[f#c#]	*k[f#c#]	*k[f#c#]	*k[f#c#]
+*b:	*b:	*b:	*b:
+*clefF4	*clefC3	*clefG	*clefG
+*M3/4	*M3/4	*M3/4	*M3/4
+2r	2r	2r	2r
+4r	4r	4r	4B
+=1	=1	=1	=1
+4BB	4F#	2r	4d
+4r	4r	.	4f#
+4d	4d	4f#	4b
+=2	=2	=2	=2
+4c#	4c#	4e	4a#
+4r	4r	4r	4cc#
+4E	4c#	4A#	4f#
+=3	=3	=3	=3
+4D	4d	4B	4b
+2r	2r	4r	4dd
+.	.	4b	4ff#
+=4	=4	=4	=4
+2.r	2.r	4a#	2ff#
+.	.	4cc#	.
+.	.	4e	4ff#
+=5	=5	=5	=5
+2r	2r	4d	4ff#
+.	.	4f#	4ff#
+4B	4d	4B	4ff#
+=6	=6	=6	=6
+4A#	4c#	2f#	2ff#
+4c#	4e	.	.
+4E	4A#	4f#	8ff#
+.	.	.	8ff#
+=7	=7	=7	=7
+4D	4B	4f#	8ff#
+.	.	.	8ff#
+4F#	4d	4f#	8ff#
+.	.	.	8ff#
+4BB	4B	4f#	8ff#
+.	.	.	8ff#
+=8	=8	=8	=8
+2FF#	2F#	2f#	2ff#
+4GG	4G	4g	4gg
+=9	=9	=9	=9
+4GG	4G	4g	4gg
+4GG	4G	4g	4gg
+4GG	4G	4g	4gg
+=10	=10	=10	=10
+2.GG	2.E	2.b 2.e	2bb 2b
+.	.	.	4gg
+=11	=11	=11	=11
+4AA	4G	2.cc# 2.e	4ee
+4AA	4G	.	4cc#
+4AA	4G	.	4a
+=12	=12	=12	=12
+4DD	4F#	4dd 4d	4dd
+4r	2r	2r	2r
+4d	.	.	.
+=13	=13	=13	=13
+4c#	2.r	2.r	2r
+4e	.	.	.
+4G	.	.	4cc#
+=14	=14	=14	=14
+4F#	2.r	2r	4dd
+4r	.	.	4aa
+4e	.	4g	4cc
+=15	=15	=15	=15
+4d#	2.r	4f#	4b
+4f#	.	4a	4r
+4A	.	4f#	4dd#
+=16	=16	=16	=16
+4G#	2r	4e	4ee
+2r	.	4r	4bb
+.	4f#	4a	4dd
+=17	=17	=17	=17
+2.r	4e#	4g#	4cc#
+.	4g#	4b	4r
+.	4B	4g#	4ee#
+=18	=18	=18	=18
+[2.F#	2.A#	4f#	4ff#
+.	.	4r	4ccc#
+.	.	4c#	4ee
+=19	=19	=19	=19
+2.F#_	2B	2d	4dd
+.	.	.	4ff#
+.	4c#	4c#	4a#
+=20	=20	=20	=20
+2.F#_	2.d	2.B	4b
+.	.	.	4dd
+.	.	.	4e#
+=21	=21	=21	=21
+4F#]	4c#	4A#	4f#
+2r	2r	2r	2r
+=22	=22	=22	=22
+4E	4c#	4A#	4g
+2r	2r	2r	4r
+.	.	.	4B
+=23	=23	=23	=23
+4D	4B	4B	4d
+4r	4r	4r	4f#
+4d	4d	4f#	4b
+=24	=24	=24	=24
+4c#	4c#	4e	4a#
+4r	4r	4r	4cc#
+4E	4c#	4A#	4f#
+=25	=25	=25	=25
+4D	4d	4B	4b
+2r	2r	4r	4dd
+.	.	4b	4ff#
+=26	=26	=26	=26
+2.r	2.r	4a#	2ff#
+.	.	4cc#	.
+.	.	4e	4ff#
+=27	=27	=27	=27
+2r	2r	4d	4ff#
+.	.	4f#	4ff#
+4B	4d	4B	4ff#
+=28	=28	=28	=28
+4A#	4c#	2f#	2ff#
+4c#	4e	.	.
+4E	4A#	4f#	8ff#
+.	.	.	8ff#
+=29	=29	=29	=29
+4D	4B	4f#	8ff#
+.	.	.	8ff#
+4F#	4d	4f#	8ff#
+.	.	.	8ff#
+4BB	4B	4f#	8ff#
+.	.	.	8ff#
+=30	=30	=30	=30
+2FF#	2F#	2f#	2ff#
+4EE#	4E#	4e#	4ee#
+=31	=31	=31	=31
+4EE#	4E#	4e#	4ee#
+4EE#	4E#	4e#	4ee#
+4EE#	4E#	4e#	4ee#
+=32	=32	=32	=32
+2EE	2E	2e	2ee
+4E	4c#	4a#	4gg
+=33	=33	=33	=33
+4E	4c#	4a#	4gg
+4E	4c#	4a#	4gg
+4E	4c#	4a#	4gg
+=34	=34	=34	=34
+4D	4d	4b	4ff#
+4r	4r	4r	4bb
+4G	4B	4B	4dd
+=35	=35	=35	=35
+2E	2c#	4g	4cc#
+.	.	4e	4ee
+4F#	4e	4c#	4a#
+=36	=36	=36	=36
+4BB	4d	4B	4b
+4r	4r	2r	2r
+4B	4d#	.	.
+=37	=37	=37	=37
+4c#	4e	2.r	2.r
+4d#	4f#	.	.
+4e	4g#	.	.
+=38	=38	=38	=38
+4d#	4f#	2r	2r
+2r	2r	.	.
+.	.	4b	4b
+=39	=39	=39	=39
+4F#	2.r	4a#	4cc#
+2r	.	4b	4dd#
+.	.	4cc#	4ee
+=40	=40	=40	=40
+4BB	2r	4b	4dd#
+4r	.	2r	2r
+4B	4d#	.	.
+=41	=41	=41	=41
+4c#	4e	2.r	2.r
+4d#	4f#	.	.
+4e	4g#	.	.
+=42	=42	=42	=42
+4d#	4f#	2r	2r
+2r	2r	.	.
+.	.	4b	4dd#
+=43	=43	=43	=43
+2.r	2r	4cc#	4ee
+.	.	4dd#	4ff#
+.	4e	4ee	4gg#
+=44	=44	=44	=44
+2r	4f#	2dd#	2ff#
+.	4g#	.	.
+4F#	4a#	4cc#	4ee
+=45	=45	=45	=45
+4G#	4b	[2.b	2.dd#
+4A#	2r	.	.
+4B	.	.	.
+=46	=46	=46	=46
+4c#	2r	2.b]	4ee#
+4d#	.	.	4ff#
+4e#	4c#	.	4gg#
+=47	=47	=47	=47
+4f#	4f#	4a#	2.ff#
+2r	4g#	4b	.
+.	4a#	4cc#	.
+=48	=48	=48	=48
+2.c#	4g#	4ee#	4gg#
+.	4f#	4ff#	4aa#
+.	4e#	4gg#	4bb
+=49	=49	=49	=49
+4F#	4f#	4ff#	4aa#
+4A#	4a#	4a#	4ff#
+4c#	4cc#	4a#	4ff#
+=50	=50	=50	=50
+4F#	4f#	4a#	4ff#
+2r	2r	4r	4r
+.	.	4dd#	4ff#
+=51	=51	=51	=51
+2.r	2r	4cc#	4ee
+.	.	4b	4dd#
+.	4e	4a#	4cc#
+=52	=52	=52	=52
+2.r	4d#	4b	4b
+.	4c#	4r	4r
+.	4B	4ee	4gg#
+=53	=53	=53	=53
+2r	2.r	4dd#	4ff#
+.	.	4cc#	4ee
+4E#	.	4b	4dd#
+=54	=54	=54	=54
+4F#	2r	4a#	4cc#
+4G#	.	4r	2r
+4A#	4A#	4c#	.
+=55	=55	=55	=55
+4B	4B	4d#	2r
+4r	4c#	4e	.
+4d#	4d#	4f#	4f#
+=56	=56	=56	=56
+4e	4e	4g#	4g#
+4f#	4r	4r	4a#
+4g#	4g#	4b	4b
+=57	=57	=57	=57
+4f#	4a#	4cc#	4cc#
+4e#	4b	4dd#	4r
+4e	4cc#	4ee	4ee
+=58	=58	=58	=58
+4d#	4dd#	4ff#	4ff#
+4c#	4ee	2r	4gg#
+4f#	4e	.	4aa#
+=59	=59	=59	=59
+4B	4d#	2.r	4bb
+4A#	4e	.	4ccc#
+4A	4f#	.	4ddd#
+=60	=60	=60	=60
+4G#	4g#	2r	4eee
+4F#	4r	.	4fff#
+4E	4c#	4a#	4ggg#
+=61	=61	=61	=61
+2.F#	4d#	4b	4fff#
+.	4f#	4dd#	4bb
+.	4e	4cc#	4aa#
+=62	=62	=62	=62
+4BB	4d#	4b	4bb
+2r	2r	2r	2r
+==	==	==	==
+*-	*-	*-	*-
+!!!RWG1: This file contains only pitch and duration data.
+!!!RWG2: Transposing instruments are not transposed.
+!!!RWG3: Spines may have incompatible meters.
+!!!RWG4: Durations of rests and tied notes may be interpreted.
+!!!RWG: Key is interpreted using the Humdrum key tool.
+!!!GTL: 6 Quators ("Jungfernquartette")
+!!!AFT: stage1
+!!!END: 1997/04/15
+!!!KEY: 1191821023
+!!!EMD: Converted from MuseData to Humdrum Dec 16, 2000, by Andreas Kornstaedt using muse2kern.
+!!!EMD: Manual editing by Craig Sapp, Nov 2001

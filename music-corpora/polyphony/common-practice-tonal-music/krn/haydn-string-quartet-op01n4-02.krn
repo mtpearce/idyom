@@ -1,0 +1,370 @@
+!!!COM: Haydn, Franz Joseph
+!!!OTL: String Quartet in G major
+!!!OPS: Opus 1
+!!!ONM: No. 4
+!!!OMD: Menuetto I
+!!!OMV: 2
+!!!SCT: H III:4
+!!!SCA: Thematisch-bibliographisches Werkevererzeichnis (A. van Hoboken)
+!!!YOR: Bremner Edition, 1772
+!!!ENC: Frances Bennion
+!!!CDT: 1732/3/31/-1809/5/31/
+!!!CNT: Oesterreich
+!!!YEC: Copyright (c) 1994, 2000 Center for Computer Assisted Research in the Humanities
+!!!YEM: Rights to all derivative editions reserved.
+!!!YEM: Refer to licensing agreement for further details.
+!!!YEN: United States of America
+**kern	**kern	**kern	**kern
+*k[f#]	*k[f#]	*k[f#]	*k[b-e-]
+*g:	*g:	*g:	*g:
+*clefF4	*clefC3	*clefF	*clefF
+*M3/4	*M3/4	*M3/4	*M3/4
+4GG	4G	2b	2gg
+4BB	4B	.	.
+4D	4d	12cc	12aa
+.	.	12b	12gg
+.	.	12a	12ff#
+=2	=2	=2	=2
+4G	4g	2.b	4gg
+2r	2r	.	4dd
+.	.	.	4dd#
+=3	=3	=3	=3
+4G	4g	2cc	2ee
+4G	4g	.	.
+4G	4g	12ee	12gg
+.	.	12dd	12ff#
+.	.	12cc	12ee
+=4	=4	=4	=4
+8G	8g	4b	4dd
+8GG	8G	.	.
+8BB	8B	2r	2r
+8D	8d	.	.
+4G	4g	.	.
+=5	=5	=5	=5
+4r	4r	12a	12cc
+.	.	12b	12dd
+.	.	12a	12cc
+4d	4dd	4cc	4aa
+4D	4d	4r	4r
+=6	=6	=6	=6
+4r	4r	12g	12b
+.	.	12a	12cc
+.	.	12g	12b
+4G	4g	4b	4dd
+4GG	4G	4r	4r
+=7	=7	=7	=7
+4C	4c	4c	4a
+4D	4d	4B	4g
+4D	4d	4A	4f#
+=8	=8	=8	=8
+4G	4g	4G	4g
+4D	4d	2r	2r
+4GG	4G	.	.
+=9	=9	=9	=9
+4G	4g	[2.d	2bb
+4G	4g	.	.
+4G	4g	.	12ddd
+.	.	.	12ccc#
+.	.	.	12bb
+=10	=10	=10	=10
+4F#	4f#	2d]	4aa
+4F#	4f#	.	4fff#
+4F#	4f#	4A	4aa
+=11	=11	=11	=11
+2E	2e	4B	4aa
+.	.	4c#	4gg
+4D	4d	4d	8gg
+.	.	.	8ff#
+=12	=12	=12	=12
+4A	4a	2c#	2ee
+4E	4e	.	.
+4AA	4A	4r	4r
+=13	=13	=13	=13
+2F#	4r	12a	[2.aa
+.	.	12b	.
+.	.	12a	.
+.	4r	4dd	.
+4D	12a	4r	.
+.	12g	.	.
+.	12f#	.	.
+=14	=14	=14	=14
+4A	4e	12cc#	2.aa_
+.	.	12dd	.
+.	.	12ee	.
+4c#	4r	4g	.
+4A	12g	4r	.
+.	12f#	.	.
+.	12e	.	.
+=15	=15	=15	=15
+4d	4d	12f#	2.aa_
+.	.	12g	.
+.	.	12f#	.
+4F#	4r	4dd	.
+4D	12a	4r	.
+.	12g	.	.
+.	12f#	.	.
+=16	=16	=16	=16
+4A	4e	12cc#	2.aa]
+.	.	12dd	.
+.	.	12ee	.
+4c#	4r	4g	.
+4A	12g	4r	.
+.	12f#	.	.
+.	12e	.	.
+=17	=17	=17	=17
+4d	4d	12f#	4aa
+.	.	12g	.
+.	.	12a	.
+4A	4a	4d	4f#
+4AA	4A	4c#	4e
+=18	=18	=18	=18
+4D	4d	2d	2d
+4d	4dd	.	.
+4c	4cc	4r	4r
+=19	=19	=19	=19
+4B	4b	2gg	2gg
+4G	4g	.	.
+4B	4b	12aa	12aa
+.	.	12gg	12gg
+.	.	12ff	12ff
+=20	=20	=20	=20
+4c	4cc	4ff	4ff
+4C	4c	8ee	8ee
+.	.	8dd	8dd
+4r	4r	8cc	8cc
+.	.	8b	8b
+=21	=21	=21	=21
+4c	4cc	8a	8a
+.	.	8b	8b
+8A	8a	8cc	8cc
+8B	8b	8dd	8dd
+8c	8cc	8dd#	8dd#
+8c#	8cc#	8ee	8ee
+=22	=22	=22	=22
+4d	4dd	2f#	2f#
+4A	4a	.	.
+4D	4d	4r	4r
+=23	=23	=23	=23
+4GG	4G	2b	2gg
+4BB	4B	.	.
+4D	4d	12cc	12aa
+.	.	12b	12gg
+.	.	12a	12ff#
+=24	=24	=24	=24
+4G	4g	2.b	4gg
+2r	2r	.	4dd
+.	.	.	4dd#
+=25	=25	=25	=25
+4G	4g	2cc	2ee
+4G	4g	.	.
+4G	4g	12ee	12gg
+.	.	12dd	12ff#
+.	.	12cc	12ee
+=26	=26	=26	=26
+8G	8g	4b	4dd
+8GG	8G	.	.
+8BB	8B	2r	2r
+8D	8d	.	.
+4G	4g	.	.
+=27	=27	=27	=27
+4r	4r	12a	12cc
+.	.	12b	12dd
+.	.	12a	12cc
+4d	4dd	4cc	4aa
+4D	4d	4r	4r
+=28	=28	=28	=28
+4r	4r	12g	12b
+.	.	12a	12cc
+.	.	12g	12b
+4G	4g	4b	4dd
+4GG	4G	4r	4r
+=29	=29	=29	=29
+4C	4c	4c	4a
+4D	4d	4B	4g
+4D	4d	4A	4f#
+=30	=30	=30	=30
+4G	4g	2G	2.g
+4D	4d	.	.
+4GG	4G	4r	.
+=31	=31	=31	=31
+8G	8g	8g	2.r
+8F#	8f#	8f#	.
+8G	8g	8g	.
+8A	8a	8a	.
+8B-	8b-	8b-	.
+8c	8cc	8cc	.
+=32	=32	=32	=32
+4d	4dd	4dd	4r
+2r	2r	2r	4aa 4cc 4d
+.	.	.	4ff# 4a 4d
+=33	=33	=33	=33
+8G	8g	8g	4d 4gg 4b-
+8F#	8f#	8f#	.
+8G	8g	8g	2r
+8A	8a	8a	.
+8B-	8b-	8b-	.
+8c	8cc	8cc	.
+=34	=34	=34	=34
+4d	4dd	4dd	4r
+2r	2r	2r	4cc 4d 4aa
+.	.	.	4a 4ff# 4d
+=35	=35	=35	=35
+8G	8g	8g	4gg 4b- 4d
+8F#	8f#	8f#	.
+8G	8g	8g	2r
+8A	8a	8a	.
+8B-	8b-	8b-	.
+8c	8cc	8cc	.
+=36	=36	=36	=36
+4d	4dd	4dd	2.r
+4D	4d	4d	.
+4r	4r	4r	.
+=37	=37	=37	=37
+8BB-	2.r	2.r	2.bb-
+8AA	.	.	.
+8BB-	.	.	.
+8C	.	.	.
+8D	.	.	.
+8E-	.	.	.
+=38	=38	=38	=38
+4F	8f	8a	2aa
+.	8a	8cc	.
+2r	8cc	8ee-	.
+.	8a	8cc	.
+.	8f	8a	8ccc
+.	8a	8cc	8ee-
+=39	=39	=39	=39
+8BB-	4b-	4b-	4dd
+8AA	.	.	.
+8BB-	2r	2r	2bb-
+8C	.	.	.
+8D	.	.	.
+8E-	.	.	.
+=40	=40	=40	=40
+4F	8f	8a	2aa
+.	8a	8cc	.
+2r	8cc	8ee-	.
+.	8a	8cc	.
+.	8f	8a	8ccc
+.	8a	8cc	8ee-
+=41	=41	=41	=41
+4B-	4b-	4b-	8dd
+.	.	.	8d
+4E-	4e-	4e-	8e-
+.	.	.	8cc
+4F	4f	4f	8f
+.	.	.	8a
+=42	=42	=42	=42
+4BB-	4B-	4B-	4B-
+8D	8d	2r	2r
+8C	8c	.	.
+8BB-	8B-	.	.
+8AA	8A	.	.
+=43	=43	=43	=43
+8BB-	8B-	2.dd	2.bb-
+8AA	8A	.	.
+8BB-	8B-	.	.
+8C	8c	.	.
+8D	8d	.	.
+8E-	8e-	.	.
+=44	=44	=44	=44
+8F	8f	2.cc	4bb-
+8E	8e	.	.
+8F	8f	.	2aa
+8G	8g	.	.
+8A	8a	.	.
+8F#	8f#	.	.
+=45	=45	=45	=45
+8G	8g	2.b-	4aa
+8F#	8f#	.	.
+8G	8g	.	2gg
+8A	8a	.	.
+8B-	8b-	.	.
+8c	8cc	.	.
+=46	=46	=46	=46
+4d	4dd	4b-	4gg
+4D	4d	4a	4ff#
+4r	4r	4r	4r
+=47	=47	=47	=47
+8G	8g	8g	2.r
+8F#	8f#	8f#	.
+8G	8g	8g	.
+8A	8a	8a	.
+8B-	8b-	8b-	.
+8c	8cc	8cc	.
+=48	=48	=48	=48
+4d	4dd	4dd	4r
+2r	2r	2r	4aa 4cc 4d
+.	.	.	4a 4ff# 4d
+=49	=49	=49	=49
+8G	8g	8g	4gg 4d 4b-
+8F#	8f#	8f#	.
+8G	8g	8g	2r
+8A	8a	8a	.
+8B-	8b-	8b-	.
+8c	8cc	8cc	.
+=50	=50	=50	=50
+4d	4dd	4dd	4r
+2r	2r	2r	4aa 4cc 4d
+.	.	.	4d 4a 4ff#
+=51	=51	=51	=51
+8G	8g	8g	4d 4b- 4gg
+8F#	8f#	8f#	.
+8G	8g	8g	2r
+8A	8a	8a	.
+8B-	8b-	8b-	.
+8c	8cc	8cc	.
+=52	=52	=52	=52
+4d	4dd	4dd	2.r
+4D	4d	4d	.
+4r	4r	4r	.
+=53	=53	=53	=53
+2.c	4cc	4ee-	2.ff#
+.	8b-	8dd	.
+.	8a	8cc	.
+.	8g	8b-	.
+.	8a	8a	.
+=54	=54	=54	=54
+4B-	8b-	8g	8gg
+.	8b-	8dd	8dd
+2r	8a	8cc	2dd
+.	8g	8b-	.
+.	8f#	8a	.
+.	8g	8b-	.
+=55	=55	=55	=55
+2.c	4cc	4ee-	2.ff#
+.	8b-	8dd	.
+.	8a	8cc	.
+.	8g	8b-	.
+.	8a	8a	.
+=56	=56	=56	=56
+4B-	8b-	8g	8gg
+.	8b-	8dd	8dd
+2r	8a	8cc	2dd
+.	8g	8b-	.
+.	8f#	8a	.
+.	8g	8b-	.
+=57	=57	=57	=57
+4c	4cc	4g	8ee-
+.	.	.	8cc
+4d	4dd	4g	8b-
+.	.	.	8g
+4D	4d	4f#	8d
+.	.	.	8f#
+=58	=58	=58	=58
+4G	4g	4g	4G
+4GG	4G	2r	2r
+4r	4r	.	.
+==	==	==	==
+*-	*-	*-	*-
+!!!RWG1: This file contains only pitch and duration data.
+!!!RWG2: Transposing instruments are not transposed.
+!!!RWG3: Spines may have incompatible meters.
+!!!RWG4: Durations of rests and tied notes may be interpreted.
+!!!RWG: Key is interpreted using the Humdrum key tool.
+!!!GTL: 10 Divertimentos
+!!!AFT: stage1
+!!!END: 1997/04/15
+!!!KEY: 438027453
+!!!EMD: Converted from MuseData to Humdrum Dec 16, 2000, by Andreas Kornstaedt using muse2kern.
+!!!EMD: Manual editing by Craig Sapp, Nov 2001

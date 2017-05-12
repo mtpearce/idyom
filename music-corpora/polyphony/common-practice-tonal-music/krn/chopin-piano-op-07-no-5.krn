@@ -1,0 +1,151 @@
+!!!COM: Chopin, Frederic
+!!!CDT: 1810///-1849///
+!!!OTL: Mazurka in C Major, Op. 7, No. 5
+!!!OPS: Op. 7
+!!!ONM: No. 5
+!!!OMD: Vivo
+!!!ODT: 1830///-1832///
+!!!PDT: 1832///-1835///
+!!!PPP: Leipzig, 1832; Paris and London, 1833; no.1, Warsaw, 1835  
+!!!ODE: Mr. Johns of nouvelle-Orleans
+**kern	**kern	**dynam
+*staff2	*staff1	*staff1/2
+*Ipiano	*Ipiano	*Ipiano
+*>[A,B,B,B]	*>[A,B,B,B]	*>[A,B,B,B]
+*>norep[A,B]	*>norep[A,B]	*>norep[A,B]
+*>A	*>A	*>A
+*clefF4	*clefG2	*clefG2
+*k[]	*k[]	*k[]
+*C:	*C:	*C:
+*M3/4	*M3/4	*M3/4
+*MM180	*MM180	*MM180
+=1	=1	=1
+(4GG'/ 4G'/	2.r	f
+4GG'/ 4G'/	.	>
+4GG'/ 4G'/	.	.
+=2	=2	=2
+4GG'/ 4G'/	2.r	.
+4GG'/ 4G'/	.	.
+4GG'/ 4G'/	.	.
+=3	=3	=3
+4GG'/ 4G'/	2.r	.
+4GG'/ 4G'/	.	.
+4GG'/ 4G'/	.	.
+=4	=4	=4
+4GG'/ 4G'/	2.r	.
+4GG'/ 4G'/	.	.
+4GG'/) 4G'/	.	.
+=5	=5	=5
+*>B	*>B	*>B
+4G\ 4B\ 4f\	(12dd\L	mf
+.	12gg\	.
+.	12dd\J)	.
+4G\ 4c\ 4e\	4g^/	.
+4G^\ 4c^\ (4e^\	(8.cc\L	.
+.	16ee\Jk)	.
+=6	=6	=6
+4G'\ 4B'\ 4f'\)	12dd\L	.
+.	12ee\	.
+.	&(12dd\J&)	.
+4G\ 4c\ 4e\	4g^/	.
+4G^\ 4c^\ (4e^\	8.cc\L	<
+.	16ee\Jk	.
+=7	=7	=7
+4G\ 4B\ 4f\)	4aa\	.
+4G\ 4B\ 4f\	8.gg\L	>
+.	16ee\k	.
+4G\ 4B\ 4f\	8.ff\	.
+.	&(16dd\Jk&)	.
+=8	=8	=8
+4C'/	(8.cc\L	<
+.	16ee\k	.
+4G'\ 4c'\ 4e'\	8.gg\	.
+.	16bb\k	.
+4G\ 4c\ (4e\	8.ddd\	>
+.	16ccc\Jk)	.
+=9	=9	=9
+4G\ 4B\ 4f\)	12dd\L	.
+.	12ee\	.
+.	&(12dd\J&)	.
+4G'\ 4c'\ 4e'\	4g^/	.
+4G^\ 4c^\ (4e^\	8.cc\L	.
+.	&(16ee\Jk&)	.
+=10	=10	=10
+4G\ 4B\ 4f\)	12dd\L	.
+.	12ee\	.
+.	&(12dd\J&)	.
+4G'\ 4c'\ 4e'\	4g^/	.
+4G^\ 4c^\ (4e^\	8.cc\L	<
+.	16ee\Jk	.
+=11	=11	=11
+4G\ 4B\ 4f\)	4aa\	.
+4G'\ 4B'\ 4f'\	8.gg\L	>
+.	16ee\k	.
+4G'\ 4B'\ 4f'\	8.ff\	.
+.	&(16dd\Jk&)	.
+=12	=12	=12
+4C/	(8.cc\L	<
+.	16dd\k	.
+4G'\ 4c'\ 4e'\	8.ee\	.
+.	16b\k	.
+4A\ 4c\ (4e\	8.dd\	>
+.	16cc\Jk)	.
+=13	=13	=13
+4D\ 4F#\ 4c\)	12a/L	.
+.	12b/	.
+.	&(12a/J&)	.
+4D'\ 4G'\ 4B'\	4d^/	.
+4D^\ 4G^\ (4B^\	8.g/L	.
+.	16b/Jk	.
+=14	=14	=14
+4D\ 4F#\ 4c\)	12a/L	.
+.	12b/	.
+.	&(12a/J&)	.
+4D'\ 4G'\ 4B'\	4d/	.
+4D^\ 4G^\ (4B^\	8.g/L	<
+.	16b/Jk	.
+=15	=15	=15
+4D\ 4F#\ 4c\)	4ee\	.
+4D'\ 4F#'\ 4c'\	8.dd\L	>
+.	16b\k	.
+4D'\ 4F#'\ 4c'\	8.cc\	.
+.	&(16a\Jk&)	.
+=16	=16	=16
+4GG/	(8.g\L	.
+.	16b\k	<
+4D\ 4G\ 4B\	8.dd\	.
+.	16ff#\k	.
+4D^\ 4G^\ (4B^\	8.aa\	>
+.	16gg\Jk)	.
+=17	=17	=17
+4D\ 4F#\ 4c\)	12a/L	.
+.	12b/	.
+.	&(12a/J&)	.
+4D'\ 4G'\ 4B'\	4d^/	.
+4D^\ 4G^\ (4B^\	8.g/L	.
+.	&(16b/Jk&)	.
+=18	=18	=18
+4D\ 4F#\ 4c\)	12a/L	.
+.	12b/	.
+.	&(12a/J&)	.
+4D'\ 4G'\ 4B'\	4d^/	.
+4D^\ 4G^\ (4B^\	8.g/L	<
+.	16b/Jk	.
+=19	=19	=19
+4D\ 4F#\ 4c\)	4ff#\	.
+4D\ 4F#\ 4c\	8.ee\L	>
+.	16b\k	.
+4D\ 4F#\ 4c\	8.cc\	.
+.	&(16a\Jk&)	.
+=20	=20	=20
+4GG/	(8.g\L	<
+.	16b\k	.
+4D\ 4G\ 4B\	8.dd\	.
+.	16ff#\k	>
+4D\ 4G\ 4B\	8.aa\	.
+.	16gg\Jk)	.
+=	=	=
+*-	*-	*-
+!!!SMS: Mikuli edition, G. Schirmer (1894-1898)
+!!!ENC: Craig Stuart Sapp
+!!!END: 2004/02/21/

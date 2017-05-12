@@ -1,0 +1,430 @@
+!!!COM: Chopin, Frederic
+!!!CDT: 1810///-1849///
+!!!OTL: Prelude in F Major, Op. 28, No. 23
+!!!OPS: Op. 28
+!!!ONM: No. 23
+!!!OMD: Moderato
+!!!ODT: 1836///-1839///
+!!!PDT: 1839///
+!!!ENC: Craig Stuart Sapp
+!!!AIN: piano
+!!!EEV: 15 March 2001
+!!!YEC: Copyright 2001 by Craig Stuart Sapp
+!!!YEN: United States of America
+**kern	**kern
+*Ipiano	*Ipiano
+*lh	*rh
+*clefF4	*clefG2
+*k[b-]	*k[b-]
+*F:	*F:
+*M4/4	*M4/4
+*MM108	*MM108
+2FF: 2C: 2A:	16cc
+.	16a
+.	16f
+.	16d
+.	16c
+.	16f
+.	16ff
+.	16dd
+2r	16cc
+.	16a
+.	16f
+.	16d
+.	16c
+.	16f
+.	16ff
+.	16dd
+=2	=2
+4CC	16cc
+.	16a
+.	16f
+.	16d
+16BBnq	.
+16Cq	.
+8Dq	.
+4CT	16c
+.	16f
+.	16ff
+.	16dd
+*^	*
+16BBq	.	.
+16Cq	.	.
+2C	4A	16cc
+.	.	16a
+.	.	16f
+.	.	16d
+.	4G	16c
+.	.	16e
+.	.	16b-
+.	.	16g
+*v	*v	*
+=3	=3
+8FF	16a
+.	16f
+16C	16c
+16F	16A
+8A	16c
+.	16f
+8C 8G	16e 16b-
+.	16g
+8FF	16a
+.	16f
+16C	16c
+16F	16A
+8A	16c
+.	16f
+8C 8G	16e 16b-
+.	16g
+=4	=4
+8FF	16a
+.	16f
+16C	16c
+16F	16A
+16A	16c
+16F	16f
+16d	16b-
+16Bn	16g#
+8c	16a
+.	16b-
+16b-	16dd
+16g#	16bn
+8a	16cc
+.	16ee
+8r	16ff
+.	16aa
+=5	=5
+2C: 2Gn: 2e:	16ggn
+.	16ee
+.	16cc
+.	16a
+.	16g
+.	16cc
+.	16ccc
+.	16aa
+2r	16gg
+.	16ee
+.	16cc
+.	16a
+.	16g
+.	16cc
+.	16ccc
+.	16aa
+=6	=6
+4GG'	16gg
+.	16ee
+.	16cc
+.	16a
+16F#q	.
+16Gq	.
+8Aq	.
+4GT	16g
+.	16cc
+.	16ccc
+.	16aa
+*^	*
+16F#q	.	.
+16Gq	.	.
+2G	4e	16gg
+.	.	16ee
+.	.	16cc
+.	.	16a
+.	4d	16g
+.	.	16bn
+.	.	16ff
+.	.	16dd
+*v	*v	*
+=7	=7
+8C	16ee
+.	16cc
+16G	16g
+16c	16e
+8e	16g
+.	16cc
+8G 8d	16bn 16ff
+.	16dd
+8C	16ee
+.	16cc
+16G	16g
+16c	16e
+8e	16g
+.	16cc
+8G 8d	16b 16ff
+.	16dd
+=8	=8
+12C	16ee
+.	16cc
+12G	.
+.	16g
+12c	.
+.	16e
+12e	16g
+.	16cc
+12b-	.
+.	16ee
+12r	.
+.	16gg
+2r	16ccc
+.	16eee
+.	16ddd
+.	16gg
+.	16dd
+.	16gg
+.	16dd
+.	16ee
+=9	=9
+2F: 2c: 2a:	16ccc
+.	16aa
+.	16ff
+.	16dd
+.	16cc
+.	16ff
+.	16fff
+.	16ddd
+2r	16ccc
+.	16aa
+.	16ff
+.	16dd
+.	16cc
+.	16ff
+.	16fff
+.	16ddd
+=10	=10
+4C'	16ccc
+.	16aa
+.	16ff
+.	16dd
+16Bnq	.
+16cq	.
+8dq	.
+4cT	16cc
+.	16ff
+.	16fff
+.	16ddd
+*^	*
+16Bq	.	.
+16cq	.	.
+2c	4a	16ccc
+.	.	16aa
+.	.	16ff
+.	.	16dd
+.	4g	16cc
+.	.	16ee
+.	.	16bb-
+.	.	16gg
+*v	*v	*
+=11	=11
+8F	16aa
+.	16ff
+16c	16cc
+16f	16a
+8a	16cc
+.	16ff
+8c 8g	16ee 16bb-
+.	16gg
+8F	16aa
+.	16ff
+16c	16cc
+16f	16a
+8a	16cc
+.	16ff
+8c 8g	16ee 16bb-
+.	16gg
+=12	=12
+12F	16aa
+.	16ff
+12c	.
+.	16cc
+12f	.
+.	16a
+12a	16cc
+.	16ff
+12ee-	.
+.	16aa
+12r	.
+.	16ccc
+2r	16fff
+.	16aaa
+.	16ggg
+.	16ccc
+.	16gg
+.	16ccc
+.	16gg
+.	16aa
+=13	=13
+12B-	16fff
+.	16ddd
+12f 12g	.
+.	16bb-
+12dd	.
+.	16gg
+4r	16ff
+.	16bb-
+.	16bbb-
+.	16ggg
+2r	16fff
+.	16ddd
+.	16bb-
+.	16gg
+.	16ff
+.	16bb-
+.	16bbb-
+.	16ggg
+=14	=14
+12G	16fff
+.	16ddd
+12f	.
+.	16bbn
+12dd	.
+.	16gg
+4r	16ff
+.	16gg
+.	16bbbn
+.	16ggg
+2r	16fff
+.	16ddd
+.	16bb
+.	16gg
+.	16ff
+.	16gg
+.	16bbb
+.	16ggg
+=15	=15
+*^	*
+12c	12ryy	16fff
+.	.	16ddd
+12g	2.g	.
+.	.	16ccc
+12cc	.	.
+.	.	16aa
+[2.ff	.	16gg
+.	.	16ccc
+.	.	16cccc
+.	.	16aaa
+.	.	16fff
+.	.	16ddd
+.	.	16ccc
+.	.	16aa
+.	.	16gg
+.	.	16ccc
+.	12ryy	.
+.	.	16cccc
+.	12ryy	.
+.	.	16aaa
+=16	=16	=16
+*^	*	*
+4c:	2g: 2b-:	4ff:]	16fff
+.	.	.	16ddd
+.	.	.	16ccc
+.	.	.	16aa
+2.ee	.	4ee	16gg
+.	.	.	16ccc
+.	.	.	16cccc
+.	.	.	16aaa
+*v	*v	*	*
+2r	8aa	16ggg
+.	.	16eee
+.	8r	16ccc
+.	.	16aa
+.	4r	16gg
+.	.	16ccc
+.	.	16cccc
+.	.	16ggg
+*v	*v	*
+=17	=17
+2F: 2c: 2a:	16cccc
+.	16aaa
+.	16fff
+.	16ddd
+.	16ccc
+.	16fff
+.	16ffff
+.	16dddd
+2r	16cccc
+.	16aaa
+.	16fff
+.	16ddd
+.	16ccc
+.	16fff
+.	16ffff
+.	16dddd
+=18	=18
+4a'	16cccc
+.	16aaa
+.	16fff
+.	16ddd
+16Bnq	.
+16cq	.
+4cT	16ccc
+.	16fff
+.	16ffff
+.	16dddd
+*^	*
+16Bq	.	.
+16cq	.	.
+2c	4a	16cccc
+.	.	16aaa
+.	.	16fff
+.	.	16ddd
+.	4g	16ccc
+.	.	16eee
+.	.	16bbb-
+.	.	16ggg
+*v	*v	*
+=19	=19
+8F	16aaa
+.	16fff
+16c	16ccc
+16f	16aa
+8a	16ff
+.	16cc
+8c 8g	16ee 16bb-
+.	16gg
+8FF	16aa
+.	16ff
+16C	16cc
+16F	16a
+8A	16f
+.	16c
+8C 8G	16e 16b-
+.	16g
+=20	=20
+8FF	16a
+.	16f
+16C	16c
+16F	16A
+8A	16c
+.	16f
+8C 8G	16e 16b-
+.	16g
+8FF	16a
+.	16f
+16C	16c
+16F	16A
+8A	16c
+.	16f
+8C 8G	16e 16b-
+.	16g
+=21	=21
+8.FF	16a
+.	16f
+.	16c
+16C	16A
+16F	16c
+16A	16f
+16c	16a
+16f	16cc
+16a	16ff
+16ee-	16aa
+16a	16ccc
+16f	16fff
+16c	16aaa
+16A	16ccc
+16F	16fff
+16C	16aa
+=32	=22
+4FF;	4ffff;
+4r	4r
+2r	2r
+==	==
+*-	*-

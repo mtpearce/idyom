@@ -1,0 +1,100 @@
+!!!COM:	Bach, Johann Sebastian
+!!!CDT:	1685/02/21/-1750/07/28/
+!!!OTL@@DE:	Lobt Gott, ihr Christen allzugleich
+!!!SCT:	BWV 375
+!!!PC#:	276
+!!!AGN:	chorale
+**kern	**kern	**kern	**kern
+*ICvox	*ICvox	*ICvox	*ICvox
+*Ibass	*Itenor	*Ialto	*Isoprn
+*I"Bass	*I"Tenor	*I"Alto	*I"Soprano
+*	*oclefC4	*oclefC3	*oclefC1
+*clefF4	*clefGv2	*clefG2	*clefG2
+*k[f#]	*k[f#]	*k[f#]	*k[f#]
+*G:	*G:	*G:	*G:
+*M4/4	*M4/4	*M4/4	*M4/4
+*met(c)	*met(c)	*met(c)	*met(c)
+*MM100	*MM100	*MM100	*MM100
+4G	4B	4d	4g
+=1	=1	=1	=1
+4F#	4A	4d	4dd
+4D	8dL	4f#	4dd
+.	8cJ	.	.
+8GL	8BL	4g	4dd
+8AJ	8AJ	.	.
+8BL	4G	8gL	4dd
+8GJ	.	8fJ	.
+=2	=2	=2	=2
+4c	4G	8eL	4ee
+.	.	8gJ	.
+4d	4d	4f#X	8ddL
+.	.	.	8ccJ
+4G;	4d;	4g;	4b;
+4F#	4d	4a	4a
+=3	=3	=3	=3
+4E	4G	4g	8bL
+.	.	.	8cc#J
+8BL	8dL	4f#	4dd
+8AJ	8c#J	.	.
+4G	8BL	4e	4dd
+.	8eJ	.	.
+4A	8aL	4e	4cc#
+.	8gJ	.	.
+=4	=4	=4	=4
+2.D;	2.f#;	2.d;	2.dd;
+4D	8dL	4f#	4dd
+.	8cnXJ	.	.
+=5	=5	=5	=5
+8GL	8BL	4g	4dd
+8AJ	8cJ	.	.
+8BL	8dL	4f#	4dd
+8AJ	8cJ	.	.
+4.G	8BL	8gL	8ddL
+.	8cJ	8aJ	8ccJ
+.	4d	8bL	8bL
+8A	.	8aJ	8ccJ
+=6	=6	=6	=6
+4B	4d	4g	8ddL
+.	.	.	8ccJ
+4c	4e	8gL	4b
+.	.	16f#L	.
+.	.	16eJJ	.
+4d;	4A;	4f#;	4a;
+4B	4B	4f#	4dd
+=7	=7	=7	=7
+4E	8GL	4g	4cc
+.	8AJ	.	.
+8eL	8BL	8gL	4b
+8dJ	8dJ	8f#J	.
+8cL	4e	4e	4a
+8AJ	.	.	.
+8dL	4d	4f#	4a
+8cJ	.	.	.
+=8	=8	=8	=8
+8BL	8dL	2g	8gL
+8A	8c	.	8a
+8G	8B	.	8b
+8F#J	8AJ	.	8ccJ
+4E;	4e;	4g#;	4dd;
+4GG#	4B	4e	4dd
+=9	=9	=9	=9
+4AA	8cL	8eL	4cc
+.	8dJ	8f#J	.
+8EL	4e	8gnXL	4b
+8DJ	.	8f#J	.
+8CL	8eL	4e	4a
+8AAJ	8cJ	.	.
+4D	8AL	4f#	4a
+.	16BL	.	.
+.	16cJJ	.	.
+=10	=10	=10	=10
+2.GG;	2.B;	2.d;	2.g;
+==	==	==	==
+*-	*-	*-	*-
+!!!YOR1: 371 vierstimmige Choralges&auml;nge von Johann Sebastian Bach, 
+!!!YOR2: 4th ed. by Alfred D&ouml;rffel (Leipzig: Breitkopf und H&auml;rtel, 
+!!!YOR2: c.1875). 178 pp. Plate "V.A.10".  reprint: J.S. Bach, 371 Four-Part 
+!!!YOR4: Chorales (New York: Associated Music Publishers, Inc., c.1940).
+!!!SMS: B&H, 4th ed, Alfred D&ouml;rffel, c.1875, plate V.A.10
+!!!EED:  Craig Stuart Sapp
+!!!EEV:  2009/05/22

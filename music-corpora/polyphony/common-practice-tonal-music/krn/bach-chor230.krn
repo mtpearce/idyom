@@ -1,0 +1,112 @@
+!!!COM:	Bach, Johann Sebastian
+!!!CDT:	1685/02/21/-1750/07/28/
+!!!OTL@@DE:	Christ, der du bist der helle Tag
+!!!SCT:	BWV 273
+!!!PC#:	230
+!!!AGN:	chorale
+**kern	**kern	**kern	**kern
+*ICvox	*ICvox	*ICvox	*ICvox
+*Ibass	*Itenor	*Ialto	*Isoprn
+*I"Bass	*I"Tenor	*I"Alto	*I"Soprano
+*	*oclefC4	*oclefC3	*oclefC1
+*clefF4	*clefGv2	*clefG2	*clefG2
+*k[b-e-]	*k[b-e-]	*k[b-e-]	*k[b-e-]
+*g:	*g:	*g:	*g:
+*M4/4	*M4/4	*M4/4	*M4/4
+*met(c)	*met(c)	*met(c)	*met(c)
+*MM100	*MM100	*MM100	*MM100
+4GG	4B-	4d	4g
+=1	=1	=1	=1
+4G	4B-	8dL	4g
+.	.	8eJ	.
+8DL	8dL	8fL	4b-
+8EJ	8cJ	8gJ	.
+8FL	4c	8fL	4a
+8F#J	.	8e-J	.
+8GL	8B-L	4d	4g
+8FJ	8AJ	.	.
+=2	=2	=2	=2
+8E-XL	16GLL	8gL	4b-
+.	16AJJ	.	.
+8DJ	4B-	8fJ	.
+8CL	.	8e-L	4cc
+8FJ	8A	8fJ	.
+4BB-;	4B-;	4f;	4dd;
+4BB-	8B-L	4f	4dd
+.	8cJ	.	.
+=3	=3	=3	=3
+8B-L	8dL	4f	4dd
+8AJ	8cJ	.	.
+4G	4B-	4g	8ddL
+.	.	.	8ee-J
+4F	4c	4a	8ffL
+.	.	.	8ee-J
+8GL	8B-L	[4b-	4dd
+8FJ	8dJ	.	.
+=4	=4	=4	=4
+4E-	4g	8b-L]	4cc
+.	.	16aL	.
+.	.	16gJJ	.
+4F	8fL	4a	4cc
+.	8e-J	.	.
+4BB-;	4d;	4f;	4b-;
+8GL	4d	4g	4b-
+8FJ	.	.	.
+=5	=5	=5	=5
+8E-L	4e-	8gL	4b-
+8DJ	.	8aJ	.
+8CL	4f	4b-	4dd
+8BB-J	.	.	.
+4.F	4f	8b-L	4cc
+.	.	16aL	.
+.	.	16gJJ	.
+.	4c	4f	4a
+8E-	.	.	.
+=6	=6	=6	=6
+8DL	4.B-	4f	4b-
+8BB-J	.	.	.
+4F	.	4f	4cc
+.	8A	.	.
+4BB-;	4B-;	4f;	4dd;
+4BB-	4B-	4f	4dd
+=7	=7	=7	=7
+8BB-L	4B-	4f	4dd
+8C	.	.	.
+8D	4.B-	4f	4dd
+8E-J	.	.	.
+4F	.	8.fL	4cc
+.	8A	.	.
+.	.	16e-Jk	.
+8F#L	[4A	[4d	4cc
+8DJ	.	.	.
+=8	=8	=8	=8
+4G	8AL]	4d]	4.b-
+.	8GJ	.	.
+4C#	8GL	4e	.
+.	16AL	.	16aLL
+.	16B-JJ	.	16gJJ
+4D;	4A;	4d;	4fnX;
+8BB-L	8B-L	4d	4f
+8AAJ	8cJ	.	.
+=9	=9	=9	=9
+4GG	8dL	8gL	8b-L
+.	8cJ	8aJ	8ccJ
+8GL	8B-L	4b-	4dd
+8FJ	8AJ	.	.
+4E	4G	4b-	4cc
+4F#	4d	4a	4dd
+=10	=10	=10	=10
+8GL	8dL	8a	4b-
+8CJ	8e-J	4g	.
+4D	8AL	.	4a
+.	8dJ	8f#	.
+4GG;	4B-;	4d;	4g;
+==	==	==	==
+*-	*-	*-	*-
+!!!YOR1: 371 vierstimmige Choralges&auml;nge von Johann Sebastian Bach, 
+!!!YOR2: 4th ed. by Alfred D&ouml;rffel (Leipzig: Breitkopf und H&auml;rtel, 
+!!!YOR2: c.1875). 178 pp. Plate "V.A.10".  reprint: J.S. Bach, 371 Four-Part 
+!!!YOR4: Chorales (New York: Associated Music Publishers, Inc., c.1940).
+!!!SMS: B&H, 4th ed, Alfred D&ouml;rffel, c.1875, plate V.A.10
+!!!EED:  Craig Stuart Sapp
+!!!EEV:  2009/05/22

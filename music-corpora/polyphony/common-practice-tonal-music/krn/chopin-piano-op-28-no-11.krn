@@ -1,0 +1,203 @@
+!!!COM: Chopin, Frederic
+!!!CDT: 1810///-1849///
+!!!OTL: Prelude in B Major, Op. 28, No. 11
+!!!OPS: Op. 28
+!!!ONM: No. 11
+!!!OMD: Vivace
+!!!ODT: 1836///-1839///
+!!!PDT: 1839///
+**kern	**kern	**dynam
+*staff2	*staff1	*staff1/2
+*clefF4	*clefG2	*clefG2
+*k[f#c#g#d#a#]	*k[f#c#g#d#a#]	*k[f#c#g#d#a#]
+*B:	*B:	*B:
+*M6/8	*M6/8	*M6/8
+*MM144	*MM144	*MM144
+=1-	=1-	=1-
+2.r	(2.ff#^\	p
+=2	=2	=2
+2.r	8ee#\L	.
+.	8ff#\	.
+.	8gg#\J	.
+.	8ff#\L	.
+.	8een\	.
+.	8dd#\J)	.
+=3	=3	=3
+8A#\L	8e/ (8cc#/L	.
+8F#\	8f#/	.
+.	a#q/	.
+8C#\J	&(8g#/J&)	.
+8FF#/L	8f#/L	.
+8C#/	8f#/	.
+8F#/J	8dd#/J	.
+=4	=4	=4
+8A#\L	8e/ 8cc#/L	.
+8F#\	8f#/	.
+.	a#q/	.
+8C#\J	&(8g#/J&)	.
+8FF#/L	8f#/L	.
+8C#/	8f#/	.
+8F#/J	8dd#/J	.
+=5	=5	=5
+8BB\L	8e/ 8cc#/L	<
+8F#\	8f#/	.
+8BB\J	8d#/ 8b/J	.
+8F#\L	8f#/L	.
+8D#\	8b/ 8dd#/	.
+8B\J	8f#/J	.
+=6	=6	=6
+8d#\L	8b\ 8ee#\L	.
+8F#\	8f#\ 8ff#\	.
+8B\J	8b\ 8gg#\J	.
+8D#\L	8f#\ 8ff#\L	>
+8F#\	8b\ 8een\	.
+8BB\J	8f#\ 8dd#\J)	.
+=7	=7	=7
+8A#\L	8e/ (8cc#/L	p
+8F#\	8f#/	.
+.	a#q/	.
+8C#\J	&(8g#/J&)	.
+8FF#/L	8f#/L	.
+8C#/	8f#/	.
+8F#/J	8dd#/J	.
+=8	=8	=8
+8A#\L	8e/ 8cc#/L	.
+8F#\	8f#/	.
+.	a#q/	.
+8C#\J	&(8g#/J&)	.
+8FF#/L	8f#/L	.
+8C#/	8f#/	.
+8F#/J	8dd#/J	.
+=9	=9	=9
+8BB\L	8e/ 8cc#/L	<
+8F#\	8f#/	.
+8BB\J	8d#/ 8b/J	.
+8F#\L	8f#/L	.
+8D#\	8b/ 8dd#/	.
+8B\J	8f#/J	.
+=10	=10	=10
+8d#\L	8b\ 8ff#\L	.
+8F#\	8f#\	.
+8c#\J	8a#\ 8ff##\J	.
+8E\L	8f##\L	.
+8B\	8b\ 8gg#\	.
+8D#\J	8g#\J)	.
+=11	=11	=11
+8GG#\L	8dd#\ (8bb\L	mf
+8D#\	8b\	.
+.	ff#q/	.
+8B\J	&(8ee\J&)	.
+8G#\L	8dd#\L	.
+8d#\	8b\	.
+8B\J	8gg#\ 8bb\J	.
+=12	=12	=12
+8D#\L	8ff#\ 8aa#\L	.
+8f#\	8dd#\	.
+8A#\J	8a#\J	.
+.	cc#q/	.
+8F#\L	&(8b\L&)	.
+8d#\	8a#\	.
+8A#\J	8dd#\ 8ff#\J)	.
+=13	=13	=13
+*	*^	*
+8EE\L	([2b/	8g#\L	>
+8B\	.	8e\	.
+.	.	g#q/	.
+8BB\J	.	8f#\J	.
+8G#\L	.	8e\	.
+8B\	8b/L]	4g#\	<
+8E\J	8cc#/J	.	.
+=14	=14	=14	=14
+(8BB\L	2.dd#/	8b\L	.
+8E#\	.	8d#\	.
+8F#\J	.	8f#\J	.
+8c#\L	.	8d#\L	.
+8B\	.	8f#\	.
+8G#\J)	.	8g#\J	.
+*	*v	*v	*
+=15	=15	=15
+8A#\L	8e/ 8cc#/L)	.
+8F#\	(8f#/	.
+.	g#q/LL	.
+.	a#q/JJ	.
+8C#\J	8g#/J	.
+8FF#/L	8f#/L	.
+8C#/	8f#/	.
+8F#/J	8dd#/J	.
+=16	=16	=16
+8A#\L	8e/ 8cc#/L	.
+8F#\	8f#/	.
+.	g#q/LL	.
+.	a#q/JJ	.
+8C#\J	8g#/J	.
+8FF#/L	8f#/L	.
+8C#/	8f#/	.
+8F#/J	8dd#/J	.
+=17	=17	=17
+8BBB/L	8e/ 8cc#/L	.
+8FF#/	8f#/	.
+8BB/J	8d#/ 8b/J	.
+8F#\L	8f#/L	.
+8D#\	8b/ 8dd#/	.
+8B\J	8f#/J	.
+=18	=18	=18
+8c##\L	8b\ 8ee#\L	.
+8d#\	8f#\ 8ff#\	.
+8en\J	8b\ 8gg#\J	.
+8d#\L	8f#\ 8ff#\L	.
+8c#\	8b\ 8een\	.
+8B\J	8f#\ 8dd#\J)	.
+=19	=19	=19
+8A#\L	8e/ (8cc#/L	.
+8r	8f#/	.
+.	g#q/LL	.
+.	a#q/JJ	.
+8C#\J	8g#/J	.
+8FF#/L	8f#/L	.
+8C#/	8f#/	.
+8F#/J	8dd#/J	.
+=20	=20	=20
+8A#\L	8e/ 8cc#/L	.
+8F#\	8f#/	.
+.	g#q/LL	.
+.	a#q/JJ	.
+8C#\J	8g#/J	.
+8FF#/L	8f#/L	.
+8C#/	8f#/	.
+8A#/J	8ff#/J)	.
+=21	=21	=21
+.	(f#q/	.
+2.BB\ 2.F#\ 2.d#\	(2.ff#\)	f
+=22	=22	=22
+2.r	8ee#\L	.
+.	8ff#\	.
+.	8gg#\J	.
+.	8ff#\L	.
+.	8een\	.
+.	8dd#\J)	.
+=23	=23	=23
+*	*^	*
+4r	4.r	(4.dd#\	.
+8r	.	.	.
+(4.D#\ 4.A#\	8cc##/L	4.f##\	.
+.	8dd#/	.	.
+.	8ee/J	.	.
+=24	=24	=24	=24
+4.G#\ 4.B\	8dd#/L	4.g#\	.
+.	8cc#/	.	.
+.	8b/J	.	.
+4.F#\ 4.A#\	8dd#/L	4.e\	.
+.	8cc#/	.	.
+.	8b/J	.	.
+*	*v	*v	*
+=25	=25	=25
+2.BB\) 2.F#\	2.d#/ 2.b/)	.
+=26	=26	=26
+(4.BBB/ 4.BB/	2.F#/ 2.d#/ (2.f#/	.
+4.FFF#/ 4.FF#/	.	.
+=27	=27	=27
+2.BBB/) 2.FF#/ 2.BB/	2.F#/ 2.B/ 2.d#/)	.
+==	==	==
+*-	*-	*-
+!!!ENC: Craig Stuart Sapp
+!!!END: 2004/12/22/

@@ -1,0 +1,178 @@
+!!!COM: Mozart, Wolfgang Amadeus
+!!!CDT: 1756/01/27/-1791/12/05/
+!!!CNT: German
+!!!OTL: Piano Sonata No. 6 in D major
+!!!SCT1: K<sup>1</sup> 284
+!!!SCT2: K<sup>6</sup> 205b
+!!!OMV: Mvmt. 3j
+!!!OMD: Variation 9
+!!!ODT: 1775///
+**kern	**kern	**dynam
+*staff2	*staff1	*staff1
+*>[A,A,B,B]	*>[A,A,B,B]	*>[A,A,B,B]
+*>norep[A,B]	*>norep[A,B]	*>norep[A,B]
+*>A	*>A	*>A
+*clefF4	*clefG2	*clefG2
+*k[f#c#]	*k[f#c#]	*k[f#c#]
+*D:	*D:	*D:
+*M4/4	*M4/4	*M4/4
+*met(c)	*met(c)	*met(c)
+*MM120	*MM120	*MM120
+=	=	=
+2r	4a	p
+.	8a'L	.
+.	8g'J	.
+=1	=1	=1
+(4.D/	8f#'L	.
+.	8e'J	.
+.	4.d	.
+8C#)	.	.
+(4.BB	.	.
+.	(8e	.
+.	[4f#)	.
+8AA)	.	.
+=2	=2	=2
+(4.GG	8f#L]	.
+.	(8BJ	.
+.	4.g)	.
+8EE)	.	.
+(4.AA	.	.
+.	(8c#	.
+.	[4e)	.
+8GG)	.	.
+=3	=3	=3
+(4.FF#	8eL]	.
+.	(8AJ	.
+.	4.a)	.
+8DD)	.	.
+(4.BB	.	.
+.	(8d	.
+.	[4g)	.
+8GG)	.	.
+=4	=4	=4
+4AA/ 4A/	8gL]	.
+.	(8f#J	.
+8AA 8AL	4e)	.
+8GG 8GJ	.	.
+8FF# 8F#L	4a 4aa	f
+8EE 8EJ	.	.
+[4DD [4D	8a 8aaL	.
+.	8g 8ggJ	.
+=5	=5	=5
+8DD] 8DL]	8f# 8ff#L	.
+8CC# 8C#	8e 8eeJ	.
+8BBB 8BB	4.d 4.dd	.
+8AAA 8AAJ	.	.
+8GGG# 8GG#L	.	.
+8AAA 8AAJ	8c# 8cc#L	.
+[4BBB [4BB	8B 8b	.
+.	8A 8aJ	.
+=6	=6	=6
+8BBB] 8BBL]	8G# 8g#L	.
+8CC# 8C#	8A 8aJ	.
+8DD 8D	4.B 4.b	.
+8DD# 8D#J	.	.
+4EE 4E	.	.
+.	8c# 8cc#L	.
+4r	8d 8dd	.
+.	8d# 8dd#J	.
+=7	=7	=7
+4C#	8r	.
+.	4cc# 4ee	p
+4F#	.	.
+.	4a# 4cc#	.
+4BB	.	.
+.	4b 4ddn	.
+4E	.	.
+.	[8g# [8b	.
+=8	=8	=8
+4AA	(8g#] 8bL]	.
+.	8anJ)	.
+4A	4r	.
+=:|!|:	=:|!|:	=:|!|:
+*>B	*>B	*>B
+2r	4aa	p
+.	8aa'L	.
+.	8bb'J	.
+*clefG2	*	*
+=9	=9	=9
+(4d# 4a	8cccn'L	.
+.	8bb'J	.
+4dn 4g#	(4.eee	.
+4c# 4gn	.	.
+.	8aa)	.
+4cn) 4f#	[4ddd	.
+*clefF4	*	*
+=10	=10	=10
+4.BB 4.B	8dddL]	f
+.	8a# (8aa#J	.
+.	4.b 4.bb)	.
+(8FF# 8F#	.	.
+4.GG) 4.G	.	.
+.	8f# (8ff#	.
+.	[4g [4gg)	.
+(8DD# 8D#	.	.
+=11	=11	=11
+4EE) 4E	8g] 8ggL]	.
+.	(8AJ	p
+(4C#	4.g)	.
+4Dn/	.	.
+.	(8f#	.
+4GG#)	[4b/	.
+=12	=12	=12
+4AA	8bL]	.
+.	8eJ)	.
+4r	4e	.
+2r	4A 4a	f
+.	8A 8aL	.
+.	8B 8bJ	.
+=13	=13	=13
+4AA/ 4A/	8c# 8cc#L	.
+.	8d 8ddJ	.
+8AA 8AL	4e 4ee	.
+8GGn 8GnJ	.	.
+8FF# 8F#L	4d 4dd	.
+8EE 8EJ	.	.
+4DD 4D	8d 8ddL	.
+.	8e 8eeJ	.
+=14	=14	=14
+4D 4d	8f# 8ff#L	.
+.	8g 8ggJ	.
+8D 8dL	4a 4aa	.
+8Cn 8cnJ	.	.
+8BB 8BL	4dd 4ddd	.
+8AA 8AJ	.	.
+[4GG [4G	8dd 8dddL	.
+.	8ccn 8cccnJ	.
+=15	=15	=15
+8GG] 8GL]	8b 8bbL	.
+8FF# 8F#	8a 8aaJ	.
+8GG 8G	4.g 4.gg	.
+8EE 8EJ	.	.
+4.AA/ 4.A/	.	.
+.	8f# 8ff#L	.
+.	8g 8gg	.
+8GG 8G	8e 8eeJ	.
+=16	=16	=16
+4FF# 4F#	8r	.
+.	4ff# 4aa	p
+4B	.	.
+.	4dd# 4ff#	.
+4E	.	.
+.	4ee 4gg	.
+4A	.	.
+.	[8cc# [8ee	.
+=17	=17	=17
+4D	8cc#] (8eeL]	.
+.	8ddnJ)	.
+4d	4r	.
+==:|!	==:|!	==:|!
+*-	*-	*-
+!!!SMS: Alte Mozart-Ausgabe, Band 20, Breitkopf &amp; H&auml;rtel 1877-1883.
+!!!ONB: Stich und Druck von Breitkopf &amp; H&auml;rtel in Leipzig
+!!!ONB: Ausgegeben 1878
+!!!ENC: Craig Stuart Sapp
+!!!END: 2009/09/22/
+!!!EED: Craig Stuart Sapp
+!!!EEV: 2017/02/03/
+!!!title: @{OTL}, K 284 (205b), @{OMV}

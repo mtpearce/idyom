@@ -1,0 +1,773 @@
+@CONTENT3:
+!!!COM: Bach, Johann Sebastian
+!!!OPR: Das wohltemperirte Clavier, Band II
+!!!XEN: Well-Tempered Clavier, Volume II
+!!!OTL: Prelude in E-flat Major
+!!!OMV: Prelude VII
+!!!SCT: BWV 876
+!!!SCA: Thematisch-systematisches Verzeichnis der musikalischen Werke Johann Sebastian Bach: Bach-Werke-Verzeichnis (Schmieder)
+!!!YOR: Bach Gesellschaft Edition xiv
+!!!EED: Walter Hewlett
+!!!ENC: Walter Hewlett
+!!!CDT: 1685/3//-1750/7/28/
+!!!OCY: Deutschland
+!!!YEC: Copyright (c) 1994, 2000 Center for Computer Assisted Research in the Humanities
+!!!YEM: Rights to all derivative editions reserved
+!!!YEM: Refer to licensing agreement for further details
+!!!YEN: United States of America
+**kern
+*I:
+*clefG6
+*k[b-e-a-]
+*E-:
+*M9/8
+=1-
+*^
+*^	*
+4.b-/	4.g\	8r
+.	.	8e-\L
+.	.	8d\J
+4.r	4.r	8e-\L
+.	.	8B-\
+.	.	8G\J
+8r	8r	8E-\
+8g/L	4g\	8r
+8ee-/J	.	8r
+=2	=2	=2
+(8ee-P/	4.f\	8r
+4ddp/)	.	8B-\L
+.	.	8An\J
+4.r	4.r	8B-\L
+.	.	8F\
+.	.	8D\J
+8r	4.ryy	8BB-\
+8f/L	.	8r
+8g/J	.	8r
+=3	=3	=3
+8a-/L	4.ryy	8F\
+8c/	.	8r
+8e-/J	.	8r
+8d/L	4.d\	8B-\
+8f/	.	8r
+8b-/J	.	8r
+8B-/L	4.B-\	8BB-/
+8f/	.	8r
+8a-/J	.	8r
+=4	=4	=4
+(8a-P/	4.e-\ 4.B-\	8r
+4gp/)	.	8E-\L
+.	.	8D\J
+4.r	4.r	8E-\L
+.	.	8BB-\
+.	.	8GG\J
+8r	4.ryy	8EE-\
+8E-/L	.	8r
+8D/J	.	8r
+=5	=5	=5
+8E-/L	4.ryy	4.r
+8G/	.	.
+8F/J	.	.
+8G/L	8ryy	8r
+8B-/	8ryy	8r
+8A-/J	8EE-/	8EE-\
+8B-/L	4E-/	4EE-\
+8d-/	.	.
+8G/J	8D-/	8EE-\
+=6	=6	=6
+8A-/L	4C/	4EE-\
+8c/	.	.
+8B-/J	8E-/	8r
+8c/L	4AA-/	8r
+8e-/	.	8r
+8d-/J	8BB-/	8EE-\
+8e-/L	4C/	4EE-\
+8a-/	.	.
+8c/J	8AA-/	8EE-\
+=7	=7	=7
+8dn/L	4F/	4E-\
+8f/	.	.
+8e-/J	8A-/	8r
+8f/L	4D/	4.r
+8a-/	.	.
+8g/J	8E-/	.
+8a-/L	4F/	8r
+8ff/	.	8r
+8a-/J	8D/	8BB-\ 8EE-\
+=8	=8	=8
+8g/L	4E-/	4BB-\ 4EE-\
+8b-/	.	.
+8a-/J	8F/	8ryy
+8b-\L	4G/	4.ryy
+8ee-\	.	.
+8dd\J	8B-/	.
+8ee-\L	4G/	4.ryy
+8gg\	.	.
+8ff\J	8D/	.
+=9	=9	=9
+*^	*	*
+8gg\L	4.ryy	2.ryy	4E-/
+8ee-\	.	.	.
+8dd\J	.	.	8G/
+[2.ee-/	8ryy	.	4C/
+.	8cc\L	.	.
+.	8b-\J	.	8D/
+.	[4.cc/	8r	16E-/LL
+.	.	.	16D/
+.	.	8an\L	16C/
+.	.	.	16D/J
+.	.	8g\J	8E-/J
+=10	=10	=10	=10
+*v	*v	*	*
+4.ee-/] 4.cc/]	4.an\	8FF/L
+.	.	8f\
+.	.	8e-\J
+4.r	4.ryy	8f\L
+.	.	8c\
+.	.	8An/J
+8r	8ryy	8F/
+8an/L	4an\	8r
+8ee-/J	.	8r
+=11	=11	=11
+8dd/L	2.ryy	8B-\
+8b-/	.	8r
+8f/J	.	8r
+8g/L	.	8E-\
+8e-/	.	8r
+8d/J	.	8r
+8c/L	4.c\	8F\
+8b-/	.	8r
+8an/J	.	8r
+=12	=12	=12
+4.b-/	4.d\	8r
+.	.	8B-\L
+.	.	8An\J
+4.r	4.r	8B-\L
+.	.	8F\
+.	.	8D\J
+8r	4.ryy	8BB-/
+8B-/L	.	8r
+8An/J	.	8r
+=13	=13	=13
+8B-/L	8r	4.r
+8d/	8BB-/L	.
+8c/J	8AAn/J	.
+8d/L	8BB-/L	4r
+8f/	8D/	.
+8e-/J	8C/J	8BB-\
+8f/L	8D/L	4BB-\
+8a-/	8F/	.
+8d/J	8A-/J	8BB-\
+=14	=14	=14
+8e-/L	8G/L	4BB-\
+8g/	8B-/	.
+8f/J	8A-/J	8r
+8g/L	8B-/L	8r
+8b-/	8G/	8r
+8a-/J	8F/J	8BB-\
+8b-/L	8G/L	4BB-\
+8ee-/	8B-/	.
+8g/J	8d\J	8B-\
+=15	=15	=15
+8an/L	8c\L	4B-\
+8cc/	8e-\	.
+8b-/J	8d\J	8r
+8cc/L	8e-\L	4.r
+8ee-/	8c/	.
+8dd/J	8B-/J	.
+8ee-/L	8c/L	8r
+8ccc/	8B-/	8r
+8ee-/J	8An/J	8F\ 8BB-\
+=16	=16	=16
+8dd/L	8B-/L	4F\ 4BB-\
+8b-/	8d\	.
+8an/J	8c\J	8r
+8b-/L	8d\L	4.r
+8dd/	8f\	.
+8cc/J	8e-\J	.
+8dd/L	8f\L	4.r
+8ff/	8a-\	.
+8ee-/J	8g\J	.
+=17	=17	=17
+*^	*	*
+4.ff/ 4.dd/	4.ryy	4.a-\	8r
+.	.	.	8B-\L
+.	.	.	8An\J
+!	! Printed in pass one	!	!
+!	! D5     6      3 q.    u1	!	!
+4.r	4.r	4.ryy	8B-\L
+.	.	.	8F\
+.	.	.	8D\J
+8r	8r	4.ryy	8BB-/
+8g/L	8e-\L	.	8r
+8f/J	8d\J	.	8r
+=18	=18	=18	=18
+*v	*v	*	*
+4.g/	4.e-\	8r
+.	.	8B-\L
+.	.	8A-\J
+4.r	4.r	8B-\L
+.	.	8G\
+.	.	8E-\J
+8r	8r	8BB-/
+8dd/L	8f\L	8r
+8ee-/J	8g\J	8r
+=19	=19	=19
+4.ff/	4.a-\	8r
+.	.	8BB-/L
+.	.	8AAn/J
+8r	8r	8BB-/L
+8r	8r	8D/
+8ff/	8a-\	8C/J
+4bn/	4a-\	8D\L
+.	.	8F\
+8cc/	8a-\ 8f\	8E-\J
+=20	=20	=20
+4.bn/	4.a-\ 4.d\	8F\L
+.	.	8A-\
+.	.	8G\J
+8r	2.ryy	8A-\
+8Bn/L	.	8r
+8d/J	.	8r
+8f/L	.	8BBn/
+8e-/	.	8r
+8d/J	.	8r
+=21	=21	=21
+*v	*v	*
+8e-/L	8C/
+8g/	8r
+8cc/J	8r
+8ee-\L	8c\
+8dd\	8r
+8cc\J	8r
+8r	8B-\
+8e-/L	8r
+8cc/J	8r
+=22	=22
+8f/L	8A-\
+8a-/	8r
+8cc/J	8r
+8ee-\L	8AA-/
+8dd\	8r
+8cc\J	8r
+8r	8E-\
+8g/L	8r
+8cc/J	8r
+=23	=23
+8a-\L	8F\
+8bn\	8r
+8cc\J	8r
+8ee-\L	8F#\
+8dd\	8r
+8cc\J	8r
+8r	8G\
+8f/L	8r
+8bn/J	8r
+=24	=24
+8cc/L	[4.C/
+8g/	.
+8e-/J	.
+8c/	8C\L]
+8r	8E-\
+8r	8G\J
+4.r	8B-\L
+.	8An\
+.	8G\J
+=25	=25
+8r	8An\
+8ee-\L	8r
+8dd\J	8r
+8ee-\L	4.r
+8cc\	.
+8an\J	.
+8f/	8r
+8r	8c\L
+8r	8F\J
+=26	=26
+*^	*
+*^	*	*
+8r	4.ryy	4.ryy	8B-\
+8f/L	.	.	8r
+8e-/J	.	.	8r
+8f/L	8ryy	[4.f\	4.r
+8b-/	[4b-\	.	.
+8cc/J	.	.	.
+8dd-/	8b-\] 8f\]	8ryy	8r
+!	!	! Printed in pass two	!
+!	!	! F4     2      4 e     d1	!
+8r	8r	8ryy	8A-\L
+8r	8r	8ryy	8F\J
+=27	=27	=27	=27
+*v	*v	*v	*
+8r	8G\
+8dd-\L	8r
+8cc\J	8r
+8dd-\L	4.r
+8b-\	.
+8g\J	.
+8e-/	8r
+8r	8B-\L
+8r	8E-\J
+=28	=28
+*^	*
+*^	*	*
+8r	4.ryy	4.ryy	8A-\
+8e-/L	.	.	8r
+8d-/J	.	.	8r
+8e-/L	8ryy	[4.e-\	4.r
+8a-/	[4a-\	.	.
+8b-/J	.	.	.
+8cc/	8a-\] 8e-\]	8ryy	8r
+!	!	! Printed in pass two	!
+!	!	! Ef4    2      4 e     d1	!
+8r	8r	8ryy	8G\L
+8r	8r	8ryy	8E-\J
+=29	=29	=29	=29
+*v	*v	*v	*
+8r	4F\
+8dn/L	.
+8a-/J	8r
+8cc/L	4.r
+8b-/	.
+8a-/J	.
+8r	8G\
+8d-/L	8r
+8b-/J	8r
+=30	=30
+8r	8En\
+8c/L	8r
+8g/J	8r
+8b-/L	4.r
+8a-/	.
+8g/J	.
+8r	8F\
+8c/L	8r
+8a-/J	8r
+=31	=31
+8r	8D\
+8B-/L	8r
+8a-/J	8r
+8r	8E-\
+8a-/L	8r
+8g/J	8r
+8r	8AAn/
+8cc/L	8r
+8e-/J	8r
+=32	=32
+8r	8BB-/
+8d/L	8r
+8c/J	8r
+8d/L	8r
+8B-/	8D\L
+8An/J	8C\J
+8B-/L	8D\L
+8d/	8F\
+8f/J	8A-\J
+=33	=33
+8a-/L	8BB-/L
+8f/	8D/
+8e-/J	8C/J
+8f/L	8D\L
+8d/	8F\
+8c/J	8E-\J
+8d/L	8F\L
+8f/	8D\
+8a-/J	8BB-\J
+=34	=34
+8cc/L	8r
+8e-/	8r
+8d/J	8F\
+8b-/L	4GG/
+8d-/	.
+8c/J	8E-\
+8a-/L	4FF/
+8c-/	.
+8B-/J	8D\
+=35	=35
+8r	8EE-/
+8g/L	8r
+8f/J	8r
+8g/L	8r
+8e-/	8G\L
+8d/J	8F\J
+8e-/L	8G\L
+8g/	8B-\
+8b-/J	8d-\J
+=36	=36
+8dd-\L	8E-\L
+8b-\	8G\
+8a-\J	8F\J
+8b-/L	8G\L
+8g/	8B-\
+8f/J	8A-\J
+8g/L	8B-\L
+8b-/	8G\
+8dd-/J	8E-\J
+=37	=37
+8ff\L	8r
+8a-\	8r
+8g\J	8B-\
+8ee-\L	4C/
+8g-\	.
+8f\J	8A-\
+8dd-\L	4BB-/
+8f-\	.
+8e-\J	8G\
+=38	=38
+8r	4AA-/
+8cc\L	.
+8b-\J	8r
+8cc\L	8r
+8a-\	8c\L
+8g\J	8B-\J
+8a-\L	4c\
+8cc\	.
+8ee-\J	8r
+=39	=39
+8gg\L	8r
+8b-\	8r
+8an\J	8C/
+8ff\L	4d\
+8a-\	.
+8g\J	8BB-/
+8ee-\L	4c\
+8g-\	.
+8f\J	8AAn/
+=40	=40
+8r	4BB-/
+8dd\L	.
+8cc\J	8r
+8dd\L	8r
+8b-\	8d\L
+8an\J	8c\J
+8b-\L	4d\
+8dd\	.
+8ff\J	8r
+=41	=41
+8aa-\L	8r
+8cc\	8r
+8bn\J	8D\
+8gg\L	4e-\
+8b-\	.
+8an\J	8C/
+8ff\L	4d\
+8a-\	.
+8g\J	8BBn/
+=42	=42
+8r	4C/
+8ee-\L	.
+8dd\J	8r
+8ee-\L	8r
+8cc\	8e-\L
+8bn\J	8d\J
+8cc\L	4e-\
+8ee-\	.
+8gg\J	8r
+=43	=43
+4ccc/	8r
+.	8a-\L
+8bbn/	8g\J
+8ccc/L	8a-\L
+8gg/	8e-\
+8aa-/J	8c\J
+8r	8g\L
+8ff#/L	8d\
+8gg/J	8B-\J
+=44	=44
+4ccc/	8f#\L
+.	8c\
+8ff#/	8An\J
+8gg/L	8e-\L
+8dd/	8B-/
+8ee-/J	8G/J
+8r	8d\L
+8cc#/L	8An/
+8dd/J	8F#/J
+=45	=45
+8bb-\L	8G\
+8gg\	8r
+8dd\J	8r
+8ee-\L	8C/
+8gg\	8r
+8ccc\J	8r
+8bb-\L	8C#/
+8aan\	8r
+8gg\J	8r
+=46	=46
+16ff#\LL	8D\
+16gg\J	.
+8aan\	8r
+8dd\J	8r
+8ee-\L	8r
+8dd\	8r
+8cc\J	8DD/
+8b-\L	4EEn/
+8cc\	.
+8an\J	8FF#/
+=47	=47
+8b-\L	8GG/
+8dd\	8r
+8gg\J	8r
+8bb-\L	8G\
+8aan\	8r
+8gg\J	8r
+8r	8F\
+8b-\L	8r
+8gg\J	8r
+=48	=48
+8cc\L	8E-\
+8ee-\	8r
+8gg\J	8r
+8bb-\L	8EE-/
+8aan\	8r
+8gg\J	8r
+8r	8BB-/
+8dd\L	8r
+8gg\J	8r
+=49	=49
+8ee-\L	8C/
+8ff#\	8r
+8gg\J	8r
+8b-/L	8C#/
+8an/	8r
+8g/J	8r
+8r	8D/
+8cc/L	8r
+8f#/J	8r
+=50	=50
+8g\L	[4.GG/
+8b-\	.
+8dd\J	.
+8gg\	8GG/L]
+8r	8BB-/
+8r	8D/J
+[4.b-\	8F\L
+.	8En\
+.	8D\J
+=51	=51
+8b-\L]	4En\
+8dd-\	.
+8cc\J	8r
+8dd-\L	4.r
+8b-\	.
+8g\J	.
+4en/	8r
+.	8G\L
+[8b-\	8C\J
+=52	=52
+*^	*
+*^	*	*
+*^	*	*	*
+8b-/L]	4.ryy	4.ryy	4.ryy	4F\
+8a-/	.	.	.	.
+8g/J	.	.	.	8r
+8a-/L	4ryy	8ryy	[4.a-\	4.r
+8cc/	.	[4cc\	.	.
+8ff/J	[8ff\	.	.	.
+4aa-/	4ff]	4cc]	4a-]	8r
+.	.	.	.	8C\L
+!	!	! Printed in pass two	! Printed in pass two	!
+!	!	! C5     4      3 q     d1	! Af4    4      4 q     d1	!
+8r	8ryy	8r	8ryy	8E-\J
+=53	=53	=53	=53	=53
+*v	*v	*v	*v	*
+8r	8D\
+8aa-\L	8r
+8gg\J	8r
+8aa-\L	4.r
+8ff\	.
+8dd\J	.
+4b-\	8r
+.	8d\L
+[8aa-\	8B-\J
+=54	=54
+8aa-\L]	4e-\
+8gg\	.
+8ff\J	8r
+8gg\L	4.r
+8ee-\	.
+8b-\J	.
+8g\L	8r
+8b-\	8G\L
+[8dd-\J	8E-\J
+=55	=55
+8dd-\L]	8A-\L
+8cc\	8E-\
+8b-\J	8D-\J
+8a-/L	8C/L
+8g/	8BB-/
+[8f/J	8AA-/J
+8f/L]	8GG/L
+8e-/	8C/
+[8g-/J	8BB-/J
+=56	=56
+*^	*
+8g-/L]	2.ryy	8AAn/L
+8f/	.	16BB-/L
+.	.	16AA/
+8e-/J	.	16GG/
+.	.	16AA/JJ
+8d/L	.	8BB-/
+8c/	.	8r
+8B-/J	.	8r
+4.r	8A-/L	4.r
+.	8G/	.
+.	8F/J	.
+=57	=57	=57
+8r	8G/	8BB-\
+8e-/L	8r	8r
+8d/J	8r	8r
+8e-/L	4.r	4.r
+8B-/	.	.
+8A-/J	.	.
+4.r	8G/L	4.r
+.	8F/	.
+.	8E-/J	.
+=58	=58	=58
+8r	8D/	8BB-\
+8f/L	8r	8r
+8e-/J	8r	8r
+8f/L	4.r	4.r
+8d/	.	.
+8B-/J	.	.
+4.r	8A-/L	4.r
+.	8G/	.
+.	8F/J	.
+=59	=59	=59
+8r	8E-/	8BB-\
+8g/L	8r	8r
+8f/J	8r	8r
+8g/L	4.r	4.r
+8e-/	.	.
+8c/J	.	.
+4.r	8B-/L	4.r
+.	8A-/	.
+.	8G/J	.
+=60	=60	=60
+8r	8F/	8D\ 8BB-\
+8a-/L	8r	8r
+8g/J	8r	8r
+8a-/L	4.r	4.r
+8f/	.	.
+8d/J	.	.
+4.r	8c/L	4.r
+.	8B-/	.
+.	8A-/J	.
+=61	=61	=61
+4.b-/	4.g\ 4.e-\	8G\L
+.	.	8B-\
+.	.	8A-\J
+4.r	4.r	8B-\L
+.	.	8G\
+.	.	8E-\J
+8r	8r	8BB-/
+8g/L	4g\	8r
+8ee-/J	.	8r
+=62	=62	=62
+(8ee-P/	4.f\	8r
+4ddp/)	.	8B-\L
+.	.	8An\J
+4.r	4.r	8B-\L
+.	.	8F\
+.	.	8D\J
+8r	4.ryy	8BB-/
+8f/L	.	8r
+8g/J	.	8r
+=63	=63	=63
+*v	*v	*
+8a-/L	8r
+8c/	8r
+8e-/J	8G\
+8d/L	4F\
+8f/	.
+8b-/J	8E-\
+8B-/L	4D\
+8f/	.
+8a-/J	8BB-/
+=64	=64
+8g/L	4EE-/
+8B-/	.
+8d-/J	8F\
+8c/L	4E-\
+8e-/	.
+8a-/J	8D-\
+8A-/L	4C/
+8e-/	.
+8g/J	8AA-/
+=65	=65
+8f/L	4DDn/
+8A-/	.
+8c/J	8E-\
+8B-/L	4D\
+8d/	.
+8g/J	8C/
+8G/L	4BB-/
+8d/	.
+8f/J	8GG/
+=66	=66
+8e-/L	4CC/
+8G/	.
+8B-/J	8D-/
+8A-/L	4C/
+8c/	.
+8f/J	8BB-/
+8F/L	4AA-/
+8c/	.
+8e-/J	8GG/
+=67	=67
+*^	*
+4.d/ 4.B-\	4.F/	4.AA-\
+8r	8r	8r
+8r	8r	8r
+8aa-/ 8ff/	8b-\	8D\
+4gg/ 4ee-/	4b-\	8E-\L
+.	.	16F\L
+.	.	16G\
+8r	8r	16A-\
+.	.	16B-\JJ
+=68	=68	=68
+*^	*	*
+8r	8ryy	8r	16c\LL
+.	.	.	16d\J
+8r	8ryy	8r	8e-\
+8ff/ 8cc/	8ryy	8a-\	8A-\J
+!	! Printed in pass one	!	!
+!	! C5     2      3 e     u1	!	!
+4.ee-/	2.b-/	4.g\	4.B-\
+4ddT/	.	4.f\	4.BB-/
+8ee-/	.	.	.
+=69	=69	=69	=69
+*v	*v	*v	*
+8ee-/L	4.E-\
+8b-/	.
+8a-/J	.
+8b-/L	4.r
+8g/	.
+8f/J	.
+8g/L	4.r
+8e-/	.
+8d/J	.
+=70	=70
+8e-/L	2..r
+8B-/	.
+8A-/J	.
+8B-/L	.
+8G/	.
+8F/J	.
+8G/L	.
+8E-/	4r
+8D/J	.
+=71	=71
+*v	*v
+4.E-/
+4.EE-/
+4.r
+==|!
+*-
+!!!RWG: Key is interpreted using the Humdrum key tool.
+!!!AFT: stage2
+!!!END: 1994/02/03/
+!!format changes:
+!!content changes:
+!!public access: complete
+!!!KEY: 3773979869
+!!!EMD: Converted from MuseData to Humdrum Dec 19, 2000, by Andreas Kornstaedt using muse2kern.

@@ -1,0 +1,377 @@
+!!!COM: Mozart, Wolfgang Amadeus
+!!!OTL: String Quartet No. 15 in D Minor
+!!!OMD: Menuetto: Allegretto
+!!!OMV: 3
+!!!SCT1: K<sup>1</sup> 421
+!!!SCA: Chronologisch-thematisches Verzeichnis sämtlicher Tonwerke Wolfgang Amade Mozarts (L. von Köchel; 1862, 2/1905, 3/1937, 1947)
+!!!SCT2: K<sup>6</sup> 417b
+!!!YOR: Breitkopf & Härtel Edition
+!!!ENC: Frances Bennion
+!!!CDT: 1756/1/27/-1791/12/5/
+!!!OCY: Österreich
+!!!YEC: Copyright (c) 1994, 2000 Center for Computer Assisted Research in the Humanities
+!!!YEM: Rights to all derivative editions reserved.
+!!!YEM: Refer to licensing agreement for further details.
+!!!YEN: United States of America
+**kern	**kern	**kern	**kern
+*k[b-]	*k[b-]	*k[b-]	*k[b-]
+*d:	*d:	*d:	*d:
+*clefC	*clefF	*clefG	*clefG
+*M3/4	*M3/4	*M3/4	*M3/4
+2r	2r	2r	2r
+8.d	4r	4r	8.dd
+16d	.	.	16dd
+=1	=1	=1	=1
+[2.d	2r	2r	4dd
+.	.	.	4a
+.	8.f	8.a	4ff
+.	16f	16a	.
+=2	=2	=2	=2
+2.d_	4g	4b-	8ff
+.	.	.	8ee
+.	4e	4g	8dd
+.	.	.	8cc#
+.	4f	4a	8dd
+.	.	.	8ff
+=3	=3	=3	=3
+4d]	4d	4f	4aa
+4r	4r	4r	4aa
+8.d	8.d	8.f	4aa
+16d	16d	16f	.
+=4	=4	=4	=4
+2.c#	4e	4a	4aa
+.	4a	4cc#	4ee
+.	4r	4ee	8.gg
+.	.	.	16gg
+=5	=5	=5	=5
+4c	4c	4e	4gg
+4r	4r	4r	4gg
+8.c	8.c	8.e	4gg
+16c	16c	16e	.
+=6	=6	=6	=6
+2.B	4d	4g	4gg
+.	4g	4b	4dd
+.	4r	4dd	8.ff
+.	.	.	16ff
+=7	=7	=7	=7
+4B-	4g#	4d	4ff
+4r	4r	4r	4ff
+8.B-	[4d	4g#	4ff
+16B-	.	.	.
+=8	=8	=8	=8
+4A	8d]	2.a	8ff
+.	8c#	.	8ee
+4G	8c#	.	8ee
+.	8e	.	8cc#
+4F	4d	.	4dd
+=9	=9	=9	=9
+4G	4B-	4g	4ee
+4A	4A	4f	4a
+4AA	4G	4e	4cc#
+=10	=10	=10	=10
+2D	2F	2d	2dd
+4r	4r	4r	8.dd
+.	.	.	16dd
+=11	=11	=11	=11
+2G#	4d	2b	4ff
+.	4f	.	4dd
+4r	4r	4r	8.b
+.	.	.	16b
+=12	=12	=12	=12
+2A	4e	2a	4cc
+.	4c	.	4ee
+4r	4r	4r	8.cc
+.	.	.	16cc
+=13	=13	=13	=13
+4r	4r	4r	4ee
+4AA	4e	4a	4cc
+4F	4A	4d#	4a
+=14	=14	=14	=14
+[2.E	4B	2e	4g#
+.	4G#	.	4b
+.	4e	4g#	8.ee
+.	.	.	16ee
+=15	=15	=15	=15
+2.E_	4f#	4a	2.dd#
+.	4g#	4b	.
+.	4a	4cc	.
+=16	=16	=16	=16
+2.E_	4g#	4b	4dd
+.	4f#	4a	4r
+.	[4e	4g#	8.dd
+.	.	.	16dd
+=17	=17	=17	=17
+2.E_	4e]	4g	2.cc#
+.	4f#	4a	.
+.	4g	4b-	.
+=18	=18	=18	=18
+2.E_	4f#	4a	4cc
+.	4e	4g	4r
+.	4d#	4f#	8.cc
+.	.	.	16cc
+=19	=19	=19	=19
+4E]	4d	8e	4b
+.	.	8f	.
+4D	4B	8e	4g#
+.	.	8f	.
+4C	4c	8e	4a
+.	.	8f	.
+=20	=20	=20	=20
+4BB	4G#	8e	2dd
+.	.	8f	.
+4GG#	4B	8e	.
+.	.	8f	.
+4AA	[4A	8e	4cc
+.	.	8a	.
+=21	=21	=21	=21
+4D	8A]	4f	8cc
+.	8d	.	8b
+4E	4c	4e	4a
+8.E	4B	8.dd	4g#
+16E	.	16dd	.
+=22	=22	=22	=22
+4AA	4A	2.cc#	2g
+4A	4r	.	.
+4r	8.A	.	8.gg
+.	16A	.	16gg
+=23	=23	=23	=23
+2r	4D	4cc	2.ff#
+.	4d	4r	.
+8.D	4r	8.cc	.
+16D	.	16cc	.
+=24	=24	=24	=24
+4GG	2r	2.b	4ff
+4G	.	.	4r
+4r	8.G	.	8.ff
+.	16G	.	16ff
+=25	=25	=25	=25
+2r	4C	4b-	2.ee
+.	4c	4r	.
+8.C	4r	8.b-	.
+16C	.	16b-	.
+=26	=26	=26	=26
+4FF	2r	2.a	4ee-
+4F	.	.	4r
+4r	8.F	.	8.ee-
+.	16F	.	16ee-
+=27	=27	=27	=27
+[2.BB-	2F	4b-	4dd
+.	.	4d	4b-
+.	4E	4e	4a
+=28	=28	=28	=28
+2.BB-]	4D	4f	4g#
+.	4C#	4e	4g#
+.	4D	4d	4g#
+=29	=29	=29	=29
+4AA	4E	4c#	4a
+4r	2r	2r	4r
+8.d	.	.	8.dd
+16d	.	.	16dd
+=30	=30	=30	=30
+[2.d	2r	2r	4dd
+.	.	.	4a
+.	8.f	8.a	4ff
+.	16f	16a	.
+=31	=31	=31	=31
+2.d_	4g	4b-	8ff
+.	.	.	8ee
+.	4e	4g	8dd
+.	.	.	8cc#
+.	4f	4a	8dd
+.	.	.	8ff
+=32	=32	=32	=32
+4d]	4d	4f	4aa
+4r	4r	4r	4aa
+8.d	8.d	8.f	4aa
+16d	16d	16f	.
+=33	=33	=33	=33
+2.c#	4e	4a	4aa
+.	4a	4cc#	4ee
+.	4r	4ee	8.gg
+.	.	.	16gg
+=34	=34	=34	=34
+4c	4c	4e	4gg
+4r	4r	4r	4gg
+8.c	8.c	8.e	4gg
+16c	16c	16e	.
+=35	=35	=35	=35
+2.B	4d	4g	4gg
+.	4g	4b	4dd
+.	4r	4dd	8.ff
+.	.	.	16ff
+=36	=36	=36	=36
+4B-	4g#	4d	4ff
+4r	4r	4r	4ff
+8.B-	[4d	4g#	4ff
+16B-	.	.	.
+=37	=37	=37	=37
+4A	8d]	2.a	8ff
+.	8c#	.	8ee
+4G	8c#	.	8ee
+.	8e	.	8cc#
+4F	4d	.	4dd
+=38	=38	=38	=38
+4G	4B-	4g	4ee
+4A	4A	4f	4a
+4AA	4G	4e	4cc#
+=39	=39	=39	=39
+2D	2F	2d	2dd
+4r	4r	4r	16d
+.	.	.	8.f#
+=40	=40	=40	=40
+4D	4A	4d	16f#
+.	.	.	8.a
+2r	2r	2r	16a
+.	.	.	8.dd
+.	.	.	16dd
+.	.	.	8.ff#
+=41	=41	=41	=41
+4d	4a	4dd	16ff#
+.	.	.	8.aa
+2r	2r	2r	16aa
+.	.	.	8.ddd
+.	.	.	16ddd
+.	.	.	8.ccc#
+=42	=42	=42	=42
+4A	4e 4c#	4g 4A	16ccc#
+.	.	.	8.eee
+4E	4e 4c#	4g 4A	16eee
+.	.	.	8.ggg
+4C#	4e 4c#	4g 4A	16ggg
+.	.	.	8.gg
+=43	=43	=43	=43
+4AA	4e 4c#	4g 4A	2gg
+4r	4r	4r	.
+4c#	4e	4a	16bb
+.	.	.	8.gg
+=44	=44	=44	=44
+4d	4d	4a	16gg
+.	.	.	8.ff#
+4r	4r	4r	16ff#
+.	.	.	8.aa
+4F#	4a	4dd	16aa
+.	.	.	8.ff#
+=45	=45	=45	=45
+4G	4g	4b	16ff#
+.	.	.	8.ee
+4r	4r	4r	16ee
+.	.	.	8.gg
+4A	4c#	4e	16gg
+.	.	.	8.ee
+=46	=46	=46	=46
+4d	4d	4f#	16ee
+.	.	.	8.dd
+4A	4d	4f#	16dd
+.	.	.	8.ff#
+4F#	4A	4d	16ff#
+.	.	.	8.d
+=47	=47	=47	=47
+2D	2F#	2A	2d
+4r	4r	4r	16d
+.	.	.	8.ff#
+=48	=48	=48	=48
+4A	4e 4c#	4g 4A	16ff#
+.	.	.	8.gg
+4E	4e 4c#	4g 4A	16gg
+.	.	.	8.a
+4C#	4e 4c#	4g 4A	16a
+.	.	.	8.eee
+=49	=49	=49	=49
+4AA	4e 4c#	4g 4A	2eee
+4A	2r	2r	.
+4r	.	.	16a
+.	.	.	8.ee
+=50	=50	=50	=50
+4d	4d	4a 4f#	16ee
+.	.	.	8.ff#
+4A	4f# 4A	4a 4d	16ff#
+.	.	.	8.dd
+4F#	4f# 4A	4a 4d	16dd
+.	.	.	8.fff#
+=51	=51	=51	=51
+4D	4f# 4A	4a 4d	2fff#
+4d	2r	2r	.
+4r	.	.	16b
+.	.	.	8.ddd
+=52	=52	=52	=52
+4BB	4g# 4B	4dd 4e	2ddd
+4B	2r	2r	.
+4r	.	.	16d
+.	.	.	8.gg#
+=53	=53	=53	=53
+4EE	4b 4e	4dd 4e	2gg#
+4E	2r	2r	.
+4r	.	.	16bb
+.	.	.	8.aa
+=54	=54	=54	=54
+4A	4a 4c#	4cc# 4e 4A	4aa
+4E	4a 4c#	4cc# 4e	4ccc#
+4C#	4a 4c#	4cc# 4e	4eee
+=55	=55	=55	=55
+4AA	4a 4c#	4cc# 4e 4A	2aaa
+2r	4r	2r	.
+.	16D	.	16d
+.	8.F#	.	8.f#
+=56	=56	=56	=56
+4D	16F#	4d 4A	16f#
+.	8.A	.	8.a
+2r	16A	2r	16a
+.	8.d	.	8.dd
+.	16d	.	16dd
+.	8.f#	.	8.ff#
+=57	=57	=57	=57
+4D	16f#	4a 4d	16ff#
+.	8.a	.	8.aa
+2r	16a	2r	16aa
+.	8.dd	.	8.ddd
+.	16dd	.	16ddd
+.	8.cc#	.	8.ccc#
+=58	=58	=58	=58
+4A	16cc#	4cc# 4e 4A	16ccc#
+.	8.ee	.	8.eee
+4E	16ee	4cc# 4e 4A	16eee
+.	8.gg	.	8.ggg
+4C#	16gg	4cc# 4e 4A	16ggg
+.	8.g	.	8.gg
+=59	=59	=59	=59
+4AA	2g	4cc# 4e 4A	2gg
+4r	.	4r	.
+4C#	16b	4e 4A	16bb
+.	8.g	.	8.gg
+=60	=60	=60	=60
+4D	16g	4d 4A	16gg
+.	8.f#	.	8.ff#
+4r	16f#	4r	16ff#
+.	8.a	.	8.aa
+4F#	16a	4dd 4f#	16aa
+.	8.f#	.	8.ff#
+=61	=61	=61	=61
+4A	16f#	4cc# 4g	16ff#
+.	8.e	.	8.ee
+4r	16e	4r	16ee
+.	8.g	.	8.gg
+4AA	16g	4cc# 4g	16gg
+.	8.e	.	8.ee
+=62	=62	=62	=62
+4D	16e	4dd 4f#	16ee
+.	8.d	.	8.dd
+4AA	16d	4f# 4A	16dd
+.	8.f#	.	8.ff#
+4FF#	16f#	4f# 4A	16ff#
+.	8.D	.	8.d
+=63	=63	=63	=63
+4DD	2D	2f# 2A	2d
+2r	.	.	.
+.	4r	4r	4r
+==	==	==	==
+*-	*-	*-	*-
+!!!RWG1: This file contains only pitch and duration data.
+!!!RWG2: Transposing instruments are not transposed.
+!!!RWG3: Spines may have incompatible meters.
+!!!RWG4: Durations of rests and tied notes may be interpreted.
+!!!RWG: Key is interpreted using the Humdrum key tool.
+!!!AFT: stage1
+!!!END: 1997/04/15
+!!!KEY: 3119063511
+!!!EMD: Converted from MuseData to Humdrum Dec 16, 2000, by Andreas Kornstaedt using muse2kern.
+!!!EMD: Manual editing by Craig Sapp, Nov 2001

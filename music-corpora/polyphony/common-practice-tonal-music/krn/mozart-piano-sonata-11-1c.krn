@@ -1,0 +1,426 @@
+!!!COM: Mozart, Wolfgang Amadeus
+!!!CDT: 1756/01/27/-1791/12/05/
+!!!CNT: German
+!!!OTL: Piano Sonata No. 11 in A major
+!!!SCT1: K<sup>1</sup> 331
+!!!SCT2: K<sup>6</sup> 300i
+!!!OMV: Mvmt. 1c
+!!!OMD: Variation II
+!!!ODT: 1778-1873///
+**kern	**kern	**dynam
+*staff2	*staff1	*staff1/2
+*>[A,A,B,B]	*>[A,A,B,B]	*>[A,A,B,B]
+*>norep[A,B]	*>norep[A,B]	*>norep[A,B]
+*>A	*>A	*>A
+*clefF4	*clefG2	*clefG2
+*k[f#c#g#]	*k[f#c#g#]	*k[f#c#g#]
+*A:	*A:	*A:
+*M6/8	*M6/8	*M6/8
+*MM72	*MM72	*MM72
+=37!|:	=37!|:	=37!|:
+!LO:TX:b:i:t=legato	!	!
+24ALL	8cc#'L	p
+24d#	.	.
+24eJJ	.	.
+24ALL	8cc#'J	.
+24d#	.	.
+24eJJ	.	.
+*Xtuplet	*Xtuplet	*
+24BLL	(16ddTLL	.
+24d#	.	.
+.	32cc#L	.
+24eJJ	.	.
+.	32ddJJJ	.
+24c#LL	8ee)	.
+24d#	.	.
+24eJJ	.	.
+24c#LL	8r	.
+24d#	.	.
+24eJJ	.	.
+24ALL	(32ff#LLL	.
+.	32ee	.
+24d#	.	.
+.	32dd	.
+24eJJ	.	.
+.	32cc#JJJ	.
+=38	=38	=38
+24G#LL	8bL)	.
+24d#	.	.
+24eJJ	.	.
+24G#LL	8b'J	.
+24d#	.	.
+24eJJ	.	.
+24ALL	(16cc#tLL	.
+24d#	.	.
+.	32bL	.
+24eJJ	.	.
+.	32cc#JJJ	.
+24BLL	8dd)	.
+24d#	.	.
+24eJJ	.	.
+24BLL	8r	.
+24d#	.	.
+24eJJ	.	.
+24G#LL	(>32eeLLL	.
+.	32dd	.
+24d#	.	.
+.	32cc#	.
+24eJJ	.	.
+.	32bJJJ	.
+=39	=39	=39
+24F#LL	8aL)	.
+24d#	.	.
+24eJJ	.	.
+24F#LL	8a'J	.
+24d#	.	.
+24eJJ	.	.
+24F#LL	(16aTLL	.
+24d#	.	.
+.	32g#L	.
+24eJJ	.	.
+.	32aJJJ	.
+24G#LL	8bL>)	.
+24dn	.	.
+24eJJ	.	.
+24G#LL	8b'J	.
+24d	.	.
+24eJJ	.	.
+24G#LL	(>16bTLL	.
+24d	.	.
+.	32aL	.
+24eJJ	.	.
+.	32bJJJ	.
+=40	=40	=40
+*	*^	*
+24ALL	4ryy	8cc#L)	.
+24c#	.	.	.
+24eJJ	.	.	.
+24ALL	.	8cc#'>J	.
+24c#	.	.	.
+24eJJ	.	.	.
+24DLL	(16.eeLL	8b	.
+24F#	.	.	.
+24BJJ	.	.	.
+.	32ddJJk)	.	.
+24ELL	(4cc#	(4a	.
+24A	.	.	.
+24c#JJ	.	.	.
+24ELL	.	.	.
+24A	.	.	.
+24c#JJ	.	.	.
+24ELL	8b)	8g#)	.
+24G#	.	.	.
+24BJJ	.	.	.
+*	*v	*v	*
+=41	=41	=41
+8AAL	(24cc#LL	f
+.	24a	.
+.	24eJJ	.
+(32G#qq/	.	.
+8AJ)	24cc#LL	.
+.	24a	.
+.	24eJJ	.
+8r	24ddLL	.
+.	24b	.
+.	24eJJ	.
+8AAL	24eeLL>	.
+.	24cc#	.
+.	24eJJ	.
+(32G#qq/	.	.
+8AJ)	24eeLL>	.
+.	24cc#	.
+.	24eJJ)	.
+8r	(>32ff#LLL	.
+.	32ee	.
+.	32dd	.
+.	32cc#JJJ	.
+=42	=42	=42
+8EEL	24bLL	.
+.	24g#	.
+.	24eJJ	.
+(32D#qq/	.	.
+8EJ)	24bLL	.
+.	24g#	.
+.	24eJJ	.
+8r	24cc#LL	.
+.	24a	.
+.	24eJJ	.
+8EEL	24ddLL	.
+.	24b	.
+.	24eJJ	.
+(32D#qq/	.	.
+8EJ)	24ddLL	.
+.	24b	.
+.	24eJJ)	.
+8r	(32eeLLL	.
+.	32dd	.
+.	32cc#	.
+.	32bJJJ	.
+=43	=43	=43
+8FF#L>	24aLL	.
+.	24e	.
+.	24c#JJ	.
+(32E#qq/	.	.
+8F#)	24aLL	.
+.	24e	.
+.	24c#JJ	.
+(32F##qq/	.	.
+8G#J)	24bLL	.
+.	24e	.
+.	24dJJ	.
+8AAL	24cc#LL	.
+.	24a	.
+.	24eJJ	.
+(32G#qq/	.	.
+8A)	24cc#LL	.
+.	24a	.
+.	24eJJ	.
+32C#qq/	.	.
+8DJ	24ddLL	.
+.	24b	.
+.	24f#JJ	.
+=44	=44	=44
+8EEL	24cc#LL	.
+.	24a	.
+.	24eJJ	.
+(32D#qq/	.	.
+8E)	24cc#LL	.
+.	24a	.
+.	24eJJ	.
+(32D#qq/	.	.
+8EJ)	24bLL	.
+.	24g#	.
+.	24dJJ	.
+8AAAL	24aLL	.
+.	24e	.
+.	24c#JJ	.
+(32GG#qq/	.	.
+8AAJ)	8A)	.
+8r	8r	.
+=45:|!|:	=45:|!|:	=45:|!|:
+*>B	*>B	*>B
+*clefG2	*	*
+!LO:TX:b:i:t=legato	!	!
+24ALL	8ee'L	p
+24c#	.	.
+24eJJ	.	.
+24ALL	8dd'	.
+24B	.	.
+24dJJ	.	.
+24ALL	8ee'J	.
+24c#	.	.
+24eJJ	.	.
+24ALL	8ff#'	.
+24d	.	.
+24f#JJ	.	.
+24ALL	8r	.
+24d	.	.
+24f#JJ	.	.
+24ALL	(32ff#mLLL	.
+.	32ee	.
+24d	.	.
+.	32ff#	.
+24f#JJ	.	.
+.	32gg#JJJ	.
+=46	=46	=46
+24ALL	8aaL)	.
+24f#	.	.
+24aJJ	.	.
+24ALL	8gg#'	.
+24e	.	.
+24g#JJ	.	.
+24ALL	8ff#'J	.
+24d	.	.
+24f#JJ	.	.
+24ALL	8ee'	.
+24c#	.	.
+24eJJ	.	.
+24ALL	8r	.
+24c#	.	.
+24eJJ	.	.
+24ALL	(32cc#mLLL	.
+.	32b	.
+24c#	.	.
+.	32cc#	.
+24eJJ	.	.
+.	32ddJJJ	.
+=47	=47	=47
+24ALL	8eeL	.
+24c#	.	.
+24eJJ	.	.
+24ALL	8cc#J)	.
+24c#	.	.
+24eJJ	.	.
+24ALL	16r	.
+24c#	.	.
+.	32r	.
+24eJJ	.	.
+.	32a'	.
+!	!LO:TX:b:i:t=cresc.	!
+24BLL	(8eeL	.
+24d	.	.
+24eJJ	.	.
+24BLL	8ddJ)	.
+24d	.	.
+24eJJ	.	.
+24BLL	16r	.
+24d	.	.
+.	32r	.
+24eJJ	.	.
+.	32b'	.
+=48	=48	=48
+24ALL	(8eeL	f
+24c#	.	.
+24eJJ	.	.
+24ALL	8cc#)	.
+24c#	.	.
+24eJJ	.	.
+*clefF4	*	*
+24F#LL	8a'J	.
+24A	.	.
+24d#JJ	.	sf
+4.E 4.e	(4a/ 4cc#/	>
+.	8g#) 8b	]
+=49	=49	=49
+24ALL	8cc#'L	p
+24d#	.	.
+24eJJ	.	.
+24ALL	8cc#'J	.
+24d#	.	.
+24eJJ	.	.
+24BLL	(16ddTLL	.
+24d#	.	.
+.	32cc#L	.
+24eJJ	.	.
+.	32ddJJJ	.
+24c#LL	8ee)	.
+24d#	.	.
+24eJJ	.	.
+24c#LL	8r	.
+24d#	.	.
+24eJJ	.	.
+24ALL	(32ff#LLL	.
+.	32ee	.
+24d#	.	.
+.	32dd	.
+24eJJ	.	.
+.	32cc#JJJ	.
+=50	=50	=50
+24G#LL	8bL)	.
+24d#	.	.
+24eJJ	.	.
+24G#LL	8b'J	.
+24d#	.	.
+24eJJ	.	.
+24ALL	(16cc#tLL	.
+24d#	.	.
+.	32bL	.
+24eJJ	.	.
+.	32cc#JJJ	.
+24BLL	8dd)	.
+24d#	.	.
+24eJJ	.	.
+24BLL	8r	.
+24d#	.	.
+24eJJ	.	.
+24G#LL	(>32eeLLL	.
+.	32dd	.
+24d#	.	.
+.	32cc#	.
+24eJJ	.	.
+.	32bJJJ	.
+=51	=51	=51
+24F#LL	8aL)	.
+24d#	.	.
+24eJJ	.	.
+24F#LL	8a'J	.
+24d#	.	.
+24eJJ	.	.
+24G#LL	(>16bTLL	.
+24dn	.	.
+.	32aL	.
+24eJJ	.	.
+.	32bJJJ	.
+24ALL	8cc#L)	.
+24c#	.	.
+24eJJ	.	.
+24ALL	8cc#'J	.
+24c#	.	.
+24eJJ	.	.
+24DLL	(16ddTLL	.
+24F#	.	.
+.	32cc#L	.
+24BJJ	.	.
+.	32ddJJJ	.
+=52	=52	=52
+*^	*^	*
+4.ryy	24ELL	4.ryy	8cc#L)	.
+.	24A	.	.	.
+.	24c#JJ	.	.	.
+.	24ELL	.	8cc#'>J	.
+.	24A	.	.	.
+.	24c#JJ	.	.	.
+.	24ELL	.	(16bTLL>	.
+.	24G#	.	.	.
+.	.	.	32aL	.
+.	24dJJ	.	.	.
+.	.	.	32bJJJ)	.
+(4d	4.A 4.e	(8bL	(4g#	>
+.	.	8b#	.	)
+8c#)	.	8cc#J)	8a)	]
+*v	*v	*	*	*
+*	*v	*v	*
+=53	=53	=53
+8AAL	(>24cc#LL	f
+.	24a	.
+.	24eJJ	.
+(32G#qq/	.	.
+8A)	24cc#LL	.
+.	24a	.
+.	24eJJ	.
+(32A#qq/	.	.
+8BJ)	24ddLL	.
+.	24g#	.
+.	24eJJ	.
+8C#L	24eeLL	.
+.	24cc#	.
+.	24aJJ	.
+(32B#qq/	.	.
+8c#)	24eeLL	.
+.	24cc#	.
+.	24aJJ	.
+(32c#qq/	.	.
+8dJ)	24ff#LL	.
+.	24b	.
+.	24aJJ	.
+=54	=54	=54
+8EEL	24cc#LL	.
+.	24a	.
+.	24eJJ	.
+(32D#qq/	.	.
+8E)	24cc#LL	.
+.	24a	.
+.	24eJJ	.
+(32D#qq/	.	.
+8EJ)	24bLL	.
+.	24g#	.
+.	24dJJ	.
+8AAAL	24aLL	.
+.	24e	.
+.	24c#JJ	.
+(32GG#qq/	.	.
+8AAJ)	8A)	.
+8r	8r	.
+*tuplet	*	*
+==:|!	==:|!	==:|!
+*-	*-	*-
+!!!RDF**kern: > = above
+!!!RDF**kern: < = below
+!!!SMS: Alte Mozart-Ausgabe, Band 20, Breitkopf &amp; H&auml;rtel 1877-1883.
+!!!ONB: Stich und Druck von Breitkopf &amp; H&auml;rtel in Leipzig
+!!!ONB: Ausgegeben 1878
+!!!ENC: Craig Stuart Sapp
+!!!END: 2009/09/29/
+!!!EED: Craig Stuart Sapp
+!!!EEV: 2017/01/31/
+!!!title: @{OTL}, K 331 (300i), @{OMV}

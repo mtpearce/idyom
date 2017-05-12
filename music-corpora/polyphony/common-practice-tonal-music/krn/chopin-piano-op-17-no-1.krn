@@ -1,0 +1,494 @@
+!!!COM: Chopin, Frederic
+!!!CDT: 1810///-1849///
+!!!OTL: Mazurka in B-flat Major, Op. 17, No. 1
+!!!OPS: Op. 17
+!!!ONM: No. 1
+!!!OMD: Vivo e risoluto
+!!!ODT: 1833///
+!!!PDT: 1834///
+!!!PPP: Leipzig, Paris and London
+!!!ODE: Lina Freppa
+!!!AIN: piano
+**kern	**kern	**dynam
+*staff2	*staff1	*staff1/2
+*Ipiano	*Ipiano	*Ipiano
+*>[A,B,A]	*>[A,B,A]	*>[A,B,A]
+*>norep[A,B,A]	*>norep[A,B,A]	*>norep[A,B,A]
+*>A	*>A	*>A
+*clefF4	*clefG2	*clefG2
+*k[b-e-]	*k[b-e-]	*k[b-e-]
+*B-:	*B-:	*B-:
+*M3/4	*M3/4	*M3/4
+*MM160	*MM160	*MM160
+!	!LO:S:a	!
+4r	(4f	f
+=1	=1	=1
+*ped	*	*
+4BBB- 4BB-	4.dd 4.ff	fz
+4F 4B- 4d	.	.
+.	8cc# 8een	.
+.	16ddq/LL 16ffq/	.
+.	16ggq/JJ	.
+4F 4B- 4d	8dd 8ffL	.
+.	8cc# 8eeJ	.
+=2	=2	=2
+4BB-	8dd` 8ff`L)	.
+.	16r	.
+.	(16b-Jk	.
+*Xped	*	*
+4E- 4B-	4g 4ee-X	.
+4BB- 4B-	4f 4dd)	.
+=3	=3	=3
+*ped	*	*
+4FFF 4FF	(4.e- 4.cc	>
+4F 4A	.	)
+.	8g 8ee-L	)
+4r	8f 8dd	]
+.	8e- 8ccJ	.
+*Xped	*	*
+=4	=4	=4
+*ped	*	*
+4BBB- 4BB-	8f`) 8dd`L	.
+.	16r	.
+.	(16fJk	.
+4BB- 4F 4B-	4d 4b-)	.
+4BB-^ 4F^ 4B-^	4d 4f 4dd	.
+=5	=5	=5
+4BBB- 4BB-	8dd` 8ff`L	fz
+.	16r	.
+.	16dd 16ffJk	.
+4F 4B- 4d	4dd' 4ff'	.
+.	16ddq/LL 16gg/q	.
+.	16gg/qJJ	.
+4F 4B- 4d	8dd (8ffL	.
+.	8cc# 8eenJ	.
+=6	=6	=6
+4BB-`	8dd 8ffL)	.
+.	16r	.
+.	(16b-Jk	.
+*Xped	*	*
+4E- 4B-	4g` 4ee-X`)	.
+4BB- 4B-	4f^ 4b-^ 4dd^	.
+=7	=7	=7
+*ped	*	*
+*	*^	*
+4FFF 4FF	(4.cc	4e-^ 4b-^	.
+4F 4c	.	8aL	.
+.	8ee-L	8g	.
+4r	8dd	8f	.
+.	8ccJ	8e-J	.
+*	*v	*v	*
+*Xped	*	*
+=8	=8	=8
+*ped	*	*
+4BBB- 4BB-	8f 8ddL)	.
+.	16r	.
+.	(16fJk	.
+4BB- 4F 4B-	4d' 4f' 4b-'	.
+4BB- 4F 4B-	4d') 4f' 4dd'	.
+.	.	.
+*Xped	*	*
+=9||	=9||	=9||
+*ped	*	*
+4CC` 4C`	4c`	fz
+*clefG2	*	*
+4.c^ 4.g^	4.b-^ 4.een^ 4.bb-^	.
+8c 8g	8b- 8ee 8aa	.
+*Xped	*	*
+=10	=10	=10
+8.c' 8.g'L	8.b- 8.een (8.ff#L	.
+16c' 16g'Jk	16b- 16ee 16ggJk	.
+4c' 4g'	4b-' 4ee' 4aa')	.
+4c' 4g'	4b-' 4ee' 4gg'	.
+*clefF4	*	*
+=11	=11	=11
+*ped	*	*
+4CC` 4C`	4c`	fz
+*clefG2	*	*
+4.c^ 4.g^	4.b-^ 4.een^ 4.aa^	.
+8c 8g	8b- 8ee (8gg	.
+.	.	.
+*Xped	*	*
+*clefF4	*	*
+=12	=12	=12
+8F 8c 8fL	8a' 8ff'L)	.
+16r	16r	.
+16F 16c 16fJk	16b- (16ddJk	.
+4F 4c 4f	4a' 4cc'	.
+4F 4c 4f	4a' 4ff')	.
+=13	=13	=13
+*ped	*	*
+4CC` 4C`	4c`	.
+*clefG2	*	*
+4.c^ 4.g^	4.b-^ 4.een^ 4.bb-^	.
+8c 8g	8b- 8ee 8aa	.
+*Xped	*	*
+=14	=14	=14
+8.c 8.gL	8.b- 8.een (8.ff#L	<
+16c 16gJk	16b- 16ee 16ggJk	(
+4c 4g	4b- 4ee 4aa	(
+4c 4g	4b- 4ee 4gg	(
+=15	=15	=15
+8fn` 8a`L	8ee-X` 8ccc`L)	[
+16r	16r	.
+(16B- 16a-Jk	16dd (16ffJk	.
+4e- 4g	4dd- 4bb-	.
+!	!LO:TX:b:i:t=dim.	!
+4A- 4g-	4cc 4ee-	.
+=16	=16	=16
+8dn` 8f`L)	8cc` 8aa-`L)	.
+16r	16r	.
+!	!LO:S:a	!
+(16G 16fJk	(16bn 16ddJk	.
+4c 4en	4b- 4gg	.
+4F 4e-)	4an 4cc	.
+*clefF4	*	*
+=17	=17	=17
+*ped	*	*
+*	*^	*
+4BBB- 4BB-	4.dd (4.ff)	4a-	f
+4B- 4f	.	4a-	.
+.	8ggL	.	.
+!	!LO:S:b	!	!
+.	(16ff/qLL	.	.
+.	16gg/qJJ	.	.
+4B- 4f	8dd 8ff)	4a-	.
+.	8cc# 8eenJ	.	.
+=18	=18	=18	=18
+4BB- 4B-	8dd 8ffL)	8a-L	.
+.	16r	16r	.
+.	(16b-Jk	16b-Jk	.
+4E- 4B-	4ryy	4g- 4b- 4ee-	.
+*Xped	*	*	*
+4F 4B-	4f 4b- 4dd)	4ryy	.
+*	*v	*v	*
+=19	=19	=19
+*	*^	*
+*	*	*^	*
+4G- 4B-	(4.cc/	2b-\	4e-\	.
+4E-	.	.	4g-	.
+.	8ee-L	.	.	.
+4F	8dd	4ryy	8f 8anL	.
+.	8ccJ	.	8e-J	.
+*	*	*v	*v	*
+*	*v	*v	*
+=20	=20	=20
+*ped	*	*
+4BBB- 4BB-	8f 8ddL)	.
+.	16r	.
+!	!LO:S:a	!
+.	(16fJk	.
+4BB- 4F 4B-	4d 4f 4b-	<
+4BB- 4F 4B-	4d 4f 4dd	(
+.	.	[
+*Xped	*	*
+=21	=21	=21
+*	*^	*
+4A- 4d 4f	4.ff	4cc	>
+4A- 4d 4f	.	4cc	)
+.	8ggL	.	]
+4A- 4d 4f	8ffM	4cc	.
+.	8eenJ	.	.
+=22	=22	=22	=22
+8G` 8d`L	8ff`L)	4bn	.
+16r	16r	.	.
+16G (16dJk	(16bJk	.	.
+4G 4g	4ryy	4b' 4ee-'	.
+4G 4f)	4ryy	4b' 4dd')	.
+=23	=23	=23	=23
+*^	*	*	*
+4ryy	4c 4en	(4.cc	4b-X	.
+(8e-L	2F	.	2a	.
+8g	.	8ee-L	.	.
+8f	.	8dd	.	.
+8e-J)	.	8ccJ	.	.
+*v	*v	*	*	*
+*	*v	*v	*
+=24	=24	=24
+8B-` 8d`L	8b-` 8dd`L)	.
+16r	16r	.
+16F (16cJk	(16f 16ccJk	.
+4BB-' 4B-')	4d') 4b-'	.
+4BBB- 4BB-	4b- 4bb-	fz
+=25	=25	=25
+*ped	*	*
+4CC` 4C`	4c`	fz
+*clefG2	*	*
+4.c^ 4.g^	4.b-^ 4.een^ 4.bb-^	.
+8c 8g	8b- 8ee 8aa	.
+*Xped	*	*
+=26	=26	=26
+8.c' 8.g'L	8.b- 8.een (8.ff#L	.
+16c' 16g'Jk	16b- 16ee 16ggJk	.
+4c' 4g'	4b-' 4ee' 4aa')	.
+4c' 4g'	4b-' 4ee' 4gg'	.
+*clefF4	*	*
+=27	=27	=27
+*ped	*	*
+4CC` 4C`	4c`	fz
+*clefG2	*	*
+4.c^ 4.g^	4.b-^ 4.een^ 4.aa^	.
+8c 8g	8b- 8ee (8gg	.
+*clefF4	*	*
+*Xped	*	*
+=28	=28	=28
+8F 8c 8fL	8a' 8ff'L)	.
+16r	16r	.
+16F 16d 16fJk	16b- (16ddJk	.
+4F 4c 4f	4a' 4cc'	.
+4F 4c 4f	4a' 4ff')	.
+=29	=29	=29
+*ped	*	*
+4CC` 4C`	4c`	.
+*clefG2	*	*
+4.c^ 4.g^	4.b-^ 4.een^ 4.bb-^	.
+8c 8g	8b- 8ee 8aa	.
+*Xped	*	*
+=30	=30	=30
+8.c 8.gL	8.b- 8.een (8.ff#L	<
+16c 16gJk	16b- 16ee 16ggJk	(
+4c 4g	4b- 4ee 4aa	(
+4c 4g	4b- 4ee 4gg	(
+=31	=31	=31
+8fn` 8a`L	8ee-` 8ccc`L)	[
+16r	16r	.
+(16B- 16a-Jk	16dd (16ffJk	.
+4e- 4g	4dd- 4bb-	.
+!	!LO:TX:b:i:t=dim.	!
+4A- 4g-	4cc 4ee-	.
+=32	=32	=32
+8dn` 8f`L)	8cc` 8aa-`L)	.
+16r	16r	.
+!	!LO:S:a	!
+(16G 16fJk	(16bn 16ddJk	.
+4c 4en	4b- 4gg	.
+4F 4e-)	4an 4cc	.
+*clefF4	*	*
+=33	=33	=33
+*ped	*	*
+*	*^	*
+4BBB- 4BB-	4.dd (4.ff)	4a-	f
+4B- 4f	.	4a-	.
+.	8ggL	.	.
+.	(16ffLLq/	.	.
+.	16ggJJq/	.	.
+4B- 4f	8dd 8ff)	4a-	.
+.	8cc# 8eenJ	.	.
+=34	=34	=34	=34
+4BB- 4B-	8dd 8ffL)	8a-L	.
+.	16r	16r	.
+.	(16b-Jk	16b-Jk	.
+4E- 4B-	4ryy	4g- 4b- 4ee-	.
+*Xped	*	*	*
+4F 4B-	4f 4b- 4dd)	4ryy	.
+*	*v	*v	*
+=35	=35	=35
+*	*^	*
+*	*	*^	*
+4G- 4B-	(4.cc	2b-	4e-	.
+4E-	.	.	4g-	.
+.	8ee-L	.	.	.
+4F	8dd	4ryy	8f 8anL	.
+.	8ccJ	.	8e-J	.
+*	*	*v	*v	*
+*	*v	*v	*
+=36	=36	=36
+*ped	*	*
+4BBB- 4BB-	8f 8ddL)	.
+.	16r	.
+!	!LO:S:a	!
+.	(16fJk	.
+4BB- 4F 4B-	4d 4f 4b-	<
+4BB- 4F 4B-	4d 4f 4dd	[
+.	.	.
+*Xped	*	*
+=37	=37	=37
+*	*^	*
+4A- 4d 4f	4.ff	4cc	>
+4A- 4d 4f	.	4cc	]
+.	8ggL	.	.
+4A- 4d 4f	8ffM	4cc	.
+.	8eenJ	.	.
+=38	=38	=38	=38
+8G` 8d`L	8ff`L)	4bn	.
+16r	16r	.	.
+16G (16dJk	(16bJk	.	.
+4G 4g	4b\' 4ee-\'	4ryy	.
+4G 4f)	4b\' 4dd\')	4ryy	.
+=39	=39	=39	=39
+*^	*	*	*
+4ryy	4c 4en	(4.cc^	4b-X	.
+(8e-L	2F	.	2a	.
+8g	.	8ee-L	.	.
+8f	.	8dd	.	.
+8e-J)	.	8ccJ	.	.
+*v	*v	*	*	*
+*	*v	*v	*
+=40	=40	=40
+8B-` 8d`L	8b-` 8dd`L)	.
+16r	16r	.
+16F (16cJk	(16f 16ccJk	.
+4BB-` 4B-`)	4d`) 4b-`	.
+!LO:TX:b:i:t=Fine	!	!
+4BBB- 4BB-	4b- 4bb-	fz
+=41||	=41||	=41||
+!! Fine
+*>B	*>B	*>B
+*k[b-e-a-]	*k[b-e-a-]	*k[b-e-a-]
+*ped	*	*
+!LO:S:a	!	!
+(4EE-'	2.r	p
+4BB-' 4G'	.	.
+4EE-'	.	.
+=42	=42	=42
+8BB-' 8G'L	2.r	.
+8BB-' 8G'J	.	.
+4EE-'	.	.
+4BB-' 4G'	.	.
+=43	=43	=43
+4EE-'	2.r	.
+4BB-' 4G'	.	.
+4EE-	.	.
+=44	=44	=44
+8BB-' 8G'L	2.r	.
+8BB-' 8G'J	.	.
+4EE-'	.	.
+4BB-' 4G')	.	p
+.	.	.
+*Xped	*	*
+=45	=45	=45
+*ped	*	*
+!	!LO:TX:b:i:t=dolce	!
+4EE-	8gL	<
+.	16r	(
+!	!LO:S:a	!
+.	(16a-Jk	[
+.	(8a/q	.
+4BB- 4A-	4.gg)	>
+4EE-	.	)
+.	8ff	]
+=46	=46	=46
+8BB- 8A-L	8eenL	.
+8BB- 8A-J	8ffJ	.
+4EE-	4aa-')	.
+4BB- 4A-	(4ccc	>
+=47	=47	=47
+4EE-	8g'L)	]
+.	16r	.
+.	(16a-Jk	.
+.	(8a-/q	.
+4BB- 4A-	4.gg)	>
+4EE-	.	)
+.	8ff	]
+*Xped	*	*
+=48	=48	=48
+*ped	*	*
+8BB- 8GL	8ee-L)	.
+8BB- 8GJ	16r	.
+.	(16ccJk	.
+4EE-	4an	.
+4BB- 4G	4b-/	.
+.	.	.
+*Xped	*	*
+=49	=49	=49
+*ped	*	*
+4EE-	8gL)	<
+.	(8a-XJ	(
+.	(8a-/q	[
+4BB- 4A-	4.gg)	>
+4EE-	.	)
+.	8ff)	]
+=50	=50	=50
+8BB-' 8A-'L	(8eenL	.
+8BB-' 8A-'J	8ffJ	.
+4EE-	4aa-)	.
+.	(8ccc/q	.
+4BB-' 4A-'	4fff`)	.
+*Xped	*	*
+=51	=51	=51
+4EE-	(4bbnm	.
+4A- 4d	8bb-L	.
+.	8ggJ	.
+4A- 4d	4bb-m	.
+=52	=52	=52
+!	!LO:TX:b:i:t=dim.	!
+4EE-'	8aanL	.
+.	8ff#J	.
+4A-X 4d	4aam	.
+4A- 4d	8aa-L	.
+.	8ffnJ	.
+=53	=53	=53
+*ped	*	*
+4EE-'	8gL)	<
+.	16r	(
+!	!LO:S:a	!
+.	(16a-Jk	[
+.	(8a-/q	.
+4BB- 4A-	4.gg)	>
+4EE-	.	)
+.	8ff	]
+=54	=54	=54
+8BB- 8A-L	8eenL	.
+8BB- 8A-J	8ffJ	.
+4EE-	4aa-`)	.
+!	!LO:S:a	!
+4BB- 4A-	(4ccc	>
+=55	=55	=55
+4EE-	8g`L)	]
+.	16r	.
+!	!LO:S:a	!
+.	(16a-Jk	.
+.	(8a-/q	.
+4BB- 4A-	4.gg)	>
+4EE-	.	)
+.	8ff	]
+*Xped	*	*
+=56	=56	=56
+*ped	*	*
+8BB- 8GL	8ee-L)	.
+8BB- 8GJ	16r	.
+.	(16ccJk	.
+4EE-	4an	.
+4BB- 4G	4b-	.
+*Xped	*	*
+=57	=57	=57
+*ped	*	*
+4EE-	8gL)	<
+!	!LO:S:a	!
+.	(8a-J	(
+.	(8a-/q	.
+4BB- 4A-	4.gg)	[
+.	.	>
+4EE-	.	)
+.	8ff)	]
+=58	=58	=58
+8BB- 8A-L	(8eenL	.
+8BB- 8A-J	8ffJ	.
+4EE-	4aa-`)	.
+*	*8va	*
+.	(8cccc/q	.
+8BB- 8A-	8ffff)	.
+*	*X8va	*
+8r;	8r;	.
+*Xped	*	*
+=59	=59	=59
+4EE-	(8cccL	>
+.	8bbnJ	)
+*clefG2	*	*
+4B- 4d 4a-	8bb-L	)
+.	8aan	)
+4B- 4d 4a-	8aa-	)
+.	8b-J	]
+*clefF4	*	*
+=60	=60	=60
+4E-	8ffL)	.
+.	16r	.
+.	(16ggJk	.
+!LO:TX:b:i:t=D.C. al Fine	!	!
+4B- 4g	4ee-)	.
+=	=	=
+*-	*-	*-
+!!!SMS: Mikuli edition, G. Schirmer (1894-1898)
+!!!ENC: Craig Stuart Sapp
+!!!END: 2005/02/11/
+!!!EEV: 2017/01/04/

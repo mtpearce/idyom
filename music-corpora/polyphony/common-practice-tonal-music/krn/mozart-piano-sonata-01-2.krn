@@ -1,0 +1,893 @@
+!!!COM: Mozart, Wolfgang Amadeus
+!!!CDT: 1756/01/27/-1791/12/05/
+!!!CNT: German
+!!!OTL: Piano Sonata No. 1 in C major
+!!!SCT1: K<sup>1</sup> 279
+!!!SCT2: K<sup>6</sup> 189d
+!!!OMV: Mvmt. 2
+!!!OMD: Andante
+!!!ODT: 1774///
+**kern	**dynam	**kern	**dynam
+*staff2	*	*staff1	*staff1/2
+*>[A,A,B,B]	*	*>[A,A,B,B]	*>[A,A,B,B]
+*>norep[A,B]	*	*>norep[A,B]	*>norep[A,B]
+*>A	*	*>A	*>A
+*clefF4	*	*clefG2	*clefG2
+*k[b-]	*	*k[b-]	*k[b-]
+*F:	*	*F:	*F:
+*M3/4	*	*M3/4	*M3/4
+*MM108	*	*MM108	*MM108
+16r	.	16f	f
+=1	=1	=1	=1
+!LO:TX:b:i:t=legato	!	!	!
+12FL	.	4cc	.
+12A	.	.	.
+12cJ	.	.	.
+.	.	(32bnqq/	.
+12GL	.	4cc)	.
+12B-	.	.	.
+12cJ	.	.	.
+.	.	(32bqLLL>	.
+.	.	32ccq	.
+.	.	32ddqJJJ	.
+12FL	.	4cc)	.
+12A	.	.	.
+12cJ	.	.	.
+=2	=2	=2	=2
+*Xtuplet	*	*Xtuplet	*
+12EL	.	(4bb-X	.
+12G	.	.	.
+12cJ	.	.	.
+12CL	.	4b-)	.
+12E	.	.	.
+12GJ	.	.	.
+12FL	.	8r	.
+12A	.	.	.
+.	.	8a	.
+12cJ	.	.	.
+=3	=3	=3	=3
+12BB-L	.	(12gL	p
+12D	.	12b-	.
+12GJ	.	12gJ)	.
+12CL	.	(12fL	.
+12F	.	12a	.
+12AJ	.	12fJ)	.
+12CL	.	(12eL	.
+12G	.	12g	.
+12B-J	.	12eJ)	.
+=4	=4	=4	=4
+12DL	.	(4bb-	f
+12F	.	.	.
+12B-J	.	.	.
+12EL	.	4b-)	.
+12G	.	.	.
+12cJ	.	.	.
+12FL	.	8r	.
+12A	.	.	.
+.	.	8a	.
+12cJ	.	.	.
+=5	=5	=5	=5
+12BB-L	.	(12gL	p
+12D	.	12b-	.
+12GJ	.	12gJ)	.
+12CL	.	(12fL	.
+12F	.	12a	.
+12AJ	.	12fJ)	.
+12CL	.	(12eL	.
+12G	.	12g	.
+12B-J	.	12eJ)	.
+=6	=6	=6	=6
+12AL	.	4f	f
+12c	.	.	.
+12AJ	.	.	.
+4F	.	12r	.
+.	.	(12eL	p
+.	.	12fJ)	.
+4r	.	(12gL	.
+.	.	12f)	.
+.	.	12g 12b-J	.
+=7	=7	=7	=7
+4CC 4C	.	(12f 12aL	f
+.	.	12e 12g	.
+.	.	12d#) 12f#J	.
+4r	.	12e 12gL	.
+.	.	(12f#	p
+.	.	12gJ)	.
+4r	.	(12aL	.
+.	.	12g)	.
+.	.	12a 12ccJ	.
+=8	=8	=8	=8
+*	*	*^	*
+4FF 4F	.	(>12g 12b-L	2ryy	f
+.	.	12fn 12a	.	.
+.	.	12e) 12g#J	.	.
+*tuplet	*	*	*	*
+12r	.	4f 4a	.	.
+12E- 12e-L	.	.	.	.
+12D 12dJ	.	.	.	.
+*Xtuplet	*	*	*	*
+12C 12cL	.	[4ccc	4ee-	.
+12BB- 12B-	.	.	.	.
+12AA 12AJ	.	.	.	.
+=9	=9	=9	=9	=9
+4BB- 4B-	.	12cccL]	2.dd	.
+.	.	(12ccc#	.	.
+.	.	12dddJ)	.	.
+4BB-	.	(12cccnL	.	.
+.	.	12bb-)	.	.
+.	.	12aa'J	.	.
+4BBn	.	(12aaL	.	.
+.	.	12gg)	.	.
+.	.	12ff'J	.	.
+=10	=10	=10	=10	=10
+4C	.	12een	12ccL	.
+.	.	6ryy	12gg	p
+.	.	.	12ggJ	.
+4r	.	2ryy	12ggL	.
+.	.	.	12gg	.
+.	.	.	12ggJ	.
+4r	.	.	12ggL	.
+.	.	.	12gg	.
+.	.	.	12ggJ	.
+*clefG2	*	*	*	*
+*	*	*v	*v	*
+=11	=11	=11	=11
+.	.	(>32ff#qLLL>	.
+.	.	32ggq	.
+.	.	32aaqJJJ	.
+*	*	*^	*
+12r	.	2.gg)	12r	f
+(12dL	.	.	(12bnL	.
+12fJ)	.	.	12ddJ)	.
+(12eL	.	.	(12ccL	p
+12d	.	.	12b	.
+12fJ)	.	.	12ddJ)	.
+(12eL	.	.	(12ccL	.
+12d	.	.	12b	.
+12fJ)	.	.	12ddJ)	.
+*	*	*v	*v	*
+=12	=12	=12	=12
+.	.	(>32aaqLLL>	.
+.	.	32ggq	.
+.	.	32ff#qJJJ	.
+*	*	*^	*
+12r	.	2.gg)	12r	f
+(12eL	.	.	(12ccL	.
+12gJ)	.	.	12eeJ)	.
+(12fL	.	.	(12ddL	p
+12e	.	.	12cc	.
+12gJ)	.	.	12eeJ)	.
+(12fL	.	.	(12ddL	.
+12e	.	.	12cc	.
+12gJ)	.	.	12eeJ)	.
+*	*	*v	*v	*
+=13	=13	=13	=13
+.	.	(>32ff#qLLL>	.
+.	.	32ggq	.
+.	.	32aaqJJJ	.
+*	*	*^	*
+12r	.	2.gg)	12r	f
+(12BnL	.	.	(12ddL	.
+12dJ)	.	.	12ffnJ)	.
+(12cL	.	.	(12eeL	p
+12B	.	.	12dd	.
+12dJ)	.	.	12ffJ)	.
+(12cL	.	.	(12eeL	.
+12B	.	.	12dd	.
+12dJ)	.	.	12ffJ)	.
+*	*	*v	*v	*
+=14	=14	=14	=14
+4c	.	12r	.
+.	.	(12eeL	.
+.	.	12ffJ	.
+4r	.	12ff#L	.
+.	.	12gg	.
+.	.	12gg#J	.
+4r	.	12aaL	.
+.	.	12bbn	.
+.	.	12cccJ)	.
+*clefF4	*	*	*
+=15	=15	=15	=15
+*^	*	*	*
+2ryy	(>(<4F# 4A 4c	.	[4dd	f
+.	4G 4Bn))	.	12ddL]	p
+.	.	.	(12aa	.
+.	.	.	12ggnJ)	.
+8ryy	8r	.	12ffnML	.
+.	.	.	12ee	.
+8Gn 8B	8F#	.	.	f
+.	.	.	12ddJ	.
+=16	=16	=16	=16	=16
+4c	8EL	.	(12ggL	.
+.	.	.	12gg#	.
+.	8FJ	.	.	.
+.	.	.	12aaJ)	.
+2ryy	(>12GL	.	4cc	.
+.	12c	.	.	.
+.	12eJ)	.	.	.
+.	(>12GL	.	(>8.bntL	.
+.	12d	.	.	.
+.	12fJ)	.	.	.
+.	.	.	32aLL	.
+.	.	.	32bJJJ	.
+*v	*v	*	*	*
+=17	=17	=17	=17
+12r	.	4cc)	.
+(12EL	.	.	p
+12FJ	.	.	.
+12F#L	.	4r	.
+12G	.	.	.
+12G#J	.	.	.
+12AL	.	4r	.
+12Bn	.	.	.
+12cJ)	.	.	.
+=18	=18	=18	=18
+4FF# 4F#	.	12r	f
+.	.	(12dd 12bbnL	.
+.	.	12ee- 12cccJ)	.
+4GGn 4Gn	.	12r	p
+.	.	(12ee- 12cccL	.
+.	.	12dd 12bbJ)	.
+4BB- 4B-	.	12r	f
+.	.	(12een 12gg#L	.
+.	.	12ff 12aaJ)	.
+=19	=19	=19	=19
+4C 4c	.	12r	p
+.	.	(12ff 12aaL	.
+.	.	12ee 12ggnJ)	.
+4GG# 4G#	.	12r	f
+.	.	(12ee 12ggL	.
+.	.	12dd 12ffJ)	.
+4AA 4A	.	12r	p
+.	.	(12dd 12ffL	.
+.	.	12cc 12eeJ)	.
+=20	=20	=20	=20
+*^	*	*^	*
+(4f	4F	.	12r	4a	.
+.	.	.	(12eeL	.	.
+.	.	.	12ddJ)	.	.
+4e	2Gn	.	12r	4g	.
+.	.	.	(12ddL	.	.
+.	.	.	12ccJ)	.	.
+4d)	.	.	12r	4f	.
+.	.	.	(12ccL	.	.
+.	.	.	12bnJ)	.	.
+*v	*v	*	*	*	*
+*	*	*v	*v	*
+=21	=21	=21	=21
+12r	.	16ff (16aaLK	f
+.	.	8.ee 8.ggJ)	.
+(12BBBn 12BBnL	.	.	.
+12CC) 12CJ	.	.	.
+12r	.	16ee (16ggLK	.
+.	.	8.dd 8.ffJ)	.
+(12CC# 12C#L	.	.	.
+12DD) 12DJ	.	.	.
+12r	.	16dd (16ffLK	.
+.	.	8.cc 8.eeJ)	.
+(12DD# 12D#L	.	.	.
+12EE) 12EJ	.	.	.
+=22	=22	=22	=22
+12r	.	(12eeL	p
+12F 12A 12cL	.	12ddJ)	.
+12F 12A 12cJ	.	12r	.
+12F 12A 12cL	.	4r	.
+12F 12A 12c	.	.	.
+12F 12A 12cJ	.	.	.
+12F 12A 12cL	.	4r	.
+12F 12A 12c	.	.	.
+12F 12A 12cJ	.	.	.
+=23	=23	=23	=23
+12r	.	(12ddL	f
+12F# 12A 12cL	.	12ee-J)	.
+12F# 12A 12cJ	.	12r	.
+12F# 12A 12cL	.	4r	.
+12F# 12A 12c	.	.	.
+12F# 12A 12cJ	.	.	.
+12F# 12A 12cL	.	4r	.
+12F# 12A 12c	.	.	.
+12F# 12A 12cJ	.	.	.
+=24	=24	=24	=24
+12r	.	(12dd#L	p
+12G 12c 12eL	.	12eenJ)	.
+12G 12c 12eJ	.	12r	.
+12G 12c 12eL	.	4r	.
+12G 12c 12e	.	.	.
+12G 12c 12eJ	.	.	.
+12G 12c 12eL	.	(12ff#L	f
+12G 12c 12e	.	12ggJ)	.
+12G 12c 12eJ	.	12r	.
+=25	=25	=25	=25
+12F# 12A 12cL	.	4r	.
+12F# 12A 12c	.	.	.
+12F# 12A 12cJ	.	.	.
+.	.	(32ccqLLL>	.
+.	.	32ddq	.
+.	.	32eeqJJJ	.
+12G 12cL	.	(4.ddTT)	.
+12G 12c	.	.	.
+12G 12cJ	.	.	.
+12G 12BnL	.	.	.
+12G 12B	.	.	.
+.	.	16ccLL	.
+12G 12BJ	.	.	.
+.	.	16ddJJ	.
+=26	=26	=26	=26
+*^	*	*	*
+4ryy	4C 4c	.	12ccL	.
+.	.	.	12ee	.
+.	.	.	12ggJ)	.
+12r	4ryy	.	(8.ggTL	.
+(12cL<	.	.	.	.
+12eJ)	.	.	.	.
+.	.	.	32ff#LL	.
+.	.	.	32ggJJJ)	.
+(12fL	4G	.	12r	.
+12d	.	.	(12ffnL	.
+12BnJ)	.	.	12ddJ)	.
+*v	*v	*	*	*
+=27	=27	=27	=27
+4C 4c	.	(12ccL	.
+.	.	12ee	.
+.	.	12gJ)	.
+12r	.	(8.gTL	.
+(12EL	p	.	.
+12CJ)	.	.	.
+.	.	32f#LL	.
+.	.	32gJJJ)	.
+4GG\	.	12r	.
+.	.	(>12fnL	p
+.	.	12Fj 12Bnj 12dJ)	.
+=28	=28	=28	=28
+[2CC	.	(>2Fj 2Bnj 2d	.
+8CC]	.	8Ej 8Gj 8c)	.
+16r	.	16r	.
+=:|!|:	=:|!|:	=:|!|:	=:|!|:
+*>B	*	*>B	*>B
+16r	.	16cc	f
+*clefG2	*	*	*
+=29	=29	=29	=29
+!LO:TX:t=legato	!	!	!
+12cL	.	4gg'	.
+12e	.	.	.
+12gJ	.	.	.
+12cL	.	4gg'	.
+12e	.	.	.
+12gJ	.	.	.
+12cL	.	4gg'	.
+12e	.	.	.
+12gJ	.	.	.
+=30	=30	=30	=30
+12BnL	.	(8.ff#L	.
+12d	.	.	.
+12gJ	.	.	.
+.	.	32ggLL	.
+.	.	32aaJJJ	.
+12BL	.	4gg)	.
+12d	.	.	.
+12gJ	.	.	.
+12BL	.	8r	.
+12d	.	.	.
+.	.	16r	.
+12gJ	.	.	.
+.	.	16gg	p
+=31	=31	=31	=31
+12B-XL	.	[4gg	.
+12d	.	.	.
+12gJ	.	.	.
+12B-L	.	12ggL]	.
+12d	.	(12bb-X	.
+12gJ	.	12aa'J	.
+12B-L	.	12gg'L	.
+12d	.	12ffn'	.
+12gJ	.	12ee'J)	.
+=32	=32	=32	=32
+12AL	.	(4dd	.
+12d	.	.	.
+12fJ	.	.	.
+12AL	.	4cc#)	.
+12c#	.	.	.
+12eJ	.	.	.
+12AL	.	8r	.
+12c#	.	.	.
+.	.	16r	.
+12eJ	.	.	.
+.	.	16a	f
+*clefF4	*	*	*
+=33	=33	=33	=33
+12GL	.	4cc# 4bb-	.
+12c#	.	.	.
+12eJ	.	.	.
+12FL	.	4dd 4aa	.
+12A	.	.	.
+12dJ	.	.	.
+12DL	.	8r	p
+12F	.	.	.
+.	.	8ff	.
+12AJ	.	.	.
+=34	=34	=34	=34
+12GL	.	(12eeL	.
+12B-	.	12gg	.
+12eJ	.	12eeJ)	.
+12AL	.	(12ddL	.
+12d	.	12ff	.
+12fJ	.	12ddJ)	.
+12AL	.	(12cc#L	.
+12c#	.	12ee	.
+12eJ	.	12cc#J)	.
+=35	=35	=35	=35
+12GL	.	4ee 4ccc#	f
+12c#	.	.	.
+12eJ	.	.	.
+12FL	.	4ff 4ddd	.
+12A	.	.	.
+12dJ	.	.	.
+12DL	.	8r	p
+12F	.	.	.
+.	.	16r	.
+12AJ	.	.	.
+.	.	16ff	.
+=36	=36	=36	=36
+12GL	.	(12eeL	.
+12B-	.	12gg	.
+12eJ	.	12eeJ)	.
+12AL	.	(12ddL	.
+12d	.	12ff	.
+12fJ	.	12ddJ)	.
+12AL	.	(12cc#L	.
+12c#	.	12ee	.
+12eJ	.	12cc#J)	.
+*clefG2	*	*	*
+=37	=37	=37	=37
+12AL	.	4ccn	f
+12e-	.	.	.
+12f#J	.	.	.
+12AL	.	(4.ee-TT	.
+12cn	.	.	.
+12f#J	.	.	.
+12AL	.	.	.
+12c	.	.	.
+.	.	16ddLL	.
+12f#J	.	.	.
+.	.	16ee-JJ)	.
+=38	=38	=38	=38
+*	*	*tuplet	*
+12B-' 12d' 12g'L	.	4dd	p
+(>12b-	.	.	.
+12aJ	.	.	.
+4b-)	.	12r	.
+.	.	(12ggL	.
+.	.	12ff#J	.
+12r	.	4gg)	.
+12b- (12ddL	.	.	.
+12a 12cc#J	.	.	.
+=39	=39	=39	=39
+4b- 4dd)	.	12r	.
+.	.	(12bb-L	.
+.	.	12aaJ	.
+*	*	*Xtuplet	*
+12r	.	4bb-)	.
+12b- (12ggL	.	.	.
+12a 12ff#J	.	.	.
+4b- 4gg)	.	12r	.
+.	.	(12dddL	.
+.	.	12ccc#J)	.
+=40	=40	=40	=40
+2.r	.	(12dddL	fp
+.	.	12bb-	.
+.	.	12ggJ)	.
+.	.	(12dddL	fp
+.	.	12bb-	.
+.	.	12ggJ)	.
+.	.	(12dddL	fp
+.	.	12bb-	.
+.	.	12ggJ)	.
+=41	=41	=41	=41
+*^	*	*	*
+4fn (4a	2c	.	[4ffn	f
+4g 4b-)	.	.	12ffL]	.
+.	.	.	(12ee	p
+.	.	.	12ffJ	.
+4r	4ryy	.	12ggL	.
+.	.	.	12aa	.
+.	.	.	12bb-J	.
+*v	*v	*	*	*
+=42	=42	=42	=42
+2.r	.	16bbnLL	f
+.	.	16ccc	.
+.	.	16ddd	.
+.	.	16cccJJ)	.
+.	.	(16cccLL	.
+.	.	16bb-	p
+.	.	16aa	.
+.	.	16ggJJ)	.
+.	.	(16ggLL	.
+.	.	16ff	.
+.	.	16ee	.
+.	.	16ddJJ)	.
+*clefF4	*	*	*
+=43	=43	=43	=43
+.	.	(32ddqq/	.
+!LO:TX:b:i:t=legato	!	!	!
+12FL	.	4cc)	f
+12A	.	.	.
+12cJ	.	.	.
+.	.	(32bnqq/	.
+12GL	.	4cc)	.
+12B-	.	.	.
+12cJ	.	.	.
+.	.	(32bqLLL>	.
+.	.	32ccq	.
+.	.	32ddqJJJ	.
+12FL	.	4cc)	.
+12A	.	.	.
+12cJ	.	.	.
+=44	=44	=44	=44
+12EL	.	(4bb-X	.
+12G	.	.	.
+12cJ	.	.	.
+12CL	.	4b-)	.
+12E	.	.	.
+12GJ	.	.	.
+12FL	.	8r	p
+12A	.	.	.
+.	.	8a	.
+12cJ	.	.	.
+=45	=45	=45	=45
+12BB-L	.	(12gL	.
+12D	.	12b-	.
+12GJ	.	12gJ)	.
+12CL	.	(12fL	.
+12F	.	12a	.
+12AJ	.	(12fJ)	.
+12CL	.	12eL	.
+12G	.	12g	.
+12B-J	.	12eJ)	.
+=46	=46	=46	=46
+12D-L	.	(4bb-	f
+12E	.	.	.
+12GJ	.	.	.
+12CL	.	4b-)	.
+12E	.	.	.
+12GJ	.	.	.
+12D-L	.	8r	p
+12E	.	.	.
+.	.	16r	.
+12GJ	.	.	.
+.	.	16b-	.
+=47	=47	=47	=47
+12CL	.	(4bb-	f
+12E	.	.	.
+12GJ	.	.	.
+12C#L	.	4b-)	.
+12E	.	.	.
+12GJ	.	.	.
+12DnL	.	8r	p
+12F	.	.	.
+.	.	8a	.
+12AJ	.	.	.
+=48	=48	=48	=48
+12r	.	(12aL	.
+12Bn 12d 12fL	.	12gJ)	.
+12B 12d 12fJ	.	12r	.
+12B 12d 12fL	.	4r	.
+12B 12d 12f	.	.	.
+12B 12d 12fJ	.	.	.
+12B 12d 12fL	.	4r	.
+12B 12d 12f	.	.	.
+12B 12d 12fJ	.	.	.
+=49	=49	=49	=49
+12r	.	(12ffL	f
+12D 12F 12BnL	.	12bnJ)	.
+12D 12F 12BJ	.	12r	.
+12D 12F 12BL	.	4r	.
+12D 12F 12B	.	.	.
+12D 12F 12BJ	.	.	.
+12D 12F 12BL	.	4r	.
+12D 12F 12B	.	.	.
+12D 12F 12BJ	.	.	.
+=50	=50	=50	=50
+4C: 4E: 4G: 4c:	.	12ccL	.
+.	.	12ccc	p
+.	.	12cccJ	.
+4r	.	12cccL	.
+.	.	12ccc	.
+.	.	12cccJ	.
+4r	.	12cccL	.
+.	.	12ccc	.
+.	.	12cccJ	.
+*clefG2	*	*	*
+=51	=51	=51	=51
+.	.	(32bbnqLLL>	.
+.	.	32cccq	.
+.	.	32dddqJJJ	.
+*	*	*^	*
+12r	.	2.ccc)	12r	f
+(12gL	.	.	(12eeL	.
+12b-XJ)	.	.	12ggJ)	.
+(12aL	.	.	(12ffL	p
+12g	.	.	12ee	.
+12b-J)	.	.	12ggJ)	.
+(12aL	.	.	(12ffL	.
+12g	.	.	12ee	.
+12b-J)	.	.	12ggJ)	.
+*	*	*v	*v	*
+=52	=52	=52	=52
+.	.	(32dddqLLL>	.
+.	.	32cccq	.
+.	.	32bbnqJJJ	.
+*	*	*^	*
+12r	.	2.ccc)	12r	f
+(12aL	.	.	(12ffL	.
+12ccJ)	.	.	12aaJ)	.
+(12b-L	.	.	(12ggL	p
+12a	.	.	12ff	.
+12ccJ)	.	.	12aaJ)	.
+(12b-L	.	.	(12ggL	.
+12a	.	.	12ff	.
+12ccJ)	.	.	12aaJ)	.
+*	*	*v	*v	*
+=53	=53	=53	=53
+.	.	(32bbnqLLL>	.
+.	.	32cccq	.
+.	.	32dddqJJJ	.
+*	*	*^	*
+12r	.	2.ccc)	12r	f
+(12eL	.	.	(12ggL	.
+12gJ)	.	.	12bb-J)	.
+(12fL	.	.	(12aaL	p
+12e	.	.	12gg	.
+12gJ)	.	.	12bb-J)	.
+(12fL	.	.	(12aaL	.
+12e	.	.	12gg	.
+12gJ)	.	.	12bb-J)	.
+*	*	*v	*v	*
+=54	=54	=54	=54
+4f	.	12r	.
+.	.	(12aL<	.
+.	.	12b-J	.
+4r	.	12bnL	.
+.	.	12cc	.
+.	.	12cc#J	.
+4r	.	12ddL	.
+.	.	12ee	.
+.	.	12ffJ)	.
+=55	=55	=55	=55
+*^	*	*	*
+(4Bn 4d 4f	2ryy	.	[4g	f
+4c) 4e	.	.	12gL>]	p
+.	.	.	(12dd	.
+.	.	.	12ccnJ)	.
+*clefF4	*clefF4	*	*	*
+8r	8ryy	.	(12b-XML	.
+.	.	.	12a	f
+8C 8E	8BB-X	.	.	.
+.	.	.	12gJ)	.
+=56	=56	=56	=56	=56
+4F	8AAL	.	(12ccL	.
+.	.	.	12cc#	.
+.	8BB-J	.	.	.
+.	.	.	12ddJ)	.
+2ryy	(>12CL	.	4f	.
+.	12F	.	.	.
+.	12AJ)	.	.	.
+.	(>12CL	.	(8.etL	.
+.	12G	.	.	.
+.	12B-J)	.	.	.
+.	.	.	32dLL	.
+.	.	.	32eJJJ	.
+*v	*v	*	*	*
+=57	=57	=57	=57
+12r	.	4f)	.
+(>12AAL	.	.	p
+12BB-J	.	.	.
+12BBnL	.	4r	.
+12C	.	.	.
+12C#J	.	.	.
+12DL	.	4r	.
+12E	.	.	.
+12FJ)	.	.	.
+=58	=58	=58	=58
+4BBBn 4BBn	.	12r	f
+.	.	12g (12eeL	.
+.	.	12a- 12ffJ)	.
+4CCn 4Cn	.	12r	p
+.	.	12a- (12ffL	.
+.	.	12g 12eeJ)	.
+4EE 4E	.	12r	f
+.	.	12an (12cc#L	.
+.	.	12b- 12ddJ)	.
+=59	=59	=59	=59
+4FF 4F	.	12r	p
+.	.	12b- (12ddL	.
+.	.	12a 12ccnJ)	.
+4C# 4c#	.	12r	f
+.	.	12aa (12cccL	.
+.	.	12gg 12bb-J)	.
+4D 4d	.	12r	p
+.	.	12gg (12bb-L	.
+.	.	12ff 12aaJ)	.
+*clefG2	*	*	*
+=60	=60	=60	=60
+*^	*	*^	*
+(4b-	4B-	.	12r	4dd	.
+.	.	.	(12aaL	.	.
+.	.	.	12ggJ)	.	.
+4a	2cn	.	12r	4cc	.
+.	.	.	(12ggL	.	.
+.	.	.	12ffJ)	.	.
+4g)	.	.	12r	4b-	.
+.	.	.	(12ffL	.	.
+.	.	.	12eeJ)	.	.
+*clefF4	*clefF4	*	*	*	*
+*v	*v	*	*	*	*
+*	*	*v	*v	*
+=61	=61	=61	=61
+12r	.	4aa 4ccc	f
+12E (12eL	.	.	.
+12F 12fJ)	.	.	.
+12r	.	4gg 4bb-	.
+12F# (12f#L	.	.	.
+12G 12gJ)	.	.	.
+12r	.	4ff 4aa	.
+12G# (12g#L	.	.	.
+12A 12aJ)	.	.	.
+=62	=62	=62	=62
+*^	*	*^	*
+(4B-	4BB-	.	12r	4d	.
+.	.	.	(12aL	.	.
+.	.	.	12gnJ)	.	.
+4A	2C	.	12r	4c	.
+.	.	.	(12gL	.	.
+.	.	.	12fnJ)	.	.
+4G)	.	.	12r	4B-	.
+.	.	.	(12fL	.	.
+.	.	.	12eJ)	.	.
+*v	*v	*	*	*	*
+*	*	*v	*v	*
+=63	=63	=63	=63
+12r	.	(16b- 16ddLK	f
+.	.	8.a) 8.ccJ	.
+(12EE 12EL	.	.	.
+12FF) 12FJ	.	.	.
+12r	.	(16a 16ccLK	.
+.	.	8.g) 8.b-J	.
+(12FF# 12F#L	.	.	.
+12GG) 12GJ	.	.	.
+12r	.	(16g 16b-LK	.
+.	.	8.f) 8.aJ	.
+(12GG# 12G#L	.	.	.
+12AA) 12AJ	.	.	.
+*clefG2	*	*	*
+=64	=64	=64	=64
+*	*	*tuplet	*
+12r	.	(12aL	p
+12B- 12d 12fL	.	12gJ)	.
+12B- 12d 12fJ	.	12r	.
+12B- 12d 12fL	.	4r	.
+12B- 12d 12f	.	.	.
+12B- 12d 12fJ	.	.	.
+12B- 12d 12fL	.	4r	.
+12B- 12d 12f	.	.	.
+12B- 12d 12fJ	.	.	.
+=65	=65	=65	=65
+12r	.	(12gL	f
+12Bn 12d 12fL	.	12a-J)	.
+12B 12d 12fJ	.	12r	.
+12B 12d 12fL	.	4r	.
+12B 12d 12f	.	.	.
+12B 12d 12fJ	.	.	.
+12B 12d 12fL	.	4r	.
+12B 12d 12f	.	.	.
+12B 12d 12fJ	.	.	.
+=66	=66	=66	=66
+*	*	*Xtuplet	*
+12r	.	(12g#L	p
+12c 12fL	.	12anJ)	.
+12c 12fJ	.	12r	.
+12c 12f 12aL	.	4r	.
+12c 12f 12a	.	.	.
+12c 12f 12aJ	.	.	.
+12r	.	(12bbnL	f
+12c 12f 12aL	.	12cccJ)	.
+12c 12f 12aJ	.	12r	.
+=67	=67	=67	=67
+12Bn 12f 12gL	.	4r	.
+12B 12f 12g	.	.	.
+12B 12f 12gJ	.	.	.
+.	.	(32ffqLLL>	.
+.	.	32ggq	.
+.	.	32aaqJJJ	.
+12c 12f 12gL	.	(4.ggTT)	.
+12c 12f 12g	.	.	.
+12c 12f 12gJ	.	.	.
+12c 12e 12b-XL	.	.	.
+12c 12e 12b-	.	.	.
+.	.	16ffLL	.
+12c 12e 12b-J	.	.	.
+.	.	16ggJJ	.
+=68	=68	=68	=68
+12f 12aL	.	4ff)	.
+(12c	.	.	.
+12AJ)	.	.	.
+*clefF4	*	*	*
+4FF 4F	.	12r	.
+.	.	(12eL	p
+.	.	12fJ)	.
+4r	.	(12gL	.
+.	.	12f)	.
+.	.	12g 12b-J	.
+=69	=69	=69	=69
+4CC 4C	.	(12f 12aL	f
+.	.	12e 12g	.
+.	.	12d#) 12f#J	.
+4r	.	12e 12gL	.
+.	.	(12f#	p
+.	.	12gJ)	.
+4r	.	(12aL	.
+.	.	12g)	.
+.	.	12a 12ccJ	.
+=70	=70	=70	=70
+4FF 4F	.	(12g 12b-L	f
+.	.	12fn 12a	.
+.	.	12e 12g#J	.
+12r	.	4f) 4a	.
+12E- 12e-L	.	.	.
+12D 12dJ	.	.	.
+12C 12cL	.	[4ee- [4ccc	.
+12BB- 12B-	.	.	.
+12AA 12AJ	.	.	.
+=71	=71	=71	=71
+4BB- 4B-	.	12ee-] 12cccL]	.
+.	.	12dd 12bb-	.
+.	.	[12cc [12aaJ	.
+4C 4c	.	12cc] 12aaL]	p
+.	.	12b- 12gg	.
+.	.	[12a [12ffJ	.
+4CC 4C	.	12a] 12ffL]	.
+.	.	12b- 12gg	.
+.	.	12g 12eenJ	.
+=72	=72	=72	=72
+*^	*	*	*
+4FF 4F	2ryy	.	12a 12ffL	.
+.	.	.	(12aa	f
+.	.	.	12cccJ)	.
+*clefG2	*clefG2	*	*	*
+12r	.	.	(8.cccTTL	.
+(12fL	.	.	.	.
+12aJ)	.	.	.	.
+.	.	.	32bbnLL	.
+.	.	.	32cccJJJ)	.
+(12b-L	4c	.	12r	.
+12g	.	.	(12bb-L	.
+12eJ)	.	.	12ggJ)	.
+*clefF4	*clefF4	*	*	*
+*v	*v	*	*	*
+=73	=73	=73	=73
+4F 4f	.	(12ffL	.
+.	.	12aa	.
+.	.	12ccJ)	.
+12r	.	(8.ccTTL	.
+(12AL	p	.	.
+12FJ)	.	.	.
+.	.	32bnLL	.
+.	.	32ccJJJ)	.
+4CC 4C	.	12r	.
+.	.	(>12b-L	p
+.	.	12B- 12e 12gJ)	.
+=74	=74	=74	=74
+[2FF	.	(2B- 2e 2g	.
+8FF]	.	8A 8c 8f)	.
+16r	.	16r	.
+==:|!	==:|!	==:|!	==:|!
+*-	*-	*-	*-
+!!!RDF**kern: > = above
+!!!RDF**kern: < = below
+!!!SMS: Alte Mozart-Ausgabe, Band 20, Breitkopf &amp; H&auml;rtel 1877-1883.
+!!!ONB: Stich und Druck von Breitkopf &amp; H&auml;rtel in Leipzig
+!!!ONB: Ausgegeben 1878
+!!!ENC: Craig Stuart Sapp
+!!!END: 2009/10/15/
+!!!EED: Craig Stuart Sapp
+!!!EEV: 2017/01/27/
+!!!title: @{OTL}, K 279 (189d), @{OMV}

@@ -1,0 +1,260 @@
+!!!COM: Mozart, Wolfgang Amadeus
+!!!CDT: 1756/01/27/-1791/12/05/
+!!!CNT: German
+!!!OTL: Piano Sonata No. 11 in A major
+!!!SCT1: K<sup>1</sup> 331
+!!!SCT2: K<sup>6</sup> 300i
+!!!OMV: Mvmt. 1b
+!!!OMD: Variation I
+!!!ODT: 1778-1873///
+**kern	**kern	**dynam
+*staff2	*staff1	*staff1/2
+*>[A,A,B,B]	*>[A,A,B,B]	*>[A,A,B,B]
+*>norep[A,B]	*>norep[A,B]	*>norep[A,B]
+*>A	*>A	*>A
+*clefF4	*clefG2	*clefG2
+*k[f#c#g#]	*k[f#c#g#]	*k[f#c#g#]
+*A:	*A:	*A:
+*M6/8	*M6/8	*M6/8
+*MM72	*MM72	*MM72
+=19!|:	=19!|:	=19!|:
+8r	(16b#LL	p
+.	16cc#JJ)	.
+8A 8e	16r	.
+.	(16cc#LL	.
+8r	16b#	.
+.	16cc#JJ)	.
+8r	(16dd#LL	.
+.	16eeJJ)	.
+8c# 8e	16r	.
+.	(16eeLL	.
+8r	16ff#	.
+.	16eeJJ)	.
+=20	=20	=20
+8r	(16eeLL	.
+.	16bnJJ)	.
+8G# 8e	16r	.
+.	(16bLL<	.
+8r	16a#	.
+.	16bJJ)	.
+8r	(16cc#LL	.
+.	16ddnJJ)	.
+8B 8e	16r	.
+.	(16ddLL	.
+8r	16ee	.
+.	16ddJJ)	.
+=21	=21	=21
+8r	(16ddLL	.
+.	16anJJ)	.
+8F# 8e	16r	.
+.	(16aLL	.
+8r	16g#	.
+.	16aJJ)	.
+8r	(16a#LL	.
+.	16bJJ)	.
+8G# 8e	16r	.
+.	(16bLL	.
+8r	16a#	.
+.	16bJJ)	.
+=22	=22	=22
+4A 4e	(16b#LL	.
+.	16cc#	.
+.	16b#	.
+.	16cc#	.
+8D 8F#	16ee	.
+.	16ddJJ	.
+4E 4G#	16cc#LL	.
+.	16bn	.
+.	16an	.
+.	16g#	.
+8r	16f#	.
+.	16eJJ)	.
+=23	=23	=23
+16AALL	4e 4a 4cc#	f
+16A	.	.
+16A	.	.
+16A	.	.
+16A	8b 8dd	.
+16AJJ	.	.
+16AALL	8b# (8dd#L	.
+16A	.	.
+16A	8cc# 8eeJ)	.
+16A	.	.
+16A	16r	.
+16AJJ	16a 16cc#	.
+=24	=24	=24
+*	*^	*
+16EELL	8e' 8g#' 8bn'L	4.ryy	.
+16E	.	.	.
+16E	8e' 8g#' 8b'	.	.
+16E	.	.	.
+16E	8e' 8a' 8cc#'J	.	.
+16EJJ	.	.	.
+16EELL	8a# (8cc#L	4e	.
+16E	.	.	.
+16E	8b 8ddJ)	.	.
+16E	.	.	.
+16E	16r	8ryy	.
+16EJJ	16g# 16b	.	.
+*	*v	*v	*
+=25	=25	=25
+16FF#LL>	8an'L	.
+16F#	.	.
+16F#	8a'J	.
+16F#	.	.
+16GG#	(>16bTLL	.
+16G#JJ	32aL	.
+.	32bJJJ	.
+16AALL>	8cc#'L)	.
+16A	.	.
+16A	8cc#'J	.
+16A	.	.
+16DD	8f# 8b 8dd	.
+16DJJ	.	.
+=26	=26	=26
+16EELL	8e 8a 8cc#L	.
+16E	.	.
+16E	8e 8a 8cc#	.
+16E	.	.
+16EE	8d 8e 8g# 8bJ	.
+16EJJ	.	.
+8AAAL	8c# 8e 8a	.
+8AAJ	8r	.
+8r	8r	.
+=27:|!|:	=27:|!|:	=27:|!|:
+*>B	*>B	*>B
+8r	(16dd#LL	p
+.	16eeJJ)	.
+8A 8c#	16r	.
+.	(16eeLL	.
+8r	16dd#	.
+.	16eeJJ)	.
+8r	(16ee#LL	.
+.	16ff#JJ)	.
+8A 8d	16r	.
+.	(16ff#LL	.
+8r	16ee#	.
+.	16ff#JJ)	.
+=28	=28	=28
+8A 8f#L	(16gg#LL	.
+.	16aa)	.
+8A 8e	(16ff##	.
+.	16gg#)	.
+8A 8dJ	(16ee#	.
+.	16ff#JJ)	.
+8r	(16dd#LL	.
+.	16eenJJ)	.
+8A 8c#	16r	.
+.	(16ee'LL	.
+8r	16ee'	.
+.	16ee'JJ)	.
+=29	=29	=29
+4.A 4.c# 4.e	(16eeLL	sf
+.	16cc#	.
+.	16a)	.
+.	(16ee'	p
+.	16ee'	.
+.	16ee'JJ)	.
+4.B 4.d 4.e	(16eeLL	sf
+.	16ddn	.
+.	16g#)	.
+.	(16ee'	p
+.	16ee'	.
+.	16ee'JJ)	.
+=30	=30	=30
+4c# 4e	(16eeLL	sf
+.	16cc#	.
+.	16a)	.
+.	(16ee	p
+8F# 8A 8d#	16cc#	.
+.	16aJJ)	.
+4.E 4.e	(4a/ 4cc#/	.
+.	8g#) 8b	.
+=31	=31	=31
+8r	(16b#LL	.
+.	16cc#JJ)	.
+8A 8e	16r	.
+.	(16cc#LL	.
+8r	16b#	.
+.	16cc#JJ)	.
+8r	(16dd#LL	.
+.	16eeJJ)	.
+8c# 8e	16r	.
+.	(16eeLL	.
+8r	16ff#	.
+.	16eeJJ)	.
+=32	=32	=32
+8r	(16eeLL	.
+.	16bnJJ)	.
+8G# 8e	16r	.
+.	(16bLL<	.
+8r	16a#	.
+.	16bJJ)	.
+8r	(16cc#LL	.
+.	16ddnJJ)	.
+8B 8e	16r	.
+.	(16ddLL	.
+8r	16ee	.
+.	16ddJJ)	.
+=33	=33	=33
+8r	(16ddLL	.
+.	16anJJ)	.
+8F# 8eL	16r	.
+.	(16aLL	.
+8G# 8eJ	16cc#	.
+.	16bJJ)	.
+8r	(16ddLL	.
+.	16cc#JJ)	.
+8A 8eL	16r	.
+.	(16cc#LL	.
+8D 8BJ	16ee	.
+.	16ddJJ)	.
+=34	=34	=34
+*	*^	*
+8r	(16b#LL<	4.ryy	.
+.	16cc#JJ)	.	.
+8E 8AL	16r	.	.
+.	(16cc#LL<	.	.
+8E 8G#J	16dd	.	.
+.	16bnJJ)	.	.
+8AL	(8.bL	(4g#	.
+8E	.	.	.
+.	16b#k	.	.
+8AAJ	8cc#J)	8a)	.
+=35	=35	=35	=35
+16AAALL	8e 8a 8cc#L	4.ryy	f
+16AA	.	.	.
+16AA	8e 8a 8cc#	.	.
+16AA	.	.	.
+16BBB	8e 8g# 8ddJ	.	.
+16BBJJ	.	.	.
+16CC#LL	8e 8a 8eeL	4ryy	.
+16C#	.	.	.
+16C#	8a 8eeJ	.	.
+16C#	.	.	.
+16DD	(16ff#LL	8a	.
+16DJJ	32gg#L	.	.
+.	32aaJJJ)	.	.
+*	*v	*v	*
+=36	=36	=36
+16EELL	8c# 8e 8aL	.
+16E	.	.
+16E	8c# 8e 8a	.
+16E	.	.
+16EE	8d 8e 8g# 8bJ	.
+16EJJ	.	.
+8AAAL	8c# 8e 8a	.
+8AAJ	8r	.
+8r	8r	.
+==:|!	==:|!	==:|!
+*-	*-	*-
+!!!RDF**kern: < = below
+!!!RDF**kern: > = above
+!!!SMS: Alte Mozart-Ausgabe, Band 20, Breitkopf &amp; H&auml;rtel 1877-1883.
+!!!ONB: Stich und Druck von Breitkopf &amp; H&auml;rtel in Leipzig
+!!!ONB: Ausgegeben 1878
+!!!ENC: Craig Stuart Sapp
+!!!END: 2009/09/29/
+!!!EED: Craig Stuart Sapp
+!!!EEV: 2017/01/29/
+!!!title: @{OTL}, K 331 (300i), @{OMV}

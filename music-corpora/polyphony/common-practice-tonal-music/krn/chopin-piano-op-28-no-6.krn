@@ -1,0 +1,242 @@
+!!!COM: Chopin, Frederic
+!!!CDT: 1810///-1849///
+!!!OTL: Prelude in B Minor, Op. 28, No. 6
+!!!OPS: Op. 28
+!!!ONM: No. 6
+!!!OMD: Lento assai
+!!!ODT: 1836///-1839///
+!!!PDT: 1839///
+!!!ENC: Craig Stuart Sapp
+!!!AIN: piano
+!!!ENC: 4 March 2001
+!!!EEV: 2 August 2011
+!!!YEC: Copyright 2001 by Craig Stuart Sapp
+!!!YEN: United States of America
+**kern	**kern
+*Ipiano	*Ipiano
+*lh	*rh
+*clefF4	*clefG2
+*k[f#c#]	*k[f#c#]
+*b:	*b:
+*M3/4	*M3/4
+*MM60	*MM60
+*	*^
+16BB	4d 4f#	8b
+16D	.	.
+16F#	.	8b
+16B	.	.
+4d	4f#	8b
+.	.	8b
+8.c#	4f#	8b
+.	.	8b
+16d	.	.
+=2	=2	=2
+4.B	4d 4f#	8b
+.	.	8b
+.	4d 4f#	8b
+8F#	.	8b
+8D	4d 4f#	8b
+8C#	.	8b
+=3	=3	=3
+16BB	4d 4f#	8b
+16F#	.	.
+16B	.	8b
+16d	.	.
+4f#	4b	8dd
+.	.	8dd
+8.e	4b	8dd
+.	.	8dd
+16f#	.	.
+=4	=4	=4
+4.d	4f# 4b	8dd
+.	.	8dd
+.	4f# 4b	8dd
+8B	.	8dd
+8F#	4f# 4b	8dd
+8D	.	8dd
+=5	=5	=5
+16GG	4g 4b	8dd
+16D	.	.
+16B	.	8dd
+16d	.	.
+4g	4b	8dd
+.	.	8dd
+4f#	4b	8dd
+.	.	8dd
+=6	=6	=6
+4f#	4g# 4b	8dd
+.	.	8dd
+4e#	4g# 4b	8cc#
+.	.	8cc#
+8en	4gn	8a# 8cc#
+8d	.	8b 8dd
+=7	=7	=7
+8c#	8g 8a#	4.ee
+8eq	.	.
+8d	8g 8b	.
+8c#	8g 8a#	.
+8A#	8f# 8c#	8ff#
+8B	8f# 8b	16ee
+.	.	16dd
+.	.	8ddq
+8D	8f#	16cc#
+.	.	16b
+*	*v	*v
+=8	=8
+8E	8c# 8f## 8a#
+8E#	8d 8g# 8b
+4F#	8d 8b 8dd
+.	8c# 8a# 8cc#
+8D	4r
+8C#	.
+=9	=9
+*	*^
+16BB	4d 4f#	8b
+16D	.	.
+16F#	.	8b
+16B	.	.
+4d	4f#	8b
+.	.	8b
+8.c#	4f#	8b
+.	.	8b
+16d	.	.
+=10	=10	=10
+4.B	4d 4f#	8b
+.	.	8b
+.	4d 4f#	8b
+8F#	.	8b
+8D	4d 4f#	8b
+8BB	.	8b
+=11	=11	=11
+16GG	4d 4g	8b
+16D	.	.
+16G	.	8b
+16B	.	.
+4d	4g	8b
+.	.	8b
+8e	4g	8b
+8fn	.	8b
+=12	=12	=12
+4.e	4g	8ccn
+.	.	8cc
+.	4e 4g	8cc
+8cn	.	8cc
+8G	4e 4g	8cc
+8Cn	.	8cc
+=13	=13	=13
+16CCn	4e 4g	8ccn
+16GG	.	.
+16E	.	8cc
+16G	.	.
+4e	4g	8cc
+.	.	8cc
+16CCn	4e 4g	8cc
+16GG	.	.
+16E	.	8cc
+16G	.	.
+=14	=14	=14
+2e	4g	8ccn
+.	.	8cc
+.	4g	8cc
+.	.	8cc
+4r	4g	8b
+.	.	8b
+=15	=15	=15
+4.E	4c# 4g	8a#
+.	.	8a#
+.	4c# 4f#	8a#
+8F#	.	8a#
+16E	4d 4f#	8b
+16D	.	.
+16C#	.	8b
+16BB	.	.
+=16	=16	=16
+4.E	4c# 4g	8b
+.	.	8b
+.	4c# 4g	8a#
+8F#	.	8a#
+16E	4d 4g	8b
+16D	.	.
+16C#	.	8b
+16BB	.	.
+=17	=17	=17
+16AA	4d 4g	8b
+16GG	.	.
+16DD	.	8b
+16EE	.	.
+2FF#	4c# 4f#	8b
+.	.	8b
+.	4c# 4e	8a#
+.	.	8a#
+=18	=18	=18
+2GG	4c# 4e	8a#
+.	.	8a#
+.	4B 4d	8b
+.	.	8b
+4G	4d 4g	8b
+.	.	8b
+=19	=19	=19
+4.E	4c# 4g	8b
+.	.	8b
+.	4c# 4g	8a#
+8F#	.	8a#
+16E	4d 4f#	8b
+16D	.	.
+16C#	.	8b
+16BB	.	.
+=20	=20	=20
+4.E	4c# 4g	8b
+.	.	8b
+.	4c# 4g	8a#
+8F#	.	8a#
+16E	4d 4g	8b
+16D	.	.
+16C#	.	8b
+16BB	.	.
+=21	=21	=21
+16AA	4d 4g	8b
+16GG	.	.
+16DD	.	8b
+16EE	.	.
+2FF#	4c# 4f#	8b
+.	.	8b
+.	4c# 4f#	8a#
+.	.	8a#
+=22	=22	=22
+[2.BBB	4d 4f#	8b
+.	.	8b
+.	4d 4f#	8b
+.	.	8b
+.	4d 4f#	8an
+.	.	8a
+=23	=23	=23
+16BBB]	4d	8f#
+16BB	.	.
+16F#	.	8f#
+16B	.	.
+4d	4ryy	8f#
+.	.	8f#
+8.c#	4ryy	8f#
+.	.	8f#
+16d	.	.
+=24	=24	=24
+4.B	4d	8f#
+.	.	8f#
+.	4d	8f#
+8F#	.	8f#
+8D	4d	8f#
+8C#	.	8f#
+=25	=25	=25
+[2.BB	4d	8f#
+.	.	8f#
+.	4ryy	4r
+.	4d	8f#
+.	.	8f#
+=26	=26	=26
+4BB]	4d	8f#
+.	.	8f#
+*	*v	*v
+4r	4r
+4r	4r
+==	==
+*-	*-

@@ -1,0 +1,53 @@
+!!!COM: Haydn, Franz Joseph
+!!!OTL: String Quartet in D Minor
+!!!OPS: Opus 103
+!!!OMD: Menuetto + Trio 
+!!!OMV: 3
+!!!SCT: H III:83
+!!!SCA: Thematisch-bibliographisches Werkevererzeichnis (A. van Hoboken)
+!!!YOR: Offenbach Edition 2377, 1807
+!!!ENC: Frances Bennion
+!!!CDT: 1732/3/31/-1809/5/31/
+!!!CNT: Oesterreich
+!!!YEC: Copyright (c) 1994, 2000 Center for Computer Assisted Research in the Humanities
+!!!YEM: Rights to all derivative editions reserved.
+!!!YEM: Refer to licensing agreement for further details.
+!!!YEN: United States of America
+**kern	**kern	**kern	**kern
+*k[f#c#g#]	*k[f#c#g#]	*k[f#c#g#]	*k[f#c#g#]
+*A:	*A:	*A:	*A:
+*clefC1	*clefC1	*clefC1	*clefC1
+*M4/4	*M4/4	*M4/4	*M4/4
+4ee	4ee	4ee	4ee
+8r	8r	8r	8r
+8cc#	8cc#	8cc#	8cc#
+8dd	8dd	8dd	8dd
+8b	8b	8b	8b
+8a	8a	8a	8a
+8g#	8g#	8g#	8g#
+=2	=2	=2	=2
+4a	4a	4a	4a
+2.r	2.r	2.r	2.r
+=3	=3	=3	=3
+4dd	4dd	4dd	4dd
+8r	8r	8r	8r
+8b	8b	8b	8b
+4cc#	4cc#	4cc#	4cc#
+8r	8r	8r	8r
+8a	8a	8a	8a
+=4	=4	=4	=4
+4b	4b	4b	4b
+2.r	2.r	2.r	2.r
+==	==	==	==
+*-	*-	*-	*-
+!!!RWG1: This file contains only pitch and duration data.
+!!!RWG2: Transposing instruments are not transposed.
+!!!RWG3: Spines may have incompatible meters.
+!!!RWG4: Durations of rests and tied notes may be interpreted.
+!!!RWG: Key is interpreted using the Humdrum key tool.
+!!!GTL: 10 Divertimentos
+!!!AFT: stage1
+!!!END: 1997/04/15
+!!!KEY: 1056783420
+!!!EMD: Converted from MuseData to Humdrum Dec 16, 2000, by Andreas Kornstaedt using muse2kern.
+!!!EMD: Manual editing by Craig Sapp, Nov 2001

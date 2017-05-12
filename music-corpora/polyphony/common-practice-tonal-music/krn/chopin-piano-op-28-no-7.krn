@@ -1,0 +1,98 @@
+!!!COM: Chopin, Frederic
+!!!CDT: 1810///-1849///
+!!!OTL: Prelude in A Major, Op. 28, No. 7
+!!!OPS: Op. 28
+!!!ONM: No. 7
+!!!OMD: Andantino
+!!!ODT: 1836///-1839///
+!!!PDT: 1839///
+!!!ENC: Craig Stuart Sapp
+!!!AIN: piano
+!!!EEV: 2 April 2001
+!!!YEC: Copyright 2001 by Craig Stuart Sapp
+!!!YEN: United States of America
+**kern	**kern
+*Ipiano	*Ipiano
+*lh	*rh
+*clefF4	*clefG2
+*k[f#c#g#]	*k[f#c#g#]
+*A:	*A:
+*M3/4	*M3/4
+*MM110	*MM110
+4r	4e
+=1	=1
+4EE	8.cc#
+.	16dd
+4E 4e	4d 4g# 4b
+4E 4e	4d 4g# 4b
+=2	=2
+2E 2e	2d 2g# 2b
+4r	4dd 4ff#
+=3	=3
+4AA	8.b# 8.dd#
+.	16cc# 16ee
+4A 4e	4cc# 4aa
+4A 4e	4cc# 4aa
+=4	=4
+2A 2e	2cc# 2aa
+4r	4e 4cc#
+=5	=5
+4EE	8.c# 8.a#
+.	[16d 16b
+*	*^
+4E 4B	2d_	4f# 4dd
+4E 4B	.	4f# 4dd
+=6	=6	=6
+2E 2B	2d]	2f# 2dd
+*	*v	*v
+4r	4d 4g#
+=7	=7
+4AAA	8.d 8.g#
+.	[16c# 16an
+4E 4A 4e	4c#] 4cc#
+4E 4A 4e	4c# 4cc#
+=8	=8
+2E 2A 2e	2c# 2cc#
+4r	[4e
+=9	=9
+*	*^
+4EE	4e] 4g#	8.cc#
+.	.	16dd
+*	*v	*v
+4E 4e	4d 4g# 4b
+4E 4e	4d 4g# 4b
+=10	=10
+2E 2e	2d 2g# 2b
+4r	4dd 4ff#
+=11	=11
+4AA	8.b# 8.dd#
+.	[16cc# [16ee
+*	*^
+4A 4e 4a	2cc#] 2ee]	4aa 4ccc#
+4A 4e 4a	.	4aa 4ccc#
+*	*v	*v
+=12	=12
+2F# 2c# 2e 2f#	2a# 2cc# 2ee 2aa# 2ccc#
+4r	4a# 4cc#
+=13	=13
+4BBB	8.a# 8.cc#
+.	[16b 16dd
+4F# 4d	4b] 4ff#
+4F# 4B 4d	4an 4ff#
+=14	=14
+2E 2B 2d	2g# 2ff#
+4r	4d 4g#
+=15	=15
+4AAA	8.d 8.b
+.	16c# 16a
+*	*^
+.	[8aq	.
+!!! Tie on 2a_ modified for IDyOM import processes
+4E 4A 4e	[2a	4cc# 4aa
+4E 4A 4e	.	4cc# 4aa
+*	*v	*v
+=16	=16
+2A 2e	2a] 2cc# 2aa
+4r	4r
+==	==
+*-	*-
