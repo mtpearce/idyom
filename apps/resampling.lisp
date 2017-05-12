@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-05-11 16:07:10 peter>                           
+;;;; Time-stamp: <2017-05-12 18:58:20 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -40,6 +40,7 @@
 			 (slices-or-chords :chords)
 			 (num-quantiles 10)
                          (use-resampling-set-cache? t)
+			 (resampling-set-cache-path nil)
                          (use-ltms-cache? t))
   "IDyOM top level: returns the mean information content for
    <dataset-id> given a model with the supplied parameters on
@@ -87,7 +88,8 @@
          (k (if (eq k :full) (length dataset) k))
          (resampling-sets (get-resampling-sets
 			   dataset-id :k k
-			   :use-cache? use-resampling-set-cache?))
+			   :use-cache? use-resampling-set-cache?
+			   :resampling-set-cache-path resampling-set-cache-path))
          (resampling-id 0)
          ;; If no resampling sets specified, then use all sets
          (resampling-indices (if (null resampling-indices)
@@ -465,13 +467,16 @@ for <viewpoint> in <dataset-id>."
       (incf composition-index))
     (reverse test-set)))
 
-(defun get-resampling-sets (dataset-id &key (k 10) (use-cache? t))
+(defun get-resampling-sets (dataset-id &key (k 10) (use-cache? t)
+					 resampling-set-cache-path)
   "Returns the resampling-sets for dataset <dataset-id>. If
    <use-cache?> is T and the cache file exists, they are read from
    file, otherwise they are created and optionally cached if
    <use-cache?> is T."
   (let* ((dataset-ids (if (consp dataset-id) dataset-id (list dataset-id)))
-         (filename (get-resampling-sets-filename dataset-ids k)))
+         (filename (if resampling-set-cache-path
+		       resampling-set-cache-path
+		       (get-resampling-sets-filename dataset-ids k))))
     (if (and use-cache? (file-exists filename))
         ;; Retrieve the previously cached resampling-set.
         (read-object-from-file filename :resampling)

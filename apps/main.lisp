@@ -2,7 +2,7 @@
 ;;;; File:       main.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2010-11-01 15:19:57 marcusp>
-;;;; Time-stamp: <2017-05-11 20:23:07 peter>
+;;;; Time-stamp: <2017-05-12 18:58:26 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:idyom)
@@ -79,6 +79,7 @@
 		(separator " ")
                 ;; Caching
                 (use-resampling-set-cache? t)
+		(resampling-set-cache-path nil)
                 (use-ltms-cache? t))
   "IDyOM top level: computes information profiles for basic
    target-viewpoints over a dataset (dataset-id), using a set of
@@ -142,6 +143,7 @@
 		   :harmonic-reduction harmonic-reduction
 		   :slices-or-chords slices-or-chords
 		   :use-resampling-set-cache? use-resampling-set-cache?
+		   :resampling-set-cache-path resampling-set-cache-path
 		   :use-ltms-cache? use-ltms-cache?)))
             (when output-path
               (resampling:format-information-content predictions filepath
