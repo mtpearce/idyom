@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2017-05-12 22:23:51 peter>
+;;;; Time-stamp: <2017-05-13 00:40:26 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -632,8 +632,7 @@ to the harmonic rhythm."
 	      ;; 				    bar rhythm))
 	      ;; 		candidate-rhythms))
 	      ;;        (best-score (apply #'max ...
-	      (otherwise (error "Invalid mode selected."))
-	       ))))))
+	      (otherwise (error "Invalid mode selected.")))))))
 
 (defun reduce-bar-given-harmonic-rhythm (bar harmonic-rhythm)
   "Reduces a <bar> assoc-list to a set of reduced slices on the basis 
