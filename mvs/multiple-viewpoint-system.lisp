@@ -2,7 +2,7 @@
 ;;;; File:       multiple-viewpoint-system.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-27 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-05-14 18:56:01 peter>                           
+;;;; Time-stamp: <2017-05-14 19:19:01 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -218,6 +218,9 @@ See also VIEWPOINTS:SET-ALPHABET-FROM-CONTEXT."
                  (cons (mvs-basic m) event-prediction-sets)))))
 
 (defmethod dataset-prediction-sets ((m mvs) sequence-prediction-sets)
+  "Combines a list of sequence prediction sets, i.e. prediction sets from
+individual compositions, into a dataset preiction object, with 
+the list of sequence prediction sets being stored in the :set attribute."
   (apply #'mapcar
          (cons #'(lambda (&rest c)
                    (make-dataset-prediction :viewpoint (car c)
@@ -309,21 +312,21 @@ multiple-viewpoint system <m>."
   (let ((num-compositions (length dataset)))
     (utils:message (format nil "Modelling dataset (~A composition(s)) with an MVS."
 			   num-compositions))
-    (labels ((model-d (dataset sequence-index prediction-sets)
-	       (if (null dataset) (reverse prediction-sets)
-		   (progn
-		     (utils:message (format nil "Modelling composition ~A/~A."
-					    (1+ (- num-compositions (length dataset)))
-					    num-compositions))
-		     (let ((prediction-set (model-sequence m (car dataset) 
-							   :construct? construct?
-							   :predict? predict?)))
-		       (unless (= sequence-index 1)
-			 (operate-on-models m #'increment-sequence-front))
-		       (operate-on-models m #'reinitialise-ppm :models 'stm)
-		       (model-d (cdr dataset) (1- sequence-index)
-				(cons prediction-set prediction-sets)))))))
-      (dataset-prediction-sets m (model-d dataset (length dataset) '())))))
+    (let* ((prediction-sets
+	    (loop
+	       for sequence-index from 1 to num-compositions
+	       for sequence in dataset
+	       collect (progn
+			 (utils:message (format nil "Modelling composition ~A/~A."
+						sequence-index num-compositions))
+			 (let* ((prediction-set (model-sequence m sequence
+								:construct? construct?
+								:predict? predict?)))
+			   (unless (= sequence-index num-compositions)
+			     (operate-on-models m #'increment-sequence-front))
+			   (operate-on-models m #'reinitialise-ppm :models 'stm)
+			   prediction-set)))))
+      (dataset-prediction-sets m prediction-sets))))
 
 (defmethod model-sequence ((m mvs) sequence &key construct? predict? 
 					      (construct-from 0) (predict-from 0))
