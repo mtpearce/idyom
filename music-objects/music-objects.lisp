@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2017-05-13 00:40:26 peter>
+;;;; Time-stamp: <2017-05-15 20:26:36 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -203,14 +203,21 @@ mp = -1; mf = 1; f = 3; ff = 5; fff = 7; ffff = 9; fffff = 11")
 ;;; Accessing properties of music objects
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defgeneric get-attribute (event attribute))
+(defgeneric get-attribute (event attribute)
+  (:documentation
+   "Returns a copy of the value for slot <attribute> in event object <e>."))
+  
 (defmethod get-attribute ((e music-element) attribute)
-  "Returns the value for slot <attribute> in event object <e>."
   (slot-value e (music-symbol attribute)))
 
 (defmethod get-attribute ((ms music-slice) attribute)
   (if (string= (symbol-name attribute) "H-CPITCH")
       (mapcar #'chromatic-pitch (coerce ms 'list))
+      (call-next-method)))
+
+(defmethod get-attribute ((mc music-chord) attribute)
+  (if (string= (symbol-name attribute) "H-CPITCH")
+      (copy-list (h-cpitch mc))
       (call-next-method)))
 
 (defgeneric set-attribute (event attribute value))
@@ -238,6 +245,11 @@ mp = -1; mf = 1; f = 3; ff = 5; fff = 7; ffff = 9; fffff = 11")
 			   e))))
       (call-next-method)))
 
+(defmethod set-attribute ((ms music-chord) attribute value)
+  (if (string= (symbol-name attribute) "H-CPITCH")
+      (set-attribute ms 'h-cpitch (copy-list value))
+      (call-next-method)))
+
 (defgeneric copy-event (music-event))
 (defmethod copy-event ((e music-element))
   (utils:copy-instance e))
@@ -248,8 +260,8 @@ mp = -1; mf = 1; f = 3; ff = 5; fff = 7; ffff = 9; fffff = 11")
     ms-copy))
 (defmethod copy-event ((chord music-chord))
   (let ((chord-copy (utils:copy-instance chord :check-atomic nil)))
-    (setf (h-cpitch chord)
-          (copy-list (h-cpitch chord)))
+    (setf (h-cpitch chord-copy)
+          (copy-list (h-cpitch chord-copy)))
     chord-copy))
 
 (defun count-compositions (dataset-id)
@@ -594,9 +606,10 @@ event identifiers to every event, starting at 0."))
 (defun slice->chord (slice)
   "Destructively converts a music-slice object <slice> to a music-chord object."
   (let* ((events (%list-slot-sequence-data slice))
-	 (h-cpitch (remove-duplicates (mapcar #'(lambda (x)
+	 (h-cpitch (sort (remove-duplicates (mapcar #'(lambda (x)
 						  (get-attribute x 'cpitch))
-					      events))))
+						    events))
+			 #'<)))
     (change-class slice 'music-chord :h-cpitch h-cpitch)))
 
 (defun reduce-bar (bar &key (mode :canonic))
