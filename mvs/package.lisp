@@ -2,7 +2,7 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-05-09 22:38:56 peter>                           
+;;;; Time-stamp: <2017-05-15 01:46:14 peter>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -32,7 +32,9 @@ distributions."))
            "COMBINE-PREDICTIONS" "SET-LTM-STM-COMBINATION" 
            "SET-MODELS" "GET-MODELS" "WITH-MODELS" 
            "SET-LTM-STM-BIAS" "SET-VIEWPOINT-BIAS" "SET-VIEWPOINT-COMBINATION" 
-           "COMBINE-LTM-STM-DISTRIBUTIONS" "COMBINE-VIEWPOINT-DISTRIBUTIONS" 
+           "COMBINE-LTM-STM-DISTRIBUTIONS" "COMBINE-VIEWPOINT-DISTRIBUTIONS"
+	   "FORMAT-EVENT-PREDICTION" "COMBINE-EVENT-PROBABILITIES"
+	   "ADD-RESULTS-TO-DATAFRAME"
            "STORE-EP-CACHE" "LOAD-EP-CACHE" "INITIALISE-EP-CACHE" 
            "DISABLE-EP-CACHE" "CACHE-EP" "CACHED-EP" "*EP-CACHE-DIR*"
 	   "MEMORY-STORE-PARAMS"

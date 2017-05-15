@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2017-05-09 18:40:44 peter>
+;;;; Time-stamp: <2017-05-15 01:20:15 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -799,3 +799,131 @@ object."
 ;; 	      (5am:is (funcall ,test (,viewpoint ,input) ,desired-output)
 ;; 		      ,fail-msg)))))
 ;;   (eval `(utils::set-test-suite-dependencies ',viewpoint ',depends-on)))
+
+;;;===========================================================================
+;;; Dataframes 
+;;;===========================================================================
+
+(defclass dataframe ()
+  ((data :initform (make-hash-table :test #'equal) :accessor data)
+   (num-rows :initform 0 :accessor num-rows))
+  (:documentation "A <dataframe> efficiently accumulates stores text data in a tabular form. Columns are identified by unique IDs, and are stored as lists within a hash table.
+Note that lists are accumulated in reverse order, so that appending to a column
+can be achieved by consing a new value to the beginning of the list."))
+
+(defgeneric get-column (column dataframe)
+  (:documentation "Gets column with ID <column> from <dataframe>."))
+
+(defmethod get-column ((column symbol) (dataframe dataframe))
+  (reverse (gethash column (data dataframe))))
+
+(defgeneric remove-columns-except (columns-to-keep dataframe)
+  (:documentation "Removes columns with IDs not in the list <columns-to-keep> from <dataframe>, and returns the new storage object."))
+
+(defmethod remove-columns-except (columns-to-keep (dataframe dataframe))
+  (loop for key being the hash-keys of (data dataframe)
+     do (if (not (member key columns-to-keep))
+	    (remhash key (data dataframe))))
+  dataframe)
+
+(defgeneric add-row (row place)
+  (:documentation "Adds a new row, <row>, to a data storage object, <place>, and returns the new storage object."))
+
+(defmethod add-row ((row hash-table) (place dataframe))
+  (let ((old-keys (loop for key being the hash-keys of (data place) collect key))
+	(new-keys (loop for key being the hash-keys of row collect key)))
+    (if (utils:any-duplicated new-keys)
+	(error "Duplicated keys are not allowed when adding new rows."))
+    (let ((old-unmatched-keys (set-difference old-keys new-keys))
+	  (new-matched-keys (intersection old-keys new-keys))
+	  (new-unmatched-keys (set-difference new-keys old-keys)))
+      (dolist (key old-unmatched-keys)
+	(push nil (gethash key (data place))))
+      (dolist (key new-matched-keys)
+	(push (gethash key row) (gethash key (data place))))
+      (dolist (key new-unmatched-keys)
+	(setf (gethash key (data place))
+	      (cons (gethash key row)
+		    (make-list (num-rows place) :initial-element nil))))
+      (incf (num-rows place))
+      place)))
+
+(defgeneric bind-by-row (dataframe &rest dataframes)
+  (:documentation "Destructively appends <dataframes> by row to <dataframe>."))
+
+(defmethod bind-by-row ((dataframe dataframe) &rest dataframes)
+  (dolist (new-dataframe dataframes dataframe)
+    (let ((old-keys (loop for key being the hash-keys of (data dataframe)
+		       collect key))
+	  (new-keys (loop for key being the hash-keys of (data new-dataframe)
+		       collect key))
+	  (num-new-rows (num-rows new-dataframe)))
+      (if (utils:any-duplicated new-keys)
+	  (error "Duplicated keys are not allowed when adding new rows."))
+      (let ((old-unmatched-keys (set-difference old-keys new-keys))
+	    (new-matched-keys (intersection old-keys new-keys))
+	    (new-unmatched-keys (set-difference new-keys old-keys)))
+	(dolist (key old-unmatched-keys)
+	  (push (make-list num-new-rows :initial-element nil)
+		(gethash key (data dataframe))))
+	(dolist (key new-matched-keys)
+	  (setf (gethash key (data dataframe))
+		(nconc (gethash key (data new-dataframe))
+		       (gethash key (data dataframe)))))
+	(dolist (key new-unmatched-keys)
+	  (setf (gethash key (data dataframe))
+		(nconc (gethash key new-dataframe)
+		       (make-list (num-rows dataframe) :initial-element nil))))
+	(incf (num-rows dataframe) num-new-rows)))))   
+
+(defgeneric print-data (data stream &key separator order-by-key
+				      null-token)
+  (:documentation "Prints <data> to <stream>. If <order-by-key>, then the output
+is ordered by key."))
+
+(defmethod print-data ((data dataframe) destination
+		       &key separator order-by-key null-token)
+  (let* ((separator (if separator separator " "))
+	 (columns (loop
+		     for key being the hash-keys of (data data)
+		     using (hash-value value)
+		     collect (cons (string-downcase (symbol-name key))
+				   (reverse value))))
+	 (columns (if order-by-key
+		      (sort columns #'string< :key #'car)
+		      columns))
+	 (columns (coerce columns 'vector))
+	 (num-rows (num-rows data))
+	 (num-cols (array-dimension columns 0)))
+    (assert (> num-rows 0))
+    (assert (> num-cols 0))
+    (assert (eql (num-rows data) (1- (length (svref columns 0)))))
+    (dotimes (i (1+ (num-rows data)))
+      (dotimes (j num-cols)
+	(let* ((token (pop (svref columns j)))
+	       (token (if (and (null token) null-token) null-token token))) 
+	  (format destination "~A~A" token separator)))
+      (format destination "~&"))))
+
+(defgeneric sort-by-columns (data columns &key descending)
+  (:documentation "Sorts a dataframe <data> by columns. <columns> should be a
+list of column names, in decreasing order of priority. <ascending> is a
+Boolean variable that determines whether the dataframe is sorted in
+ascending order or in descending order."))
+
+(defmethod sort-by-columns ((dataframe dataframe) (columns list) &key descending)
+  (let* ((row-nums (loop for i from 0 to (1- (num-rows dataframe)) collect i))
+	 (predicate (if descending #'< #'>)))
+    (dolist (column (reverse columns))
+      (setf row-nums (stable-sort row-nums
+				  predicate
+				  :key #'(lambda (x)
+					   (nth x (gethash column
+							   (data dataframe)))))))
+    (maphash #'(lambda (key column)
+		 (setf (gethash key (data dataframe))
+		       (loop for i in row-nums
+			  collect (nth i column))))
+	     (data dataframe))
+    dataframe))
+

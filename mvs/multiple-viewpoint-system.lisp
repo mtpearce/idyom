@@ -2,7 +2,7 @@
 ;;;; File:       multiple-viewpoint-system.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-27 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-05-14 19:19:01 peter>                           
+;;;; Time-stamp: <2017-05-15 01:50:32 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -218,15 +218,18 @@ See also VIEWPOINTS:SET-ALPHABET-FROM-CONTEXT."
                  (cons (mvs-basic m) event-prediction-sets)))))
 
 (defmethod dataset-prediction-sets ((m mvs) sequence-prediction-sets)
-  "Combines a list of sequence prediction sets, i.e. prediction sets from
-individual compositions, into a dataset preiction object, with 
-the list of sequence prediction sets being stored in the :set attribute."
-  (apply #'mapcar
-         (cons #'(lambda (&rest c)
-                   (make-dataset-prediction :viewpoint (car c)
-                                            :set (cdr c)))
-               (cons (mvs-basic m) sequence-prediction-sets))))
-
+  (cond
+    ((typep (car sequence-prediction-sets)
+	    'prediction-sets:sequence-prediction)
+     (apply #'mapcar
+	    (cons #'(lambda (&rest c)
+		      (make-dataset-prediction :viewpoint (car c)
+					       :set (cdr c)))
+		  (cons (mvs-basic m) sequence-prediction-sets))))
+    ((typep (car sequence-prediction-sets)
+	    'utils:dataframe)
+     (apply #'utils:bind-by-row sequence-prediction-sets))
+    (t (error "Unrecognised format for dataset prediction sets."))))
 
 ;;;========================================================================
 ;;; Model Initialisation 
@@ -299,7 +302,7 @@ the supplied parameters."
 ;;; Model Construction and Prediction 
 ;;;========================================================================
 
-(defmethod model-dataset ((m mvs) dataset &key construct? predict?)
+(defmethod model-dataset ((m mvs) dataset &key construct? predict? detail)
   "Models a dataset <dataset> (a vector of sequence vectors) given the
 multiple-viewpoint system <m>."
   (assert (listp dataset))
@@ -312,21 +315,24 @@ multiple-viewpoint system <m>."
   (let ((num-compositions (length dataset)))
     (utils:message (format nil "Modelling dataset (~A composition(s)) with an MVS."
 			   num-compositions))
-    (let* ((prediction-sets
+    (let* ((seq-prediction-sets
 	    (loop
 	       for sequence-index from 1 to num-compositions
 	       for sequence in dataset
 	       collect (progn
 			 (utils:message (format nil "Modelling composition ~A/~A."
 						sequence-index num-compositions))
-			 (let* ((prediction-set (model-sequence m sequence
-								:construct? construct?
-								:predict? predict?)))
+			 (let* ((seq-prediction-sets
+				 (model-sequence m sequence
+						 :construct? construct?
+						 :predict? predict?))
+				(seq-prediction-sets (format-seq-prediction-sets
+						      seq-prediction-sets detail)))
 			   (unless (= sequence-index num-compositions)
 			     (operate-on-models m #'increment-sequence-front))
 			   (operate-on-models m #'reinitialise-ppm :models 'stm)
-			   prediction-set)))))
-      (dataset-prediction-sets m prediction-sets))))
+			   seq-prediction-sets)))))
+      (dataset-prediction-sets m seq-prediction-sets))))
 
 (defmethod model-sequence ((m mvs) sequence &key construct? predict? 
 					      (construct-from 0) (predict-from 0))
@@ -347,10 +353,11 @@ appropriate sequence index before this method is called."
              (event-array (get-event-array m events))
              (construct? (if (< event-index construct-from) nil construct?))
              (predict? (if (< event-index predict-from) nil predict?)))
-;;         (set-model-alphabets m event-array events 
-;;                              *marginalise-using-current-event*)
+	;;         (set-model-alphabets m event-array events 
+	;;                              *marginalise-using-current-event*)
         (multiple-value-bind (ltm-next-locations stm-next-locations
-                              ltm-prediction-sets stm-prediction-sets)
+						 ltm-prediction-sets
+						 stm-prediction-sets)
             (model-event m event-array events :ltm-locations ltm-locations 
                          :stm-locations stm-locations 
                          :construct? construct? :predict? predict?)
@@ -429,10 +436,141 @@ multiple viewpoint system <m>."
     (values ltm-locations stm-locations ltm-prediction-sets
             stm-prediction-sets)))
 
+;;;========================================================================
+;;; Formatting
+;;;========================================================================
+
+(defun format-seq-prediction-sets (sets detail)
+  "Formats a list of prediction sets to a given degree of detail."
+  (if (null detail)
+      sets
+      (let ((composition-id (prediction-sets:prediction-index (car sets)))
+	    (data (make-instance 'utils:dataframe))
+	    (results (make-hash-table :test #'equal))
+	    (features))
+	(dolist (fp sets) ; target viewpoints
+	  (let ((feature (viewpoints:viewpoint-type
+			  (prediction-sets:prediction-viewpoint fp))))
+	    (pushnew feature features)
+	    (dolist (ep (prediction-sets:prediction-set fp)) ; events
+	      (let* ((event (prediction-sets:prediction-event ep))
+		     (dataset-id (md:get-dataset-index
+				  (md:get-attribute event 'identifier)))
+		     (event-id (md:get-event-index
+				(md:get-attribute event 'identifier))))
+		(setf (gethash (list composition-id event-id) results)
+		      (format-event-prediction ep results
+							  dataset-id composition-id
+							  feature))))))
+	(maphash #'(lambda (k v)
+		     (setf (gethash k results)
+			   (combine-event-probabilities v features)))
+		 results)
+	(add-results-to-dataframe results data)
+	(cond
+	  ;; Keep full data
+	  ((= detail 3) data)
+	  ;; Keep limited data about each event
+	  ((= detail 2.5) (utils:remove-columns-except
+			   '(:dataset.id :melody.id :note.id :melody.name
+			     :probability :information.content :entropy)
+			   data))
+	  ;; Keep limited data about each composition
+	  (t (let ((row (make-hash-table))
+		   (new-data (make-instance 'utils:dataframe)))
+	       (setf (gethash :dataset.id row)
+		     (car (utils:get-column :dataset.id data)))
+	       (setf (gethash :melody.id row)
+		     (car (utils:get-column :melody.id data)))
+	       (setf (gethash :melody.name row)
+		     (car (utils:get-column :melody.name data)))
+	       (setf (gethash :mean.information.content row)
+		     (let ((ic (utils:get-column
+				:information.content data)))
+		       (/ (apply #'+ ic) (length ic))))
+	       (add-row row new-data)))))))
+
+(defun create-key (feature attribute)
+  (intern (concatenate 'string (symbol-name feature) "."
+		       (format nil "~A" attribute)) :keyword))
+
+(defun quote-string (string)
+  (format nil "~s" string))
+
+(defun format-event-prediction (ep results dataset-id composition-id feature)
+  (let* ((event (prediction-sets:prediction-event ep))
+	 (event-id (md:get-event-index (md:get-attribute event 'identifier)))
+	 (probability (float (probability ep) 0.0))
+	 (distribution (prediction-sets:prediction-set ep))
+	 (orders (prediction-sets:prediction-order ep))
+	 (weights (prediction-sets:prediction-weights ep))
+	 (existing-results (gethash (list composition-id event-id) results))
+	 (event-results (if existing-results existing-results (make-hash-table)))
+	 (timebase (md:timebase event)))
+    ;; Store event information
+    (unless existing-results
+      (setf (gethash :dataset.id event-results) dataset-id)
+      (setf (gethash :melody.id event-results) (1+ composition-id))
+      (setf (gethash :note.id event-results) (1+ event-id))
+      (setf (gethash :melody.name event-results) (quote-string (md:get-description
+								dataset-id
+								composition-id)))
+      ;; TODO - this needs to be specific to each type of music-object
+      ;; (music-event, music-slice etc.)
+      (dolist (attribute (viewpoints:get-basic-types event))
+	(let ((value (md:get-attribute event attribute)))
+	  (when (member attribute '(:dur :bioi :deltast :onset) :test #'eq)
+	    (setf value (* value (/ timebase 96))))
+	  (setf (gethash attribute event-results) value))))
+    ;; Store feature prediction
+    (dolist (o orders) ; orders
+      (setf (gethash (create-key feature (car o)) event-results) (cadr o)))
+    (when weights
+      (dolist (w weights) ; weights
+	(setf (gethash (create-key feature (car w)) event-results) (cadr w))))
+    (setf (gethash (create-key feature :probability) event-results) probability)
+    (setf (gethash (create-key feature :information.content) event-results)
+	  (- (log probability 2)))
+    (setf (gethash (create-key feature :entropy) event-results)
+	  (float (prediction-sets:shannon-entropy distribution) 0.0))
+    (setf (gethash (create-key feature :distribution) event-results) distribution)
+    (dolist (p distribution)
+      (setf (gethash (create-key feature (car p)) event-results) (cadr p)))
+    event-results))
+
+(defun add-results-to-dataframe (results dataframe)
+  (flet ((sort-function (x y) (let ((x1 (car x)) (x2 (cadr x))
+				    (y1 (car y)) (y2 (cadr y)))
+				(if (= x1 y1) (< x2 y2) (< x1 y1)))))
+    
+    (let ((sorted-results (utils:hash-table->sorted-alist results #'sort-function)))
+      (dolist (event sorted-results)
+	(let* ((event-ht (cdr event)))
+	  (add-row event-ht dataframe))))))
 
 ;;;========================================================================
 ;;; Combining event predictions
 ;;;========================================================================
+
+(defun probability (event-prediction) 
+  (cadr (prediction-sets:event-prediction event-prediction)))
+
+(defun combine-event-probabilities (event-results features)
+  (let* ((probability-keys (mapcar #'(lambda (f) (create-key f :probability)) features))
+	 (probabilities (mapcar #'(lambda (x) (gethash x event-results)) probability-keys))
+	 (probability (apply #'* probabilities))
+	 (distribution-keys (mapcar #'(lambda (f) (create-key f :distribution)) features))
+	 (distributions (mapcar #'(lambda (x) (gethash x event-results)) distribution-keys))
+	 (distribution (mapcar #'(lambda (x) (let ((elements (mapcar #'first x))
+						   (probabilities (mapcar #'second x)))
+					       (list elements (apply #'* probabilities))))
+			       (apply #'utils:cartesian-product distributions))))
+    (setf (gethash :probability event-results) probability)
+    (setf (gethash :information.content event-results) (- (log probability 2)))
+    (setf (gethash :entropy event-results) (prediction-sets:shannon-entropy distribution))
+    ;; TODO elements of combined distribution
+    (mapc #'(lambda (key) (remhash key event-results)) distribution-keys)
+    event-results))
 
 (defun combine-predictions (mvs ltm-prediction-sets stm-prediction-sets events)
   (case *models*

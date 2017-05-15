@@ -2,7 +2,7 @@
 ;;;; File:       main.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2010-11-01 15:19:57 marcusp>
-;;;; Time-stamp: <2017-05-12 18:58:26 peter>
+;;;; Time-stamp: <2017-05-15 01:29:45 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:idyom)
@@ -73,10 +73,10 @@
 		(slices-or-chords :chords)
                 ;; Output
                 (detail 3)
-		(return-predictions nil)
+		(print-predictions nil)
                 (output-path nil)
                 (overwrite nil)
-		(separator " ")
+		(separator " ") (null-token "NA")
                 ;; Caching
                 (use-resampling-set-cache? t)
 		(resampling-set-cache-path nil)
@@ -144,14 +144,18 @@
 		   :slices-or-chords slices-or-chords
 		   :use-resampling-set-cache? use-resampling-set-cache?
 		   :resampling-set-cache-path resampling-set-cache-path
-		   :use-ltms-cache? use-ltms-cache?)))
-            (when output-path
-              (resampling:format-information-content predictions filepath
-                             dataset-id detail :separator separator))
-	    (if return-predictions
-		predictions
-		(resampling:output-information-content predictions
-						       detail)))))))
+		   :use-ltms-cache? use-ltms-cache?
+		   :detail detail)))
+	    (when output-path
+	      (with-open-file (stream filepath :direction :output
+				      :if-exists :supersede)
+	        (utils:print-data predictions stream :null-token null-token
+				  :separator separator)))
+	    (when print-predictions
+	      (format t "~&")
+	      (utils:print-data predictions t :null-token null-token
+				:separator separator))
+	  predictions)))))
 
 
 (defun find-selection-basis (targets basis)

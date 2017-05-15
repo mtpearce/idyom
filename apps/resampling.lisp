@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-05-12 18:58:20 peter>                           
+;;;; Time-stamp: <2017-05-15 01:50:15 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -41,7 +41,8 @@
 			 (num-quantiles 10)
                          (use-resampling-set-cache? t)
 			 (resampling-set-cache-path nil)
-                         (use-ltms-cache? t))
+                         (use-ltms-cache? t)
+			 (detail nil))
   "IDyOM top level: returns the mean information content for
    <dataset-id> given a model with the supplied parameters on
    <testing-sequence> where the long-term model has been trained on
@@ -122,10 +123,20 @@
 					     voices texture
 					     use-ltms-cache?))
 		 (mvs (make-mvs targets sources ltms))
-		 (predictions
-		  (mvs:model-dataset mvs test-set :construct? t :predict? t)))
-	    (push predictions sequence-predictions)))
-	(incf resampling-id)))))
+		 (predictions (mvs:model-dataset mvs test-set
+						 :construct? t :predict? t
+						 :detail detail)))
+	    (if (typep predictions 'utils:dataframe)
+		(if sequence-predictions
+		    (setf sequence-predictions (utils:bind-by-row sequence-predictions
+								  predictions))
+		    (setf sequence-predictions predictions))
+		(push predictions sequence-predictions))))
+	(incf resampling-id))
+      (when (typep sequence-predictions 'utils:dataframe)
+	(utils:sort-by-columns sequence-predictions '(:melody.id)))
+      (when (= detail 1) (error "Detail level 1 not yet implemented."))
+      sequence-predictions)))
 
 (defun discretise-viewpoints (viewpoints datasets num-quantiles
 			      slices-or-chords reduction expansion)
@@ -154,6 +165,7 @@ quantiles are calculated for it."
 (defun monodies-to-lists (monodies) (mapcar #'monody-to-list monodies))
 (defun monody-to-list (monody) (coerce monody 'list))
 
+; Deprecated
 (defun output-information-content (resampling-predictions &optional (detail 3))
   "Processes the output of IDYOM-RESAMPLE. <detail> is an integer
 specifying the desired level of detail."
@@ -164,7 +176,8 @@ specifying the desired level of detail."
       (1 overall-ics)
       (2 (values overall-ics melody-ics))
       (3 (values overall-ics melody-ics event-ics)))))
-    
+
+; Deprecated
 (defun information-content-profiles (dataset-predictions) 
   "Processes the output of IDYOM-RESAMPLE, multiplying
 probabilities for different attributes and returning a list of lists
@@ -218,6 +231,7 @@ dataset-id)."
 (defun quote-string (string)
   (format nil "~s" string))
 
+;; Deprecated
 (defun format-information-content (resampling-predictions file dataset-id detail
 				   &key (separator " "))
   (with-open-file (o file :direction :output :if-exists :supersede)
@@ -228,6 +242,7 @@ dataset-id)."
       (3 (format-information-content-detail=3 o resampling-predictions dataset-id
 					      :separator separator)))))
 
+;; Deprecated
 (defun format-information-content-detail=2 (stream resampling-predictions
 					    dataset-id
 					    &key (separator " "))
@@ -241,68 +256,12 @@ dataset-id)."
       (let ((d (quote-string (md:get-description dataset-id (1- cid)))))
         (format stream "~&~A~A~A~A~A~%" cid separator d separator (car ic))))))
 
+;; Deprecated
 (defun create-key (feature attribute)
   (intern (concatenate 'string (symbol-name feature) "."
 		       (format nil "~A" attribute)) :keyword))
 
-(defun format-event-prediction (ep results dataset-id composition-id feature)
-  (let* ((event (prediction-sets:prediction-event ep))
-	 (event-id (md:get-event-index (md:get-attribute event 'identifier)))
-	 (probability (float (probability ep) 0.0))
-	 (distribution (prediction-sets:prediction-set ep))
-	 (orders (prediction-sets:prediction-order ep))
-	 (weights (prediction-sets:prediction-weights ep))
-	 (existing-results (gethash (list composition-id event-id) results))
-	 (event-results (if existing-results existing-results (make-hash-table)))
-	 (timebase (md:timebase event)))
-    ;; Store event information
-    (unless existing-results
-      (setf (gethash 'dataset.id event-results) dataset-id)
-      (setf (gethash 'melody.id event-results) (1+ composition-id))
-      (setf (gethash 'note.id event-results) (1+ event-id))
-      (setf (gethash 'melody.name event-results) (quote-string (md:get-description
-								dataset-id
-								composition-id)))
-      ;; TODO - this needs to be specific to each type of music-object
-      ;; (music-event, music-slice etc.)
-      (dolist (attribute (viewpoints:get-basic-types event))
-	(let ((value (md:get-attribute event attribute)))
-	  (when (member attribute '(:dur :bioi :deltast :onset) :test #'eq)
-	    (setf value (* value (/ timebase 96))))
-	  (setf (gethash attribute event-results) value))))
-    ;; Store feature prediction
-    (dolist (o orders) ; orders
-      (setf (gethash (create-key feature (car o)) event-results) (cadr o)))
-    (when weights
-      (dolist (w weights) ; weights
-	(setf (gethash (create-key feature (car w)) event-results) (cadr w))))
-    (setf (gethash (create-key feature 'probability) event-results) probability)
-    (setf (gethash (create-key feature 'information.content) event-results)
-	  (- (log probability 2)))
-    (setf (gethash (create-key feature 'entropy) event-results)
-	  (float (prediction-sets:shannon-entropy distribution) 0.0))
-    (setf (gethash (create-key feature 'distribution) event-results) distribution)
-    (dolist (p distribution)
-      (setf (gethash (create-key feature (car p)) event-results) (cadr p)))
-    event-results))
-
-(defun combine-event-probabilities (event-results features)
-  (let* ((probability-keys (mapcar #'(lambda (f) (create-key f 'probability)) features))
-	 (probabilities (mapcar #'(lambda (x) (gethash x event-results)) probability-keys))
-	 (probability (apply #'* probabilities))
-	 (distribution-keys (mapcar #'(lambda (f) (create-key f 'distribution)) features))
-	 (distributions (mapcar #'(lambda (x) (gethash x event-results)) distribution-keys))
-	 (distribution (mapcar #'(lambda (x) (let ((elements (mapcar #'first x))
-						   (probabilities (mapcar #'second x)))
-					       (list elements (apply #'* probabilities))))
-			       (apply #'utils:cartesian-product distributions))))
-    (setf (gethash 'probability event-results) probability)
-    (setf (gethash 'information.content event-results) (- (log probability 2)))
-    (setf (gethash 'entropy event-results) (prediction-sets:shannon-entropy distribution))
-    ;; TODO elements of combined distribution
-    (mapc #'(lambda (key) (remhash key event-results)) distribution-keys)
-    event-results))       
-
+;; Deprecated
 (defun reorder-resampling-predictions (resampling-predictions)
   "Reorders <resampling-predictions> so that instead of compositions 
 being nested within features, features are nested within compositions.
@@ -337,8 +296,8 @@ is a list of composition prediction sets, ordered by composition ID."
 	 ;; Order by composition
 	 (reordered (sort reordered #'< :key #'prediction-sets:prediction-index)))
     reordered))
-    
 
+;; Deprecated
 (defun format-information-content-detail=3
     (stream resampling-predictions dataset-id &key (separator " ")
 						(null-token "NA"))
@@ -362,14 +321,14 @@ is a list of composition prediction sets, ordered by composition ID."
 			 (event-id (md:get-event-index
 				    (md:get-attribute event 'identifier))))
 		    (setf (gethash (list composition-id event-id) results)
-			  (format-event-prediction ep results
+			  (mvs:format-event-prediction ep results
 						   dataset-id composition-id
 						   feature))))))
 	    (maphash #'(lambda (k v)
 			 (setf (gethash k results)
-			       (combine-event-probabilities v features)))
+			       (mvs:combine-event-probabilities v features)))
 		     results)
-	    (add-results-to-dataframe results data)))
+	    (mvs:add-results-to-dataframe results data)))
 	(print-data data stream :null-token null-token :separator separator))))
 
 
@@ -525,74 +484,3 @@ for <viewpoint> in <dataset-id>."
 				       #'<)))
 		 (list (list 'test test-set)
 		       (list 'train train-set))))))
-
-;;;===========================================================================
-;;; Defining a dataframe class
-;;;===========================================================================
-
-(defclass dataframe ()
-  ((data :initform (make-hash-table :test #'equal) :accessor data)
-   (num-rows :initform 0 :accessor num-rows))
-  (:documentation "A <dataframe> efficiently accumulates stores text data in a tabular form. Columns are identified by unique IDs, and are stored as lists within a hash table.
-Note that lists are accumulated in reverse order, so that appending to a column
-can be achieved by consing a new value to the beginning of the list."))
-
-(defgeneric add-row (row place)
-  (:documentation "Adds a new row, <row>, to a data storage object, <place>."))
-
-(defmethod add-row ((row hash-table) (place dataframe))
-  (let ((old-keys (loop for key being the hash-keys of (data place) collect key))
-	(new-keys (loop for key being the hash-keys of row collect key)))
-    (if (utils:any-duplicated new-keys)
-	(error "Duplicated keys are not allowed when adding new rows."))
-    (let ((old-unmatched-keys (set-difference old-keys new-keys))
-	  (new-matched-keys (intersection old-keys new-keys))
-	  (new-unmatched-keys (set-difference new-keys old-keys)))
-      (dolist (key old-unmatched-keys)
-	(push nil (gethash key (data place))))
-      (dolist (key new-matched-keys)
-	(push (gethash key row) (gethash key (data place))))
-      (dolist (key new-unmatched-keys)
-	(setf (gethash key (data place))
-	      (cons (gethash key row)
-		    (make-list (num-rows place) :initial-element nil))))
-      (incf (num-rows place)))))
-
-(defgeneric print-data (data stream &key separator order-by-key
-				      null-token)
-  (:documentation "Prints <data> to <stream>. If <order-by-key>, then the output
-is ordered by key."))
-
-(defmethod print-data ((data dataframe) destination
-		       &key separator order-by-key null-token)
-  (let* ((separator (if separator separator " "))
-	 (columns (loop
-		     for key being the hash-keys of (data data)
-		     using (hash-value value)
-		     collect (cons (string-downcase (symbol-name key))
-				   (reverse value))))
-	 (columns (if order-by-key
-		      (sort columns #'string< :key #'car)
-		      columns))
-	 (columns (coerce columns 'vector))
-	 (num-rows (num-rows data))
-	 (num-cols (array-dimension columns 0)))
-    (assert (> num-rows 0))
-    (assert (> num-cols 0))
-    (assert (eql (num-rows data) (1- (length (svref columns 0)))))
-    (dotimes (i (1+ (num-rows data)))
-      (dotimes (j num-cols)
-	(let* ((token (pop (svref columns j)))
-	       (token (if (and (null token) null-token) null-token token))) 
-	  (format destination "~A~A" token separator)))
-      (format destination "~&"))))
-  
-(defun add-results-to-dataframe (results dataframe)
-  (flet ((sort-function (x y) (let ((x1 (car x)) (x2 (cadr x))
-				    (y1 (car y)) (y2 (cadr y)))
-				(if (= x1 y1) (< x2 y2) (< x1 y1)))))
-    
-    (let ((sorted-results (utils:hash-table->sorted-alist results #'sort-function)))
-      (dolist (event sorted-results)
-	(let* ((event-ht (cdr event)))
-	  (add-row event-ht dataframe))))))

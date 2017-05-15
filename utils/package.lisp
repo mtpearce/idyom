@@ -2,7 +2,7 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-05-09 18:41:11 peter>                           
+;;;; Time-stamp: <2017-05-15 01:01:53 peter>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -26,7 +26,9 @@
            "ALIST->HASH-TABLE" "HASH-TABLE->ALIST" "HASH-TABLE->SORTED-ALIST"
            "READ-OBJECT-FROM-FILE" "FILE-EXISTS" "WRITE-OBJECT-TO-FILE"
            "CD" "PWD" "ENSURE-DIRECTORY" "COPY-FILE" "RECURSIVELY-LIST-FILES"
-           "COLLECT-GARBAGE" "SHELL-COMMAND" "SET-TEST-SUITE-DEPENDENCIES")
+           "COLLECT-GARBAGE" "SHELL-COMMAND" "SET-TEST-SUITE-DEPENDENCIES"
+	   "DATAFRAME" "ADD-ROW" "BIND-BY-ROW" "REMOVE-COLUMNS-EXCEPT"
+	   "GET-COLUMN" "SORT-BY-COLUMNS" "PRINT-DATA")
   (:documentation "Utility functions of general use."))
 
 
