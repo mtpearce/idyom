@@ -2,7 +2,7 @@
 ;;;; File:       study-1.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-05-15 13:37:26 peter>                          
-;;;; Time-stamp: <2017-05-15 17:40:14 peter>                           
+;;;; Time-stamp: <2017-05-15 19:03:18 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -46,6 +46,7 @@ The analysis uses <k> cross-validation folds."
 					 :none)
 		 :separator #\tab :overwrite t :detail 2.5
 		 :use-resampling-set-cache? t
+		 :slices-or-chords :chords
 		 :resampling-set-cache-path output-resampling-set-path
 		 :use-ltms-cache? nil
 		 :output-path output-analysis-path)))
