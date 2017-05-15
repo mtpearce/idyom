@@ -2,7 +2,7 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-02-16 18:59:36 peter>                           
+;;;; Time-stamp: <2017-05-15 17:40:32 peter>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -24,7 +24,9 @@
            "GET-COMPOSITIONS" "GET-EVENT-ATTRIBUTE"
            "GET-ATTRIBUTE" "SET-ATTRIBUTE" "GET-TIMEBASE" "GET-MIDC" 
            "GET-NEXT-FREE-ID" "COUNT-COMPOSITIONS" "COUNT-EVENTS" "GET-DOMAIN" 
-           "GET-MAX-EVENT-COUNT")
+           "GET-MAX-EVENT-COUNT"
+	   "IMPORT-COMMON-PRACTICE-TONAL" "IMPORT-POP" "IMPORT-JAZZ"
+	   "IMPORT-FOUR-BACH-CHORALES")
   (:documentation "Interface to an SQL database of music objects."))
 
 ;;; ======================================================================

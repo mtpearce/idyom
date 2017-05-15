@@ -2,7 +2,7 @@
 ;;;; File:       music-data.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-05-12 21:07:29 peter>                           
+;;;; Time-stamp: <2017-05-15 17:08:28 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -58,6 +58,16 @@
 					       "polyphony" "jazz-irb"))
 			      cl-user::*idyom-code-root*)
 			"The iRb jazz corpus"
+			id))
+
+(defun import-four-bach-chorales (&key (id 4))
+  (idyom-db:import-data :krn (merge-pathnames
+			      (make-pathname :directory
+					     '(:relative "music-corpora"
+					       "polyphony" "four-bach-chorales"
+					       "krn"))
+			      cl-user::*idyom-code-root*)
+			"Four example Bach chorales"
 			id))
 
 (defun db-backup ()
