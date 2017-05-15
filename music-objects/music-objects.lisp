@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2017-05-15 20:26:36 peter>
+;;;; Time-stamp: <2017-05-15 21:45:48 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -245,9 +245,9 @@ mp = -1; mf = 1; f = 3; ff = 5; fff = 7; ffff = 9; fffff = 11")
 			   e))))
       (call-next-method)))
 
-(defmethod set-attribute ((ms music-chord) attribute value)
+(defmethod set-attribute ((mc music-chord) attribute value)
   (if (string= (symbol-name attribute) "H-CPITCH")
-      (set-attribute ms 'h-cpitch (copy-list value))
+      (setf (h-cpitch mc) (copy-list value))
       (call-next-method)))
 
 (defgeneric copy-event (music-event))
