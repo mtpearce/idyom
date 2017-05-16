@@ -2,7 +2,7 @@
 ;;;; File:       key-finding.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-03-01 14:58:07 peter>                             
-;;;; Time-stamp: <2017-05-16 23:57:53 peter>                           
+;;;; Time-stamp: <2017-05-17 00:15:24 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -74,8 +74,11 @@
 		       (mode (if (undefined-p key)
 				 +undefined+
 				 (cdr (assoc :mode key)))))
-		  (list (cons :mode mode)
-			(cons :tonic tonic)))))
+		  (if (or (undefined-p tonic)
+			  (undefined-p mode))
+		      +undefined+
+		      (list (cons :mode mode)
+			    (cons :tonic tonic))))))
 
 (define-viewpoint (local-tonic derived (h-cpitch))
     ((events md:harmonic-sequence) element)
