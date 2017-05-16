@@ -16,5 +16,6 @@
 	   #:linked-p #:continuous-p #:set-viewpoint-quantiles
            #:in-typeset-p #:alphabet->events #:viewpoint-element-equal
 	   #:composition-viewpoint #:dataset-viewpoint
-	   #:harm-seq #:*discretise-viewpoints* #:reset-viewpoint-quantiles)
+	   #:harm-seq #:*discretise-viewpoints* #:reset-viewpoint-quantiles
+	   #:add-local-key-cache #:*use-cached-local-key*)
   (:documentation "Multiple viewpoint framework for music representation."))

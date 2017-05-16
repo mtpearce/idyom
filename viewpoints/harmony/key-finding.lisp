@@ -2,7 +2,7 @@
 ;;;; File:       key-finding.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-03-01 14:58:07 peter>                             
-;;;; Time-stamp: <2017-05-11 19:55:50 peter>                           
+;;;; Time-stamp: <2017-05-16 23:20:15 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -51,8 +51,28 @@
 
 (define-viewpoint (local-key derived (h-cpitch))
     ((events md:harmonic-sequence) element)
-  :function (kf-events->local-key-method-1
-	     events *key-finding-long-window-size*))
+  :function (if *use-cached-local-key*
+		(let ((cached-local-tonic
+		       (md:get-attribute (car (last events))
+					 'cached-local-tonic))
+		      (cached-local-mode
+		       (md:get-attribute (car (last events))
+					 'cached-local-mode)))
+		  (if (or (null cached-local-tonic)
+			  (null cached-local-mode))
+		      (error "Couldn't find cached key information.")
+		      (list (cons :mode cached-local-mode)
+			    (cons :tonic cached-local-tonic))))
+		(let* ((key (kf-events->local-key-method-1
+			     events *key-finding-long-window-size*))
+		       (tonic  (if (undefined-p key)
+				   +undefined+
+				   (cdr (assoc :tonic key))))
+		       (mode (if (undefined-p key)
+				 +undefined+
+				 (cdr (assoc :mode key)))))
+		  (list (cons :mode mode)
+			(cons :tonic tonic)))))
 
 (define-viewpoint (local-tonic derived (h-cpitch))
     ((events md:harmonic-sequence) element)
@@ -67,6 +87,37 @@
 	      (if (undefined-p key)
 		  +undefined+
 		  (cdr (assoc :mode key)))))
+
+;;;===============================================
+;;;* Caching derived viewpoints *
+;;;===============================================
+
+;; The local tonic key can be expensive to compute. The following
+;; function caches the local key in an event sequence to avoid
+;; repeated computation of the local key. Beware of situations
+;; where this cache might be invalidated.
+
+(defgeneric add-local-key-cache (sequence)
+  (:documentation "Adds key information to <sequence> using the 
+<local-key> viewpoint."))
+
+(defmethod add-local-key-cache ((seq md:harmonic-sequence))
+  (let ((*use-cached-local-key* nil)
+	(key-list (viewpoint-sequence (get-viewpoint 'local-key) seq
+				      :keep-undefined t)))
+    (iterate:iterate (iterate:for event in-sequence seq)
+		     (iterate:for key in key-list)
+		     (let ((tonic (if (undefined-p key)
+				      +undefined+
+				      (cdr (assoc :tonic key))))
+			   (mode (if (undefined-p key)
+				     +undefined+
+				     (cdr (assoc :mode key)))))
+		       (md:set-attribute event 'cached-local-tonic tonic)
+		       (md:set-attribute event 'cached-local-mode mode)))
+    seq))
+
+
 
 ;;;===============================================
 ;;;* Derived viewpoints (specific algorithms) *

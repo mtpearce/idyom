@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-05-15 01:50:15 peter>                           
+;;;; Time-stamp: <2017-05-16 23:29:41 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -80,6 +80,15 @@
 			   :polyphonic-expansion polyphonic-expansion
 			   :harmonic-reduction harmonic-reduction
 			   :slices-or-chords slices-or-chords))
+	 (dataset
+	  (progn
+	    (utils:message "Adding local key cache to the main dataset.")
+	    (mapcar #'viewpoints:add-local-key-cache dataset)))
+	 (pretraining-set
+	  (progn
+	    (utils:message "Adding local key cache to the pretraining dataset.")
+	    (mapcar #'viewpoints:add-local-key-cache pretraining-set)))
+	 (viewpoints:*use-cached-local-key* t)
          ;; viewpoints
          (sources (get-viewpoints source-viewpoints))
          (targets

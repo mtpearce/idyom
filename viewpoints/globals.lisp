@@ -2,7 +2,7 @@
 ;;;; File:       globals.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-04-27 12:36:01 peter>                           
-;;;; Time-stamp: <2017-05-04 11:34:47 peter>                           
+;;;; Time-stamp: <2017-05-16 23:31:19 peter>                           
 ;;;; ======================================================================
 
 ;;;; This file contains global variables for the viewpoints package.
@@ -26,5 +26,8 @@
 ;; Typically will be set to nil when the viewpoint quantiles are being
 ;; calibrated, and set to t when quantiles have been calibrated.
 (defparameter *discretise-viewpoints* nil)
+
+;; Boolean, determines whether to make use of local key caches or not.
+(defparameter *use-cached-local-key* nil)
 
 

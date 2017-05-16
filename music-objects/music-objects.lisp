@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2017-05-15 21:45:48 peter>
+;;;; Time-stamp: <2017-05-16 23:31:31 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -82,7 +82,15 @@
 (defclass music-phrase ()
   ((phrase :initarg :phrase :accessor phrase)))
 
-(defclass music-element (music-temporal-object music-environment music-phrase) ())
+(defclass music-element (music-temporal-object music-environment music-phrase)
+  ((cached-local-tonic
+    :initarg :cached-local-tonic :accessor cached-local-tonic
+    :initform nil
+    :documentation "The local tonic can be expensive to compute. A cache of the local tonic can be stored here. Beware of situations where this cache might be invalidated.")
+   (cached-local-mode
+    :initarg :cached-local-mode :accessor cached-local-mode
+    :initform nil
+    :documentation "See <cached-local-tonic>.")))
 
 (defclass music-slice (list-slot-sequence music-element) ())
 ;; set of music objects overlapping in time, ordered by voice
