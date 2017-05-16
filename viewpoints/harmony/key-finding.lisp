@@ -2,7 +2,7 @@
 ;;;; File:       key-finding.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-03-01 14:58:07 peter>                             
-;;;; Time-stamp: <2017-05-16 23:20:15 peter>                           
+;;;; Time-stamp: <2017-05-16 23:57:53 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -61,8 +61,11 @@
 		  (if (or (null cached-local-tonic)
 			  (null cached-local-mode))
 		      (error "Couldn't find cached key information.")
-		      (list (cons :mode cached-local-mode)
-			    (cons :tonic cached-local-tonic))))
+		      (if (or (undefined-p cached-local-tonic)
+			      (undefined-p cached-local-mode))
+			  +undefined+
+			  (list (cons :mode cached-local-mode)
+				(cons :tonic cached-local-tonic)))))
 		(let* ((key (kf-events->local-key-method-1
 			     events *key-finding-long-window-size*))
 		       (tonic  (if (undefined-p key)
