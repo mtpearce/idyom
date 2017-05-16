@@ -2,7 +2,7 @@
 ;;;; File:       study-1.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-05-15 13:37:26 peter>                          
-;;;; Time-stamp: <2017-05-16 23:47:13 peter>                           
+;;;; Time-stamp: <2017-05-17 00:07:58 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -117,7 +117,7 @@ The analysis uses <k> cross-validation folds."
 		 :harmonic-reduction (if reduce-harmony
 					 :regular-harmonic-rhythm
 					 :none)
-		 :separator #\tab :overwrite t :detail 2.5
+		 :separator #\tab :detail 2.5
 		 :use-resampling-set-cache? t
 		 :slices-or-chords :chords
 		 :resampling-set-cache-path output-resampling-set-path
