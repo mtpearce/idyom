@@ -2,7 +2,7 @@
 ;;;; File:       general-chord-type.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-03-01 14:58:07 peter>                             
-;;;; Time-stamp: <2017-05-11 19:27:44 peter>                           
+;;;; Time-stamp: <2017-05-16 21:07:56 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -28,7 +28,7 @@
 ;;;* Memoized functions *
 ;;;======================
 
-(fmemo:define-memo-function general-chord-type (pitch-class-set bass-pc pitch-scale-hierarchy consonance-vector)
+(defun general-chord-type (pitch-class-set bass-pc pitch-scale-hierarchy consonance-vector)
   "Computes the GCT representation of PITCH-CLASS-SET, given BASS-PC, PITCH-SCALE-HIERARCHY and CONSONANCE-VECTOR.
    PITCH-SCALE-HIERARCHY can optionally be null, in which case the choose-best-chord function may produce
    slightly different results, and root-csd will be expressed relative to a tonic of C major."
