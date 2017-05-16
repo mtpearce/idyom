@@ -2,7 +2,7 @@
 ;;;; File:       main.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2010-11-01 15:19:57 marcusp>
-;;;; Time-stamp: <2016-05-04 15:24:51 marcusp>
+;;;; Time-stamp: <2017-05-11 10:54:15 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:idyom)
@@ -68,6 +68,7 @@
                 (detail 3)
                 (output-path nil)
                 (overwrite nil)
+		(separator " ")
                 ;; Caching
                 (use-resampling-set-cache? t)
                 (use-ltms-cache? t))
@@ -119,7 +120,7 @@
                                              :use-resampling-set-cache? use-resampling-set-cache?
                                              :use-ltms-cache? use-ltms-cache?)))
             (when output-path
-              (resampling:format-information-content predictions filepath dataset-id detail))
+              (resampling:format-information-content predictions filepath dataset-id detail :separator separator))
             (resampling:output-information-content predictions detail))))))
 
 
