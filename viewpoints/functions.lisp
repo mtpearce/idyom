@@ -145,7 +145,7 @@ for each respective dataset."))
 				  :expansion expansion
 				  :reduction reduction
 				  :slices-or-chords slices-or-chords)))))
-	   (quantiles (utils:quantiles viewpoint-elements
+	   (quantiles (utils:quantiles (remove-duplicates viewpoint-elements :test #'=)
 				       num-quantiles)))
       (setf (gethash (viewpoints:viewpoint-name v)
 		     *viewpoint-quantiles*)
