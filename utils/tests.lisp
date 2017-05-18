@@ -2,7 +2,7 @@
 ;;;; File:       tests.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-04-27 16:17:12 peter>                         
-;;;; Time-stamp: <2017-05-18 18:29:49 peter>                           
+;;;; Time-stamp: <2017-05-18 23:47:43 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -29,10 +29,10 @@
 		 '(0.325 2.025 3.0875))))
 (5am:test quantiles-ex-3
   (5am:is (equal (quantiles (loop for i from 1 to 10 collect i) 5)
-		 '(2 4 6 8))))
+		 '(2.0 4.0 6.0 8.0))))
 (5am:test quantiles-ex-4
   (5am:is (equal (quantiles (list 1 5 4 3 2 7 9 8 10 6) 5)
-		 '(2 4 6 8))))
+		 '(2.0 4.0 6.0 8.0))))
 
 ;;;; assign-to-quantile
 (5am:def-suite assign-to-quantile :in utils)

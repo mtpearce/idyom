@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2017-05-18 18:25:58 peter>
+;;;; Time-stamp: <2017-05-18 23:46:57 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -203,27 +203,17 @@ and the 100th percentile). Uses linear interpolation of the
 empirical distribution function."
   (assert (every #'numberp numbers))
   (let* ((sorted (sort (coerce numbers 'vector) #'<))
-	 (n (length sorted))
-	 (quantile-width (/ n num-quantiles))
-	 (quantile-positions (loop
-				for i from 1 to (- num-quantiles 1)
-				collect (1- (* quantile-width i))))
-	 (quantile-values
-	  (loop
-	     for exact-position in quantile-positions
-	     collect (if (= (round exact-position) exact-position)
-			 (svref sorted (round exact-position))
-			 (let* ((lower-pos (floor exact-position))
-				(higher-pos (ceiling exact-position))
-				(lower-value (svref sorted lower-pos))
-				(higher-value (svref sorted higher-pos))
-				(diff-value (- higher-value lower-value))
-				(fraction (- exact-position lower-pos)))
-			   (coerce (+ lower-value (* fraction diff-value))
-				   'float))))))
-    (utils:message (format nil "Quantile positions: ~A" quantile-positions)
-		   :detail 3)
-    quantile-values))
+	 (n (length sorted)))
+    (loop
+       for k from 1 to (- num-quantiles 1)
+       collect (float (let* ((p (/ k num-quantiles))
+			     (h (* n p)))
+			(cond ((< p (/ 1 n)) (svref sorted 0))
+			      ((= p 1) (svref sorted (1- n)))
+			      (t (+ (svref sorted (1- (floor h)))
+				    (* (- h (floor h))
+				       (- (svref sorted (floor h))
+					  (svref sorted (1- (floor h)))))))))))))
 
 (defun shuffle (sequence)
   "Shuffles a sequence into a random order. 
