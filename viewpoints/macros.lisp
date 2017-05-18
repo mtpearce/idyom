@@ -23,8 +23,11 @@ is a continuous viewpoint or not."
        (defmethod ,name ((,events list))
 	 (declare (ignorable ,events))
 	 ,(if continuous
-	      `(let ((continuous-output
-		      (utils:round-to-nearest-decimal-place ,function 10)))
+	      `(let* ((continuous-output ,function)
+		      (continuous-output
+		       (if (undefined-p continuous-output)
+			   continuous-output
+			   (utils:round-to-nearest-decimal-place ,function 10))))
 		 (if *discretise-viewpoints*
 		     (let ((quantiles (gethash (symbol-name ',name)
 					       *viewpoint-quantiles*)))
