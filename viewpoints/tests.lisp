@@ -2,7 +2,7 @@
 ;;;; File:       tests.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-03-28 21:04:43 peter>                             
-;;;; Time-stamp: <2017-04-13 18:22:11 peter>                           
+;;;; Time-stamp: <2017-05-18 18:50:37 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -1150,30 +1150,37 @@
 	       15)))
 
 ;; Viewpoints
+
+(defun approx= (x y &optional (precision 10))
+  (= (utils:round-to-nearest-decimal-place x precision)
+     (utils:round-to-nearest-decimal-place y precision)))
+
 (make-viewpoint-tests
  'h-cpc-vl-dist-p=1
  '(((harm-seq '((0 4 7) (0 3 7))) 1)
    ((harm-seq '((0 2 5 7) (0 4 7))) 3)
    ((harm-seq '((2 5 8) (2 5 9))) 1))
- :parent-suite 'tymoczko)
+ :parent-suite 'tymoczko
+ :test #'approx=)				
 (make-viewpoint-tests
  'h-cpc-vl-dist-p=2
  '(((harm-seq '((0 4 7) (0 3 8))) (sqrt 2))
    ((harm-seq '((0 2 5 7) (0 4 7))) (sqrt 5))
    ((harm-seq '((2 5 8) (2 5 9))) 1))
- :test #'equalp
+ :test #'approx=
  :parent-suite 'tymoczko)
 (make-viewpoint-tests
  'h-cpitch-vl-dist-p=1
  '(((harm-seq '((40 41) (38 42))) 3)
    ((harm-seq '((16 20 25 26) (16 19 25))) 2)
    ((harm-seq '((15) (14 16))) 2))
+ :test #'approx=
  :parent-suite 'tymoczko)
 (make-viewpoint-tests
  'h-cpitch-vl-dist-p=2
  '(((harm-seq '((40 41) (37 45))) 5)
    ((harm-seq '((16 20 25 26) (16 19 25))) (sqrt 2))
    ((harm-seq '((15) (14 16))) (sqrt 2)))
- :test #'equalp
+ :test #'approx=
  :parent-suite 'tymoczko)
 
