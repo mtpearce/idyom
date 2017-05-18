@@ -2,7 +2,7 @@
 ;;;; File:       key-finding.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-03-01 14:58:07 peter>                             
-;;;; Time-stamp: <2017-05-17 00:15:24 peter>                           
+;;;; Time-stamp: <2017-05-18 18:35:23 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -106,6 +106,10 @@
 (defgeneric add-local-key-cache (sequence)
   (:documentation "Adds key information to <sequence> using the 
 <local-key> viewpoint."))
+
+(defmethod add-local-key-cache ((seq md:music-sequence))
+  ;; Fall-back method for sequence types where local-key is not defined
+  seq)
 
 (defmethod add-local-key-cache ((seq md:harmonic-sequence))
   (let ((*use-cached-local-key* nil)
