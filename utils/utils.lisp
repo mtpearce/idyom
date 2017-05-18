@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2017-05-15 01:20:15 peter>
+;;;; Time-stamp: <2017-05-18 18:25:58 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -883,7 +883,7 @@ is ordered by key."))
 
 (defmethod print-data ((data dataframe) destination
 		       &key separator order-by-key null-token)
-  (let* ((separator (if separator separator " "))
+  (let* ((separator (if separator separator #\tab))
 	 (columns (loop
 		     for key being the hash-keys of (data data)
 		     using (hash-value value)
@@ -914,16 +914,23 @@ ascending order or in descending order."))
 (defmethod sort-by-columns ((dataframe dataframe) (columns list) &key descending)
   (let* ((row-nums (loop for i from 0 to (1- (num-rows dataframe)) collect i))
 	 (predicate (if descending #'< #'>)))
+    ;; Coerce columns to vectors
+    (maphash #'(lambda (key column)
+		 (setf (gethash key (data dataframe))
+		       (coerce column 'vector)))
+	     (data dataframe))
     (dolist (column (reverse columns))
       (setf row-nums (stable-sort row-nums
 				  predicate
 				  :key #'(lambda (x)
-					   (nth x (gethash column
-							   (data dataframe)))))))
+					   (svref (gethash column
+							   (data dataframe))
+						  x)))))
+    ;; Reorder columns and save as lists
     (maphash #'(lambda (key column)
 		 (setf (gethash key (data dataframe))
 		       (loop for i in row-nums
-			  collect (nth i column))))
+			  collect (svref column i))))
 	     (data dataframe))
     dataframe))
 

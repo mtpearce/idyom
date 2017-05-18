@@ -2,7 +2,7 @@
 ;;;; File:       tests.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-04-27 16:17:12 peter>                         
-;;;; Time-stamp: <2017-05-01 10:31:15 peter>                           
+;;;; Time-stamp: <2017-05-18 18:29:49 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -51,3 +51,29 @@
   (5am:is (eql (assign-to-quantile 1.5 '(1 2 3 4 5)) 2)))
 (5am:test assign-to-quantile-ex-6
   (5am:is (eql (assign-to-quantile 500 '(1 2 3 4 5)) 6)))
+
+;;;; Dataframes
+(5am:def-suite dataframe :in utils)
+(5am:in-suite dataframe)
+
+(defun make-test-dataframe ()
+  (let ((df (make-instance 'dataframe)))
+    (add-row (alist->hash-table '((:day 1) (:hour 2) (:value 0.3))) df)
+    (add-row (alist->hash-table '((:day 2) (:hour 2) (:value 0.7))) df)
+    (add-row (alist->hash-table '((:day 3) (:hour 2) (:value 0.1))) df)
+    (add-row (alist->hash-table '((:day 1) (:hour 1) (:value 0.4))) df)
+    (add-row (alist->hash-table '((:day 2) (:hour 1) (:value 0.2))) df)
+    (add-row (alist->hash-table '((:day 3) (:hour 1) (:value 0.0))) df)
+    df))
+
+(5am:def-suite sort-by-columns :in dataframe)
+(5am:in-suite sort-by-columns)
+
+(5am:test sort-by-columns-ex-1
+  (5am:is (equal (get-column :day (sort-by-columns (make-test-dataframe) '(:day :hour)))
+		 '(1 1 2 2 3 3))))
+(5am:test sort-by-columns-ex-2
+  (5am:is (equal (get-column :hour (sort-by-columns (make-test-dataframe) '(:day :hour)))
+		 '(1 2 1 2 1 2))))
+    
+    
