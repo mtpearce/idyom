@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2017-05-18 23:46:57 peter>
+;;;; Time-stamp: <2017-05-20 14:02:47 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -232,7 +232,7 @@ quantile into which <number> falls."
   (assert (listp quantiles))
   (assert (equal quantiles (sort quantiles #'<)))
   (let* ((num-quantiles (1+ (length quantiles)))
-	 (match (position-if #'(lambda (x) (> x number)) quantiles)))
+	 (match (position-if #'(lambda (x) (<= number x)) quantiles)))
     (if match
 	(1+ match)
 	num-quantiles)))	       
