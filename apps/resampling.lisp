@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-05-16 23:29:41 peter>                           
+;;;; Time-stamp: <2017-05-22 12:58:09 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -36,7 +36,7 @@
                          (voices nil)
                          (texture :melody)
 			 (polyphonic-expansion :full)
-			 (harmonic-reduction :regular-harmonic-rhythm)
+			 harmonic-reduction
 			 (slices-or-chords :chords)
 			 (num-quantiles 10)
                          (use-resampling-set-cache? t)
