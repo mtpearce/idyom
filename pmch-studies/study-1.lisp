@@ -2,7 +2,7 @@
 ;;;; File:       study-1.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-05-15 13:37:26 peter>                          
-;;;; Time-stamp: <2017-05-22 13:48:43 peter>                           
+;;;; Time-stamp: <2017-05-22 17:54:00 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -80,7 +80,7 @@
   '(h-gct h-gct-3rd-type h-gct-7th-type h-gct-root-5ths-dist))
 
 (defparameter *h-vp-8-of-8*
-  '(h-gct-base h-gct-ext h-gct h-gct-root-cpc))
+  '(h-gct-base h-gct-ext h-gct-root-cpc))
 
 ;;;; Analysis functions	 
 
