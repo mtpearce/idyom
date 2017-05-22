@@ -2,7 +2,7 @@
 ;;;; File:       study-1.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-05-15 13:37:26 peter>                          
-;;;; Time-stamp: <2017-05-17 00:07:58 peter>                           
+;;;; Time-stamp: <2017-05-22 12:30:42 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -60,15 +60,15 @@
 ;; Analysis functions	 
 
 (defun analyse-all-viewpoints
-    (dataset reduce-harmony
+    (dataset pretraining-ids reduce-harmony
      &key (output-path "/home/peter/idyom-output/study-1/")
        (k 10))
   (let ((viewpoints *harmony-viewpoints*))
-    (analyse-viewpoints viewpoints dataset reduce-harmony
+    (analyse-viewpoints viewpoints dataset pretraining-ids reduce-harmony
 			:output-path output-path :k k)))
 
 (defun analyse-viewpoints
-    (viewpoints dataset reduce-harmony
+    (viewpoints dataset pretraining-ids reduce-harmony
      &key (output-path "/home/peter/idyom-output/study-1/")
        (k 10))
   "Analyses a set of viewpoints on a given dataset."
@@ -82,11 +82,11 @@
        do (progn
 	    (utils:message (format nil "Analysing viewpoint ~A/~A (~A)."
 				   i num-viewpoints viewpoint))
-	    (analyse-viewpoint viewpoint dataset reduce-harmony
+	    (analyse-viewpoint viewpoint dataset pretraining-ids reduce-harmony
 			       :output-path output-path :k k)))))
 
 (defun analyse-viewpoint
-    (viewpoint dataset reduce-harmony
+    (viewpoint dataset pretraining-ids reduce-harmony
      &key (output-path "/home/peter/idyom-output/study-1/")
        (k 10))
   "Analyses a derived viewpoint, identified by symbol <viewpoint>,
@@ -95,8 +95,10 @@ of <output-path>, which will be created if it doesn't exist.
 This subdirectory will be identified by the dataset and the viewpoint.
 If <reduce-harmony> is true, harmonic reduction is applied to 
 the dataset before analysis.
-The analysis uses <k> cross-validation folds."
+The analysis uses <k> cross-validation folds.
+<pretraining-ids> is a list of datasets to pretrain on."
   (assert (integerp dataset))
+  (assert (listp pretraining-ids))
   (assert (symbolp viewpoint))
   (let* ((output-root-dir (utils:ensure-directory output-path))
 	 (output-dir (ensure-directories-exist
@@ -114,6 +116,7 @@ The analysis uses <k> cross-validation folds."
 	 (viewpoints::*basic-types* (list :h-cpitch)))
     (idyom:idyom dataset '(h-cpitch) (list viewpoint)
 		 :k k :texture :harmony :models :ltm
+		 :pretraining-ids pretraining-ids
 		 :harmonic-reduction (if reduce-harmony
 					 :regular-harmonic-rhythm
 					 :none)
