@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2017-05-16 23:31:31 peter>
+;;;; Time-stamp: <2017-05-22 11:48:22 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -30,6 +30,13 @@
 (defvar *time-slots* '(onset dur deltast barlength bioi))
 (defvar *md-time-slots* (mapcar #'music-symbol *time-slots*))
 
+(defvar *harm-seq-cache-dir*
+  (ensure-directories-exist
+   (merge-pathnames
+    (make-pathname :directory
+		   '(:relative "data" "harmonic-sequences"))
+    cl-user::*idyom-root*)))
+   
 
 ;;; Classes for music objects
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -444,21 +451,52 @@ i.e. reduce to the level of a regular harmonic rhythm."
 			:voices voices :expansion expansion :reduction reduction
 			:slices-or-chords slices-or-chords))
 
-(defun get-harmonic-sequences (dataset-ids &key voices (expansion :full)
-					     (reduction :none) (slices-or-chords :slices))
+(defun get-harmonic-sequences (dataset-ids &key
+					     (cache t)
+					     voices
+					     (expansion :full)
+					     (reduction :none)
+					     (slices-or-chords :slices))
   "Gets harmonic sequences for all compositions contained within
 a set of datasets indexed by DATASET-IDS"
   (utils:message
    (format nil "Getting harmonic sequences for dataset(s) ~A." dataset-ids))
-  (let ((compositions '()))
-    (dolist (dataset-id dataset-ids (nreverse compositions))
-      (let* ((d (get-dataset (lookup-dataset dataset-id)))
-	     (pb (utils:initialise-progress-bar (length d))))
-        (sequence:dosequence (c d)
-          (push (composition->harmony c :voices voices :expansion expansion
-				      :reduction reduction :slices-or-chords slices-or-chords)
-		compositions)
-	  (utils:update-progress-bar pb (length compositions)))))))
+  (let ((cache-path (get-harm-seq-cache-filename dataset-ids voices expansion
+						 reduction slices-or-chords)))
+    (if (and cache (probe-file cache-path))
+	(progn
+	  (utils:message "Loading harmonic sequences from cache.")
+	  (cl-store:restore cache-path))
+	(let* ((compositions '())
+	       (compositions
+		(dolist (dataset-id dataset-ids (nreverse compositions))
+		  (let* ((d (get-dataset (lookup-dataset dataset-id)))
+			 (pb (utils:initialise-progress-bar (length d))))
+		    (sequence:dosequence (c d)
+		      (push (composition->harmony c :voices voices
+						  :expansion expansion
+						  :reduction reduction
+						  :slices-or-chords slices-or-chords)
+			    compositions)
+		      (utils:update-progress-bar pb (length compositions)))))))
+	  (when cache
+	    (if (probe-file cache-path)
+		(utils:message "Cache file seems to have been created by another process since data import started; caching aborted.")
+		(progn 
+		  (utils:message "Writing harmonic sequences to cache.")
+		  (cl-store:store compositions cache-path))))
+	  compositions))))
+
+(defun get-harm-seq-cache-filename (dataset-ids voices expansion
+				    reduction slices-or-chords)
+  (let ((id (format nil "datasets-~{~S-~}voices-~{~S-~}expansion-~A-reduction-~A-~A"
+		    dataset-ids voices
+		    (string-downcase (symbol-name expansion))
+		    (string-downcase (symbol-name reduction))
+		    (string-downcase (symbol-name slices-or-chords)))))
+    (merge-pathnames
+     (make-pathname :name id :type "cache")
+     *harm-seq-cache-dir*)))
 
 (defun composition->harmony (composition &key voices (expansion :full)
 					   (reduction :none) (slices-or-chords :slices))
