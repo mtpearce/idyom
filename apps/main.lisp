@@ -2,7 +2,7 @@
 ;;;; File:       main.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2010-11-01 15:19:57 marcusp>
-;;;; Time-stamp: <2017-05-15 01:29:45 peter>
+;;;; Time-stamp: <2017-05-22 13:30:37 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:idyom)
@@ -70,6 +70,7 @@
                 (texture :melody)
 		(polyphonic-expansion :full)
 		(harmonic-reduction :none)
+		(pretraining-harmonic-reduction :none)
 		(slices-or-chords :chords)
                 ;; Output
                 (detail 3)
@@ -141,6 +142,8 @@
 		   :voices voices :texture texture
 		   :polyphonic-expansion polyphonic-expansion
 		   :harmonic-reduction harmonic-reduction
+		   :pretraining-harmonic-reduction
+		   pretraining-harmonic-reduction
 		   :slices-or-chords slices-or-chords
 		   :use-resampling-set-cache? use-resampling-set-cache?
 		   :resampling-set-cache-path resampling-set-cache-path
