@@ -2,7 +2,7 @@
 ;;;; File:       tests.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-04-24 20:51:10 peter>                            
-;;;; Time-stamp: <2017-04-27 14:59:11 peter>                           
+;;;; Time-stamp: <2017-05-22 10:44:32 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -460,3 +460,30 @@ be a list the ith element of which is the duration of the ith chord.
 				  150 200)
 		   'list))
 		 (list 50 50 50))))
+
+;;;; Serialization
+(5am:def-suite serial :in music-data)
+(5am:in-suite serial)
+
+;; Files and folders
+(defparameter *temp-dir* (merge-pathnames
+			  (make-pathname :directory
+					 '(:relative "temp" "tests"))
+			  cl-user::*idyom-root*))
+(ensure-directories-exist *temp-dir*)
+
+(defun test-serial (input file-id)
+  (assert (stringp file-id))
+  (let ((path (merge-pathnames
+	       (make-pathname :name file-id :type "cache")
+	       *temp-dir*)))
+    (cl-store:store input path)
+    (cl-store:restore path)))
+
+(5am:test serial-ex-1
+  (5am:is
+   (equal (mapcar #'(lambda (e) (md:get-attribute e 'h-cpitch))
+		  (coerce (test-serial (harm-seq '((0 4 7) (0 3 7) (0 4 7)))
+				       "harm-seq-1")
+			  'list))
+	  '((0 4 7) (0 3 7) (0 4 7)))))
