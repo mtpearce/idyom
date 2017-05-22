@@ -2,7 +2,7 @@
 ;;;; File:       study-1.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-05-15 13:37:26 peter>                          
-;;;; Time-stamp: <2017-05-22 12:30:42 peter>                           
+;;;; Time-stamp: <2017-05-22 12:45:50 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -32,8 +32,8 @@
 				     h-gct-root-5ths-dist
 				     h-gct-root-cpc h-hedges-chord-type))
 
-;; Splitting viewpoints into equal-sized sets
-
+;;;; Splitting viewpoints into equal-sized sets
+;;   Sets of 3
 (defparameter *h-vp-1-of-3*
   (let* ((num-viewpoints (length *harmony-viewpoints*))
 	 (one-third-threshold (1- (/ num-viewpoints 3))))
@@ -104,7 +104,12 @@ The analysis uses <k> cross-validation folds.
 	 (output-dir (ensure-directories-exist
 		      (merge-pathnames
 		       (make-pathname :directory
-				      (list :relative (format nil "~A" dataset)
+				      (list :relative
+					    (if pretraining-ids
+						(format nil "pretraining-~{~S~^-~}"
+							pretraining-ids)
+						"pretraining-none")
+					    (format nil "test-dataset-~A" dataset)
 					    (string-downcase (symbol-name viewpoint))))
 		       output-root-dir)))
 	 (output-resampling-set-path (namestring (merge-pathnames
