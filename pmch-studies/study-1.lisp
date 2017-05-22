@@ -2,7 +2,7 @@
 ;;;; File:       study-1.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-05-15 13:37:26 peter>                          
-;;;; Time-stamp: <2017-05-22 12:45:50 peter>                           
+;;;; Time-stamp: <2017-05-22 12:54:17 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -57,7 +57,32 @@
        for i from (ceiling two-third-threshold) to (1- num-viewpoints)
        collect (nth i *harmony-viewpoints*))))
 
-;; Analysis functions	 
+;; Splitting into 8 sets
+(defparameter *h-vp-1-of-8*
+  '(h-cpitch h-cpc-milne-sd-cont=min h-hutch-rough))
+
+(defparameter *h-vp-2-of-8*
+  '(h-cpc-vl-dist-p=1 h-gct-root-csd h-gct-root-cpcint))
+
+(defparameter *h-vp-3-of-8*
+  '(h-bass-cpc h-bass-cpcint h-bass-cpint h-hedges-chord-type))
+
+(defparameter *h-vp-4-of-8*
+  '(h-bass-cpitch h-bass-csd h-bass-int-from-gct-root))
+
+(defparameter *h-vp-5-of-8*
+  '(h-cpc-identity h-cpc-int-from-bass h-cpc-int-from-gct-root))
+
+(defparameter *h-vp-6-of-8*
+  '(h-cpitch-class-set h-cpitch-identity h-csd h-gct-meeus-int))
+
+(defparameter *h-vp-7-of-8*
+  '(h-gct h-gct-3rd-type h-gct-7th-type h-gct-root-5ths-dist))
+
+(defparameter *h-vp-8-of-8*
+  '(h-gct-base h-gct-ext h-gct h-gct-root-cpc))
+
+;;;; Analysis functions	 
 
 (defun analyse-all-viewpoints
     (dataset pretraining-ids reduce-harmony
