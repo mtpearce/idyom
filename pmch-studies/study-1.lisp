@@ -2,7 +2,7 @@
 ;;;; File:       study-1.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-05-15 13:37:26 peter>                          
-;;;; Time-stamp: <2017-05-22 12:54:17 peter>                           
+;;;; Time-stamp: <2017-05-22 13:48:43 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -85,17 +85,19 @@
 ;;;; Analysis functions	 
 
 (defun analyse-all-viewpoints
-    (dataset pretraining-ids reduce-harmony
+    (dataset pretraining-ids reduce-harmony reduce-harmony-pretraining
      &key (output-path "/home/peter/idyom-output/study-1/")
        (k 10))
   (let ((viewpoints *harmony-viewpoints*))
-    (analyse-viewpoints viewpoints dataset pretraining-ids reduce-harmony
+    (analyse-viewpoints viewpoints dataset pretraining-ids
+			:reduce-harmony reduce-harmony
+			:reduce-harmony-pretraining reduce-harmony-pretraining
 			:output-path output-path :k k)))
 
 (defun analyse-viewpoints
-    (viewpoints dataset pretraining-ids reduce-harmony
-     &key (output-path "/home/peter/idyom-output/study-1/")
-       (k 10))
+    (viewpoints dataset pretraining-ids &key reduce-harmony reduce-harmony-pretraining
+					  (output-path "/home/peter/idyom-output/study-1/")
+					  (k 10))
   "Analyses a set of viewpoints on a given dataset."
   (assert (listp viewpoints))
   (let ((num-viewpoints (length viewpoints)))
@@ -108,10 +110,11 @@
 	    (utils:message (format nil "Analysing viewpoint ~A/~A (~A)."
 				   i num-viewpoints viewpoint))
 	    (analyse-viewpoint viewpoint dataset pretraining-ids reduce-harmony
+			       reduce-harmony-pretraining
 			       :output-path output-path :k k)))))
 
 (defun analyse-viewpoint
-    (viewpoint dataset pretraining-ids reduce-harmony
+    (viewpoint dataset pretraining-ids reduce-harmony reduce-harmony-pretraining
      &key (output-path "/home/peter/idyom-output/study-1/")
        (k 10))
   "Analyses a derived viewpoint, identified by symbol <viewpoint>,
@@ -119,24 +122,31 @@ on dataset with ID <dataset>, saving the output to a sub-directory
 of <output-path>, which will be created if it doesn't exist.
 This subdirectory will be identified by the dataset and the viewpoint.
 If <reduce-harmony> is true, harmonic reduction is applied to 
-the dataset before analysis.
+the test dataset before analysis.
+If <reduce-harmony-pretraining> is true, harmonic reduction is applied to 
+the pretraining dataset before analysis.
 The analysis uses <k> cross-validation folds.
 <pretraining-ids> is a list of datasets to pretrain on."
   (assert (integerp dataset))
   (assert (listp pretraining-ids))
   (assert (symbolp viewpoint))
   (let* ((output-root-dir (utils:ensure-directory output-path))
-	 (output-dir (ensure-directories-exist
-		      (merge-pathnames
-		       (make-pathname :directory
-				      (list :relative
-					    (if pretraining-ids
-						(format nil "pretraining-~{~S~^-~}"
-							pretraining-ids)
-						"pretraining-none")
-					    (format nil "test-dataset-~A" dataset)
-					    (string-downcase (symbol-name viewpoint))))
-		       output-root-dir)))
+	 (output-dir
+	  (ensure-directories-exist
+	   (merge-pathnames
+	    (make-pathname
+	     :directory
+	     (list :relative
+		   (if pretraining-ids
+		       (format nil "pretraining-~{~S-~}harmonic-reduction-~A"
+			       pretraining-ids
+			       (string-downcase (symbol-name
+						 reduce-harmony-pretraining)))
+		       "pretraining-none")
+		   (format nil "test-dataset-~A-harmonic-reduction-~A" dataset
+			   (string-downcase (symbol-name reduce-harmony)))
+		   (string-downcase (symbol-name viewpoint))))
+	    output-root-dir)))
 	 (output-resampling-set-path (namestring (merge-pathnames
 						  (make-pathname :name "resampling" :type "lisp")
 						  output-dir)))
@@ -150,6 +160,9 @@ The analysis uses <k> cross-validation folds.
 		 :harmonic-reduction (if reduce-harmony
 					 :regular-harmonic-rhythm
 					 :none)
+		 :pretraining-harmonic-reduction (if reduce-harmony-pretraining
+						     :regular-harmonic-rhythm
+						     :none)
 		 :separator #\tab :detail 2.5
 		 :use-resampling-set-cache? t
 		 :slices-or-chords :chords

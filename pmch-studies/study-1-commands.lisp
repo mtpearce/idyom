@@ -14,6 +14,27 @@
 
 ;;;; Training and testing on different datasets
 ;; Train on classical, test on jazz
-(pmch-s1:analyse-viewpoints pmch-s1:*h-vp-1-of-3* 3 '(1) nil)
-(pmch-s1:analyse-viewpoints pmch-s1:*h-vp-2-of-3* 3 '(1) nil)
-(pmch-s1:analyse-viewpoints pmch-s1:*h-vp-3-of-3* 3 '(1) nil)
+(pmch-s1:analyse-viewpoints pmch-s1:*h-vp-1-of-8* 3 '(1)
+			    :reduce-harmony nil
+			    :reduce-harmony-pretraining t)
+(pmch-s1:analyse-viewpoints pmch-s1:*h-vp-2-of-8* 3 '(1)
+			    :reduce-harmony nil
+			    :reduce-harmony-pretraining t)
+(pmch-s1:analyse-viewpoints pmch-s1:*h-vp-3-of-8* 3 '(1)
+			    :reduce-harmony nil
+			    :reduce-harmony-pretraining t)
+(pmch-s1:analyse-viewpoints pmch-s1:*h-vp-4-of-8* 3 '(1)
+			    :reduce-harmony nil
+			    :reduce-harmony-pretraining t)
+(pmch-s1:analyse-viewpoints pmch-s1:*h-vp-5-of-8* 3 '(1)
+			    :reduce-harmony nil
+			    :reduce-harmony-pretraining t)
+(pmch-s1:analyse-viewpoints pmch-s1:*h-vp-6-of-8* 3 '(1)
+			    :reduce-harmony nil
+			    :reduce-harmony-pretraining t)
+(pmch-s1:analyse-viewpoints pmch-s1:*h-vp-7-of-8* 3 '(1)
+			    :reduce-harmony nil
+			    :reduce-harmony-pretraining t)
+(pmch-s1:analyse-viewpoints pmch-s1:*h-vp-8-of-8* 3 '(1)
+			    :reduce-harmony nil
+			    :reduce-harmony-pretraining t)
