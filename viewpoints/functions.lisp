@@ -104,55 +104,26 @@ the original viewpoints are included."
 
 ;;;; Setting viewpoint quantiles
 
-(defgeneric set-viewpoint-quantiles (v datasets num-quantiles
-				     &key expansion reduction slices-or-chords)
-  (:documentation "Gets viewpoint quantiles for viewpoint <v> on the basis
-of a list of dataset-ids, <dataset-ids>, using <num-quantiles> quantiles.
-<expansion-method> may be nil, in which case no expansion is used,
-or a keyword symbol corresponding to an expansion method to be used,
-or a list of keyword symbols corresponding to the expansion method 
-for each respective dataset."))
+(defgeneric set-viewpoint-quantiles (v sequences num-quantiles)
+  (:documentation "Sets viewpoint quantiles for viewpoint <v> on the basis
+of <sequences>, using <num-quantiles> quantiles. <sequences> can be a list
+of music-sequences or a list of music-sequences that have been coerced to lists."))
 
-(defmethod set-viewpoint-quantiles ((v viewpoint) datasets num-quantiles
-				    &key expansion reduction slices-or-chords)
+(defmethod set-viewpoint-quantiles ((v viewpoint) (sequences list) (num-quantiles integer))
   (utils:message
    (format nil
-	   "Discretising viewpoint ~A into ~A quantiles from datasets ~A."
-	   (viewpoints:viewpoint-name v) num-quantiles datasets))
+	   "Discretising viewpoint ~A into ~A quantiles on the basis of ~A compositions."
+	   (viewpoints:viewpoint-name v) num-quantiles (length sequences)))
   (assert (integerp num-quantiles))
-  (assert (listp datasets))
-  (assert (not (null datasets)))
-  (assert (every #'integerp datasets))
-  (assert (or (every #'(lambda (x) (typep x 'md:music-sequence)) datasets)
-	      (every #'integerp datasets)))
-  (let* ((expansion-method (if (null expansion) :none expansion))
-	 (expansion-methods (if (not (listp expansion-method))
-				(make-list (length datasets)
-					   :initial-element expansion-method)
-				expansion-method)))
-    ;; (datasets (if (integerp (car datasets)))
-    (if (typep (car datasets) 'md:music-sequence)
-	(error "set-viewpoint-quantiles cannot yet accept music sequences as input."))
-    (assert (eql (length expansion-methods) (length datasets)))
-    (let* ((viewpoint-elements
-	    (loop
-	       for dataset-id in datasets
-	       for method in expansion-methods
-	       append (mapcan #'identity
-			      (viewpoints:viewpoint-sequences
-			       v (md:get-harmonic-sequences
-				  (list dataset-id)
-				  :expansion expansion
-				  :reduction reduction
-				  :slices-or-chords slices-or-chords)))))
-	   (quantiles (utils:quantiles (remove-duplicates viewpoint-elements :test #'=)
-				       num-quantiles)))
+  (assert (not (null sequences)))
+  (let* ((viewpoint-elements
+	  (loop for sequence in sequences
+	     append (viewpoints:viewpoint-sequence v sequence)))
+	 (quantiles (utils:quantiles (remove-duplicates viewpoint-elements :test #'=)
+				     num-quantiles)))
       (setf (gethash (viewpoints:viewpoint-name v)
 		     *viewpoint-quantiles*)
-	    quantiles))))
+	    quantiles)))
 
-(defmethod set-viewpoint-quantiles ((v symbol) datasets num-quantiles
-				    &key expansion reduction slices-or-chords)
-  (set-viewpoint-quantiles (get-viewpoint v) datasets num-quantiles
-			   :expansion expansion :reduction reduction
-			   :slices-or-chords slices-or-chords))
+(defmethod set-viewpoint-quantiles ((v symbol) (sequences list) (num-quantiles integer))
+  (set-viewpoint-quantiles (get-viewpoint v) sequences num-quantiles))

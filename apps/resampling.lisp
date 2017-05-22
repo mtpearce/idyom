@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-05-22 13:29:16 peter>                           
+;;;; Time-stamp: <2017-05-22 15:00:30 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -54,6 +54,7 @@
    their predictions combined. The parameters
    <use-resampling-set-cache?> and <use-ltms-cache?> enable or disable
    respectively the caching of resampling-sets and LTMs."
+  (when (= detail 1) (error "Detail level 1 not yet implemented."))
   (assert (integerp num-quantiles))
   (let* (;; Check model memory parameters
          (ltmo (apply #'check-model-defaults (cons mvs::*ltm-params* ltmo)))
@@ -109,12 +110,6 @@
                                  resampling-indices))
          ;; the result
          (sequence-predictions))
-    (discretise-viewpoints (append sources targets)
-			   (cons dataset-id pretraining-ids)
-			   num-quantiles
-			   slices-or-chords harmonic-reduction
-			   polyphonic-expansion)
-    (let ((viewpoints:*discretise-viewpoints* t)) 
       (utils:message (format nil "Iterating over ~A resampling indice(s)."
 			     (length resampling-indices)))
       (dolist (resampling-set resampling-sets sequence-predictions)
@@ -123,47 +118,45 @@
 	(when (member resampling-id resampling-indices)
 	  (utils:message (format nil "Modelling resampling fold ~A/~A."
 				 (1+ resampling-id) (length resampling-indices)))
-	  (let* ((training-set (get-training-set dataset resampling-set))
+	  (let* ((resampling-training-set (get-training-set dataset resampling-set))
 		 (training-set (monodies-to-lists (append pretraining-set
-							  training-set)))
-		 (test-set (monodies-to-lists (get-test-set dataset
-							    resampling-set)))
-		 (ltms (get-long-term-models sources training-set
-					     pretraining-ids dataset-id
-					     resampling-id k 
-					     voices texture
-					     use-ltms-cache?))
-		 (mvs (make-mvs targets sources ltms))
-		 (predictions (mvs:model-dataset mvs test-set
-						 :construct? t :predict? t
-						 :detail detail)))
-	    (if (typep predictions 'utils:dataframe)
-		(if sequence-predictions
-		    (setf sequence-predictions (utils:bind-by-row sequence-predictions
-								  predictions))
-		    (setf sequence-predictions predictions))
-		(push predictions sequence-predictions))))
-	(incf resampling-id))
+							  resampling-training-set))))
+	    (discretise-viewpoints (append sources targets) training-set num-quantiles)
+	    (let* ((viewpoints:*discretise-viewpoints* t)
+		   (test-set (monodies-to-lists (get-test-set dataset
+							      resampling-set)))
+		   (ltms (get-long-term-models sources training-set
+					       pretraining-ids dataset-id
+					       resampling-id k 
+					       voices texture
+					       use-ltms-cache?))
+		   (mvs (make-mvs targets sources ltms))
+		   (predictions (mvs:model-dataset mvs test-set
+						   :construct? t :predict? t
+						   :detail detail)))
+	      (if (typep predictions 'utils:dataframe)
+		  (if sequence-predictions
+		      (setf sequence-predictions
+			    (utils:bind-by-row sequence-predictions predictions))
+		      (setf sequence-predictions predictions))
+		  (push predictions sequence-predictions))
+	      (incf resampling-id)))))
       (when (typep sequence-predictions 'utils:dataframe)
 	(utils:sort-by-columns sequence-predictions '(:melody.id)))
-      (when (= detail 1) (error "Detail level 1 not yet implemented."))
-      sequence-predictions)))
+      sequence-predictions))
 
-(defun discretise-viewpoints (viewpoints datasets num-quantiles
-			      slices-or-chords reduction expansion)
+(defun discretise-viewpoints (viewpoints sequences num-quantiles)
   "Takes as input a list of viewpoints, <viewpoint-list>, and iterates
 over this list. Whenever a continuous viewpoint is found, viewpoint 
 quantiles are calculated for it."
-  (assert (not (null datasets)))
-  (assert (listp datasets))
+  (assert (not (null sequences)))
+  (assert (listp sequences))
   (assert (every #'(lambda (v) (typep v 'viewpoints:viewpoint)) viewpoints))
   (viewpoints:reset-viewpoint-quantiles)
   (setf viewpoints:*discretise-viewpoints* nil)
   (dolist (v viewpoints)
     (when (viewpoints:continuous-p v)
-      (viewpoints:set-viewpoint-quantiles
-       v datasets num-quantiles :slices-or-chords slices-or-chords
-       :reduction reduction :expansion expansion))))
+      (viewpoints:set-viewpoint-quantiles v sequences num-quantiles))))
 
 (defun check-model-defaults (defaults &key
 			      (order-bound (getf defaults :order-bound))
