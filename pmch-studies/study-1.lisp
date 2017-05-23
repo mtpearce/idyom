@@ -2,7 +2,7 @@
 ;;;; File:       study-1.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-05-15 13:37:26 peter>                          
-;;;; Time-stamp: <2017-05-23 18:54:41 peter>                           
+;;;; Time-stamp: <2017-05-23 19:06:57 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -138,7 +138,6 @@ to the size that each training set should be downsized to."
   (assert (symbolp viewpoint))
   (let* ((output-root-dir (utils:ensure-directory output-path))
 	 (output-dir
-	  (ensure-directories-exist
 	   (merge-pathnames
 	    (make-pathname
 	     :directory
@@ -157,32 +156,37 @@ to the size that each training set should be downsized to."
 		       "no-training-set-downsampling")
 		   (string-downcase (symbol-name viewpoint))))
 	    output-root-dir)))
-	 (output-resampling-set-path
-	  (namestring (merge-pathnames
-		       (make-pathname :name "resampling" :type "lisp")
-		       output-dir)))
-	 (output-analysis-path
-	  (merge-pathnames
-	   (make-pathname :directory '(:relative "dat_from_idyom"))
-	   output-dir))
-	 (viewpoints::*basic-types* (list :h-cpitch)))
-    (idyom:idyom dataset '(h-cpitch) (list viewpoint)
-		 :k k :texture :harmony :models :ltm
-		 :pretraining-ids pretraining-ids
-		 :harmonic-reduction (if reduce-harmony
-					 :regular-harmonic-rhythm
-					 :none)
-		 :pretraining-harmonic-reduction (if reduce-harmony-pretraining
-						     :regular-harmonic-rhythm
-						     :none)
-		 :separator #\tab :detail 2.5
-		 :use-resampling-set-cache? t
-		 :slices-or-chords :chords
-		 :resampling-set-cache-path output-resampling-set-path
-		 :num-quantiles 10
-		 :training-set-size training-set-size
-		 :use-ltms-cache? nil
-		 :overwrite nil
-		 :output-path output-analysis-path)))
+    (if (probe-file output-dir)
+	(utils:message "Output directory already exists, skipping analysis.")
+	(progn
+	  (ensure-directories-exist output-dir)
+	  (let* ((output-resampling-set-path
+		  (namestring (merge-pathnames
+			       (make-pathname :name "resampling" :type "lisp")
+			       output-dir)))
+		 (output-analysis-path
+		  (merge-pathnames
+		   (make-pathname :directory '(:relative "dat_from_idyom"))
+		   output-dir))
+		 (viewpoints::*basic-types* (list :h-cpitch)))
+	    (idyom:idyom
+	     dataset '(h-cpitch) (list viewpoint)
+	     :k k :texture :harmony :models :ltm
+	     :pretraining-ids pretraining-ids
+	     :harmonic-reduction (if reduce-harmony
+				     :regular-harmonic-rhythm
+				     :none)
+	     :pretraining-harmonic-reduction (if reduce-harmony-pretraining
+						 :regular-harmonic-rhythm
+						 :none)
+	     :separator #\tab :detail 2.5
+	     :use-resampling-set-cache? t
+	     :slices-or-chords :chords
+	     :resampling-set-cache-path output-resampling-set-path
+	     :num-quantiles 10
+	     :training-set-size training-set-size
+	     :use-ltms-cache? nil
+	     :overwrite nil
+	     :output-path output-analysis-path))))))
 
 		 
