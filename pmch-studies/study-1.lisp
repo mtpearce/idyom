@@ -2,7 +2,7 @@
 ;;;; File:       study-1.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-05-15 13:37:26 peter>                          
-;;;; Time-stamp: <2017-05-23 19:06:57 peter>                           
+;;;; Time-stamp: <2017-05-23 20:33:15 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -28,7 +28,7 @@
 				     h-csd
 				     h-gct h-gct-3rd-type
 				     h-gct-7th-type h-gct-base
-				     h-gct-ext h-gct h-gct-meeus-int
+				     h-gct-ext h-gct-meeus-int
 				     h-gct-root-5ths-dist
 				     h-gct-root-cpc h-hedges-chord-type))
 
@@ -86,8 +86,9 @@
 ;;;; Analysis functions	 
 
 (defun analyse-all-viewpoints
-    (dataset pretraining-ids reduce-harmony reduce-harmony-pretraining
-     &key (output-path "/home/peter/idyom-output/study-1/")
+    (dataset pretraining-ids
+     &key reduce-harmony reduce-harmony-pretraining
+     (output-path "/home/peter/idyom-output/study-1/")
        (k 10) training-set-size)
   (let ((viewpoints *harmony-viewpoints*))
     (analyse-viewpoints viewpoints dataset pretraining-ids

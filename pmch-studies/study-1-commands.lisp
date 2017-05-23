@@ -1,9 +1,30 @@
+;;;; Paths
+(defparameter cl-user::*mac-os-output-dir*
+  "/Users/peter/Dropbox/Academic/projects/idyom/studies/HarmonyRepresentations/inst/extdata/data-4/")
+(defparameter cl-user::*linux-output-dir*
+  "/home/peter/idyom-output/study-1/")
+
 ;;;; Test analyses
 (pmch-s1:analyse-viewpoints '(h-cpitch h-cpitch-class-set) 4 nil
 			    :reduce-harmony t
 			    :output-path "/Users/peter/Temp/test-analysis/"
 			    :training-set-size 1
 			    :k 2)
+
+;;;; Training and testing on the same dataset
+;; Pop
+(loop for ts-size in '(711 10 350 20 175 45 90 525)
+   do (pmch-s1:analyse-all-viewpoints 
+       2 nil
+       :training-set-size ts-size
+       :output-path (if (member :os-macosx cl-user::*features*)
+			cl-user::*mac-os-output-dir*
+			cl-user::*linux-output-dir*)))
+     
+
+
+;;;; OLD ;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;; Training and testing on the same dataset
 ;; Classical
