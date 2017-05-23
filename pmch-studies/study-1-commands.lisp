@@ -1,9 +1,3 @@
-;;;; Paths
-(defparameter cl-user::*mac-os-output-dir*
-  "/Users/peter/Dropbox/Academic/projects/idyom/studies/HarmonyRepresentations/inst/extdata/data-4/")
-(defparameter cl-user::*linux-output-dir*
-  "/home/peter/idyom-output/study-1/")
-
 ;;;; Test analyses
 (pmch-s1:analyse-viewpoints '(h-cpitch h-cpitch-class-set) 4 nil
 			    :reduce-harmony t
@@ -12,10 +6,17 @@
 			    :k 2)
 
 ;;;; Training and testing on the same dataset
+(start-idyom)
+;;;; Paths
+(defparameter cl-user::*mac-os-output-dir*
+  "/Users/peter/Dropbox/Academic/projects/idyom/studies/HarmonyRepresentations/inst/extdata/data-4/")
+(defparameter cl-user::*linux-output-dir*
+  "/home/peter/idyom-output/study-1/")
 ;; Pop
-(loop for ts-size in '(711 10 350 20 175 45 90 525)
+(loop for ts-size in '(665 10 330 20 165 40 80 495)
    do (pmch-s1:analyse-all-viewpoints 
        2 nil
+       :k 10
        :training-set-size ts-size
        :output-path (if (member :os-macosx cl-user::*features*)
 			cl-user::*mac-os-output-dir*
