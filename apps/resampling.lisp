@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-05-23 17:51:01 peter>                           
+;;;; Time-stamp: <2017-05-23 18:17:24 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -40,6 +40,7 @@
 			 pretraining-harmonic-reduction
 			 (slices-or-chords :chords)
 			 (num-quantiles 10)
+			 training-set-size
                          (use-resampling-set-cache? t)
 			 (resampling-set-cache-path nil)
                          (use-ltms-cache? t)
@@ -53,7 +54,10 @@
    short-term model is used and otherwise both models are used and
    their predictions combined. The parameters
    <use-resampling-set-cache?> and <use-ltms-cache?> enable or disable
-   respectively the caching of resampling-sets and LTMs."
+   respectively the caching of resampling-sets and LTMs.
+   If <training-set-size> is not nil, it should
+   be a positive integer corresponding to the number of compositions
+   that each training set should be downsampled to."
   (when (= detail 1) (error "Detail level 1 not yet implemented."))
   (assert (integerp num-quantiles))
   (let* (;; Check model memory parameters
@@ -102,7 +106,8 @@
          (resampling-sets (get-resampling-sets
 			   dataset-id :k k
 			   :use-cache? use-resampling-set-cache?
-			   :resampling-set-cache-path resampling-set-cache-path))
+			   :resampling-set-cache-path resampling-set-cache-path
+			   :training-set-size training-set-size))
          (resampling-id 0)
          ;; If no resampling sets specified, then use all sets
          (resampling-indices (if (null resampling-indices)
@@ -453,7 +458,7 @@ for <viewpoint> in <dataset-id>."
                 (apply #'+ (mapcar #'md:count-compositions
                                    dataset-ids)))
                (resampling-sets (create-resampling-sets
-                                 composition-count k)))
+                                 composition-count k training-set-size)))
           (when use-cache? (write-resampling-sets-to-file
                             resampling-sets filename))
           resampling-sets))))
@@ -481,7 +486,7 @@ for <viewpoint> in <dataset-id>."
 ;;; Constructing random partitions of each dataset 
 ;;;===========================================================================
 
-(defun create-resampling-sets (count k training-set-size)
+(defun create-resampling-sets (count k &optional training-set-size)
   "Returns a list of length <k> whose elements are lists representing a
    complete partition of the integers from 0 to (- count 1) where the
    elements of the individual sets are randomly selected without
@@ -498,12 +503,13 @@ for <viewpoint> in <dataset-id>."
       (push i (svref test-sets current-test-set))
       (setf current-test-set (mod (1+ current-test-set) k)))
     (loop for i from 0 to (1- k)
-       collect (let* ((test-set (sort (svref test-sets i) #'<))
+       collect (let* ((test-set (sort (copy-list (svref test-sets i))
+				      #'<))
 		      (train-set (remove-if #'(lambda (x) (member x test-set))
 						  indices))
 		      (train-set (if training-set-size
-				     something
+				     (utils::sample training-set-size train-set)
 				     train-set))
-		      (train-set (sort (copy-list train-set) #'<))
+		      (train-set (sort (copy-list train-set) #'<)))
 		 (list (list 'test test-set)
 		       (list 'train train-set))))))

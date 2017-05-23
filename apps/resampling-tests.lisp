@@ -2,7 +2,7 @@
 ;;;; File:       resampling-tests.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-05-09 14:00:34 peter>                             
-;;;; Time-stamp: <2017-05-11 15:56:50 peter>                           
+;;;; Time-stamp: <2017-05-23 18:14:02 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -26,7 +26,7 @@
 (5am:test create-resampling-sets-ex-2
   (5am:is (eql (length (create-resampling-sets 100 7)) 7)))
 (5am:test create-resampling-sets-ex-3
-  (5am:is (eql (length (create-resampling-sets 99 35)) 35)))
+  (5am:is (eql (length (create-resampling-sets 99 35 1)) 35)))
 ;; Check for repetition in the test sets
 (5am:test create-resampling-sets-ex-4
   (5am:is (every #'(lambda (x) (let ((test-set (second (car x))))
@@ -36,7 +36,7 @@
 (5am:test create-resampling-sets-ex-5
   (5am:is (every #'(lambda (x) (let ((training-set (second (second x))))
 				 (not (utils:any-duplicated training-set))))
-		 (create-resampling-sets 80 13))))
+		 (create-resampling-sets 80 13 3))))
 ;; Check symbols
 (5am:test create-resampling-sets-ex-6
   (5am:is (every #'(lambda (x) (eql (caar x) 'test)) (create-resampling-sets 12 2))))
@@ -47,10 +47,23 @@
 (5am:test create-resampling-sets-ex-8
   (5am:is (not (utils:any-duplicated (loop for resampling-set
 				  in (create-resampling-sets 20 6)
+					append (second (car resampling-set)))))))
+(5am:test create-resampling-sets-ex-8-2
+  (5am:is (not (utils:any-duplicated (loop for resampling-set
+				  in (create-resampling-sets 150 4 10)
 				  append (second (car resampling-set)))))))
 ;; Check that test sets are all approximately equal sizes
 (5am:test create-resampling-sets-ex-9
   (5am:is (eval '(let* ((resampling-sets (create-resampling-sets 70 8))
+			(min-size (apply #'min (mapcar #'(lambda (x)
+							   (length (second (car x))))
+						       resampling-sets)))
+			(max-size (apply #'max (mapcar #'(lambda (x)
+							   (length (second (car x))))
+						       resampling-sets))))
+		  (< (- max-size min-size) 2)))))
+(5am:test create-resampling-sets-ex-9-2
+  (5am:is (eval '(let* ((resampling-sets (create-resampling-sets 70 8 2))
 			(min-size (apply #'min (mapcar #'(lambda (x)
 							   (length (second (car x))))
 						       resampling-sets)))
@@ -65,6 +78,23 @@
 				      (combined (append test-set training-set)))
 				 (not (utils:any-duplicated combined))))
 		 (create-resampling-sets 120 14))))
+(5am:test create-resampling-sets-ex-10-2
+  (5am:is (every #'(lambda (x) (let* ((test-set (second (car x)))
+				      (training-set (second (second x)))
+				      (combined (append test-set training-set)))
+				 (not (utils:any-duplicated combined))))
+		 (create-resampling-sets 160 5 15))))
+;; Check that training set sizes are correct
+(5am:test create-resampling-sets-ex-11
+  (5am:is (every #'(lambda (x)
+		     (eql (length (cadr (assoc 'train x)))
+			  10))
+		 (create-resampling-sets 100 3 10))))
+(5am:test create-resampling-sets-ex-11-2
+  (5am:is (every #'(lambda (x)
+		     (eql (length (cadr (assoc 'train x)))
+			  33))
+		 (create-resampling-sets 100 2 33))))
 
 ;;;=====================
 ;;;* Output formatting *
