@@ -2,7 +2,7 @@
 ;;;; File:       mcgill2db.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-02-16 15:38:15 peter>                           
-;;;; Time-stamp: <2017-05-23 20:12:25 peter>                           
+;;;; Time-stamp: <2017-05-23 21:20:48 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -355,6 +355,9 @@
                 (process-files file-or-dir-name directory))
       (print-status))))
 
+(defun break-me (x)
+  (break))
+
 (defun process-files (file-or-dir directory &key (remove-duplicates t))
   "If <file-or-dir> is a directory all the files in that directory
    are converted. The file search is recursive, meaning that 
@@ -392,7 +395,7 @@
 			    (string-downcase (cdr (assoc :artist result))))))
 	    (when (or (not remove-duplicates)
 		      (null (nth-value 1 (gethash key song-table))))
-	      (push (list (cdr (assoc :description result))
+	      (push (cons (cdr (assoc :description result))
 			  (cdr (assoc :events result)))
 		    converted-files)
 	      (setf (gethash key song-table) t)))))
@@ -402,7 +405,7 @@
 	(utils:message (format nil "Converting file: ~A" *file-name*)
 		       :detail 1)
 	(let* ((result (process-file file-or-dir)))
-	  (list (cdr (assoc :description result))
+	  (cons (cdr (assoc :description result))
 		(cdr (assoc :events result)))))))
 
 (defun process-file (file-name)
