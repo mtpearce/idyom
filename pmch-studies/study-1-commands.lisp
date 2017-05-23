@@ -1,3 +1,10 @@
+;;;; Test analyses
+(pmch-s1:analyse-viewpoints '(h-cpitch h-cpitch-class-set) 4 nil
+			    :reduce-harmony t
+			    :output-path "/Users/peter/Temp/test-analysis/"
+			    :training-set-size 1
+			    :k 2)
+
 ;;;; Training and testing on the same dataset
 ;; Classical
 (pmch-s1:analyse-viewpoints pmch-s1:*h-vp-1-of-3* 1 nil t)
