@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2017-05-20 14:02:47 peter>
+;;;; Time-stamp: <2017-05-23 18:00:00 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -223,6 +223,14 @@ Borrowed from https://www.pvk.ca/Blog/Lisp/trivial_uniform_shuffling.html"
                                  (cons x (random 1d0)))
                        sequence)
                   #'< :key #'cdr)))
+
+(defun sample (n sequence)
+  "Takes a random sample of size <n> from <sequence> without replacement."
+  (assert (integerp n))
+  (assert (>= n 0))
+  (assert (<= n (length sequence)))
+  (let ((shuffled (shuffle sequence)))
+    (subseq shuffled 0 n)))
 
 (defun assign-to-quantile (number quantiles)
   "Given a number <number> and a list <quantiles> identifying a set of 
