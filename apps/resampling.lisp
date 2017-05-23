@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-05-23 18:17:24 peter>                           
+;;;; Time-stamp: <2017-05-23 18:33:27 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -57,7 +57,9 @@
    respectively the caching of resampling-sets and LTMs.
    If <training-set-size> is not nil, it should
    be a positive integer corresponding to the number of compositions
-   that each training set should be downsampled to."
+   that each resampling training set should be downsampled to.
+   Note that pretraining datasets outside the resampling procedure
+   are not downsampled."
   (when (= detail 1) (error "Detail level 1 not yet implemented."))
   (assert (integerp num-quantiles))
   (let* (;; Check model memory parameters
