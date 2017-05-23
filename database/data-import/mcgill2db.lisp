@@ -2,7 +2,7 @@
 ;;;; File:       mcgill2db.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-02-16 15:38:15 peter>                           
-;;;; Time-stamp: <2017-05-23 21:20:48 peter>                           
+;;;; Time-stamp: <2017-05-23 21:31:38 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -354,9 +354,6 @@
         (append (list description *default-timebase* (car *middle-c*))
                 (process-files file-or-dir-name directory))
       (print-status))))
-
-(defun break-me (x)
-  (break))
 
 (defun process-files (file-or-dir directory &key (remove-duplicates t))
   "If <file-or-dir> is a directory all the files in that directory
