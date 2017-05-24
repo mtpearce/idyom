@@ -12,6 +12,17 @@
   "/Users/peter/Dropbox/Academic/projects/idyom/studies/HarmonyRepresentations/inst/extdata/data-4/")
 (defparameter cl-user::*linux-output-dir*
   "/home/peter/Dropbox/Academic/projects/idyom/studies/HarmonyRepresentations/inst/extdata/data-4/")
+
+;; Classical (1022 pieces in corpus, max 919 in training set)
+(loop for ts-size in '(10 320 20 160 40 640 80 919)
+   do (pmch-s1:analyse-all-viewpoints 
+       1 nil
+       :reduce-harmony t
+       :k 10
+       :training-set-size ts-size
+       :output-path (if (member :os-macosx cl-user::*features*)
+			cl-user::*mac-os-output-dir*
+			cl-user::*linux-output-dir*)))
 ;; Pop
 (loop for ts-size in '(665 10 330 20 165 40 80 495)
    do (pmch-s1:analyse-all-viewpoints 
