@@ -2,7 +2,7 @@
 ;;;; File:       mcgill2db.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-02-16 15:38:15 peter>                           
-;;;; Time-stamp: <2017-02-20 16:23:12 peter>                           
+;;;; Time-stamp: <2017-05-23 21:31:38 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -355,7 +355,7 @@
                 (process-files file-or-dir-name directory))
       (print-status))))
 
-(defun process-files (file-or-dir directory)
+(defun process-files (file-or-dir directory &key (remove-duplicates t))
   "If <file-or-dir> is a directory all the files in that directory
    are converted. The file search is recursive, meaning that 
    subdirectories and subdirectories of subdirectories etc
@@ -370,22 +370,40 @@
 		     file-or-dir
 		     :extensions *input-file-extensions*))
 	     (num-files (length files))
-	     (converted-files nil))
+	     (converted-files nil)
+	     (song-table (make-hash-table :test 'equal)))
 	(utils:message (format nil "Converting ~A files..." num-files)
 		       :detail 1)
-	(utils:dolist-pb (file files (reverse converted-files))
+	(utils:dolist-pb
+	    (file files
+		  (progn
+		    (when remove-duplicates
+		      (utils:message
+		       (format nil "Retained ~A songs after removing duplicates."
+			       (length converted-files))))
+		    (reverse converted-files)))
 	  (incf *file-number*)
 	  (setf *file-name* file)
 	  (utils:message (format nil "Converting file ~A out of ~A: ~A"
 				 *file-number* num-files *file-name*)
 			 :detail 3)
-	  (push (process-file file) converted-files)))
+	  (let* ((result (process-file file))
+		 (key (cons (string-downcase (cdr (assoc :title result)))
+			    (string-downcase (cdr (assoc :artist result))))))
+	    (when (or (not remove-duplicates)
+		      (null (nth-value 1 (gethash key song-table))))
+	      (push (cons (cdr (assoc :description result))
+			  (cdr (assoc :events result)))
+		    converted-files)
+	      (setf (gethash key song-table) t)))))
       (progn
 	(setf *file-number* 1)
 	(setf *file-name* file-or-dir)
 	(utils:message (format nil "Converting file: ~A" *file-name*)
 		       :detail 1)
-	(list (process-file file-or-dir)))))
+	(let* ((result (process-file file-or-dir)))
+	  (cons (cdr (assoc :description result))
+		(cdr (assoc :events result)))))))
 
 (defun process-file (file-name)
   "Top level call to convert the file <file-name> to CHARM readable
@@ -398,7 +416,10 @@
 			      (if artist artist "Unknown artist")
 			      (if title title "Unknown title")))
 	 (events (output processed-data)))
-    (cons description events)))
+    (list (cons :description description)
+	  (cons :events events)
+	  (cons :title title)
+	  (cons :artist artist))))
 
 (defun process-data (raw-data)
   (labels ((fun (remaining-lines reader)

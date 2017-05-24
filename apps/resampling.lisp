@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-05-22 15:00:30 peter>                           
+;;;; Time-stamp: <2017-05-23 18:33:27 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -40,6 +40,7 @@
 			 pretraining-harmonic-reduction
 			 (slices-or-chords :chords)
 			 (num-quantiles 10)
+			 training-set-size
                          (use-resampling-set-cache? t)
 			 (resampling-set-cache-path nil)
                          (use-ltms-cache? t)
@@ -53,7 +54,12 @@
    short-term model is used and otherwise both models are used and
    their predictions combined. The parameters
    <use-resampling-set-cache?> and <use-ltms-cache?> enable or disable
-   respectively the caching of resampling-sets and LTMs."
+   respectively the caching of resampling-sets and LTMs.
+   If <training-set-size> is not nil, it should
+   be a positive integer corresponding to the number of compositions
+   that each resampling training set should be downsampled to.
+   Note that pretraining datasets outside the resampling procedure
+   are not downsampled."
   (when (= detail 1) (error "Detail level 1 not yet implemented."))
   (assert (integerp num-quantiles))
   (let* (;; Check model memory parameters
@@ -102,7 +108,8 @@
          (resampling-sets (get-resampling-sets
 			   dataset-id :k k
 			   :use-cache? use-resampling-set-cache?
-			   :resampling-set-cache-path resampling-set-cache-path))
+			   :resampling-set-cache-path resampling-set-cache-path
+			   :training-set-size training-set-size))
          (resampling-id 0)
          ;; If no resampling sets specified, then use all sets
          (resampling-indices (if (null resampling-indices)
@@ -431,15 +438,21 @@ for <viewpoint> in <dataset-id>."
     (reverse test-set)))
 
 (defun get-resampling-sets (dataset-id &key (k 10) (use-cache? t)
-					 resampling-set-cache-path)
+					 resampling-set-cache-path
+					 training-set-size)
   "Returns the resampling-sets for dataset <dataset-id>. If
    <use-cache?> is T and the cache file exists, they are read from
    file, otherwise they are created and optionally cached if
-   <use-cache?> is T."
+   <use-cache?> is T. If <training-set-size> is not nil, it must
+   be a positive integer corresponding to the number of compositions
+   that each training set should be downsampled to."
+  (assert (or (null training-set-size)
+	      (integerp training-set-size)))
   (let* ((dataset-ids (if (consp dataset-id) dataset-id (list dataset-id)))
          (filename (if resampling-set-cache-path
 		       resampling-set-cache-path
-		       (get-resampling-sets-filename dataset-ids k))))
+		       (get-resampling-sets-filename dataset-ids k
+						     training-set-size))))
     (if (and use-cache? (file-exists filename))
         ;; Retrieve the previously cached resampling-set.
         (read-object-from-file filename :resampling)
@@ -447,7 +460,7 @@ for <viewpoint> in <dataset-id>."
                 (apply #'+ (mapcar #'md:count-compositions
                                    dataset-ids)))
                (resampling-sets (create-resampling-sets
-                                 composition-count k)))
+                                 composition-count k training-set-size)))
           (when use-cache? (write-resampling-sets-to-file
                             resampling-sets filename))
           resampling-sets))))
@@ -457,11 +470,17 @@ for <viewpoint> in <dataset-id>."
   (write-object-to-file resampling-sets filename :resampling)
   (format t "~%Written resampling set to ~A." filename))
 
-(defun get-resampling-sets-filename (dataset-ids k)
+(defun get-resampling-sets-filename (dataset-ids k training-set-size)
   "Returns the filename in *resampling-sets-directory* containing the
-   resampling-sets for <dataset-id>." 
+   resampling-sets for <dataset-id>."
   (string-append (namestring *resampling-dir*)
-                 (format nil "~{~S-~}~S" (sort dataset-ids #'<) k)
+                 (format nil "datasets-~{~S-~}k-~S~A"
+			 (sort dataset-ids #'<)
+			 k
+			 (if training-set-size
+			     (format nil "-training-set-size-~A"
+				     training-set-size)
+			     ""))
                  ".resample"))
   
 
@@ -469,11 +488,15 @@ for <viewpoint> in <dataset-id>."
 ;;; Constructing random partitions of each dataset 
 ;;;===========================================================================
 
-(defun create-resampling-sets (count k)
+(defun create-resampling-sets (count k &optional training-set-size)
   "Returns a list of length <k> whose elements are lists representing a
    complete partition of the integers from 0 to (- count 1) where the
    elements of the individual sets are randomly selected without
-   replacement."
+   replacement. <training-set-size> may be nil (no downsampling) or
+   a positive integer corresponding to the number of compositions
+   that each training set should be downsampled to."
+  (assert (or (null training-set-size)
+	      (integerp training-set-size)))
   (let* ((test-sets (make-array k :initial-element nil))
 	 (indices (loop for i from 0 to (1- count) collect i))
 	 (shuffled-indices (utils:shuffle indices))
@@ -482,9 +505,13 @@ for <viewpoint> in <dataset-id>."
       (push i (svref test-sets current-test-set))
       (setf current-test-set (mod (1+ current-test-set) k)))
     (loop for i from 0 to (1- k)
-       collect (let* ((test-set (sort (svref test-sets i) #'<))
-		      (train-set (sort (remove-if #'(lambda (x) (member x test-set))
-						  indices)
-				       #'<)))
+       collect (let* ((test-set (sort (copy-list (svref test-sets i))
+				      #'<))
+		      (train-set (remove-if #'(lambda (x) (member x test-set))
+						  indices))
+		      (train-set (if training-set-size
+				     (utils::sample training-set-size train-set)
+				     train-set))
+		      (train-set (sort (copy-list train-set) #'<)))
 		 (list (list 'test test-set)
 		       (list 'train train-set))))))
