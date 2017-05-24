@@ -11,7 +11,7 @@
 (defparameter cl-user::*mac-os-output-dir*
   "/Users/peter/Dropbox/Academic/projects/idyom/studies/HarmonyRepresentations/inst/extdata/data-4/")
 (defparameter cl-user::*linux-output-dir*
-  "/home/peter/idyom-output/study-1/")
+  "/home/peter/Dropbox/Academic/projects/idyom/studies/HarmonyRepresentations/inst/extdata/data-4/")
 ;; Pop
 (loop for ts-size in '(665 10 330 20 165 40 80 495)
    do (pmch-s1:analyse-all-viewpoints 
