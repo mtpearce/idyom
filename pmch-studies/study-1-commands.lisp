@@ -46,3 +46,10 @@
 			    :reduce-harmony nil
 			    :reduce-harmony-pretraining t
 			    :k 1)
+
+;; Train on classical, test on jazz
+(pmch-s1:analyse-viewpoints pmch-s1:*h-vp-1-of-8* 2 '(1)
+			    :reduce-harmony nil
+			    :reduce-harmony-pretraining t
+			    :k 1)
+;; etc.
