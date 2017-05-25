@@ -2,7 +2,7 @@
 ;;;; File:       study-1.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-05-15 13:37:26 peter>                          
-;;;; Time-stamp: <2017-05-23 20:33:15 peter>                           
+;;;; Time-stamp: <2017-05-25 22:42:16 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -18,8 +18,8 @@
 				     h-cpc-vl-dist-p=1
 				     h-gct-root-csd
 				     h-gct-root-cpcint
-				     h-bass-cpc h-bass-cpcint h-bass-cpint
-				     h-bass-cpitch h-bass-csd
+				     h-bass-cpc h-bass-cpcint
+				     h-bass-csd
 				     h-bass-int-from-gct-root
 				     h-cpc-identity h-cpc-int-from-bass
 				     h-cpc-int-from-gct-root
@@ -65,10 +65,10 @@
   '(h-cpc-vl-dist-p=1 h-gct-root-csd h-gct-root-cpcint))
 
 (defparameter *h-vp-3-of-8*
-  '(h-bass-cpc h-bass-cpcint h-bass-cpint h-hedges-chord-type))
+  '(h-bass-cpc h-bass-cpcint h-hedges-chord-type))
 
 (defparameter *h-vp-4-of-8*
-  '(h-bass-cpitch h-bass-csd h-bass-int-from-gct-root))
+  '(h-bass-csd h-bass-int-from-gct-root))
 
 (defparameter *h-vp-5-of-8*
   '(h-cpc-identity h-cpc-int-from-bass h-cpc-int-from-gct-root))
