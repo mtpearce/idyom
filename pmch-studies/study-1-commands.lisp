@@ -9,9 +9,9 @@
 (start-idyom)
 ;;;; Paths
 (defparameter cl-user::*mac-os-output-dir*
-  "/Users/peter/Dropbox/Academic/projects/idyom/studies/HarmonyRepresentations/inst/extdata/data-4/")
+  "/Users/peter/Dropbox/Academic/projects/idyom/studies/HarmonyRepresentations/inst/extdata/data-5/")
 (defparameter cl-user::*linux-output-dir*
-  "/home/peter/Dropbox/Academic/projects/idyom/studies/HarmonyRepresentations/inst/extdata/data-4/")
+  "/home/peter/Dropbox/Academic/projects/idyom/studies/HarmonyRepresentations/inst/extdata/data-5/")
 
 ;;;; Experimenting with test length
 ;; Classical (1022 pieces in corpus, max 987 in training set with 30-fold CV)
