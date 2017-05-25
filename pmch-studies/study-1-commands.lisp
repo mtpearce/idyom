@@ -13,21 +13,31 @@
 (defparameter cl-user::*linux-output-dir*
   "/home/peter/Dropbox/Academic/projects/idyom/studies/HarmonyRepresentations/inst/extdata/data-4/")
 
-;; Classical (1022 pieces in corpus, max 919 in training set)
-(loop for ts-size in '(10 320 20 160 40 640 80 919)
+;;;; Experimenting with test length
+;; Classical (1022 pieces in corpus, max 987 in training set with 30-fold CV)
+(loop for ts-size in '(987 8 512 256 16 128 32 64 4 2 1)
    do (pmch-s1:analyse-all-viewpoints 
        1 nil
        :reduce-harmony t
-       :k 10
+       :k 30
        :training-set-size ts-size
        :output-path (if (member :os-macosx cl-user::*features*)
 			cl-user::*mac-os-output-dir*
 			cl-user::*linux-output-dir*)))
-;; Pop
-(loop for ts-size in '(665 10 330 20 165 40 80 495)
+;; Pop (739 pieces in corpus, max 714 in training set with 30-fold CV)
+(loop for ts-size in '(714 8 512 256 16 128 32 64 4 2 1)
    do (pmch-s1:analyse-all-viewpoints 
        2 nil
-       :k 10
+       :k 30
+       :training-set-size ts-size
+       :output-path (if (member :os-macosx cl-user::*features*)
+			cl-user::*mac-os-output-dir*
+			cl-user::*linux-output-dir*)))
+;; Jazz (1186 pieces in corpus, max 714 in training set with 30-fold CV)
+(loop for ts-size in '(1024 8 512 256 16 128 32 64 4 2 1)
+   do (pmch-s1:analyse-all-viewpoints 
+       2 nil
+       :k 30
        :training-set-size ts-size
        :output-path (if (member :os-macosx cl-user::*features*)
 			cl-user::*mac-os-output-dir*
