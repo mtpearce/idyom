@@ -36,7 +36,7 @@
 ;; Jazz (1186 pieces in corpus, max 714 in training set with 30-fold CV)
 (loop for ts-size in '(1024 8 512 256 16 128 32 64 4 2 1)
    do (pmch-s1:analyse-all-viewpoints 
-       2 nil
+       3 nil
        :k 30
        :training-set-size ts-size
        :output-path (if (member :os-macosx cl-user::*features*)
