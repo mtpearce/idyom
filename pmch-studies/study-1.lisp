@@ -2,7 +2,7 @@
 ;;;; File:       study-1.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-05-15 13:37:26 peter>                          
-;;;; Time-stamp: <2017-05-25 22:42:16 peter>                           
+;;;; Time-stamp: <2017-05-25 23:07:54 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -138,25 +138,29 @@ to the size that each training set should be downsized to."
   (assert (listp pretraining-ids))
   (assert (symbolp viewpoint))
   (let* ((output-root-dir (utils:ensure-directory output-path))
-	 (output-dir
-	   (merge-pathnames
-	    (make-pathname
-	     :directory
-	     (list :relative
-		   (if pretraining-ids
-		       (format nil "pretraining-~{~S-~}harmonic-reduction-~A"
-			       pretraining-ids
-			       (string-downcase (symbol-name
-						 reduce-harmony-pretraining)))
-		       "pretraining-none")
-		   (format nil "test-dataset-~A-harmonic-reduction-~A" dataset
-			   (string-downcase (symbol-name reduce-harmony)))
-		   (if training-set-size
-		       (format nil "resampling-training-set-size-~A"
-			       training-set-size)
-		       "no-training-set-downsampling")
-		   (string-downcase (symbol-name viewpoint))))
-	    output-root-dir)))
+	 (training-set-size-dir
+	  (merge-pathnames
+	   (make-pathname
+	    :directory
+	    (list :relative
+		  (if pretraining-ids
+		      (format nil "pretraining-~{~S-~}harmonic-reduction-~A"
+			      pretraining-ids
+			      (string-downcase (symbol-name
+						reduce-harmony-pretraining)))
+		      "pretraining-none")
+		  (format nil "test-dataset-~A-harmonic-reduction-~A" dataset
+			  (string-downcase (symbol-name reduce-harmony)))
+		  (if training-set-size
+		      (format nil "resampling-training-set-size-~A"
+			      training-set-size)
+		      "no-training-set-downsampling")))
+	   output-root-dir))
+	 (output-dir (merge-pathnames
+		      (make-pathname :directory
+				     (list :relative
+					   (string-downcase (symbol-name viewpoint))))
+		      training-set-size-dir)))
     (if (probe-file output-dir)
 	(utils:message "Output directory already exists, skipping analysis.")
 	(progn
@@ -164,7 +168,7 @@ to the size that each training set should be downsized to."
 	  (let* ((output-resampling-set-path
 		  (namestring (merge-pathnames
 			       (make-pathname :name "resampling" :type "lisp")
-			       output-dir)))
+			       training-set-size-dir)))
 		 (output-analysis-path
 		  (merge-pathnames
 		   (make-pathname :directory '(:relative "dat_from_idyom"))
