@@ -8,10 +8,12 @@
 ;;;; Training and testing on the same dataset
 (start-idyom)
 ;;;; Paths
-(defparameter cl-user::*mac-os-output-dir*
-  "/Users/peter/Dropbox/Academic/projects/idyom/studies/HarmonyRepresentations/inst/extdata/data-5/")
-(defparameter cl-user::*linux-output-dir*
-  "/home/peter/Dropbox/Academic/projects/idyom/studies/HarmonyRepresentations/inst/extdata/data-5/")
+(defparameter cl-user::*output-dir*
+  (cond ((member :os-macosx cl-user::*features*)
+	 "/Users/peter/Dropbox/Academic/projects/idyom/studies/HarmonyRepresentations/inst/extdata/data-5/")
+	((member :marcus-pc cl-user::*features*)
+	 "/home/pharrison/HarmonyRepresentations/data-5/")
+	(t "/home/peter/Dropbox/Academic/projects/idyom/studies/HarmonyRepresentations/inst/extdata/data-5/")))
 
 ;;;; Experimenting with test length
 ;; Classical (1022 pieces in corpus, max 987 in training set with 30-fold CV)
@@ -21,27 +23,21 @@
        :reduce-harmony t
        :k 30
        :training-set-size ts-size
-       :output-path (if (member :os-macosx cl-user::*features*)
-			cl-user::*mac-os-output-dir*
-			cl-user::*linux-output-dir*)))
+       :output-path cl-user::*output-dir*))
 ;; Pop (739 pieces in corpus, max 714 in training set with 30-fold CV)
 (loop for ts-size in '(714 8 512 256 16 128 32 64 4 2 1)
    do (pmch-s1:analyse-all-viewpoints 
        2 nil
        :k 30
        :training-set-size ts-size
-       :output-path (if (member :os-macosx cl-user::*features*)
-			cl-user::*mac-os-output-dir*
-			cl-user::*linux-output-dir*)))
+       :output-path cl-user::*output-dir*))
 ;; Jazz (1186 pieces in corpus, max 714 in training set with 30-fold CV)
 (loop for ts-size in '(1024 8 512 256 16 128 32 64 4 2 1)
    do (pmch-s1:analyse-all-viewpoints 
        3 nil
        :k 30
        :training-set-size ts-size
-       :output-path (if (member :os-macosx cl-user::*features*)
-			cl-user::*mac-os-output-dir*
-			cl-user::*linux-output-dir*)))
+       :output-path cl-user::*output-dir*))
      
 
 
