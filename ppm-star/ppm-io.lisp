@@ -2,7 +2,7 @@
 ;;;; File:       ppm-io.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2016-04-20 16:52:15 marcusp>
+;;;; Time-stamp: <2017-05-29 11:53:21 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package :ppm)
@@ -79,7 +79,7 @@
   (let* ((leaves (utils:hash-table->alist (ppm-leaves m)))
          (branches (utils:hash-table->alist (ppm-branches m)))
          (dataset (dataset->alist m))
-         (alphabet (ppm-alphabet m))
+         (alphabet (coerce (ppm-alphabet m) 'list))
          (model (list (list 'leaves leaves)
                       (list 'branches branches)
                       (list 'dataset dataset)
