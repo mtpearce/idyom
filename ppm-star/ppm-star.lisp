@@ -2,7 +2,7 @@
 ;;;; File:       ppm-star.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-05-29 09:44:04 marcusp>                           
+;;;; Time-stamp: <2017-05-29 13:29:44 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -115,8 +115,7 @@
    (virtual-nodes :accessor ppm-virtual-nodes :initarg :virtual-nodes
                   :type hash-table)
    ;;parameters used in prediction
-   (alphabet        :accessor ppm-alphabet        :initarg :alphabet        :type list)
-   (alphabet-vector :accessor ppm-alphabet-vector :initarg :alphabet-vector :type vector)
+   (alphabet        :accessor ppm-alphabet        :initarg :alphabet        :type vector)
    (alphabet-ht     :accessor ppm-alphabet-ht     :initarg :alphabet-ht     :type hash-table)
    (update-exclusion :accessor ppm-update-exclusion :initarg :update-exclusion
                      :type (or null symbol))
@@ -221,8 +220,7 @@
 
 (defmethod set-alphabet ((m ppm) alphabet)
   "Sets the alphabet slot in ppm model <m> to <alphabet>."
-  (setf (ppm-alphabet m) alphabet
-        (ppm-alphabet-vector m) (coerce alphabet 'vector)
+  (setf (ppm-alphabet m) (coerce alphabet 'vector)
         (ppm-alphabet-ht m) (make-ppm-alphabet alphabet)))
 
 (declaim (inline set-branch-record-child))
@@ -456,9 +454,8 @@
                                  :leaf-index leaf-index
                                  :branch-index branch-index
                                  :virtual-nodes virtual-nodes
-                                 :alphabet alphabet
+                                 :alphabet alphabet-vector
                                  :alphabet-ht alphabet-ht
-                                 :alphabet-vector alphabet-vector
                                  :update-exclusion update-exclusion
                                  :mixtures mixtures
                                  :order-bound order-bound
@@ -577,17 +574,18 @@ values and the position of each element as the corresponding key."
    is returned for <location>.  The model's index into the sequence
    vector must be set to the appropriate event index before this method
    is called."
-  (add-event-to-model-dataset m symbol)
-  (let* ((gd (when predict? (multiple-value-list (get-distribution m location))))
-         (distribution (recode-distribution m (car gd)))
-         (order (cadr gd))
-         (novel? (when construct? (unless (occurs? m location symbol) t)))
-         (next-location (ukkstep m nil location symbol construct?)))
-    (when construct? (increment-counts m next-location novel?))
-    (values next-location distribution order)))
+  (let ((symbol (recode-symbol m symbol)))
+    (add-event-to-model-dataset m symbol)
+    (let* ((gd (when predict? (multiple-value-list (get-distribution m location))))
+           (distribution (recode-distribution m (car gd)))
+           (order (cadr gd))
+           (novel? (when construct? (unless (occurs? m location symbol) t)))
+           (next-location (ukkstep m nil location symbol construct?)))
+      (when construct? (increment-counts m next-location novel?))
+      (values next-location distribution order))))
 
 (defmethod recode-symbol ((m ppm) symbol)
-  (position symbol (ppm-alphabet-vector m) :test #'equalp))
+  (position symbol (ppm-alphabet m) :test #'equalp))
 
 (defmethod recode-distribution ((m ppm) distribution)
   (mapcar #'(lambda (x) (list (gethash (car x) (ppm-alphabet-ht m)) (cadr x)))
@@ -975,12 +973,12 @@ probability."
         (dolist (child (list-children m location) tc)
           (let ((sym (get-symbol m (label-left (get-label m child)))))
             ;;(print (list child sym))
-            (when (gethash sym alphabet)
+            (when (nth-value 1 (gethash sym alphabet))
               (setf (gethash sym tc) (get-count m child up-ex)))))
         (let ((sym (get-symbol m (label-left (location-rest location)))))
           ;; we dynamically set derived alphabets on a per-event basis 
-          (when (gethash sym alphabet)
-            (setf (gethash sym tc) (get-virtual-node-count m location up-ex)))))) 
+          (when (nth-value 1 (gethash sym alphabet))
+            (setf (gethash sym tc) (get-virtual-node-count m location up-ex)))))
     tc))
 
 (defmethod child-count ((m ppm) transition-counts)
