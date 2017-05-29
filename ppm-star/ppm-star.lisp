@@ -2,7 +2,7 @@
 ;;;; File:       ppm-star.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2016-05-03 13:51:53 marcusp>                           
+;;;; Time-stamp: <2017-05-29 09:44:04 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -114,8 +114,10 @@
                   :type (integer 0 *))
    (virtual-nodes :accessor ppm-virtual-nodes :initarg :virtual-nodes
                   :type hash-table)
-   ;;parameters used in prediction 
-   (alphabet :accessor ppm-alphabet :initarg :alphabet :type list)
+   ;;parameters used in prediction
+   (alphabet        :accessor ppm-alphabet        :initarg :alphabet        :type list)
+   (alphabet-vector :accessor ppm-alphabet-vector :initarg :alphabet-vector :type vector)
+   (alphabet-ht     :accessor ppm-alphabet-ht     :initarg :alphabet-ht     :type hash-table)
    (update-exclusion :accessor ppm-update-exclusion :initarg :update-exclusion
                      :type (or null symbol))
    (mixtures :accessor ppm-mixtures :initarg :mixtures :type (or null symbol))
@@ -219,7 +221,9 @@
 
 (defmethod set-alphabet ((m ppm) alphabet)
   "Sets the alphabet slot in ppm model <m> to <alphabet>."
-  (setf (ppm-alphabet m) alphabet))
+  (setf (ppm-alphabet m) alphabet
+        (ppm-alphabet-vector m) (coerce alphabet 'vector)
+        (ppm-alphabet-ht m) (make-ppm-alphabet alphabet)))
 
 (declaim (inline set-branch-record-child))
 (defun set-branch-record-child (branch-record child)
@@ -263,7 +267,7 @@
 
 (defmethod alphabet-size ((m ppm))
   "Returns the cardinality of the alphabet of model <m>."
-  (length (ppm-alphabet m)))
+  (hash-table-count (ppm-alphabet-ht m)))
 
 (defmethod drop ((m ppm) n label)
   "Returns a copy of <label> with the first <n> symbols removed."
@@ -377,8 +381,8 @@
   "Returns the child of <node> the first symbol of whose label matches symbol."
   (labels ((get-matching-brother (child)
              (cond ((null child) nil)
-                   ((eequal (get-symbol m (label-left (get-label m child)))
-                            symbol)
+                   ((eq (get-symbol m (label-left (get-label m child))) ;; was eequal
+                        symbol)
                     child)
                    (t (get-matching-brother (get-brother m child))))))
     (let ((child (if (branch-p node) (branch-record-child
@@ -442,6 +446,8 @@
            (leaf-index (hash-table-count initial-leaves))
            (branch-index (hash-table-count initial-branches))
            (virtual-nodes (make-hash-table :test #'equalp))
+           (alphabet-vector (coerce alphabet 'vector))
+           (alphabet-ht (make-ppm-alphabet alphabet))
            (model (make-instance 'ppm 
                                  :leaves initial-leaves
                                  :branches initial-branches
@@ -451,6 +457,8 @@
                                  :branch-index branch-index
                                  :virtual-nodes virtual-nodes
                                  :alphabet alphabet
+                                 :alphabet-ht alphabet-ht
+                                 :alphabet-vector alphabet-vector
                                  :update-exclusion update-exclusion
                                  :mixtures mixtures
                                  :order-bound order-bound
@@ -459,6 +467,16 @@
                                  :k k)))
       (when (and (null leaves) (null branches)) (initialise-nodes model))
       model)))
+
+(defun make-ppm-alphabet (alphabet)
+  "Creates a hash-table the elements of <alphabet>, a list, as its
+values and the position of each element as the corresponding key."
+  (let ((ht (make-hash-table :test #'eq))
+        (key 0))
+    (dolist (a alphabet)
+      (setf (gethash key ht) a)
+      (incf key))
+    ht))
 
 (defmethod reinitialise-ppm ((m ppm))
   "Reinitialises the parameters of <m> used in model construction."
@@ -561,13 +579,19 @@
    is called."
   (add-event-to-model-dataset m symbol)
   (let* ((gd (when predict? (multiple-value-list (get-distribution m location))))
-         (distribution (car gd))
+         (distribution (recode-distribution m (car gd)))
          (order (cadr gd))
          (novel? (when construct? (unless (occurs? m location symbol) t)))
          (next-location (ukkstep m nil location symbol construct?)))
     (when construct? (increment-counts m next-location novel?))
     (values next-location distribution order)))
 
+(defmethod recode-symbol ((m ppm) symbol)
+  (position symbol (ppm-alphabet-vector m) :test #'equalp))
+
+(defmethod recode-distribution ((m ppm) distribution)
+  (mapcar #'(lambda (x) (list (gethash (car x) (ppm-alphabet-ht m)) (cadr x)))
+          distribution))
 
 ;;;===========================================================================
 ;;; Moving around and constructing ppm models
@@ -605,8 +629,8 @@
 (defmethod occurs? ((m ppm) location symbol)
   "Returns t if the current input symbol occurs in <location>, else nil."
   (if (location-p location)
-      (when (eequal (get-symbol m (label-left (location-rest location)))
-                   symbol)
+      (when (eq (get-symbol m (label-left (location-rest location))) ;; was eequal
+                symbol)
         location)
       (get-matching-child m location symbol)))
 
@@ -870,12 +894,16 @@
   "Returns the probability of <symbol> by computing a mixture of the 
    probabilities assigned to <symbol> by all the states in a chain of
    suffix links from <location>."
-  (let* ((initial-distribution 
-          (mapcar #'(lambda (a) (list a 0.0)) (ppm-alphabet m)))
+  (let* ((initial-distribution (initial-distribution m))
          (up-ex (if (null selected?) (ppm-update-exclusion m)))
          (mixture 
           (compute-mixture m initial-distribution location '() :up-ex up-ex)))
     (normalise-distribution mixture)))
+
+(defmethod initial-distribution ((m ppm))
+  (let ((result nil))
+    (dotimes (i (alphabet-size m) (nreverse result))
+      (push (list i 0.0) result))))
 
 (defmethod compute-mixture ((m ppm) distribution location excluded
                             &key (up-ex (ppm-update-exclusion m))
@@ -941,18 +969,18 @@ probability."
   "Returns a list of the form (symbol frequency-count) for the transitions
    appearing at location <location> in the suffix tree of model <m>."
   (declare (optimize (speed 3) (safety 1) (space 0) (debug 0) (compilation-speed 0)))
-  (let ((tc (make-hash-table :test #'equal)))
+  (let ((tc (make-hash-table :test #'equal))
+        (alphabet (ppm-alphabet-ht m)))
     (if (branch-p location)
-        (let ((alphabet (ppm-alphabet m)))
-          (dolist (child (list-children m location) tc)
-            (let ((sym (get-symbol m (label-left (get-label m child)))))
-              ;;(print (list child sym))
-              (when (member sym alphabet :test #'eequal)
-                (setf (gethash sym tc) (get-count m child up-ex))))))
+        (dolist (child (list-children m location) tc)
+          (let ((sym (get-symbol m (label-left (get-label m child)))))
+            ;;(print (list child sym))
+            (when (gethash sym alphabet)
+              (setf (gethash sym tc) (get-count m child up-ex)))))
         (let ((sym (get-symbol m (label-left (location-rest location)))))
           ;; we dynamically set derived alphabets on a per-event basis 
-          (when (member sym (ppm-alphabet m) :test #'eequal)
-            (setf (gethash sym tc) (get-virtual-node-count m location up-ex)))))
+          (when (gethash sym alphabet)
+            (setf (gethash sym tc) (get-virtual-node-count m location up-ex)))))) 
     tc))
 
 (defmethod child-count ((m ppm) transition-counts)
