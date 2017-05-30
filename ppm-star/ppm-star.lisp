@@ -2,7 +2,7 @@
 ;;;; File:       ppm-star.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-05-29 13:29:44 marcusp>                           
+;;;; Time-stamp: <2017-05-30 09:43:16 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -114,9 +114,13 @@
                   :type (integer 0 *))
    (virtual-nodes :accessor ppm-virtual-nodes :initarg :virtual-nodes
                   :type hash-table)
-   ;;parameters used in prediction
+   ;; alphabets
    (alphabet        :accessor ppm-alphabet        :initarg :alphabet        :type vector)
    (alphabet-ht     :accessor ppm-alphabet-ht     :initarg :alphabet-ht     :type hash-table)
+   (alphabet-map :accessor ppm-alphabet-map :initarg :alphabet-map :type hash-table)
+   (alphabet-map* :accessor ppm-alphabet-map* :initarg :alphabet-map* :type hash-table)
+   (alphabet-key :accessor ppm-alphabet-key :initarg :alphabet-key :type integer)
+   ;;parameters used in prediction
    (update-exclusion :accessor ppm-update-exclusion :initarg :update-exclusion
                      :type (or null symbol))
    (mixtures :accessor ppm-mixtures :initarg :mixtures :type (or null symbol))
@@ -220,8 +224,9 @@
 
 (defmethod set-alphabet ((m ppm) alphabet)
   "Sets the alphabet slot in ppm model <m> to <alphabet>."
-  (setf (ppm-alphabet m) (coerce alphabet 'vector)
-        (ppm-alphabet-ht m) (make-ppm-alphabet alphabet)))
+  (update-alphabet-maps m alphabet)
+  (update-ppm-alphabet m alphabet)
+  (setf (ppm-alphabet m) (coerce alphabet 'vector)))
 
 (declaim (inline set-branch-record-child))
 (defun set-branch-record-child (branch-record child)
@@ -445,7 +450,6 @@
            (branch-index (hash-table-count initial-branches))
            (virtual-nodes (make-hash-table :test #'equalp))
            (alphabet-vector (coerce alphabet 'vector))
-           (alphabet-ht (make-ppm-alphabet alphabet))
            (model (make-instance 'ppm 
                                  :leaves initial-leaves
                                  :branches initial-branches
@@ -455,25 +459,40 @@
                                  :branch-index branch-index
                                  :virtual-nodes virtual-nodes
                                  :alphabet alphabet-vector
-                                 :alphabet-ht alphabet-ht
+                                 :alphabet-ht (make-hash-table :test 'eq)
+                                 :alphabet-map (make-hash-table :test 'eq)
+                                 :alphabet-map* (make-hash-table :test 'equalp)
+                                 :alphabet-key 0
                                  :update-exclusion update-exclusion
                                  :mixtures mixtures
                                  :order-bound order-bound
                                  :escape escape
                                  :d d
                                  :k k)))
+      (update-alphabet-maps model alphabet)
+      (update-ppm-alphabet model alphabet)
       (when (and (null leaves) (null branches)) (initialise-nodes model))
       model)))
 
-(defun make-ppm-alphabet (alphabet)
-  "Creates a hash-table the elements of <alphabet>, a list, as its
-values and the position of each element as the corresponding key."
-  (let ((ht (make-hash-table :test #'eq))
-        (key 0))
+(defmethod update-alphabet-maps ((m ppm) alphabet)
+  (let ((map (ppm-alphabet-map m))
+        (map* (ppm-alphabet-map* m))
+        (key (ppm-alphabet-key m)))
     (dolist (a alphabet)
-      (setf (gethash key ht) a)
-      (incf key))
-    ht))
+      (unless (nth-value 1 (gethash a map*))
+        (setf (gethash a map*) key
+              (gethash key map) a)
+        (incf key)))
+    (setf (ppm-alphabet-map m) map
+          (ppm-alphabet-map* m) map*
+          (ppm-alphabet-key m) key)))
+
+(defmethod update-ppm-alphabet ((m ppm) alphabet)
+  (let ((ht (make-hash-table :test #'eq)))
+    (dolist (a alphabet)
+      (let ((key (gethash a (ppm-alphabet-map* m))))
+        (setf (gethash key ht) a)))
+    (setf (ppm-alphabet-ht m) ht)))
 
 (defmethod reinitialise-ppm ((m ppm))
   "Reinitialises the parameters of <m> used in model construction."
@@ -585,10 +604,10 @@ values and the position of each element as the corresponding key."
       (values next-location distribution order))))
 
 (defmethod recode-symbol ((m ppm) symbol)
-  (position symbol (ppm-alphabet m) :test #'equalp))
+  (gethash symbol (ppm-alphabet-map* m)))
 
 (defmethod recode-distribution ((m ppm) distribution)
-  (mapcar #'(lambda (x) (list (gethash (car x) (ppm-alphabet-ht m)) (cadr x)))
+  (mapcar #'(lambda (x) (list (gethash (car x) (ppm-alphabet-map m)) (cadr x)))
           distribution))
 
 ;;;===========================================================================
