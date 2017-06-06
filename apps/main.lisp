@@ -2,7 +2,7 @@
 ;;;; File:       main.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2010-11-01 15:19:57 marcusp>
-;;;; Time-stamp: <2016-05-04 15:24:51 marcusp>
+;;;; Time-stamp: <2017-05-30 15:39:34 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:idyom)
@@ -121,7 +121,6 @@
             (when output-path
               (resampling:format-information-content predictions filepath dataset-id detail))
             (resampling:output-information-content predictions detail))))))
-
 
 (defun find-selection-basis (targets basis)
   "Determine which viewpoints are to be used in selection process"

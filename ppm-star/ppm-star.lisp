@@ -2,7 +2,7 @@
 ;;;; File:       ppm-star.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-05-30 09:43:16 marcusp>                           
+;;;; Time-stamp: <2017-06-02 11:43:11 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -483,6 +483,10 @@
         (setf (gethash a map*) key
               (gethash key map) a)
         (incf key)))
+    (print (list "update-alphabet-maps"
+                 (utils:hash-table->alist map)
+                 (utils:hash-table->alist map*)
+                 key))
     (setf (ppm-alphabet-map m) map
           (ppm-alphabet-map* m) map*
           (ppm-alphabet-key m) key)))
@@ -492,7 +496,14 @@
     (dolist (a alphabet)
       (let ((key (gethash a (ppm-alphabet-map* m))))
         (setf (gethash key ht) a)))
+    (print (list "update-ppm-alphabet" (utils:hash-table->alist ht)))
     (setf (ppm-alphabet-ht m) ht)))
+
+(defmethod reinitialise-alphabet ((m ppm) alphabet)
+  (setf (ppm-alphabet-ht m) (make-hash-table :test 'eq)
+        (ppm-alphabet-map m) (make-hash-table :test 'eq)
+        (ppm-alphabet-map* m) (make-hash-table :test 'equalp)
+        (ppm-alphabet-key m) 0))
 
 (defmethod reinitialise-ppm ((m ppm))
   "Reinitialises the parameters of <m> used in model construction."
