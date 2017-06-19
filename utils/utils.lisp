@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2017-06-19 14:24:30 peter>
+;;;; Time-stamp: <2017-06-19 18:30:11 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -944,7 +944,7 @@ ascending order or in descending order."))
 ;; The next step to speeding up the current code might be
 ;; to pre-compute sum-sq-dist for all pairs of i and j.
 
-(defun k-means-1d (data k)
+(defun k-means-1d-slow (data k)
   "<data> should be a sequence of numeric values to be clustered.
 <k> should be the number of clusters. Returns the computed means
 for the k clusters."
