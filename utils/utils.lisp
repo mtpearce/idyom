@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2017-05-23 18:00:00 peter>
+;;;; Time-stamp: <2017-06-19 14:24:30 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -932,3 +932,138 @@ ascending order or in descending order."))
 	     (data dataframe))
     dataframe))
 
+;;;===========================================================================
+;;; Quantisation 
+;;;===========================================================================
+
+;; This is an algorithm for optimal 1-dimensional k-means clustering,
+;; from Wang & Song (2011).
+
+;; Unfortunately the current implementation is much slower than the C++
+;; implementation available in the R package Ckmeans.1d.dp.
+;; The next step to speeding up the current code might be
+;; to pre-compute sum-sq-dist for all pairs of i and j.
+
+(defun k-means-1d (data k)
+  "<data> should be a sequence of numeric values to be clustered.
+<k> should be the number of clusters. Returns the computed means
+for the k clusters."
+  (assert (integerp k))
+  (assert (> k 0))
+  (assert (every #'numberp data))
+  (assert (>= (length data) k))
+  (let* ((data (coerce data 'list))
+	 (data (sort (copy-list data) #'<))
+	 (data (mapcar #'float data))
+	 (data (make-array (length data) :element-type 'single-float
+			   :initial-contents data))
+	 (n (length data))
+	 (d (make-array (list (1+ n) (1+ k)) :initial-element 0.0
+			:element-type 'single-float))
+	 (b (make-array (list n k) :initial-element 1 :element-type 'integer)))
+    (assert (> (length data) 0))
+    (loop for m from 1 to k ;; m = number of clusters
+       do (loop for i from m to n ;; i = number of data points
+	     do (setf (aref d i m)
+		      (progn
+			;; (format nil "~%Computing D(~A, ~A)~%" i m)
+			(if (= m 1)
+			    (let ((res (sum-sq-dist data 1 i)))
+			     ;; (format t "res = ~A~%" res)
+			      res)
+			    (loop
+			       with best-j = nil and best-res = nil
+			       for j from m to i
+			       do (let ((res (+ (aref d (- j 1) (- m 1))
+						(sum-sq-dist data j i))))
+				  ;; (format t "j = ~A, res = ~A~%" j res)
+				    (when (or (null best-res)
+					      (< res best-res))
+				      (setf best-j j)
+            				      (setf best-res res)))
+			       finally
+				 (return
+				   (progn 
+				     (setf (aref b (1- i) (1- m)) best-j)
+				     ;; (format
+				     ;;  t
+				     ;;  "m = ~A, i = ~A, best-res = ~A, best-j = ~A~%"
+				     ;;  m i best-res best-j)
+				     best-res))))))))
+    (let* ((thresholds (k-means-1d-backtrack b n k))
+    	   (means (loop
+    		     for lower-threshold in thresholds
+    		     for upper-threshold in (append (cdr thresholds)
+						    (list (1+ (length data))))
+    		     collect (let ((elts (subseq data
+						 (1- lower-threshold)
+						 (1- upper-threshold))))
+			       ;; (format t "lower-threshold = ~A~%" lower-threshold)
+			       ;; (format t "upper-threshold = ~A~%" upper-threshold)
+			       ;; (format t "elts = ~A~%" elts)
+		               (/ (loop for i across elts sum i)
+				  (length elts))))))
+      means)))
+
+(defun k-means-1d-backtrack (b n k)
+  (loop
+     with last-in-cluster = n
+     with first-in-cluster = nil
+     for cluster from k downto 1
+     do (progn (push (aref b (1- last-in-cluster) (1- cluster))
+		     first-in-cluster)
+	       (setf last-in-cluster (1- (car first-in-cluster))))
+     finally (return first-in-cluster)))
+
+(let ((cache-data nil)
+      (cache-mu-array nil)
+      (cache-dist-array nil))
+  (defun sum-sq-dist (data j i)
+    "This function corresponds to lower-case d in the original paper.
+It iteratively computes sums of the squared distances of a subsequence
+of <data>, 1-indexed by <j> and <i>, from the mean of that subsequence."
+    ;; Note that <i> and <j> are 1-indexing, but internally
+    ;; we use a 0-indexed vector.
+    ;;  (format t "sum-sq-dist: j = ~A, i = ~A~%" j i)
+    (assert (typep data 'vector))
+    (assert (integerp j))
+    (assert (integerp i))
+    (assert (<= j i))
+    (assert (> j 0))
+    (assert (<= i (length data)))
+    (when (not (eq data cache-data))
+      (format t "Resetting hash table.~%")
+      (setf cache-data data
+	    cache-mu-array (make-array (list (length data) (length data))
+				       :element-type 'single-float
+				       :initial-element 0.0)
+	    cache-dist-array (make-array (list (length data) (length data))
+					 :element-type 'single-float
+					 :initial-element 0.0)))
+    (multiple-value-bind (mu dist)
+	(let ((i-2 (+ (- i j) 1))
+	      (x-i (aref data (1- i))))
+	  (declare (fixnum i-2))
+	  (assert (floatp x-i))
+	  (assert (integerp i-2))
+	  (cond ((= i j) (values x-i 0.0))
+		(t (let ((cache-mu (aref cache-mu-array (- j 1) (- i 2)))
+			 (cache-dist (aref cache-dist-array (- j 1) (- i 2))))
+		     (assert (not (or (null cache-mu) (null cache-dist))))
+		     (assert (floatp cache-mu))
+		     (assert (floatp cache-dist))
+		     (values (/ (the float (+ x-i (* (- i-2 1) cache-mu)))
+				(the fixnum i-2))
+			     (+ (the float cache-dist)
+				(the float
+				     (* (/ (the fixnum (- i-2 1))
+					   (the fixnum i-2))
+					(the float
+					     (expt (the float (- x-i
+								 cache-mu))
+						   2))))))))))
+      (setf cache-data data
+	    (aref cache-mu-array (1- j) (1- i)) mu
+	    (aref cache-dist-array (1- j) (1- i)) dist)
+      (assert (numberp dist))
+      (float dist))))
