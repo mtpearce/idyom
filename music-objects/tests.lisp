@@ -2,7 +2,7 @@
 ;;;; File:       tests.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-04-24 20:51:10 peter>                            
-;;;; Time-stamp: <2017-05-22 10:44:32 peter>                           
+;;;; Time-stamp: <2017-06-20 14:16:41 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -36,7 +36,7 @@ Pitches are expressed relative to <ref-pitch>."
     slice))
 
 (defun harm-seq
-    (cpitch &key onset dur (ref-pitch 0) (timebase 96))
+    (cpitch &key onset dur (ref-pitch 0) (timebase 96) (type :slices))
   "Intended for testing purposes. Makes an object of class md:harmonic-sequence
 with attributes specified by <cpitch>, <onset>, <dur>, and <ref-pitch>.
 <cpitch> should be a list of lists, with the ith element of the jth list
@@ -50,6 +50,7 @@ chord will default to the inter-onset interval between each chord,
 unless <dur> is specified manually, in which case <dur> should 
 be a list the ith element of which is the duration of the ith chord.
 "
+  (assert (member type '(:slices :chords)))
   (if (or (null cpitch) (not (listp cpitch)))
       (error "<cpitch> must be a non-empty list."))
   (let* ((num-chords (length cpitch))
@@ -94,7 +95,10 @@ be a list the ith element of which is the duration of the ith chord.
 					  :onset o :duration d)))
 		(sequence:adjust-sequence slice (length events)
 					  :initial-contents events)
-		(push slice slices))))
+		(push (case type
+			(:slices slice)
+			(:chords (slice->chord slice)))
+		      slices))))
       (sequence:adjust-sequence seq (length slices)
 				:initial-contents (reverse slices))
       seq)))
@@ -487,3 +491,37 @@ be a list the ith element of which is the duration of the ith chord.
 				       "harm-seq-1")
 			  'list))
 	  '((0 4 7) (0 3 7) (0 4 7)))))
+
+;;;; remove-repeated-chords
+(5am:def-suite remove-repeated-chords :in music-data)
+(5am:in-suite remove-repeated-chords)
+
+(5am:test remove-repeated-chords-ex-1
+  (5am:is
+   (equal (mapcar #'(lambda (e) (md:get-attribute e 'h-cpitch))
+		  (%list-slot-sequence-data
+		   (remove-repeated-chords
+		    (harm-seq '((0 4 7) (0 4 7) (0 3 7)) :type :chords))))
+	  (list (list 0 4 7) (list 0 3 7)))))
+(5am:test remove-repeated-chords-ex-2
+  (5am:is
+   (equal (mapcar #'(lambda (e) (md:get-attribute e 'dur))
+		  (%list-slot-sequence-data
+		   (remove-repeated-chords
+		    (harm-seq '((0 4 7) (0 4 7) (0 3 7)) :type :chords))))
+	  (list 200 100))))
+(5am:test remove-repeated-chords-ex-3
+  (5am:is
+   (equal (mapcar #'(lambda (e) (md:get-attribute e 'dur))
+		  (%list-slot-sequence-data
+		   (remove-repeated-chords
+		    (harm-seq '((0 4 7) (0 4 7) (0 3 7))
+			      :onset '(0 100 200)
+			      :dur '(50 100 100)
+			      :type :chords))))
+	  (list 200 100))))
+
+
+				   
+	  
+   

@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-05-23 18:33:27 peter>                           
+;;;; Time-stamp: <2017-06-20 14:44:18 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -39,6 +39,7 @@
 			 harmonic-reduction
 			 pretraining-harmonic-reduction
 			 (slices-or-chords :chords)
+			 (remove-repeated-chords nil)
 			 (num-quantiles 10)
 			 training-set-size
                          (use-resampling-set-cache? t)
@@ -82,13 +83,17 @@
 					:texture texture
 					:polyphonic-expansion polyphonic-expansion
 					:harmonic-reduction harmonic-reduction
-					:slices-or-chords slices-or-chords))
+					:slices-or-chords slices-or-chords
+					:remove-repeated-chords
+					remove-repeated-chords))
          (pretraining-set
 	  (md:get-music-objects
 	   pretraining-ids nil :voices voices :texture texture
 	   :polyphonic-expansion polyphonic-expansion
 	   :harmonic-reduction pretraining-harmonic-reduction
-	   :slices-or-chords slices-or-chords))
+	   :slices-or-chords slices-or-chords
+	   :remove-repeated-chords
+	   remove-repeated-chords))
 	 (dataset
 	  (progn
 	    (utils:message "Adding local key cache to the main dataset.")

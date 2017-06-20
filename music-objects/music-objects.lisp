@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2017-05-22 11:48:22 peter>
+;;;; Time-stamp: <2017-06-20 14:42:58 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -301,7 +301,8 @@ mp = -1; mf = 1; f = 3; ff = 5; fff = 7; ffff = 9; fffff = 11")
 			  &key voices (texture :melody)
 			    (polyphonic-expansion :full)
 			    (harmonic-reduction :regular-harmonic-rhythm)
-			    (slices-or-chords :slices))
+			    (slices-or-chords :slices)
+			    (remove-repeated-chords nil))
   "Returns music objects from the database corresponding to
 DATASET-INDICES, COMPOSITION-INDICES which may be single numeric IDs
 or lists of IDs. COMPOSITION-INDICES is only considered if
@@ -334,13 +335,17 @@ extracted or the harmony corresponding to all voices is used."
 					 :voices voices
 					 :expansion polyphonic-expansion
 					 :reduction harmonic-reduction
-					 :slices-or-chords slices-or-chords))
+					 :slices-or-chords slices-or-chords
+					 :remove-repeated-chords
+					 remove-repeated-chords))
 		((numberp composition-indices)
 		 (get-harmonic-sequence dataset-indices composition-indices
 					:voices voices
 					:expansion polyphonic-expansion
 					:reduction harmonic-reduction
-					:slices-or-chords slices-or-chords))
+					:slices-or-chords slices-or-chords
+					:remove-repeated-chords
+					 remove-repeated-chords))
 		(t 
 		 (mapcar
 		  #'(lambda (c)
@@ -348,12 +353,16 @@ extracted or the harmony corresponding to all voices is used."
 					     :voices voices
 					     :expansion polyphonic-expansion
 					     :reduction harmonic-reduction
-					     :slices-or-chords slices-or-chords))
+					     :slices-or-chords slices-or-chords
+					     :remove-repeated-chords
+					     remove-repeated-chords))
 		  composition-indices)))
 	  (get-harmonic-sequences dataset-indices
 				  :voices voices :expansion polyphonic-expansion
 				  :reduction harmonic-reduction
-				  :slices-or-chords slices-or-chords))))
+				  :slices-or-chords slices-or-chords
+				  :remove-repeated-chords
+				  remove-repeated-chords))))
     (t 
      (error "Unrecognised texture for the music object. Current options are :melody or :harmony."))))
 
@@ -438,7 +447,8 @@ the highest pitch sounding at that onset position."
 
 (defun get-harmonic-sequence (dataset-index composition-index
 			      &key voices (expansion :full)
-				(reduction :none) (slices-or-chords :slices))
+				(reduction :none) (slices-or-chords :chords)
+				(remove-repeated-chords nil))
   "Gets harmonic sequences from a given composition indexed
 by DATASET-INDEX and COMPOSITION-INDEX. <expansion> determines
 the expansion method. <reduction> describes how (if at all)
@@ -449,20 +459,23 @@ i.e. reduce to the level of a regular harmonic rhythm."
 			 (lookup-composition dataset-index
 					     composition-index))
 			:voices voices :expansion expansion :reduction reduction
-			:slices-or-chords slices-or-chords))
+			:slices-or-chords slices-or-chords
+			:remove-repeated-chords remove-repeated-chords))
 
 (defun get-harmonic-sequences (dataset-ids &key
 					     (cache t)
 					     voices
 					     (expansion :full)
 					     (reduction :none)
-					     (slices-or-chords :slices))
+					     (slices-or-chords :chords)
+					     (remove-repeated-chords nil))
   "Gets harmonic sequences for all compositions contained within
 a set of datasets indexed by DATASET-IDS"
   (utils:message
    (format nil "Getting harmonic sequences for dataset(s) ~A." dataset-ids))
   (let ((cache-path (get-harm-seq-cache-filename dataset-ids voices expansion
-						 reduction slices-or-chords)))
+						 reduction slices-or-chords
+						 remove-repeated-chords)))
     (if (and cache (probe-file cache-path))
 	(progn
 	  (utils:message "Loading harmonic sequences from cache.")
@@ -473,10 +486,12 @@ a set of datasets indexed by DATASET-IDS"
 		  (let* ((d (get-dataset (lookup-dataset dataset-id)))
 			 (pb (utils:initialise-progress-bar (length d))))
 		    (sequence:dosequence (c d)
-		      (push (composition->harmony c :voices voices
-						  :expansion expansion
-						  :reduction reduction
-						  :slices-or-chords slices-or-chords)
+		      (push (composition->harmony
+			     c :voices voices
+			     :expansion expansion
+			     :reduction reduction
+			     :slices-or-chords slices-or-chords
+			     :remove-repeated-chords remove-repeated-chords)
 			    compositions)
 		      (utils:update-progress-bar pb (length compositions)))))))
 	  (when cache
@@ -488,18 +503,23 @@ a set of datasets indexed by DATASET-IDS"
 	  compositions))))
 
 (defun get-harm-seq-cache-filename (dataset-ids voices expansion
-				    reduction slices-or-chords)
-  (let ((id (format nil "datasets-~{~S-~}voices-~{~S-~}expansion-~A-reduction-~A-~A"
-		    dataset-ids voices
-		    (string-downcase (symbol-name expansion))
-		    (string-downcase (symbol-name reduction))
-		    (string-downcase (symbol-name slices-or-chords)))))
+				    reduction slices-or-chords
+				    remove-repeated-chords)
+  (let ((id (format
+	     nil "datasets-~{~S-~}voices-~{~S-~}expansion-~A-reduction-~A-~A-remove-repeated-chords-~A"
+	     dataset-ids voices
+	     (string-downcase (symbol-name expansion))
+	     (string-downcase (symbol-name reduction))
+	     (string-downcase (symbol-name slices-or-chords))
+	     (string-downcase (symbol-name remove-repeated-chords)))))
     (merge-pathnames
      (make-pathname :name id :type "cache")
      *harm-seq-cache-dir*)))
 
 (defun composition->harmony (composition &key voices (expansion :full)
-					   (reduction :none) (slices-or-chords :slices))
+					   (reduction :none)
+					   (slices-or-chords :chords)
+					   (remove-repeated-chords nil))
   "Extract a sequence of harmonic slices from a composition according
    to the <voice> argument, which either should be nil (extract all voices)
    or a list of integers identifying the voices to be extracted."
@@ -583,7 +603,9 @@ a set of datasets indexed by DATASET-IDS"
       (if (eql slices-or-chords :chords)
 	  (setf (%list-slot-sequence-data hs)
 		(mapcar #'slice->chord (%list-slot-sequence-data hs))))
-      hs)))
+      (if remove-repeated-chords
+	  (remove-repeated-chords hs)
+	  hs))))
 
 
 (defun get-matching-events (event-list onset &key (expansion :full))
@@ -630,6 +652,32 @@ event identifiers to every event, starting at 0."))
 
 ;;; Reducing harmonic sequences
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun remove-repeated-chords (seq)
+  "Non-destructively removes all repeated chords in a harmonic sequence,
+updating chord durations to include the repeated chords."
+  (assert (typep seq 'harmonic-sequence))
+  (when (not (every #'(lambda (elt) (typep elt 'md:music-chord)) seq))
+    (error
+     "remove-repeated-chords is currently only defined for chords, not slices."))   
+  (let ((new-chords nil)
+	(new-sequence (utils:copy-instance seq :check-atomic nil)))
+    (loop for chord in (%list-slot-sequence-data seq) do
+      (if (or (null new-chords)
+	      (not (equalp (get-attribute chord 'h-cpitch)
+			   (get-attribute (car new-chords) 'h-cpitch))))
+	  (push chord new-chords)
+	  (let* ((prev-chord (pop new-chords))
+		 (replacement-chord (copy-event prev-chord))
+		 (new-offset (+ (get-attribute chord 'onset)
+				(get-attribute chord 'dur)))
+		 (new-dur (- new-offset
+			     (get-attribute prev-chord 'onset))))
+	    (set-attribute replacement-chord 'dur new-dur)
+	    (push replacement-chord new-chords))))
+    (setf (%list-slot-sequence-data new-sequence) (reverse new-chords))
+    new-sequence))
+  
 
 (defun reduce-with-regular-harmonic-rhythm
     (harmonic-sequence bars bar-onsets)
