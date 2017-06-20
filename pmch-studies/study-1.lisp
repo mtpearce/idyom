@@ -2,7 +2,7 @@
 ;;;; File:       study-1.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-05-15 13:37:26 peter>                          
-;;;; Time-stamp: <2017-06-20 16:11:31 peter>                           
+;;;; Time-stamp: <2017-06-20 16:56:17 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -11,6 +11,68 @@
 ;;;; Provides utility functions for Peter's study on harmony representations.
 
 (cl:in-package #:pmch-s1)
+
+;;;; Top-level call
+
+(defun run-study-1 ()
+  ;; Set paths
+  (defparameter cl-user::*output-dir*
+  (cond ((member :os-macosx cl-user::*features*)
+	 "/Users/peter/Dropbox/Academic/projects/idyom/studies/HarmonyRepresentations/data-raw/data-5/data/")
+	((member :marcus-pc cl-user::*features*)
+	 "/home/pharrison/HarmonyRepresentations/data-5/")
+	(t "/home/peter/Dropbox/Academic/projects/idyom/studies/HarmonyRepresentations/inst/extdata/data-5/")))
+  ;;;; Analyse test length
+  ;; Classical (1022 pieces in corpus, max 987 in training set with 30-fold CV)
+  (loop for ts-size in '(987 8 512 256 16 128 32 64 4 2 1)
+     do (pmch-s1:analyse-all-viewpoints 
+	 1 nil
+	 :reduce-harmony t
+	 :k 30
+	 :training-set-size ts-size
+	 :output-path cl-user::*output-dir*
+	 :remove-repeated-chords t))
+  ;; Pop (739 pieces in corpus, max 714 in training set with 30-fold CV)
+  (loop for ts-size in '(714 8 512 256 16 128 32 64 4 2 1)
+     do (pmch-s1:analyse-all-viewpoints 
+	 2 nil
+	 :k 30
+	 :training-set-size ts-size
+	 :output-path cl-user::*output-dir*
+	 :remove-repeated-chords t))
+  ;; Jazz (1186 pieces in corpus, max 714 in training set with 30-fold CV)
+  (loop for ts-size in '(1024 8 512 256 16 128 32 64 4 2 1)
+     do (pmch-s1:analyse-all-viewpoints 
+	 3 nil
+	 :k 30
+	 :training-set-size ts-size
+	 :output-path cl-user::*output-dir*
+	 :remove-repeated-chords t))
+  ;;;; Analyse generalisation
+  ;; Train on classical, test on jazz
+  (pmch-s1:analyse-all-viewpoints 3 '(1)
+				  :reduce-harmony nil
+				  :reduce-harmony-pretraining t
+				  :k 1
+				  :output-path cl-user::*output-dir*
+				  :remove-repeated-chords t)
+  ;; Train on pop, test on jazz
+  (pmch-s1:analyse-all-viewpoints 3 '(2)
+				  :reduce-harmony nil
+				  :reduce-harmony-pretraining nil
+				  :k 1
+				  :output-path cl-user::*output-dir*
+				  :remove-repeated-chords t)
+  ;; Train on classical, test on pop
+  (pmch-s1:analyse-all-viewpoints 2 '(1)
+				  :reduce-harmony nil
+				  :reduce-harmony-pretraining t
+				  :k 1
+				  :output-path cl-user::*output-dir*
+				  :remove-repeated-chords t)
+  (utils:message "Study 1 analyses complete!"))
+
+;;;; Utility functions
 
 (defparameter *harmony-viewpoints* '(h-bass-cpc
 				     h-bass-cpcint
@@ -152,7 +214,7 @@ to the size that each training set should be downsized to."
 	     :slices-or-chords :chords
 	     :remove-repeated-chords remove-repeated-chords
 	     :resampling-set-cache-path output-resampling-set-path
-	     :num-quantiles 10
+	     :num-quantiles 12
 	     :training-set-size training-set-size
 	     :use-ltms-cache? nil
 	     :overwrite nil
