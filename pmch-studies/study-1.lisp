@@ -2,7 +2,7 @@
 ;;;; File:       study-1.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-05-15 13:37:26 peter>                          
-;;;; Time-stamp: <2017-05-25 23:07:54 peter>                           
+;;;; Time-stamp: <2017-06-20 15:25:49 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -88,20 +88,24 @@
 (defun analyse-all-viewpoints
     (dataset pretraining-ids
      &key reduce-harmony reduce-harmony-pretraining
-     (output-path "/home/peter/idyom-output/study-1/")
-       (k 10) training-set-size)
+       (output-path "/home/peter/idyom-output/study-1/")
+       (k 10) training-set-size
+       (remove-repeated-chords t))
   (let ((viewpoints *harmony-viewpoints*))
     (analyse-viewpoints viewpoints dataset pretraining-ids
 			:reduce-harmony reduce-harmony
 			:reduce-harmony-pretraining reduce-harmony-pretraining
 			:output-path output-path :k k
-			:training-set-size training-set-size)))
+			:training-set-size training-set-size
+			:remove-repeated-chords remove-repeated-chords)))
 
 (defun analyse-viewpoints
-    (viewpoints dataset pretraining-ids &key reduce-harmony reduce-harmony-pretraining
-					  (output-path "/home/peter/idyom-output/study-1/")
-					  (k 10)
-					  training-set-size)
+    (viewpoints dataset pretraining-ids
+     &key reduce-harmony reduce-harmony-pretraining
+       (output-path "/home/peter/idyom-output/study-1/")
+       (k 10)
+       training-set-size
+       (remove-repeated-chords t))
   "Analyses a set of viewpoints on a given dataset."
   (assert (listp viewpoints))
   (let ((num-viewpoints (length viewpoints)))
@@ -116,13 +120,14 @@
 	    (analyse-viewpoint viewpoint dataset pretraining-ids reduce-harmony
 			       reduce-harmony-pretraining
 			       :output-path output-path :k k
-			       :training-set-size training-set-size)))))
+			       :training-set-size training-set-size
+			       :remove-repeated-chords remove-repeated-chords)))))
 
 (defun analyse-viewpoint
     (viewpoint dataset pretraining-ids reduce-harmony reduce-harmony-pretraining
      &key (output-path "/home/peter/idyom-output/study-1/")
-       (k 10) training-set-size)
-  "Analyses a derived viewpoint, identified by symbol <viewpoint>,
+       (k 10) training-set-size (remove-repeated-chords t))
+  "Analyses a derived viewpoint, identified by symbol/list <viewpoint>,
 on dataset with ID <dataset>, saving the output to a sub-directory
 of <output-path>, which will be created if it doesn't exist.
 This subdirectory will be identified by the dataset and the viewpoint.
@@ -136,7 +141,7 @@ If <trainining-set-size> is not null, it should be an integer corresponding
 to the size that each training set should be downsized to."
   (assert (integerp dataset))
   (assert (listp pretraining-ids))
-  (assert (symbolp viewpoint))
+  (assert (or (listp viewpoint) (symbolp viewpoint)))
   (let* ((output-root-dir (utils:ensure-directory output-path))
 	 (training-set-size-dir
 	  (merge-pathnames
@@ -159,7 +164,12 @@ to the size that each training set should be downsized to."
 	 (output-dir (merge-pathnames
 		      (make-pathname :directory
 				     (list :relative
-					   (string-downcase (symbol-name viewpoint))))
+					   (string-downcase
+					    (if (listp viewpoint)
+						(format nil "~{~A~^-x-~}"
+							(mapcar #'symbol-name
+								viewpoint))
+						(symbol-name viewpoint)))))
 		      training-set-size-dir)))
     (if (probe-file output-dir)
 	(utils:message "Output directory already exists, skipping analysis.")
@@ -187,6 +197,7 @@ to the size that each training set should be downsized to."
 	     :separator #\tab :detail 2.5
 	     :use-resampling-set-cache? t
 	     :slices-or-chords :chords
+	     :remove-repeated-chords remove-repeated-chords
 	     :resampling-set-cache-path output-resampling-set-path
 	     :num-quantiles 10
 	     :training-set-size training-set-size
