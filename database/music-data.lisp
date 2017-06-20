@@ -2,7 +2,7 @@
 ;;;; File:       music-data.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-05-15 17:08:28 peter>                           
+;;;; Time-stamp: <2017-06-20 14:49:41 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -68,6 +68,15 @@
 					       "krn"))
 			      cl-user::*idyom-code-root*)
 			"Four example Bach chorales"
+			id))
+
+(defun import-four-pop-pieces (&key (id 5))
+  (idyom-db:import-data :mcgill (merge-pathnames
+			      (make-pathname :directory
+					     '(:relative "music-corpora"
+					       "polyphony" "four-pop-pieces"))
+			      cl-user::*idyom-code-root*)
+			"Four example pop pieces"
 			id))
 
 (defun db-backup ()
