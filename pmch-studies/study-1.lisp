@@ -2,7 +2,7 @@
 ;;;; File:       study-1.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-05-15 13:37:26 peter>                          
-;;;; Time-stamp: <2017-06-20 16:56:17 peter>                           
+;;;; Time-stamp: <2017-06-20 17:01:38 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -18,10 +18,10 @@
   ;; Set paths
   (defparameter cl-user::*output-dir*
   (cond ((member :os-macosx cl-user::*features*)
-	 "/Users/peter/Dropbox/Academic/projects/idyom/studies/HarmonyRepresentations/data-raw/data-5/data/")
+	 "/Users/peter/Dropbox/Academic/projects/idyom/studies/HarmonyRepresentations/data-raw/data-6/data/")
 	((member :marcus-pc cl-user::*features*)
-	 "/home/pharrison/HarmonyRepresentations/data-5/")
-	(t "/home/peter/Dropbox/Academic/projects/idyom/studies/HarmonyRepresentations/inst/extdata/data-5/")))
+	 "/home/pharrison/HarmonyRepresentations/data-6/")
+	(t "/home/peter/Dropbox/Academic/projects/idyom/studies/HarmonyRepresentations/data-raw/data6/data/")))
   ;;;; Analyse test length
   ;; Classical (1022 pieces in corpus, max 987 in training set with 30-fold CV)
   (loop for ts-size in '(987 8 512 256 16 128 32 64 4 2 1)
