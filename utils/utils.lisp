@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2017-06-20 10:41:10 peter>
+;;;; Time-stamp: <2017-06-20 12:09:14 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -951,7 +951,9 @@ ascending order or in descending order."))
 of the output. If <format> is eql to :means, then the function 
 returns the computed means for the k clusters. If <format> is equal
 to :thresholds, then the function returns the k - 1 decision thresholds
-situated between the k clusters."
+situated between the k clusters.
+Note: if <k> exceeds the number of unique values in <data>, then <k>
+will be set to the number of unique values in <data>."
   (assert (member format '(:means :thresholds)))
   (assert (integerp k))
   (assert (> k 0))
