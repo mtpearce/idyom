@@ -2,7 +2,7 @@
 ;;;; File:       r.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-06-19 14:31:19 peter>                          
-;;;; Time-stamp: <2017-06-19 18:28:15 peter>                           
+;;;; Time-stamp: <2017-06-20 11:38:15 peter>                           
 ;;;; ======================================================================
 
 ;;;; This page contains code for interfacing with R.
@@ -98,7 +98,7 @@ If <wait> is nil, then the command is run asynchronously."
   write(sprintf(\"(vector %s)\", paste(~A, collapse = \" \")),
         file = \"~A\")
 } else {
-  error(\"Don't know how to export outputs of class \", class(~A))
+  stop(\"Don't know how to export outputs of class \", class(~A))
 }" r-obj r-obj (namestring temp-file) r-obj))
 
 ;; ====================================
@@ -115,7 +115,7 @@ to an equivalent R object."))
     (loop for elt in obj 
 	  for i from 1
 	  if (> i 1) do (format str ",")
-	  do (format str "~A" elt))
+	  do (format str "~A" (lisp->r-object elt)))
     (format str ")")))
 
 (defmethod lisp->r-object ((obj vector))
@@ -124,10 +124,13 @@ to an equivalent R object."))
     (loop for elt across obj 
 	  for i from 1
 	  if (> i 1) do (format str ",")
-	  do (format str "~A" elt))
+	  do (format str "~A" (lisp->r-object elt)))
     (format str ")")))
 
 (defmethod lisp->r-object ((obj number))
-  (lisp->r-object (vector obj)))
+  (let ((obj (if (integerp obj)
+		 obj
+		 (coerce obj 'float))))
+    (format nil "~A" obj)))
 
 
