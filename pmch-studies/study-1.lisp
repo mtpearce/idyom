@@ -2,7 +2,7 @@
 ;;;; File:       study-1.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-05-15 13:37:26 peter>                          
-;;;; Time-stamp: <2017-06-20 15:25:49 peter>                           
+;;;; Time-stamp: <2017-06-20 16:11:31 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -12,78 +12,31 @@
 
 (cl:in-package #:pmch-s1)
 
-(defparameter *harmony-viewpoints* '(h-cpitch
-				     h-cpc-milne-sd-cont=min
-				     h-hutch-rough
-				     h-cpc-vl-dist-p=1
-				     h-gct-root-csd
-				     h-gct-root-cpcint
-				     h-bass-cpc h-bass-cpcint
+(defparameter *harmony-viewpoints* '(h-bass-cpc
+				     h-bass-cpcint
 				     h-bass-csd
 				     h-bass-int-from-gct-root
-				     h-cpc-identity h-cpc-int-from-bass
+				     h-cpc-identity
+				     h-cpc-int-from-bass
 				     h-cpc-int-from-gct-root
+				     h-cpc-milne-sd-cont=min
+				     h-cpc-vl-dist-p=1
+				     h-cpitch
 				     h-cpitch-class-set
 				     h-cpitch-identity
 				     h-csd
-				     h-gct h-gct-3rd-type
-				     h-gct-7th-type h-gct-base
-				     h-gct-ext h-gct-meeus-int
+				     h-gct-3rd-type
+				     h-gct-7th-type
+				     h-gct-base
+				     h-gct-ext
+				     h-gct-meeus-int
 				     h-gct-root-5ths-dist
-				     h-gct-root-cpc h-hedges-chord-type))
-
-;;;; Splitting viewpoints into equal-sized sets
-;;   Sets of 3
-(defparameter *h-vp-1-of-3*
-  (let* ((num-viewpoints (length *harmony-viewpoints*))
-	 (one-third-threshold (1- (/ num-viewpoints 3))))
-    (loop
-       for v in *harmony-viewpoints*
-       for i from 0 to (floor one-third-threshold)
-       collect v)))
-
-(defparameter *h-vp-2-of-3*
-  (let* ((num-viewpoints (length *harmony-viewpoints*))
-	 (one-third-threshold (1- (/ num-viewpoints 3)))
-	 (two-third-threshold (1- (* 2 (/ num-viewpoints 3)))))
-    (loop
-       for i from (ceiling one-third-threshold) to (floor two-third-threshold)
-       collect (nth i *harmony-viewpoints*))))
-
-(defparameter *h-vp-3-of-3*
-  (let* ((num-viewpoints (length *harmony-viewpoints*))
-	 (two-third-threshold (1- (* 2 (/ num-viewpoints 3)))))
-    (loop
-       for i from (ceiling two-third-threshold) to (1- num-viewpoints)
-       collect (nth i *harmony-viewpoints*))))
-
-;; Splitting into 8 sets
-(defparameter *h-vp-1-of-8*
-  '(h-cpitch h-cpc-milne-sd-cont=min h-hutch-rough))
-
-(defparameter *h-vp-2-of-8*
-  '(h-cpc-vl-dist-p=1 h-gct-root-csd h-gct-root-cpcint))
-
-(defparameter *h-vp-3-of-8*
-  '(h-bass-cpc h-bass-cpcint h-hedges-chord-type))
-
-(defparameter *h-vp-4-of-8*
-  '(h-bass-csd h-bass-int-from-gct-root))
-
-(defparameter *h-vp-5-of-8*
-  '(h-cpc-identity h-cpc-int-from-bass h-cpc-int-from-gct-root))
-
-(defparameter *h-vp-6-of-8*
-  '(h-cpitch-class-set h-cpitch-identity h-csd h-gct-meeus-int))
-
-(defparameter *h-vp-7-of-8*
-  '(h-gct h-gct-3rd-type h-gct-7th-type h-gct-root-5ths-dist))
-
-(defparameter *h-vp-8-of-8*
-  '(h-gct-base h-gct-ext h-gct-root-cpc))
-
-
-;;;; Analysis functions	 
+				     h-gct-root-cpc
+				     h-gct-root-cpcint
+				     h-gct-root-csd
+				     h-hedges-chord-type
+				     h-hutch-rough
+				     (h-csd h-bass-csd)))
 
 (defun analyse-all-viewpoints
     (dataset pretraining-ids
