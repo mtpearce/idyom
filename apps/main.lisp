@@ -2,7 +2,7 @@
 ;;;; File:       main.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2010-11-01 15:19:57 marcusp>
-;;;; Time-stamp: <2017-05-23 18:32:33 peter>
+;;;; Time-stamp: <2017-06-20 14:44:57 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:idyom)
@@ -72,6 +72,7 @@
 		(harmonic-reduction :none)
 		(pretraining-harmonic-reduction :none)
 		(slices-or-chords :chords)
+		(remove-repeated-chords nil)
 		;; Quantiles for discretising continuous viewpoints
 		(num-quantiles 10)
 		;; Size to downsample the training sets to
@@ -151,6 +152,7 @@
 		   :pretraining-harmonic-reduction
 		   pretraining-harmonic-reduction
 		   :slices-or-chords slices-or-chords
+		   :remove-repeated-chords remove-repeated-chords
 		   :num-quantiles num-quantiles
 		   :training-set-size training-set-size
 		   :use-resampling-set-cache? use-resampling-set-cache?

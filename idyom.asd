@@ -2,7 +2,7 @@
 ;;;; File:       IDyOM.asd
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-05-04 21:29:04 marcusp>
-;;;; Time-stamp: <2017-05-22 09:54:38 peter>
+;;;; Time-stamp: <2017-06-19 18:20:47 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -20,7 +20,14 @@
 		     fare-memoization iterate cl-store)
   :serial t
   :components
-  (;; General utilities  
+  ;; Interfacing with external programs
+  ((:module interfaces
+	   :serial t
+	   :components
+	   ((:file "package")
+	    (:file "r")
+	    (:file "tests")))
+  ;; General utilities  
    (:module utils 
 	    :serial t
             :components 

@@ -2,7 +2,7 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-05-23 17:57:25 peter>                           
+;;;; Time-stamp: <2017-06-19 19:12:23 peter>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -29,7 +29,8 @@
            "CD" "PWD" "ENSURE-DIRECTORY" "COPY-FILE" "RECURSIVELY-LIST-FILES"
            "COLLECT-GARBAGE" "SHELL-COMMAND" "SET-TEST-SUITE-DEPENDENCIES"
 	   "DATAFRAME" "ADD-ROW" "BIND-BY-ROW" "REMOVE-COLUMNS-EXCEPT"
-	   "GET-COLUMN" "SORT-BY-COLUMNS" "PRINT-DATA")
+	   "GET-COLUMN" "SORT-BY-COLUMNS" "PRINT-DATA"
+	   "K-MEANS-1D" "K-MEANS-1D-SLOW")
   (:documentation "Utility functions of general use."))
 
 

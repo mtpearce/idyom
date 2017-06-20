@@ -1,4 +1,4 @@
-This folder contains music intended to represent common-practice Western tonal music. It includes the following repertoires: (1021 pieces/movements in total)
+This folder contains music intended to represent common-practice Western tonal music. It includes the following repertoires: (1022 pieces/movements in total)
 
 Bach chorales (1685-1750)– sourced from kernScores
 – 370 pieces (1 is missing)
@@ -15,7 +15,7 @@ J. S. Bach: preludes from the Well-Tempered Clavier (1685-1750)
 – sourced from kernScores– some are missing, so there are 24 in book 1 and 20 in book 2
 – the files are prefixed with "bach-wtc-1-prelude" and "back-wtc-2-prelude"
 
-Mozart: piano sonatas– sourced from kernScores– 17 in total, c. 3 movements each => 67 movements in total
+Mozart: piano sonatas– sourced from kernScores– 17 in total, c. 3 movements each => 69 movements in total
 – the files are prefixed with "mozart-piano-sonata"
 
 Beethoven: piano sonatas– sourced from kernScores– 32 in total, c. 3 movements each => 101 movements
