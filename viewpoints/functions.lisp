@@ -109,21 +109,29 @@ the original viewpoints are included."
 of <sequences>, using <num-quantiles> quantiles. <sequences> can be a list
 of music-sequences or a list of music-sequences that have been coerced to lists."))
 
-(defmethod set-viewpoint-quantiles ((v viewpoint) (sequences list) (num-quantiles integer))
+(defmethod set-viewpoint-quantiles ((v viewpoint) (sequences list)
+				    (num-quantiles integer))
   (utils:message
-   (format nil
-	   "Discretising viewpoint ~A into ~A quantiles on the basis of ~A compositions."
+   (format
+    nil
+    "Discretising viewpoint ~A into ~A quantiles on the basis of ~A compositions."
 	   (viewpoints:viewpoint-name v) num-quantiles (length sequences)))
   (assert (integerp num-quantiles))
   (assert (not (null sequences)))
   (let* ((viewpoint-elements
 	  (loop for sequence in sequences
 	     append (viewpoints:viewpoint-sequence v sequence)))
-	 (quantiles (utils:quantiles (remove-duplicates viewpoint-elements :test #'=)
-				     num-quantiles)))
+	 (quantiles (utils:k-means-1d viewpoint-elements num-quantiles
+				      :format :thresholds)))
       (setf (gethash (viewpoints:viewpoint-name v)
 		     *viewpoint-quantiles*)
 	    quantiles)))
 
-(defmethod set-viewpoint-quantiles ((v symbol) (sequences list) (num-quantiles integer))
+;; The previous version computed real quantiles; the new version
+;; computes k-means quantiles.
+;; (utils:quantiles (remove-duplicates viewpoint-elements :test #'=)
+;;				     num-quantiles)
+
+(defmethod set-viewpoint-quantiles ((v symbol) (sequences list)
+				    (num-quantiles integer))
   (set-viewpoint-quantiles (get-viewpoint v) sequences num-quantiles))

@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2017-06-19 18:30:11 peter>
+;;;; Time-stamp: <2017-06-20 10:41:10 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -939,10 +939,39 @@ ascending order or in descending order."))
 ;; This is an algorithm for optimal 1-dimensional k-means clustering,
 ;; from Wang & Song (2011).
 
-;; Unfortunately the current implementation is much slower than the C++
-;; implementation available in the R package Ckmeans.1d.dp.
-;; The next step to speeding up the current code might be
+;; Two implementations are provided: one that interfaces with R/C++
+;; to use the fast implementation of the original authors (k-means-1d),
+;; and one Lisp implementation that currently runs much slower (k-means-1d-slow).
+;; The next step to speeding up the Lisp implementation might be
 ;; to pre-compute sum-sq-dist for all pairs of i and j.
+
+(defun k-means-1d (data k &key (format :means))
+  "<data> should be a sequence of numeric values to be clustered.
+<k> should be the number of clusters. <format> determines the format
+of the output. If <format> is eql to :means, then the function 
+returns the computed means for the k clusters. If <format> is equal
+to :thresholds, then the function returns the k - 1 decision thresholds
+situated between the k clusters."
+  (assert (member format '(:means :thresholds)))
+  (assert (integerp k))
+  (assert (> k 0))
+  (assert (every #'numberp data))
+  (assert (>= (length data) k))
+  (let* ((data (coerce data 'vector))
+	 (r-output (interfaces:call-r "
+library(Ckmeans.1d.dp)
+out <- Ckmeans.1d.dp(data, k)$centers"
+				      (list (cons "data" data)
+					    (cons "k" k))
+				      "out"))
+	 (list-output (coerce (car r-output) 'list)))
+    (case format
+      (:means list-output)
+      (:thresholds (loop 
+		      for i in list-output
+		      for j in (cdr list-output)
+		      collect (float (/ (+ i j) 2))))
+      (otherwise (error "Unrecognised <format> argument.")))))
 
 (defun k-means-1d-slow (data k)
   "<data> should be a sequence of numeric values to be clustered.
