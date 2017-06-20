@@ -10,7 +10,7 @@
 ;;;; Paths
 (defparameter cl-user::*output-dir*
   (cond ((member :os-macosx cl-user::*features*)
-	 "/Users/peter/Dropbox/Academic/projects/idyom/studies/HarmonyRepresentations/inst/extdata/data-5/")
+	 "/Users/peter/Dropbox/Academic/projects/idyom/studies/HarmonyRepresentations/data-raw/data-5/data/")
 	((member :marcus-pc cl-user::*features*)
 	 "/home/pharrison/HarmonyRepresentations/data-5/")
 	(t "/home/peter/Dropbox/Academic/projects/idyom/studies/HarmonyRepresentations/inst/extdata/data-5/")))
@@ -38,7 +38,35 @@
        :k 30
        :training-set-size ts-size
        :output-path cl-user::*output-dir*))
-     
+
+;;;; Generalisation
+(start-idyom)
+(defparameter cl-user::*output-dir*
+  (cond ((member :os-macosx cl-user::*features*)
+	 "/Users/peter/Dropbox/Academic/projects/idyom/studies/HarmonyRepresentations/inst/extdata/data-5/")
+	((member :marcus-pc cl-user::*features*)
+	 "/home/pharrison/HarmonyRepresentations/data-5/")
+	(t "/home/peter/Dropbox/Academic/projects/idyom/studies/HarmonyRepresentations/inst/extdata/data-5/")))
+
+;; Train on classical, test on jazz
+(pmch-s1:analyse-all-viewpoints 3 '(1)
+				:reduce-harmony nil
+				:reduce-harmony-pretraining t
+				:k 1
+				:output-path cl-user::*output-dir*)
+;; Train on pop, test on jazz
+(pmch-s1:analyse-all-viewpoints 3 '(2)
+				:reduce-harmony nil
+				:reduce-harmony-pretraining nil
+				:k 1
+				:output-path cl-user::*output-dir*)
+;; Train on classical, test on pop
+(pmch-s1:analyse-all-viewpoints 2 '(1)
+				:reduce-harmony nil
+				:reduce-harmony-pretraining t
+				:k 1
+				:output-path cl-user::*output-dir*)
+
 
 
 ;;;; OLD ;;;;;;;;;;;;;;
@@ -93,7 +121,7 @@
 			    :reduce-harmony-pretraining t
 			    :k 1)
 
-;; Train on classical, test on jazz
+;; Train on classical, test on pop
 (pmch-s1:analyse-viewpoints pmch-s1:*h-vp-1-of-8* 2 '(1)
 			    :reduce-harmony nil
 			    :reduce-harmony-pretraining t
