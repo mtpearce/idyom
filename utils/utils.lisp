@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2017-06-20 12:09:14 peter>
+;;;; Time-stamp: <2017-07-02 18:50:51 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -958,7 +958,6 @@ will be set to the number of unique values in <data>."
   (assert (integerp k))
   (assert (> k 0))
   (assert (every #'numberp data))
-  (assert (>= (length data) k))
   (let* ((data (coerce data 'vector))
 	 (r-output (interfaces:call-r "
 library(Ckmeans.1d.dp)
