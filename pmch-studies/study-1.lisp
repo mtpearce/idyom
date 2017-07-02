@@ -2,7 +2,7 @@
 ;;;; File:       study-1.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-05-15 13:37:26 peter>                          
-;;;; Time-stamp: <2017-06-20 17:01:38 peter>                           
+;;;; Time-stamp: <2017-07-02 18:37:35 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -78,14 +78,12 @@
 				     h-bass-cpcint
 				     h-bass-csd
 				     h-bass-int-from-gct-root
-				     h-cpc-identity
 				     h-cpc-int-from-bass
 				     h-cpc-int-from-gct-root
 				     h-cpc-milne-sd-cont=min
 				     h-cpc-vl-dist-p=1
 				     h-cpitch
 				     h-cpitch-class-set
-				     h-cpitch-identity
 				     h-csd
 				     h-gct-3rd-type
 				     h-gct-7th-type
