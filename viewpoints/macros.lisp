@@ -29,9 +29,10 @@ is a continuous viewpoint or not."
 			   continuous-output
 			   (utils:round-to-nearest-decimal-place ,function 10))))
 		 (if *discretise-viewpoints*
-		     (let ((quantiles (gethash (symbol-name ',name)
-					       *viewpoint-quantiles*)))
-		       (if quantiles
+		     (multiple-value-bind (quantiles quantiles-exist)
+			 (gethash (symbol-name ',name)
+				  *viewpoint-quantiles*)
+		       (if quantiles-exist
 			   (if (undefined-p continuous-output)
 			       continuous-output
 			       (utils:assign-to-quantile continuous-output
