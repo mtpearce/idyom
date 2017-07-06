@@ -2,7 +2,7 @@
 ;;;; File:       study-1.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-05-15 13:37:26 peter>                          
-;;;; Time-stamp: <2017-07-04 09:14:59 peter>                           
+;;;; Time-stamp: <2017-07-05 15:42:48 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -97,7 +97,8 @@
 				     h-hedges-chord-type
 				     h-hutch-rough
 				     (h-csd h-bass-csd)
-				     (h-cpc-int-from-bass h-bass-cpcint)))
+				     (h-cpc-int-from-bass h-bass-cpcint)
+				     (h-cpc-int-from-gct-root h-gct-root-cpcint)))
 
 (defun analyse-all-viewpoints
     (dataset pretraining-ids
