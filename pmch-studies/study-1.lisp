@@ -2,7 +2,7 @@
 ;;;; File:       study-1.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-05-15 13:37:26 peter>                          
-;;;; Time-stamp: <2017-07-05 15:42:48 peter>                           
+;;;; Time-stamp: <2017-07-11 17:26:55 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -21,7 +21,7 @@
 	 "/Users/peter/Dropbox/Academic/projects/idyom/studies/HarmonyRepresentations/data-raw/data-6/data/")
 	((member :marcus-pc cl-user::*features*)
 	 "/home/pharrison/HarmonyRepresentations/data-6/")
-	(t "/home/peter/Dropbox/Academic/projects/idyom/studies/HarmonyRepresentations/data-raw/data6/data/")))
+	(t "/home/peter/Dropbox/Academic/projects/idyom/studies/HarmonyRepresentations/data-raw/data-6/data/")))
   ;;;; Analyse test length
   ;; Classical (1022 pieces in corpus, max 987 in training set with 30-fold CV)
   (loop for ts-size in '(987 8 512 256 16 128 32 64 4 2 1)
