@@ -171,7 +171,8 @@ to a csv file at that path."
 				    :slices-or-chords slices-or-chords
 				    :remove-repeated-chords
 				    remove-repeated-chords)))
-	(dolist (viewpoint viewpoints)
+	(utils:message (format nil "Analysing dataset(s) ~A" dataset-id))
+	(utils:dolist-pb (viewpoint viewpoints)
 	  (let ((alphabet)
 		(v (viewpoints:get-viewpoint viewpoint)))
 	    (dolist (composition compositions)
