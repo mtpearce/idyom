@@ -17,5 +17,6 @@
            #:in-typeset-p #:alphabet->events #:viewpoint-element-equal
 	   #:composition-viewpoint #:dataset-viewpoint
 	   #:harm-seq #:*discretise-viewpoints* #:reset-viewpoint-quantiles
-	   #:add-local-key-cache #:*use-cached-local-key*)
+	   #:add-local-key-cache #:*use-cached-local-key*
+	   #:get-alphabet-sizes)
   (:documentation "Multiple viewpoint framework for music representation."))

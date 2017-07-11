@@ -135,3 +135,58 @@ of music-sequences or a list of music-sequences that have been coerced to lists.
 (defmethod set-viewpoint-quantiles ((v symbol) (sequences list)
 				    (num-quantiles integer))
   (set-viewpoint-quantiles (get-viewpoint v) sequences num-quantiles))
+
+;;;; Getting alphabet sizes
+
+(defun get-alphabet-sizes
+    (viewpoints dataset-ids
+     &key output-path
+       ;; These are arguments to pass to md:get-music-objects,
+       ;; make sure these are kept up to date when additional
+       ;; arguments are added for md:get-music-objects.
+       (voices nil) (texture :melody) (polyphonic-expansion :full)
+       (harmonic-reduction :none) (slices-or-chords :chords) remove-repeated-chords)
+  "Gets the sizes of the alphabets for a set of provided viewpoints 
+in a series of provided datasets. <viewpoints> should be a list of 
+symbols identifying the viewpoints of interest. <dataset-ids> should
+be a list each of element of which corresponds to a unique set of datasets
+to analyse. Typically each element of <dataset-ids> will be a number
+giving the dataset id to use, but these elements can also be lists,
+in which case the alphabet size will be computed over the concatenation
+of the datasets. If <output-path> is provided, the results will be saved
+to a csv file at that path."
+  (assert (listp viewpoints))
+  (assert (every #'symbolp viewpoints))
+  (assert (listp dataset-ids))
+  (let ((output (list (list "viewpoint" "dataset_ids" "alphabet_size"))))
+    (dolist (dataset-id dataset-ids)
+      (let* ((dataset-id (if (listp dataset-id) dataset-id (list dataset-id)))
+	     (compositions
+	      (md:get-music-objects dataset-id nil
+				    :voices voices
+				    :texture texture
+				    :polyphonic-expansion polyphonic-expansion
+				    :harmonic-reduction harmonic-reduction
+				    :slices-or-chords slices-or-chords
+				    :remove-repeated-chords
+				    remove-repeated-chords)))
+	(dolist (viewpoint viewpoints)
+	  (let ((alphabet)
+		(v (viewpoints:get-viewpoint viewpoint)))
+	    (dolist (composition compositions)
+	      (let ((viewpoint-sequence (viewpoint-sequence v composition)))
+		(dolist (viewpoint-element viewpoint-sequence)
+		  (unless (or (undefined-p viewpoint-element)
+			      (member viewpoint-element alphabet :test #'equal))
+		    (push viewpoint-element alphabet)))))
+	    (push (list (string-downcase (symbol-name viewpoint))
+			(format nil "~{~A~^ ~}" dataset-id)
+			(length alphabet))
+		  output)))))
+    (setf output (reverse output))
+    (when output-path
+      (with-open-file (s (ensure-directories-exist (pathname output-path))
+			 :direction :output :if-exists :supersede)
+	(cl-csv:write-csv output :stream s)))
+    output))
+	  
