@@ -158,6 +158,7 @@ to a csv file at that path."
   (assert (listp viewpoints))
   (assert (every #'symbolp viewpoints))
   (assert (listp dataset-ids))
+  (utils:message "Iterating over datasets and viewpoints to compute alphabet sizes")
   (let ((output (list (list "viewpoint" "dataset_ids" "alphabet_size"))))
     (dolist (dataset-id dataset-ids)
       (let* ((dataset-id (if (listp dataset-id) dataset-id (list dataset-id)))
