@@ -2,7 +2,7 @@
 ;;;; File:       study-1.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-05-15 13:37:26 peter>                          
-;;;; Time-stamp: <2017-07-11 17:26:55 peter>                           
+;;;; Time-stamp: <2017-07-11 17:38:07 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -22,6 +22,25 @@
 	((member :marcus-pc cl-user::*features*)
 	 "/home/pharrison/HarmonyRepresentations/data-6/")
 	(t "/home/peter/Dropbox/Academic/projects/idyom/studies/HarmonyRepresentations/data-raw/data-6/data/")))
+  ;;;; Calculate alphabet sizes
+  (viewpoints:get-alphabet-sizes
+   *harmony-viewpoints* '(1)
+   :output-path (merge-pathnames "classical_alphabets.csv" cl-user::*output-dir*)
+   :texture :harmony
+   :harmonic-reduction :regular-harmonic-rhythm
+   :remove-repeated-chords t)
+  (viewpoints:get-alphabet-sizes
+   *harmony-viewpoints* '(2)
+   :output-path (merge-pathnames "popular_alphabets.csv" cl-user::*output-dir*)
+   :texture :harmony
+   :harmonic-reduction :none
+   :remove-repeated-chords t)
+  (viewpoints:get-alphabet-sizes
+   *harmony-viewpoints* '(3)
+   :output-path (merge-pathnames "jazz_alphabets.csv" cl-user::*output-dir*)
+   :texture :harmony
+   :harmonic-reduction :none
+   :remove-repeated-chords t)				 
   ;;;; Analyse test length
   ;; Classical (1022 pieces in corpus, max 987 in training set with 30-fold CV)
   (loop for ts-size in '(987 8 512 256 16 128 32 64 4 2 1)
