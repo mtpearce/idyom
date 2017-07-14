@@ -2,7 +2,7 @@
 ;;;; File:       study-1.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-05-15 13:37:26 peter>                          
-;;;; Time-stamp: <2017-07-11 17:38:07 peter>                           
+;;;; Time-stamp: <2017-07-14 10:29:28 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -113,6 +113,7 @@
 				     h-gct-root-cpc
 				     h-gct-root-cpcint
 				     h-gct-root-csd
+				     h-hash-12
 				     h-hedges-chord-type
 				     h-hutch-rough
 				     (h-csd h-bass-csd)

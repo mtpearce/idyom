@@ -2,7 +2,7 @@
 ;;;; File:       tests.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-03-28 21:04:43 peter>                             
-;;;; Time-stamp: <2017-05-18 18:50:37 peter>                           
+;;;; Time-stamp: <2017-07-14 10:27:18 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -1184,3 +1184,11 @@
  :test #'approx=
  :parent-suite 'tymoczko)
 
+;;;; h-hash-12
+
+(5am:def-suite h-hash-12 :in viewpoints)
+(5am:in-suite h-hash-12)
+
+(5am:test h-hash-12-ex-1
+  (5am:is (eql (h-hash-12 (harm-seq '((0 3 7))))
+	       (h-hash-12 (harm-seq '((0 3 7)))))))

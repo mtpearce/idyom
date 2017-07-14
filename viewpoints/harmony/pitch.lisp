@@ -2,7 +2,7 @@
 ;;;; File:       pitch.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-03-03 10:13:20 peter>                              
-;;;; Time-stamp: <2017-04-13 18:21:20 peter>                           
+;;;; Time-stamp: <2017-07-14 10:25:01 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -241,3 +241,11 @@
 		 nil
 		 "Invalid h-gct-root-cpcint value: ~A"
 		 int))))))))
+
+(define-viewpoint (h-hash-12 derived (h-cpitch))
+  ;; Hashes h-cpitch into 12 random bins (used as a benchmark
+  ;; to show performance for an uninformed representation
+  ;; with an alphabet size of 12
+    ((events md:harmonic-sequence) element)
+  :function (mod (sxhash (h-cpitch events)) 12))
+  
