@@ -156,7 +156,6 @@ in which case the alphabet size will be computed over the concatenation
 of the datasets. If <output-path> is provided, the results will be saved
 to a csv file at that path."
   (assert (listp viewpoints))
-  (assert (every #'symbolp viewpoints))
   (assert (listp dataset-ids))
   (utils:message "Iterating over datasets and viewpoints to compute alphabet sizes")
   (let ((output (list (list "viewpoint" "dataset_ids" "alphabet_size"))))
@@ -181,8 +180,13 @@ to a csv file at that path."
 		  (unless (or (undefined-p viewpoint-element)
 			      (member viewpoint-element alphabet :test #'equal))
 		    (push viewpoint-element alphabet)))))
-	    (push (list (string-downcase (symbol-name viewpoint))
-			(format nil "~{~A~^ ~}" dataset-id)
+	    (push (list (string-downcase
+			 (if (listp viewpoint)
+			     (format nil "~{~A~^-x-~}"
+				     (mapcar #'symbol-name
+					     viewpoint))
+			     (symbol-name viewpoint)))
+			 (format nil "~{~A~^ ~}" dataset-id)
 			(length alphabet))
 		  output)))))
     (setf output (reverse output))
