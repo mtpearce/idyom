@@ -2,7 +2,7 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                        
-;;;; Time-stamp: <2017-05-15 01:45:24 peter>                           
+;;;; Time-stamp: <2017-07-23 12:29:58 peter>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -38,3 +38,7 @@
         #:resampling)
   (:export "DATASET-GENERATION" "GENERATE-CHORALES")
   (:documentation "Generation of melodic compositions."))
+
+(defpackage #:descriptives
+  (:use #:cl #:utils #:md #:viewpoints)
+  (:documentation "Computation of descriptive statistics for datasets"))

@@ -2,7 +2,7 @@
 ;;;; File:       IDyOM.asd
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-05-04 21:29:04 marcusp>
-;;;; Time-stamp: <2017-06-19 18:20:47 peter>
+;;;; Time-stamp: <2017-07-23 12:31:47 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -130,6 +130,7 @@
              (:file "viewpoint-selection")
              (:file "main")
              (:file "segmentation")
+	     (:file "descriptives")
              (:file "generation")))
    ;; Studies
    (:module pmch-studies
