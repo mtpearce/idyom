@@ -2,7 +2,7 @@
 ;;;; File:       descriptives.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-07-23 12:30:38 peter>                          
-;;;; Time-stamp: <2017-07-24 13:53:15 peter>                           
+;;;; Time-stamp: <2017-07-24 13:57:30 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -127,7 +127,7 @@ probability.")))
 		 (apply #'max (mapcar #'(lambda (x) (length (princ-to-string x))) string-list))))
 	  (let* ((context-col-width (max 10 (max-string-width contexts)))
 		 (continuation-col-width (max 15 (max-string-width continuations)))
-		 (probability-col-width (max 15 (max-string-width probabilities)))
+		 (probability-col-width 9)
 		 (total-width (+ context-col-width continuation-col-width
 				 probability-col-width)))
 	    (flet ((print-separator ()
@@ -141,10 +141,10 @@ probability.")))
 			for continuation in continuations
 			for probability in probabilities
 			do (format stream
-				   (format nil "~~%~~~AA~~~AA~~~AA"
-					   context-col-width continuation-col-width
-					   probability-col-width)
-				   context continuation probability))))
+				   "~%~vA~vA~v$"
+				   context-col-width context
+				   continuation-col-width continuation
+				   probability-col-width probability))))
 	      (print-separator)
 	      (print-header)
 	      (print-data))))))))
