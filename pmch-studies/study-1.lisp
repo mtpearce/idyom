@@ -2,7 +2,7 @@
 ;;;; File:       study-1.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-05-15 13:37:26 peter>                          
-;;;; Time-stamp: <2017-07-14 10:29:28 peter>                           
+;;;; Time-stamp: <2017-07-24 17:08:42 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -16,28 +16,28 @@
 
 (defun run-study-1 ()
   ;; Set paths
-  (defparameter cl-user::*output-dir*
-  (cond ((member :os-macosx cl-user::*features*)
-	 "/Users/peter/Dropbox/Academic/projects/idyom/studies/HarmonyRepresentations/data-raw/data-6/data/")
-	((member :marcus-pc cl-user::*features*)
-	 "/home/pharrison/HarmonyRepresentations/data-6/")
-	(t "/home/peter/Dropbox/Academic/projects/idyom/studies/HarmonyRepresentations/data-raw/data-6/data/")))
+  (let ((output-dir
+	 (cond ((member :os-macosx cl-user::*features*)
+		"/Users/peter/Dropbox/Academic/projects/idyom/studies/HarmonyRepresentations/data-raw/data-6/data/")
+	       ((member :marcus-pc cl-user::*features*)
+		"/home/pharrison/HarmonyRepresentations/data-6/")
+	       (t "/home/peter/Dropbox/Academic/projects/idyom/studies/HarmonyRepresentations/data-raw/data-6/data/"))))
   ;;;; Calculate alphabet sizes
   (viewpoints:get-alphabet-sizes
    *harmony-viewpoints* '(1)
-   :output-path (merge-pathnames "classical_alphabets.csv" cl-user::*output-dir*)
+   :output-path (merge-pathnames "classical_alphabets.csv" output-dir)
    :texture :harmony
    :harmonic-reduction :regular-harmonic-rhythm
    :remove-repeated-chords t)
   (viewpoints:get-alphabet-sizes
    *harmony-viewpoints* '(2)
-   :output-path (merge-pathnames "popular_alphabets.csv" cl-user::*output-dir*)
+   :output-path (merge-pathnames "popular_alphabets.csv" output-dir)
    :texture :harmony
    :harmonic-reduction :none
    :remove-repeated-chords t)
   (viewpoints:get-alphabet-sizes
    *harmony-viewpoints* '(3)
-   :output-path (merge-pathnames "jazz_alphabets.csv" cl-user::*output-dir*)
+   :output-path (merge-pathnames "jazz_alphabets.csv" output-dir)
    :texture :harmony
    :harmonic-reduction :none
    :remove-repeated-chords t)				 
@@ -49,7 +49,7 @@
 	 :reduce-harmony t
 	 :k 30
 	 :training-set-size ts-size
-	 :output-path cl-user::*output-dir*
+	 :output-path output-dir
 	 :remove-repeated-chords t))
   ;; Pop (739 pieces in corpus, max 714 in training set with 30-fold CV)
   (loop for ts-size in '(714 8 512 256 16 128 32 64 4 2 1)
@@ -57,7 +57,7 @@
 	 2 nil
 	 :k 30
 	 :training-set-size ts-size
-	 :output-path cl-user::*output-dir*
+	 :output-path output-dir
 	 :remove-repeated-chords t))
   ;; Jazz (1186 pieces in corpus, max 714 in training set with 30-fold CV)
   (loop for ts-size in '(1024 8 512 256 16 128 32 64 4 2 1)
@@ -65,7 +65,7 @@
 	 3 nil
 	 :k 30
 	 :training-set-size ts-size
-	 :output-path cl-user::*output-dir*
+	 :output-path output-dir
 	 :remove-repeated-chords t))
   ;;;; Analyse generalisation
   ;; Train on classical, test on jazz
@@ -73,23 +73,23 @@
 				  :reduce-harmony nil
 				  :reduce-harmony-pretraining t
 				  :k 1
-				  :output-path cl-user::*output-dir*
+				  :output-path output-dir
 				  :remove-repeated-chords t)
   ;; Train on pop, test on jazz
   (pmch-s1:analyse-all-viewpoints 3 '(2)
 				  :reduce-harmony nil
 				  :reduce-harmony-pretraining nil
 				  :k 1
-				  :output-path cl-user::*output-dir*
+				  :output-path output-dir
 				  :remove-repeated-chords t)
   ;; Train on classical, test on pop
   (pmch-s1:analyse-all-viewpoints 2 '(1)
 				  :reduce-harmony nil
 				  :reduce-harmony-pretraining t
 				  :k 1
-				  :output-path cl-user::*output-dir*
+				  :output-path output-dir
 				  :remove-repeated-chords t)
-  (utils:message "Study 1 analyses complete!"))
+  (utils:message "Study 1 analyses complete!")))
 
 ;;;; Utility functions
 
@@ -240,4 +240,64 @@ to the size that each training set should be downsized to."
 	     :overwrite nil
 	     :output-path output-analysis-path))))))
 
-		 
+(defun analyse-tps-all-viewpoints
+    (dataset &key output-path reduce-harmony (remove-repeated-chords t)
+	       n num-quantiles)
+  (utils:message (format nil "Analysing transition probabilities (n = ~A) for ~A viewpoints in dataset ~A..."
+			 n (length *harmony-viewpoints*) dataset))
+  (let* ((data (md:get-music-objects (list dataset) nil
+				     :voices nil :texture :harmony
+				     :harmonic-reduction (if reduce-harmony
+							     :regular-harmonic-rhythm
+							     :none)
+				     :slices-or-chords :chords
+				     :remove-repeated-chords remove-repeated-chords))
+	 (data (progn (utils:message "Adding local key cache.")
+		      (mapcar #'viewpoints:add-local-key-cache data))))
+    (loop for viewpoint in *harmony-viewpoints*
+       do (analyse-tps-viewpoint viewpoint data dataset
+				 :output-path output-path
+				 :reduce-harmony reduce-harmony
+				 :n n :num-quantiles num-quantiles))))
+
+(defun analyse-tps-viewpoint
+    (viewpoint data dataset &key output-path reduce-harmony
+	       n num-quantiles)
+  (let* ((output-root-dir output-path)
+	 (output-leaf-dir (ensure-directories-exist
+			   (merge-pathnames
+			    (make-pathname
+			     :directory
+			     (list :relative
+				   "transition-probabilities"
+				   (format nil "~A-harmonic-reduction-~A" dataset
+					   (string-downcase (symbol-name reduce-harmony)))
+				   (format nil "n=~A" n)
+				   (format nil "quantiles=~A" num-quantiles)))
+			    output-root-dir)))
+	 (output-path (merge-pathnames (concatenate 'string
+						    (string-downcase
+						     (if (listp viewpoint)
+							 (format nil "~{~A~^-x-~}"
+								 (mapcar #'symbol-name
+									 viewpoint))
+							 (symbol-name viewpoint)))
+						    ".csv")
+				       output-leaf-dir)))
+     (if (probe-file output-path)
+	 (utils:message
+	  (format nil
+		  "TPs already exist (dataset = ~A, n = ~A, viewpoint = ~A, quantiles = ~A), skipping analysis."
+		  dataset n viewpoint num-quantiles))
+	 (let* ((viewpoints:*discretise-viewpoints* nil))
+	   (when (and num-quantiles
+		      (viewpoints:continuous-p (viewpoints:get-viewpoint viewpoint)))
+	     (viewpoints:set-viewpoint-quantiles viewpoint data num-quantiles)
+	     (setf viewpoints:*discretise-viewpoints* t))
+	   (utils:message (format nil "Computing transition probabilities (n = ~A) for dataset ~A, viewpoint ~A"
+				  n dataset viewpoint))
+	   (descriptives:write-csv (descriptives:get-viewpoint-transition-probabilities data n viewpoint)
+				   output-path)))))
+					   
+	 
+	   

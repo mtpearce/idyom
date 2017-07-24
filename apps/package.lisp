@@ -2,7 +2,7 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                        
-;;;; Time-stamp: <2017-07-24 15:02:56 peter>                           
+;;;; Time-stamp: <2017-07-24 16:05:57 peter>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -41,4 +41,6 @@
 
 (defpackage #:descriptives
   (:use #:cl)
-  (:documentation "Computation of descriptive statistics for datasets"))
+  (:documentation "Computation of descriptive statistics for datasets")
+  (:export "COUNT-VIEWPOINT-N-GRAMS" "GET-VIEWPOINT-TRANSITION-PROBABILITIES"
+	   "TRANSITION-PROBABILITIES" "WRITE-CSV"))

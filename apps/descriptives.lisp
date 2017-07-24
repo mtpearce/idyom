@@ -2,7 +2,7 @@
 ;;;; File:       descriptives.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-07-23 12:30:38 peter>                          
-;;;; Time-stamp: <2017-07-24 15:12:20 peter>                           
+;;;; Time-stamp: <2017-07-24 17:04:00 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -91,6 +91,10 @@ object."))
   (count-viewpoint-n-grams data n (viewpoints:get-viewpoint viewpoint)))
 
 (defmethod count-viewpoint-n-grams
+    (data n (viewpoint list))
+  (count-viewpoint-n-grams data n (viewpoints:get-viewpoint viewpoint)))
+
+(defmethod count-viewpoint-n-grams
     ((data md:music-sequence) n (viewpoint viewpoints:viewpoint))
   (count-n-grams (viewpoints:viewpoint-sequence viewpoint data) n))
 
@@ -112,20 +116,35 @@ Transition probabilities are stored in the <data> slot. This slot
 should be occupied by a list each element of which corresponds
 to a unique transition. These elements should themselves be lists,
 the first element of which gives the context, the second giving 
-the continuation, and the third giving the associated transition 
-probability.")))
+the continuation, the third giving the context count, the fourth giving 
+the continuation count, and the fifth giving the resulting MLE probability.")))
 
 (defgeneric write-csv (object path))
 (defmethod write-csv ((object transition-probabilities) path)
-  (let* ((contexts (loop for x in (data object) collect (first x)))
-	 (continuations (loop for x in (data object) collect (second x)))
-	 (probabilities (loop for x in (data object) collect (third x)))
+  (let* ((data (sort (copy-list (data object))
+		     #'string<
+		     :key #'(lambda (x) (princ-to-string (second x)))))
+	 (data (sort data
+		     #'string<
+		     :key #'(lambda (x) (princ-to-string (first x)))))
+	 (contexts (loop for x in data collect (first x)))
+	 (continuations (loop for x in data collect (second x)))
+	 (context-counts (loop for x in data collect (third x)))
+	 (continuation-counts (loop for x in data collect (fourth x)))
+	 (probabilities (loop for x in data collect (fifth x)))
 	 (data (loop
 		  for context in contexts
 		  for continuation in continuations
+		  for context-count in context-counts
+		  for continuation-count in continuation-counts
 		  for probability in probabilities
-		  collect (list context continuation probability)))
-	 (output (cons (list "context" "continuation" "probability") data)))
+		  collect (list context continuation
+				context-count continuation-count
+				probability)))
+	 (output (cons (list "context" "continuation"
+			     "context_count" "continuation_count"
+			     "probability")
+		       data)))
     (with-open-file (stream path :direction :output :if-exists :supersede)
       (cl-csv:write-csv output :stream stream))))
 
@@ -184,8 +203,10 @@ maximum-likelihood estimation (i.e. no escape probabilities)."))
 			     (context-count (get-count context context-counts))
 			     (probability (coerce (/ continuation-count context-count)
 						  'double-float)))
-			(list context continuation probability))))))
+			(list context continuation
+			      context-count continuation-count
+			      probability))))))
 
-
-
+(defun get-viewpoint-transition-probabilities (data n viewpoint)
+  (n-grams->transition-probabilities (count-viewpoint-n-grams data (1+ n) viewpoint)))
 
