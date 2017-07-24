@@ -148,7 +148,7 @@ of music-sequences or a list of music-sequences that have been coerced to lists.
 
 (defun get-alphabet-sizes
     (viewpoints dataset-ids
-     &key output-path
+     &key output-path overwrite
        ;; These are arguments to pass to md:get-music-objects,
        ;; make sure these are kept up to date when additional
        ;; arguments are added for md:get-music-objects.
@@ -166,6 +166,11 @@ to a csv file at that path."
   (assert (listp viewpoints))
   (assert (listp dataset-ids))
   (utils:message "Iterating over datasets and viewpoints to compute alphabet sizes")
+  (when (and (not (null output-path))
+	     (probe-file output-path)
+	     (null overwrite))
+    (utils:message "Alphabet output file existed already, skipping analysis.")
+    (return-from get-alphabet-sizes))
   (let ((output (list (list "viewpoint" "dataset_ids" "alphabet_size"))))
     (dolist (dataset-id dataset-ids)
       (let* ((dataset-id (if (listp dataset-id) dataset-id (list dataset-id)))

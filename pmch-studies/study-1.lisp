@@ -2,7 +2,7 @@
 ;;;; File:       study-1.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-05-15 13:37:26 peter>                          
-;;;; Time-stamp: <2017-07-24 23:40:23 peter>                           
+;;;; Time-stamp: <2017-07-24 23:50:52 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -52,13 +52,13 @@
   (save-viewpoint-quantiles 2
 			    :output-path output-dir
 			    :reduce-harmony nil
-			    :remove-repeated-chords nil
+			    :remove-repeated-chords t
 			    :num-quantiles 12)
   ;; Jazz
   (save-viewpoint-quantiles 3
 			    :output-path output-dir
 			    :reduce-harmony nil
-			    :remove-repeated-chords nil
+			    :remove-repeated-chords t
 			    :num-quantiles 12)
   ;;;; Save transition probabilities
   ;;;  0th-order (note: we don't quantise for this)
@@ -359,6 +359,7 @@ to the size that each training set should be downsized to."
 
 (defun save-viewpoint-quantiles
     (dataset &key output-path reduce-harmony num-quantiles (remove-repeated-chords t))
+  (utils:message "Computing and saving viewpoint quantiles...")
   (let* ((output-root-dir (utils:ensure-directory output-path))
 	 (output-leaf-dir (ensure-directories-exist
 			   (merge-pathnames
@@ -377,16 +378,18 @@ to the size that each training set should be downsized to."
 							     :none)
 				     :slices-or-chords :chords
 				     :remove-repeated-chords remove-repeated-chords)))
-    (print output-leaf-dir)
     (loop for v in *harmony-viewpoints*
        when (viewpoints:continuous-p (viewpoints:get-viewpoint v))
        do (let ((viewpoints:*discretise-viewpoints* nil)
-		(output-file (merge-pathnames (concatenate 'string (viewpoints:viewpoint-name-string v)
+		(output-file (merge-pathnames
+			      (concatenate 'string
+					   (viewpoints:viewpoint-name-string v)
 							   ".csv")
-					      output-leaf-dir)))
-	    (print output-file)
-	    (viewpoints:set-viewpoint-quantiles v data num-quantiles
-						:output-path output-file)))))
+			      output-leaf-dir)))
+	    (if (probe-file output-file)
+		(utils:message "Output file exists aready, skipping analysis.")
+		(viewpoints:set-viewpoint-quantiles v data num-quantiles
+						    :output-path output-file))))))
 	    
 	 
   
