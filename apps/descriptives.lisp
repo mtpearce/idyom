@@ -2,7 +2,7 @@
 ;;;; File:       descriptives.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-07-23 12:30:38 peter>                          
-;;;; Time-stamp: <2017-07-24 12:22:24 peter>                           
+;;;; Time-stamp: <2017-07-24 13:53:15 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -27,7 +27,7 @@
 		    collect (cons (princ-to-string object) count)))
 	 (output (sort output #'string< :key #'car))
 	 (num-objects (length output)))
-    (format stream "<COUNT-TABLE (COUNT = ~A)>" num-objects)
+    (format stream "<COUNT-TABLE (UNIQUE OBJECT COUNT = ~A)>" num-objects)
     (dolist (x output)
       (format stream "~%~A - ~A" (car x) (cdr x)))))
 
@@ -102,5 +102,76 @@ object."))
 							 composition)
 				     n))
 		  data)))
+
+;;;; Converting n-grams to transition probabilities
+
+(defclass transition-probabilities ()
+  ((data :accessor data :initarg :data
+	:documentation "Object storing transition probabilities.
+Transition probabilities are stored in the <data> slot. This slot 
+should be occupied by a list each element of which corresponds
+to a unique transition. These elements should themselves be lists,
+the first element of which gives the context, the second giving 
+the continuation, and the third giving the associated transition 
+probability.")))
+
+(defmethod print-object ((object transition-probabilities) stream)
+  (let* ((data (data object))
+	 (num-transitions (length data)))
+    (format stream "<TRANSITION PROBABILITIES (COUNT = ~A)>" num-transitions)
+    (when (> num-transitions 0)
+      (let* ((contexts (loop for x in (data object) collect (first x)))
+	     (continuations (loop for x in (data object) collect (second x)))
+	     (probabilities (loop for x in (data object) collect (third x))))
+	(flet ((max-string-width (string-list)
+		 (apply #'max (mapcar #'(lambda (x) (length (princ-to-string x))) string-list))))
+	  (let* ((context-col-width (max 10 (max-string-width contexts)))
+		 (continuation-col-width (max 15 (max-string-width continuations)))
+		 (probability-col-width (max 15 (max-string-width probabilities)))
+		 (total-width (+ context-col-width continuation-col-width
+				 probability-col-width)))
+	    (flet ((print-separator ()
+		       (format stream "~%~A"
+			       (make-sequence 'string total-width :initial-element #\-)))
+		   (print-header ()
+		     (format stream "~%~10A~15A~15A" "Context" "Continuation" "Probability"))
+		   (print-data ()
+		     (loop
+			for context in contexts
+			for continuation in continuations
+			for probability in probabilities
+			do (format stream
+				   (format nil "~~%~~~AA~~~AA~~~AA"
+					   context-col-width continuation-col-width
+					   probability-col-width)
+				   context continuation probability))))
+	      (print-separator)
+	      (print-header)
+	      (print-data))))))))
+	       
+(defgeneric n-grams->transition-probabilities (n-grams)
+  (:documentation "Converts n-grams to transition probabilities using
+maximum-likelihood estimation (i.e. no escape probabilities)."))
+
+(defmethod n-grams->transition-probabilities ((n-grams count-table))
+  (let* ((context-counts
+	  (loop with context-counts = (make-instance 'count-table)
+	     for n-gram being each hash-key of (%data n-grams)
+	     using (hash-value count)
+	     do (add-count (butlast n-gram) count context-counts)
+	     finally (return context-counts))))
+    (make-instance
+     'transition-probabilities
+     :data (loop
+	      for n-gram being each hash-key of (%data n-grams)
+	      using (hash-value continuation-count)
+	      collect (let* ((context (butlast n-gram))
+			     (continuation (car (last n-gram)))
+			     (context-count (get-count context context-counts))
+			     (probability (coerce (/ continuation-count context-count)
+						  'double-float)))
+			(list context continuation probability))))))
+
+
 
 
