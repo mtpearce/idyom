@@ -104,13 +104,14 @@ the original viewpoints are included."
 
 ;;;; Setting viewpoint quantiles
 
-(defgeneric set-viewpoint-quantiles (v sequences num-quantiles)
+(defgeneric set-viewpoint-quantiles (v sequences num-quantiles &key output-path)
   (:documentation "Sets viewpoint quantiles for viewpoint <v> on the basis
 of <sequences>, using <num-quantiles> quantiles. <sequences> can be a list
 of music-sequences or a list of music-sequences that have been coerced to lists."))
 
 (defmethod set-viewpoint-quantiles ((v viewpoint) (sequences list)
-				    (num-quantiles integer))
+				    (num-quantiles integer)
+				    &key output-path)
   (utils:message
    (format
     nil
@@ -123,7 +124,13 @@ of music-sequences or a list of music-sequences that have been coerced to lists.
 	     append (viewpoints:viewpoint-sequence v sequence)))
 	 (quantiles (utils:k-means-1d viewpoint-elements num-quantiles
 				      :format :thresholds)))
-      (setf (gethash (viewpoints:viewpoint-name v)
+    (when output-path
+      (with-open-file (s output-path :direction :output :if-exists :supersede)
+	(cl-csv:write-csv (cons (list "thresholds")
+				(loop for quantile in quantiles
+				   collect (list quantile)))
+			  :stream s)))
+    (setf (gethash (viewpoints:viewpoint-name v)
 		     *viewpoint-quantiles*)
 	    quantiles)))
 
@@ -133,8 +140,9 @@ of music-sequences or a list of music-sequences that have been coerced to lists.
 ;;				     num-quantiles)
 
 (defmethod set-viewpoint-quantiles ((v symbol) (sequences list)
-				    (num-quantiles integer))
-  (set-viewpoint-quantiles (get-viewpoint v) sequences num-quantiles))
+				    (num-quantiles integer)
+				    &key output-path)
+  (set-viewpoint-quantiles (get-viewpoint v) sequences num-quantiles :output-path output-path))
 
 ;;;; Getting alphabet sizes
 

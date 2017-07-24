@@ -18,5 +18,6 @@
 	   #:composition-viewpoint #:dataset-viewpoint
 	   #:harm-seq #:*discretise-viewpoints* #:reset-viewpoint-quantiles
 	   #:add-local-key-cache #:*use-cached-local-key*
-	   #:get-alphabet-sizes)
+	   #:get-alphabet-sizes
+	   #:viewpoint-name-string)
   (:documentation "Multiple viewpoint framework for music representation."))

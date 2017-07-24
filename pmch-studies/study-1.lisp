@@ -2,7 +2,7 @@
 ;;;; File:       study-1.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-05-15 13:37:26 peter>                          
-;;;; Time-stamp: <2017-07-24 17:08:42 peter>                           
+;;;; Time-stamp: <2017-07-24 23:30:04 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -284,20 +284,54 @@ to the size that each training set should be downsized to."
 							 (symbol-name viewpoint)))
 						    ".csv")
 				       output-leaf-dir)))
-     (if (probe-file output-path)
-	 (utils:message
-	  (format nil
-		  "TPs already exist (dataset = ~A, n = ~A, viewpoint = ~A, quantiles = ~A), skipping analysis."
-		  dataset n viewpoint num-quantiles))
-	 (let* ((viewpoints:*discretise-viewpoints* nil))
-	   (when (and num-quantiles
-		      (viewpoints:continuous-p (viewpoints:get-viewpoint viewpoint)))
-	     (viewpoints:set-viewpoint-quantiles viewpoint data num-quantiles)
-	     (setf viewpoints:*discretise-viewpoints* t))
-	   (utils:message (format nil "Computing transition probabilities (n = ~A) for dataset ~A, viewpoint ~A"
-				  n dataset viewpoint))
-	   (descriptives:write-csv (descriptives:get-viewpoint-transition-probabilities data n viewpoint)
-				   output-path)))))
+    (if (probe-file output-path)
+	(utils:message
+	 (format nil
+		 "TPs already exist (dataset = ~A, n = ~A, viewpoint = ~A, quantiles = ~A), skipping analysis."
+		 dataset n viewpoint num-quantiles))
+	(let* ((viewpoints:*discretise-viewpoints* nil))
+	  (when (and num-quantiles
+		     (viewpoints:continuous-p (viewpoints:get-viewpoint viewpoint)))
+	    (viewpoints:set-viewpoint-quantiles viewpoint data num-quantiles)
+	    (setf viewpoints:*discretise-viewpoints* t))
+	  (utils:message (format nil "Computing transition probabilities (n = ~A) for dataset ~A, viewpoint ~A"
+				 n dataset viewpoint))
+	  (descriptives:write-csv (descriptives:get-viewpoint-transition-probabilities data n viewpoint)
+				  output-path)))))
+
+(defun save-viewpoint-quantiles
+    (dataset &key output-path reduce-harmony num-quantiles (remove-repeated-chords t))
+  (let* ((output-root-dir (utils:ensure-directory output-path))
+	 (output-leaf-dir (ensure-directories-exist
+			   (merge-pathnames
+			    (make-pathname
+			     :directory
+			     (list :relative
+				   "viewpoint-quantisation-boundaries"
+				   (format nil "~A-harmonic-reduction-~A" dataset
+					   (string-downcase (symbol-name reduce-harmony)))
+				   (format nil "quantiles=~A" num-quantiles)))
+			    output-root-dir)))
+	 (data (md:get-music-objects (list dataset) nil
+				     :voices nil :texture :harmony
+				     :harmonic-reduction (if reduce-harmony
+							     :regular-harmonic-rhythm
+							     :none)
+				     :slices-or-chords :chords
+				     :remove-repeated-chords remove-repeated-chords)))
+    (print output-leaf-dir)
+    (loop for v in *harmony-viewpoints*
+       when (viewpoints:continuous-p (viewpoints:get-viewpoint v))
+       do (let ((viewpoints:*discretise-viewpoints* nil)
+		(output-file (merge-pathnames (concatenate 'string (viewpoints:viewpoint-name-string v)
+							   ".csv")
+					      output-leaf-dir)))
+	    (print output-file)
+	    (viewpoints:set-viewpoint-quantiles v data num-quantiles
+						:output-path output-file)))))
+	    
+	 
+  
 					   
 	 
 	   
