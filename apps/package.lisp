@@ -2,7 +2,7 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                        
-;;;; Time-stamp: <2017-07-23 12:29:58 peter>                           
+;;;; Time-stamp: <2017-07-24 15:02:56 peter>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -40,5 +40,5 @@
   (:documentation "Generation of melodic compositions."))
 
 (defpackage #:descriptives
-  (:use #:cl #:utils #:md #:viewpoints)
+  (:use #:cl)
   (:documentation "Computation of descriptive statistics for datasets"))

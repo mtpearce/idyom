@@ -2,7 +2,7 @@
 ;;;; File:       descriptives.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-07-23 12:30:38 peter>                          
-;;;; Time-stamp: <2017-07-24 13:57:30 peter>                           
+;;;; Time-stamp: <2017-07-24 15:12:20 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -91,15 +91,15 @@ object."))
   (count-viewpoint-n-grams data n (viewpoints:get-viewpoint viewpoint)))
 
 (defmethod count-viewpoint-n-grams
-    ((data md:music-sequence) n (viewpoint viewpoint))
-  (count-n-grams (viewpoint-sequence viewpoint data) n))
+    ((data md:music-sequence) n (viewpoint viewpoints:viewpoint))
+  (count-n-grams (viewpoints:viewpoint-sequence viewpoint data) n))
 
 (defmethod count-viewpoint-n-grams
-    ((data list) n (viewpoint viewpoint))
+    ((data list) n (viewpoint viewpoints:viewpoint))
   (reduce #'combine
 	  (mapcar #'(lambda (composition)
-		      (count-n-grams (viewpoint-sequence viewpoint
-							 composition)
+		      (count-n-grams (viewpoints:viewpoint-sequence viewpoint
+								    composition)
 				     n))
 		  data)))
 
@@ -114,6 +114,20 @@ to a unique transition. These elements should themselves be lists,
 the first element of which gives the context, the second giving 
 the continuation, and the third giving the associated transition 
 probability.")))
+
+(defgeneric write-csv (object path))
+(defmethod write-csv ((object transition-probabilities) path)
+  (let* ((contexts (loop for x in (data object) collect (first x)))
+	 (continuations (loop for x in (data object) collect (second x)))
+	 (probabilities (loop for x in (data object) collect (third x)))
+	 (data (loop
+		  for context in contexts
+		  for continuation in continuations
+		  for probability in probabilities
+		  collect (list context continuation probability)))
+	 (output (cons (list "context" "continuation" "probability") data)))
+    (with-open-file (stream path :direction :output :if-exists :supersede)
+      (cl-csv:write-csv output :stream stream))))
 
 (defmethod print-object ((object transition-probabilities) stream)
   (let* ((data (data object))
