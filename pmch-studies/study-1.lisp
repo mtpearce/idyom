@@ -2,7 +2,7 @@
 ;;;; File:       study-1.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-05-15 13:37:26 peter>                          
-;;;; Time-stamp: <2017-07-24 23:30:04 peter>                           
+;;;; Time-stamp: <2017-07-24 23:40:23 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -40,7 +40,65 @@
    :output-path (merge-pathnames "jazz_alphabets.csv" output-dir)
    :texture :harmony
    :harmonic-reduction :none
-   :remove-repeated-chords t)				 
+   :remove-repeated-chords t)
+  ;;;; Save viewpoint quantiles
+  ;; Classical
+  (save-viewpoint-quantiles 1
+			    :output-path output-dir
+			    :reduce-harmony t
+			    :remove-repeated-chords t
+			    :num-quantiles 12)
+  ;; Popular
+  (save-viewpoint-quantiles 2
+			    :output-path output-dir
+			    :reduce-harmony nil
+			    :remove-repeated-chords nil
+			    :num-quantiles 12)
+  ;; Jazz
+  (save-viewpoint-quantiles 3
+			    :output-path output-dir
+			    :reduce-harmony nil
+			    :remove-repeated-chords nil
+			    :num-quantiles 12)
+  ;;;; Save transition probabilities
+  ;;;  0th-order (note: we don't quantise for this)
+  ;;   Classical
+  (analyse-tps-all-viewpoints 1
+			      :output-path output-dir
+			      :reduce-harmony t
+			      :remove-repeated-chords t
+			      :n 0 :num-quantiles nil)
+  ;;   Popular
+  (analyse-tps-all-viewpoints 2
+			      :output-path output-dir
+			      :reduce-harmony nil
+			      :remove-repeated-chords t
+			      :n 0 :num-quantiles nil)
+  ;;   Jazz
+  (analyse-tps-all-viewpoints 3
+			      :output-path output-dir
+			      :reduce-harmony nil
+			      :remove-repeated-chords t
+			      :n 0 :num-quantiles nil)
+  ;;;  1st-order
+  ;;   Classical
+  (analyse-tps-all-viewpoints 1
+			      :output-path output-dir
+			      :reduce-harmony t
+			      :remove-repeated-chords t
+			      :n 1 :num-quantiles 12)
+  ;;   Popular
+  (analyse-tps-all-viewpoints 2
+			      :output-path output-dir
+			      :reduce-harmony nil
+			      :remove-repeated-chords t
+			      :n 1 :num-quantiles 12)
+  ;;   Jazz
+  (analyse-tps-all-viewpoints 3
+			      :output-path output-dir
+			      :reduce-harmony nil
+			      :remove-repeated-chords t
+			      :n 1 :num-quantiles 12)
   ;;;; Analyse test length
   ;; Classical (1022 pieces in corpus, max 987 in training set with 30-fold CV)
   (loop for ts-size in '(987 8 512 256 16 128 32 64 4 2 1)
