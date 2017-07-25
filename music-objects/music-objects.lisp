@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2017-06-20 14:42:58 peter>
+;;;; Time-stamp: <2017-07-25 17:54:02 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -831,7 +831,11 @@ to be the bass note."
 	 (pitches (mapcar #'(lambda (e)
 			      (get-attribute e 'cpitch))
 			  events))
-	 (min-pitch (apply #'min pitches))
+	 (chord-pitches (remove-if-not #'(lambda (pitch)
+					   (member (mod pitch 12)
+						   reduced-pcs))
+				       pitches))
+	 (min-pitch (apply #'min chord-pitches))
 	 (bass-pc (mod min-pitch 12)))
     bass-pc))
 

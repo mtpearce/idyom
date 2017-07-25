@@ -2,7 +2,7 @@
 ;;;; File:       tests.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-04-24 20:51:10 peter>                            
-;;;; Time-stamp: <2017-06-20 14:16:41 peter>                           
+;;;; Time-stamp: <2017-07-25 17:46:18 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -464,6 +464,29 @@ be a list the ith element of which is the duration of the ith chord.
 				  150 200)
 		   'list))
 		 (list 50 50 50))))
+;; Check bass notes
+(5am:test slices->slice-ex-7
+  (5am:is (equal (mapcar
+		  #'chromatic-pitch
+		  (coerce 
+		   (slices->slice (coerce (harm-seq
+					   '((52) (60) (64) (67)))
+					  'list)
+				  0 100)
+		   'list))
+		 (list 52 60 67))))
+;; In this example, we want to ensure that the bottom D of the arpeggio
+;; is filtered out and not included as the bass note
+(5am:test slices->slice-ex-8
+  (5am:is (equal (mapcar
+		  #'chromatic-pitch
+		  (coerce 
+		   (slices->slice (coerce (harm-seq
+					   '((50) (60) (64) (67)))
+					  'list)
+				  0 100)
+		   'list))
+		 (list 48 64 67))))
 
 ;;;; Serialization
 (5am:def-suite serial :in music-data)
