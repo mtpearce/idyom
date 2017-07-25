@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2017-07-25 17:54:02 peter>
+;;;; Time-stamp: <2017-07-25 18:32:18 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -339,13 +339,13 @@ extracted or the harmony corresponding to all voices is used."
 					 :remove-repeated-chords
 					 remove-repeated-chords))
 		((numberp composition-indices)
-		 (get-harmonic-sequence dataset-indices composition-indices
-					:voices voices
-					:expansion polyphonic-expansion
-					:reduction harmonic-reduction
-					:slices-or-chords slices-or-chords
-					:remove-repeated-chords
-					 remove-repeated-chords))
+		 (list (get-harmonic-sequence dataset-indices composition-indices
+					      :voices voices
+					      :expansion polyphonic-expansion
+					      :reduction harmonic-reduction
+					      :slices-or-chords slices-or-chords
+					      :remove-repeated-chords
+					      remove-repeated-chords)))
 		(t 
 		 (mapcar
 		  #'(lambda (c)
@@ -833,7 +833,8 @@ to be the bass note."
 			  events))
 	 (chord-pitches (remove-if-not #'(lambda (pitch)
 					   (member (mod pitch 12)
-						   reduced-pcs))
+						   reduced-pcs
+						   :test #'=))
 				       pitches))
 	 (min-pitch (apply #'min chord-pitches))
 	 (bass-pc (mod min-pitch 12)))
@@ -1028,7 +1029,8 @@ Returns two lists, the first corresponding to the starts of
 each harmonic segment in basic time units, the second 
 corresponding to the ends of these harmonic segments."
   (declare (ignore slices))
-  (let* ((num-pulses-in-bar (if (and (= (mod pulses 3) 0) t) ;;(> pulses 5)
+  (let* ((num-pulses-in-bar (if (and (= (mod pulses 3) 0)
+				     (or (>= pulses 6) (<= barlength 36)))
 				(/ pulses 3)
 				pulses))
 	 (pulse-length (/ barlength num-pulses-in-bar))
