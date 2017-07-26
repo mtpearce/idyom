@@ -2,7 +2,7 @@
 ;;;; File:       midi.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-07-25 15:31:57 peter>                        
-;;;; Time-stamp: <2017-07-25 17:00:31 peter>                           
+;;;; Time-stamp: <2017-07-26 12:55:57 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -71,7 +71,8 @@ composition is to be exported."))
     (ensure-directories-exist dir-path)
     (events->midi (flatten-events data) file-path
 		  :encode-keysig *encode-keysig*
-		  :encode-timesig *encode-timesig*)
+		  :encode-timesig *encode-timesig*
+		  :shift (- (onset data)))
     file-path))
 
 (defgeneric flatten-events (events)
@@ -96,7 +97,8 @@ of monophonic events."))
   (coerce events 'list))
 
 (defun events->midi (events file &key (format 1) (program *default-program*)
-				   encode-timesig encode-keysig)
+				   encode-timesig encode-keysig
+				   (shift 0))
   "Converts a list of events to a MIDI representation."
   (when *remap-voices* (update-voice->channel-map events))
   (let* ((*environment* nil)
@@ -114,7 +116,8 @@ of monophonic events."))
          (track (mapcan #'(lambda (event)
 			    (event->midi event
 					 :encode-timesig encode-timesig
-					 :encode-keysig encode-keysig))
+					 :encode-keysig encode-keysig
+					 :shift shift))
 			events))
 	 (track (sort track #'(lambda (x y) (< (midi:message-time x)
 					       (midi:message-time y)))))
@@ -127,9 +130,9 @@ of monophonic events."))
     (midi:write-midi-file midifile file)
     midifile))
 
-(defun event->midi (event &key encode-timesig encode-keysig)
+(defun event->midi (event &key encode-timesig encode-keysig (shift 0))
   "Converts a CHARM event to a MIDI representation."
-  (let* ((non-onset (round (onset event)))
+  (let* ((non-onset (round (+ (onset event) shift)))
          (noff-onset (round (+ non-onset (duration event))))
          (voice (voice event))
 	 (channel (if (null voice) 1

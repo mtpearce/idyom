@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2017-07-25 18:32:18 peter>
+;;;; Time-stamp: <2017-07-26 12:32:51 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -1373,11 +1373,63 @@ is ignored."))
   (if (or (null value) (null timebase))
       nil
       (let ((multiplier (/ 96 timebase)))
-        (* value multiplier)))) 
+        (* value multiplier))))
 
 
+;;;; Manipulating music sequences
 
+(defgeneric subsequence (sequence first last)
+  (:documentation "Returns a subsequence of <sequence> with specified
+<first> and <last> elements (0-indexed). Non-destructive, but a significant
+amount of structure may be shared between <sequence> and the output."))
 
+(defmethod subsequence ((sequence music-sequence) first last)
+  (let ((seq (utils:copy-instance sequence :check-atomic nil)))
+    (setf (%list-slot-sequence-data seq)
+	  (subseq (%list-slot-sequence-data seq)
+		  first (1+ last)))
+    (update-metadata-from-events seq)
+    seq))
+
+(defgeneric update-metadata-from-events (seq)
+  (:documentation "Updates the metadata in the sequence <seq> to match
+the events contained in the <data> slot of <seq>."))
+
+(defmethod update-metadata-from-events ((seq music-sequence))
+  (setf (onset seq) (loop for event in (%list-slot-sequence-data seq)
+		       minimize (onset event))
+	(duration seq) (let ((max-offset
+			      (loop for event in (%list-slot-sequence-data seq)
+				 maximize (+ (onset event) (duration event)))))
+			 (- max-offset (onset seq)))
+	(midc seq) (midc (car (%list-slot-sequence-data seq)))
+	(timebase seq) (timebase (car (%list-slot-sequence-data seq))))
+  (let (new-bar-onsets new-bars)
+    (loop
+       for bar-onset in (bar-onsets seq)
+       for bar in (bars seq)
+       do
+	 (when (and (>= bar-onset (onset seq))
+		    (<= bar-onset (+ (onset seq) (duration seq))))
+	   (push bar-onset new-bar-onsets)
+	   (push bar new-bars)))
+    (setf (bar-onsets seq) (reverse new-bar-onsets)
+	  (bars seq) (reverse new-bars))))
+
+;; (defgeneric zero-onset (seq)
+;;   (:documentation "Takes a sequence <seq> and shifts its onsets so that the 
+;; sequence begins at an onset of zero. Assumes that the sequence's metadata
+;; is up-to-date (this can be achieved using update-metadata-from-events)."))
+
+;; (defmethod zero-onset ((seq music-sequence))
+;;   (let ((shift (- 0 (onset seq))))
+;;     (incf (onset seq) shift)
+;;     (setf (bar-onsets seq) (loop for i in (bar-onsets seq)
+;; 			      collect (+ i shift)))
+;;     (loop for event in (%list-slot-sequence-data seq)
+;;        do (incf (onset event) shift))))
+  
+	  
 ;; Detritus
 
 ;; (defmethod crotchet ((mo music-object))
