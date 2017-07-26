@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2017-07-26 12:32:51 peter>
+;;;; Time-stamp: <2017-07-26 14:51:05 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -1415,6 +1415,32 @@ the events contained in the <data> slot of <seq>."))
 	   (push bar new-bars)))
     (setf (bar-onsets seq) (reverse new-bar-onsets)
 	  (bars seq) (reverse new-bars))))
+
+(defgeneric regularize-rhythm (seq &key tempo duration ioi pulses barlength)
+  (:documentation
+   "Updates <seq> to standardize event onsets, duration, and tempo
+in terms of a regular <tempo>, <duration>, and <ioi>
+for each event. <pulses> and <barlength> can optionally be provided."))
+
+(defmethod regularize-rhythm ((seq harmonic-sequence)
+			      &key (tempo 70) (duration 24) (ioi 24)
+				(pulses 1) (barlength 24))
+  (let* ((num-events (length seq))
+	 (onsets (loop for i from 0 to (1- num-events)
+		    collect (* i ioi))))
+    (loop
+       for event in (%list-slot-sequence-data seq)
+       for onset in onsets
+       do
+	 (set-attribute event 'onset onset)
+	 (set-attribute event 'dur duration)
+	 (set-attribute event 'tempo tempo)
+	 (set-attribute event 'pulses pulses)
+	 (set-attribute event 'barlength barlength))
+    (setf (bar-onsets seq) nil
+	  (bars seq) nil)
+    (update-metadata-from-events seq)
+    seq))
 
 ;; (defgeneric zero-onset (seq)
 ;;   (:documentation "Takes a sequence <seq> and shifts its onsets so that the 
