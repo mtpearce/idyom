@@ -2,7 +2,7 @@
 ;;;; File:       study-1.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-05-15 13:37:26 peter>                          
-;;;; Time-stamp: <2017-07-24 23:50:52 peter>                           
+;;;; Time-stamp: <2017-07-26 16:31:58 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -25,19 +25,19 @@
   ;;;; Calculate alphabet sizes
   (viewpoints:get-alphabet-sizes
    *harmony-viewpoints* '(1)
-   :output-path (merge-pathnames "classical_alphabets.csv" output-dir)
+   :output-path (merge-pathnames "alphabets/classical_alphabets.csv" output-dir)
    :texture :harmony
    :harmonic-reduction :regular-harmonic-rhythm
    :remove-repeated-chords t)
   (viewpoints:get-alphabet-sizes
    *harmony-viewpoints* '(2)
-   :output-path (merge-pathnames "popular_alphabets.csv" output-dir)
+   :output-path (merge-pathnames "alphabets/popular_alphabets.csv" output-dir)
    :texture :harmony
    :harmonic-reduction :none
    :remove-repeated-chords t)
   (viewpoints:get-alphabet-sizes
    *harmony-viewpoints* '(3)
-   :output-path (merge-pathnames "jazz_alphabets.csv" output-dir)
+   :output-path (merge-pathnames "alphabets/jazz_alphabets.csv" output-dir)
    :texture :harmony
    :harmonic-reduction :none
    :remove-repeated-chords t)
@@ -241,6 +241,7 @@ to the size that each training set should be downsized to."
 	   (make-pathname
 	    :directory
 	    (list :relative
+		  "predictions"
 		  (if pretraining-ids
 		      (format nil "pretraining-~{~S-~}harmonic-reduction-~A"
 			      pretraining-ids
