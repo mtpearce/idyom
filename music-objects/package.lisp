@@ -22,6 +22,10 @@
    "GET-HARMONIC-SEQUENCE" "GET-HARMONIC-SEQUENCES"
    ;; Accessing properties of music objects
    "GET-ATTRIBUTE" "SET-ATTRIBUTE" "COUNT-COMPOSITIONS" "GET-DESCRIPTION"
-   "COPY-EVENT" "MUSIC-SYMBOL" "*MD-MUSIC-SLOTS*" "*MD-TIME-SLOTS*")
+   "COPY-EVENT" "MUSIC-SYMBOL" "*MD-MUSIC-SLOTS*" "*MD-TIME-SLOTS*"
+   ;; Manipulating sequences
+   "REGULARIZE-RHYTHM" "SUBSEQUENCE"
+   ;; MIDI
+   "EXPORT-MIDI")
   (:documentation "Musical data."))
 
