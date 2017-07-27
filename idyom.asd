@@ -2,7 +2,7 @@
 ;;;; File:       IDyOM.asd
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-05-04 21:29:04 marcusp>
-;;;; Time-stamp: <2017-07-26 19:20:17 peter>
+;;;; Time-stamp: <2017-07-27 10:55:57 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -140,4 +140,4 @@
 	    :components
 	    ((:file "package")
 	     (:file "study-1")
-	     (:file "study-2")))))
+	     (:file "study-3")))))
