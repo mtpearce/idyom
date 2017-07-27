@@ -2,7 +2,7 @@
 ;;;; File:       study-3.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-07-26 19:12:50 peter>                        
-;;;; Time-stamp: <2017-07-27 15:16:32 peter>                           
+;;;; Time-stamp: <2017-07-27 15:50:42 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -20,6 +20,7 @@
 (defparameter *num-stimuli-per-ic-category* 3)
 (defparameter *num-chords-in-stimulus* 10)
 (defparameter *target-chord-position* 5) ;; 0-indexed
+(defparameter *tempo* 70)
 
 (defparameter *h-cpitch-analysis-files*
   '("/Users/peter/Dropbox/Academic/projects/idyom/studies/HarmonyRepresentations/data-raw/data-6/data/predictions/pretraining-none/test-dataset-1-harmonic-reduction-t/resampling-training-set-size-987/h-cpitch/dat_from_idyom/1-h-cpitch-h-cpitch-nil-nil-harmony-nil-30-ltm-nil-t-nil-c-nil-t-t-x-2.5.dat"
@@ -149,8 +150,8 @@ by each new stimulus."
 	 (audio-path (merge-pathnames (make-pathname :directory
 						     '(:relative "audio"))
 				      output-dir)))
-    (save-metadata stimuli metadata-path)))
-    ;; (save-audio stimuli (ensure-directories-exist audio-path))))
+    (save-metadata stimuli metadata-path)
+    (save-audio stimuli (ensure-directories-exist audio-path))))
 
 (defun save-metadata (stimuli metadata-path)
   (let ((headers (mapcar #'(lambda (stimulus)
@@ -171,34 +172,69 @@ by each new stimulus."
 	(cl-csv:write-csv output :stream stream)))))
 
 (defun save-audio (stimuli output-path)
-  nil)
-      
+  (utils:message (format nil "Saving MIDI files for ~A stimuli..."
+			 (length stimuli)))
+  (let ((midi-path (ensure-directories-exist
+		    (merge-pathnames (make-pathname :directory
+						    '(:relative "midi"))
+				     output-path)))
+	(bar (utils:initialise-progress-bar (length stimuli))))
+    (loop
+       for stimulus in stimuli
+       for i from 1
+       as label = (cdr (assoc :label stimulus))
+       as filename = (merge-pathnames midi-path (format nil "~A.mid" label))
+       as first-e-id = (cdr (assoc :first-e-id stimulus))
+       as last-e-id = (cdr (assoc :last-e-id stimulus))
+       as dataset-id = (cdr (assoc :dataset-id stimulus))
+       as c-id = (cdr (assoc :c-id stimulus))
+       as reduce-harmony = (cdr (assoc :reduce-harmony stimulus))
+       as harmonic-reduction = (if reduce-harmony
+				   :regular-harmonic-rhythm
+				   :none)
+       as composition = (car (md:get-music-objects
+			      dataset-id c-id
+			      :voices nil :texture :harmony
+			      :harmonic-reduction harmonic-reduction
+			      :slices-or-chords :chords
+			      :remove-repeated-chords t))
+       as music-stimulus = (md:regularize-rhythm
+			    (md:subsequence composition first-e-id last-e-id)
+			    :tempo *tempo*)
+       do
+	 (md:export-midi music-stimulus midi-path :filename filename)
+	 (utils:update-progress-bar bar i))))
+
 
 (defun add-metadata (stimuli)
-  (loop
-     for genre in stimuli
-     for dataset-id in *genre-dataset-ids*
-     for reduce-harmony in *genre-reduce-harmony*
-     as genre-symbol = (car genre)
-     as genre-label = (string-downcase (symbol-name genre-symbol))
-     as genre-stimuli = (cdr genre)
-     append (loop
-		for stimulus in genre-stimuli
-		as c-id = (cdr (assoc :c-id stimulus))
-		as e-id = (cdr (assoc :e-id stimulus))
-		as first-e-id = (- e-id *target-chord-position*)
-		as last-e-id = (1- (+ first-e-id *num-chords-in-stimulus*))
-		as ic-category = (cdr (assoc :ic-category stimulus))
-		as label = (format nil "genre=~A_c-id=~A_e-id=~A_ic_category_~A"
-				   genre-label c-id e-id ic-category)
-		collect
-		  (append (list (cons :label label)
-				(cons :genre genre-symbol)
-				(cons :dataset-id dataset-id)
-				(cons :reduce-harmony reduce-harmony)
-				(cons :first-e-id first-e-id)
-				(cons :last-e-id last-e-id))
-			  stimulus))))
+  (let ((id 0))
+    (loop
+       for genre in stimuli
+       for dataset-id in *genre-dataset-ids*
+       for reduce-harmony in *genre-reduce-harmony*
+       as genre-symbol = (car genre)
+       as genre-label = (string-downcase (symbol-name genre-symbol))
+       as genre-stimuli = (cdr genre)
+       append (loop
+		 for stimulus in genre-stimuli
+		 as stimulus-id = (incf id)
+		 as c-id = (cdr (assoc :c-id stimulus))
+		 as e-id = (cdr (assoc :e-id stimulus))
+		 as first-e-id = (- e-id *target-chord-position*)
+		 as last-e-id = (1- (+ first-e-id *num-chords-in-stimulus*))
+		 as ic-category = (cdr (assoc :ic-category stimulus))
+		 as label = (format nil
+				    "id=~A_genre=~A_c-id=~A_e-id=~A_ic_category_~A"
+				    stimulus-id genre-label c-id e-id ic-category)
+		 collect
+		   (append (list (cons :id stimulus-id)
+				 (cons :label label)
+				 (cons :genre genre-symbol)
+				 (cons :dataset-id dataset-id)
+				 (cons :reduce-harmony reduce-harmony)
+				 (cons :first-e-id first-e-id)
+				 (cons :last-e-id last-e-id))
+			   stimulus)))))
 
 (defun construct-stimuli ()
   (let ((h-cpitch-analyses (load-h-cpitch-analyses)))
@@ -231,6 +267,6 @@ by each new stimulus."
 						       used-compositions))))))))
 
 ;;;; TODO
-;; Synthesise MIDI/audio
+;; Synthesise mp3
 ;; Add tests
 ;; Add random state for reproducibility
