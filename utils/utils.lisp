@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2017-07-02 18:50:51 peter>
+;;;; Time-stamp: <2017-07-27 11:07:50 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -171,6 +171,10 @@
   "Returns the no. of combinations of <n> different items taken <r> at a time."
   (/ (factorial n) (* (factorial r) (factorial (- n r)))))
 
+(defun parse-number (string)
+  "Coerces a string representation of a number to numeric type."
+  (with-input-from-string (input string)
+    (read input)))
 
 
 ;;;===========================================================================
@@ -202,7 +206,7 @@ non-trivial thresholds for these quantiles (i.e. excludes the 0th percentile
 and the 100th percentile). Uses linear interpolation of the 
 empirical distribution function."
   (assert (every #'numberp numbers))
-  (let* ((sorted (sort (coerce numbers 'vector) #'<))
+  (let* ((sorted (sort (coerce (copy-seq numbers) 'vector) #'<))
 	 (n (length sorted)))
     (loop
        for k from 1 to (- num-quantiles 1)
