@@ -2,7 +2,7 @@
 ;;;; File:       pitch.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-03-03 10:13:20 peter>                              
-;;;; Time-stamp: <2017-07-14 10:25:01 peter>                           
+;;;; Time-stamp: <2017-07-29 20:12:07 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -248,4 +248,10 @@
   ;; with an alphabet size of 12
     ((events md:harmonic-sequence) element)
   :function (mod (sxhash (h-cpitch events)) 12))
+
+(define-viewpoint (num-pcs-in-chord derived (h-cpitch))
+    ;; Returns the number of unique pitch classes
+    ;; found in the chord
+    ((events md:harmonic-sequence) element)
+  :function (length (h-cpitch-class-set events)))
   
