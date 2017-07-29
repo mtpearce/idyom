@@ -2,7 +2,7 @@
 ;;;; File:       study-3.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-07-26 19:12:50 peter>                        
-;;;; Time-stamp: <2017-07-27 15:50:42 peter>                           
+;;;; Time-stamp: <2017-07-29 22:40:58 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -61,11 +61,25 @@
 		     (cons :e-id event-id)
 		     (cons :ic info-content)))))
 
-(let* ((h-cpitch-analyses (load-h-cpitch-analyses))
-       (quantiles (loop for analysis in h-cpitch-analyses
-		     collect (utils:quantiles (cdr (assoc :ic analysis))
-					      *num-ic-categories*))))
-  quantiles)
+(defun get-num-pcs (dataset-id reduce-harmony)
+  "Given a <dataset-id> and the Boolean <reduce-harmony> (whether or
+not to reduce the harmony in the given dataset), returns a vector
+corresponding to the number of pitch classes in each chord of that
+dataset, ordered by composition ID and event ID."s
+  (let* ((harmonic-reduction (if reduce-harmony
+				 :regular-harmonic-rhythm
+				 :none))
+	 (music-data (md:get-music-objects (list dataset-id) nil
+					   :voices nil :texture :harmony
+					   :harmonic-reduction harmonic-reduction
+					   :slices-or-chords :chords
+					   :remove-repeated-chords t))
+	 (num-pcs (mapcan #'(lambda (c)
+			      (viewpoints:viewpoint-sequence
+			       (viewpoints:get-viewpoint 'num-pcs-in-chord)
+			       c))
+			  music-data)))
+    (coerce num-pcs 'vector)))
 
 (defun choose-stimuli-in-ic-category (candidate-stimuli used-compositions)
   "Chooses a set of stimuli for a particular IC category from
