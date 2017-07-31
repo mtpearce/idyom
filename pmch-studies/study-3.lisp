@@ -2,7 +2,7 @@
 ;;;; File:       study-3.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-07-26 19:12:50 peter>                        
-;;;; Time-stamp: <2017-07-29 22:40:58 peter>                           
+;;;; Time-stamp: <2017-07-31 11:43:38 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -18,9 +18,12 @@
 (defparameter *genre-reduce-harmony* '(t nil nil))
 (defparameter *num-ic-categories* 10)
 (defparameter *num-stimuli-per-ic-category* 3)
+(defparameter *num-stimuli-per-ic-category-intermediate* 25) ;; intermediate filtering threshold imposed for computational tractability
 (defparameter *num-chords-in-stimulus* 10)
 (defparameter *target-chord-position* 5) ;; 0-indexed
 (defparameter *tempo* 70)
+(defparameter *exclude-unisons* t)
+(defparameter *min-stm-ic* 2.0)
 
 (defparameter *h-cpitch-analysis-files*
   '("/Users/peter/Dropbox/Academic/projects/idyom/studies/HarmonyRepresentations/data-raw/data-6/data/predictions/pretraining-none/test-dataset-1-harmonic-reduction-t/resampling-training-set-size-987/h-cpitch/dat_from_idyom/1-h-cpitch-h-cpitch-nil-nil-harmony-nil-30-ltm-nil-t-nil-c-nil-t-t-x-2.5.dat"
@@ -61,34 +64,25 @@
 		     (cons :e-id event-id)
 		     (cons :ic info-content)))))
 
-(defun get-num-pcs (dataset-id reduce-harmony)
-  "Given a <dataset-id> and the Boolean <reduce-harmony> (whether or
-not to reduce the harmony in the given dataset), returns a vector
+(defun get-num-pcs (dataset)
+  "Given a <dataset>, returns a vector
 corresponding to the number of pitch classes in each chord of that
-dataset, ordered by composition ID and event ID."s
-  (let* ((harmonic-reduction (if reduce-harmony
-				 :regular-harmonic-rhythm
-				 :none))
-	 (music-data (md:get-music-objects (list dataset-id) nil
-					   :voices nil :texture :harmony
-					   :harmonic-reduction harmonic-reduction
-					   :slices-or-chords :chords
-					   :remove-repeated-chords t))
-	 (num-pcs (mapcan #'(lambda (c)
+dataset, ordered by composition ID and event ID."
+  (let* ((num-pcs (mapcan #'(lambda (c)
 			      (viewpoints:viewpoint-sequence
 			       (viewpoints:get-viewpoint 'num-pcs-in-chord)
 			       c))
-			  music-data)))
+			  dataset)))
     (coerce num-pcs 'vector)))
 
 (defun choose-stimuli-in-ic-category (candidate-stimuli used-compositions)
   "Chooses a set of stimuli for a particular IC category from
 <candidate-stimuli>, ensuring that no stimulus is drawn from <used-compositions>.
-Side-effect: <used-compositions> is updated to add the compositions used
-by each new stimulus."
-  (let ((shuffled-candidates (utils:shuffle candidate-stimuli)))
+The old side effects on <used-compositions> have been removed."
+  (let ((used-compositions (copy-list used-compositions))
+	(shuffled-candidates (utils:shuffle candidate-stimuli)))
     ;; Remove candidates from a composition that has been used already
-    (loop for i from 1 to *num-stimuli-per-ic-category*
+    (loop for i from 1 to *num-stimuli-per-ic-category-intermediate*
        do
 	 (setf shuffled-candidates 
 	       (remove-if #'(lambda (stimulus)
@@ -108,14 +102,23 @@ by each new stimulus."
      num-events quantiles
      composition-lengths
      desired-ic-category
-     used-compositions)
+     used-compositions
+     num-pcs-in-chords)
+  ;; Note: num-events = (length ics) = (length c-ids) etc.
   (let ((desired-num-chords-post-target (- *num-chords-in-stimulus*
 					   *target-chord-position* 1)))
     (loop for j from 0 to (1- num-events)
        as c-id = (aref c-ids j)
        as e-id = (aref e-ids j)
+       as first-e-id = (- e-id *target-chord-position*)
+       as last-e-id = (1- (+ first-e-id *num-chords-in-stimulus*))
        as ic = (aref ics j)
        as ic-category = (utils:assign-to-quantile ic quantiles)
+       as count-pcs-in-chords = (loop
+				   with start = (- j *target-chord-position*)
+				   with end = (1- (+ start *num-chords-in-stimulus*))
+				   for i from (max start 0) to (min end (1- num-events))
+				 collect (aref num-pcs-in-chords i))
        when (and
 	     (= ic-category desired-ic-category)
 	     (>= e-id *target-chord-position*)
@@ -125,10 +128,17 @@ by each new stimulus."
 		     (- composition-length e-id 1)))
 	       (>= num-chords-available-post-target
 		   desired-num-chords-post-target))
-	     (not (member c-id used-compositions :test #'=)))
+	     (not (member c-id used-compositions :test #'=))
+	     (if *exclude-unisons*
+		 (every #'(lambda (x) (> x 1))
+			count-pcs-in-chords)
+		 t))
        collect
 	 (list (cons :c-id c-id)
 	       (cons :e-id e-id)
+	       (cons :first-e-id first-e-id)
+	       (cons :last-e-id last-e-id)
+	       (cons :num-pcs-in-chords count-pcs-in-chords)
 	       (cons :ic ic)
 	       (cons :ic-category ic-category)))))
 
@@ -188,35 +198,19 @@ by each new stimulus."
 (defun save-audio (stimuli output-path)
   (utils:message (format nil "Saving MIDI files for ~A stimuli..."
 			 (length stimuli)))
-  (let ((midi-path (ensure-directories-exist
-		    (merge-pathnames (make-pathname :directory
-						    '(:relative "midi"))
-				     output-path)))
+  (let ((midi-path (merge-pathnames (make-pathname :directory
+						   '(:relative "midi"))
+				    output-path))
 	(bar (utils:initialise-progress-bar (length stimuli))))
+    (ensure-directories-exist midi-path)
     (loop
        for stimulus in stimuli
        for i from 1
        as label = (cdr (assoc :label stimulus))
        as filename = (merge-pathnames midi-path (format nil "~A.mid" label))
-       as first-e-id = (cdr (assoc :first-e-id stimulus))
-       as last-e-id = (cdr (assoc :last-e-id stimulus))
-       as dataset-id = (cdr (assoc :dataset-id stimulus))
-       as c-id = (cdr (assoc :c-id stimulus))
-       as reduce-harmony = (cdr (assoc :reduce-harmony stimulus))
-       as harmonic-reduction = (if reduce-harmony
-				   :regular-harmonic-rhythm
-				   :none)
-       as composition = (car (md:get-music-objects
-			      dataset-id c-id
-			      :voices nil :texture :harmony
-			      :harmonic-reduction harmonic-reduction
-			      :slices-or-chords :chords
-			      :remove-repeated-chords t))
-       as music-stimulus = (md:regularize-rhythm
-			    (md:subsequence composition first-e-id last-e-id)
-			    :tempo *tempo*)
+       as music-data = (cdr (assoc :music-data stimulus))
        do
-	 (md:export-midi music-stimulus midi-path :filename filename)
+	 (md:export-midi music-data midi-path :filename filename)
 	 (utils:update-progress-bar bar i))))
 
 
@@ -234,8 +228,8 @@ by each new stimulus."
 		 as stimulus-id = (incf id)
 		 as c-id = (cdr (assoc :c-id stimulus))
 		 as e-id = (cdr (assoc :e-id stimulus))
-		 as first-e-id = (- e-id *target-chord-position*)
-		 as last-e-id = (1- (+ first-e-id *num-chords-in-stimulus*))
+		 as first-e-id = (cdr (assoc :first-e-id stimulus))
+		 as last-e-id = (cdr (assoc :last-e-id stimulus))
 		 as ic-category = (cdr (assoc :ic-category stimulus))
 		 as label = (format nil
 				    "id=~A_genre=~A_c-id=~A_e-id=~A_ic_category_~A"
@@ -246,20 +240,31 @@ by each new stimulus."
 				 (cons :genre genre-symbol)
 				 (cons :dataset-id dataset-id)
 				 (cons :reduce-harmony reduce-harmony)
-				 (cons :first-e-id first-e-id)
-				 (cons :last-e-id last-e-id))
+				 (cons :target-chord-position-1-indexed (1+ *target-chord-position*)))
 			   stimulus)))))
 
 (defun construct-stimuli ()
   (let ((h-cpitch-analyses (load-h-cpitch-analyses)))
     (loop
        for genre in *genres*
+       for dataset-id in *genre-dataset-ids*
+       for reduce-harmony in *genre-reduce-harmony*
        for analysis in h-cpitch-analyses
        collect
 	 (cons genre
-	       (let* ((c-ids (cdr (assoc :c-id analysis)))
+	       (let* ((harmonic-reduction (if reduce-harmony
+					      :regular-harmonic-rhythm
+					      :none))
+		      (music-data (md:get-music-objects
+				   (list dataset-id) nil
+				   :voices nil :texture :harmony
+				   :harmonic-reduction harmonic-reduction
+				   :slices-or-chords :chords
+				   :remove-repeated-chords t))
+		      (c-ids (cdr (assoc :c-id analysis)))
 		      (e-ids (cdr (assoc :e-id analysis)))
 		      (ics (cdr (assoc :ic analysis)))
+		      (num-pcs-in-chords (get-num-pcs music-data))
 		      (num-events (length ics))
 		      (used-compositions nil)
 		      (composition-lengths
@@ -276,11 +281,77 @@ by each new stimulus."
 						     num-events quantiles
 						     composition-lengths
 						     desired-ic-category
-						     used-compositions)))
-			(choose-stimuli-in-ic-category candidate-stimuli
-						       used-compositions))))))))
+						     used-compositions
+						     num-pcs-in-chords))
+			     (refined-candidates
+			      (choose-stimuli-in-ic-category candidate-stimuli
+							     used-compositions))
+			     (refined-candidates
+			      (mapcar #'(lambda (s)
+					  (acons :music-data (md:regularize-rhythm
+							      (md:subsequence (nth (cdr (assoc :c-id s)) music-data)
+									      (cdr (assoc :first-e-id s))
+									      (cdr (assoc :last-e-id s)))
+							      :tempo *tempo*)
+						 s))
+				      refined-candidates))
+			     (refined-candidates
+			      (mapcar #'(lambda (s)
+			     		  (acons :stm-ic (get-stm-ic (cdr (assoc :music-data s))) s))
+			     	      refined-candidates))
+			     (refined-candidates (remove-if #'(lambda (s) (< (cdr (assoc :stm-ic s))
+									       *min-stm-ic*))
+							      refined-candidates))
+			     (refined-candidates (utils:sample *num-stimuli-per-ic-category* refined-candidates)))
+			(setf used-compositions (append (mapcar #'(lambda (s) (cdr (assoc :c-id s))) refined-candidates)
+							  used-compositions))
+		        refined-candidates)))))))
+
+(defun break-me (x)
+  (break x))
+
+(defun get-stm-ic (stimulus)
+  (let* ((stimulus (coerce stimulus 'list))
+	 (viewpoints::*basic-types* (list :h-cpitch))
+	 ;; Initialise MVS parameters (see idyom:resampling)
+	 (models :stm)
+	 (ltmo mvs::*ltm-params*)
+	 (stmo mvs::*stm-params*)
+	 (ltmo (apply #'resampling:check-model-defaults
+		      (cons mvs::*ltm-params* ltmo)))
+         (stmo (apply #'resampling:check-model-defaults
+		      (cons mvs::*stm-params* stmo)))
+         (mvs::*models* models)
+         (mvs::*ltm-order-bound* (getf ltmo :order-bound))
+         (mvs::*ltm-mixtures* (getf ltmo :mixtures))
+         (mvs::*ltm-update-exclusion* (getf ltmo :update-exclusion))
+         (mvs::*ltm-escape* (getf ltmo :escape))
+         (mvs::*stm-order-bound* (getf stmo :order-bound))
+         (mvs::*stm-mixtures* (getf stmo :mixtures))
+         (mvs::*stm-update-exclusion* (getf stmo :update-exclusion))
+         (mvs::*stm-escape* (getf stmo :escape))
+	 ;; Initialise an MVS
+	 (test-set (list stimulus))
+	 (sources (list (viewpoints:get-viewpoint 'h-cpitch)))
+	 (targets (viewpoints:get-basic-viewpoints '(h-cpitch) test-set))
+	 (ltms (resampling:get-long-term-models sources nil
+					        nil nil
+						nil nil 
+					        nil :harmony
+						nil))
+	 (mvs (mvs:make-mvs targets sources ltms))
+	 (cl-user::*idyom-message-detail-level* 0)
+	 (predictions (mvs:model-dataset mvs test-set
+					 :construct? t :predict? t
+					 :detail 1))
+	 (predictions (car (gethash :mean.information.content (utils:data predictions)))))
+    predictions))
 
 ;;;; TODO
 ;; Synthesise mp3
 ;; Add tests
 ;; Add random state for reproducibility
+
+;;;; TO DISCUSS
+;; Pop has a lot more STM repetition than the other corpora, and it's difficult to filter it out.
+;; Is that ok?

@@ -2,7 +2,7 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                        
-;;;; Time-stamp: <2017-07-24 16:05:57 peter>                           
+;;;; Time-stamp: <2017-07-30 18:02:45 peter>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -23,7 +23,7 @@
            "INFORMATION-CONTENT-PROFILES" "CACHED-DATASET-PREDICTION" 
            "BUILD-EP-CACHE" "SELECT-VIEWPOINTS-FOR-GENERATION" 
            "GET-RESAMPLING-SETS" "GET-TRAINING-SET" "GET-TEST-SET" 
-           "GET-LONG-TERM-MODELS" "TEST-COMBINATIONS")
+           "GET-LONG-TERM-MODELS" "TEST-COMBINATIONS" "CHECK-MODEL-DEFAULTS")
   (:documentation "Prediction of datasets using cross-validation."))
 
 (defpackage #:viewpoint-selection
