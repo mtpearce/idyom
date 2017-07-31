@@ -2,7 +2,7 @@
 ;;;; File:       study-3.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-07-26 19:12:50 peter>                        
-;;;; Time-stamp: <2017-07-31 11:43:38 peter>                           
+;;;; Time-stamp: <2017-07-31 14:07:37 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -24,11 +24,14 @@
 (defparameter *tempo* 70)
 (defparameter *exclude-unisons* t)
 (defparameter *min-stm-ic* 2.0)
+(defparameter *mp3-bit-rate* 256)
 
 (defparameter *h-cpitch-analysis-files*
   '("/Users/peter/Dropbox/Academic/projects/idyom/studies/HarmonyRepresentations/data-raw/data-6/data/predictions/pretraining-none/test-dataset-1-harmonic-reduction-t/resampling-training-set-size-987/h-cpitch/dat_from_idyom/1-h-cpitch-h-cpitch-nil-nil-harmony-nil-30-ltm-nil-t-nil-c-nil-t-t-x-2.5.dat"
     "/Users/peter/Dropbox/Academic/projects/idyom/studies/HarmonyRepresentations/data-raw/data-6/data/predictions/pretraining-none/test-dataset-2-harmonic-reduction-nil/resampling-training-set-size-714/h-cpitch/dat_from_idyom/2-h-cpitch-h-cpitch-nil-nil-harmony-nil-30-ltm-nil-t-nil-c-nil-t-t-x-2.5.dat"
     "/Users/peter/Dropbox/Academic/projects/idyom/studies/HarmonyRepresentations/data-raw/data-6/data/predictions/pretraining-none/test-dataset-3-harmonic-reduction-nil/resampling-training-set-size-1024/h-cpitch/dat_from_idyom/3-h-cpitch-h-cpitch-nil-nil-harmony-nil-30-ltm-nil-t-nil-c-nil-t-t-x-2.5.dat"))
+
+(defparameter *random-seed* 0)
 
 (defun load-h-cpitch-analyses ()
   ;; Note that 1-indexing is converted to 0-indexing
@@ -196,22 +199,46 @@ The old side effects on <used-compositions> have been removed."
 	(cl-csv:write-csv output :stream stream)))))
 
 (defun save-audio (stimuli output-path)
-  (utils:message (format nil "Saving MIDI files for ~A stimuli..."
+  (utils:message (format nil "Saving audio files for ~A stimuli..."
 			 (length stimuli)))
   (let ((midi-path (merge-pathnames (make-pathname :directory
 						   '(:relative "midi"))
 				    output-path))
+	(wav-path (merge-pathnames (make-pathname :directory
+						  '(:relative "wav"))
+				   output-path))
+	(mp3-path (merge-pathnames (make-pathname :directory
+						  '(:relative "mp3"))
+				   output-path))
 	(bar (utils:initialise-progress-bar (length stimuli))))
     (ensure-directories-exist midi-path)
+    (ensure-directories-exist wav-path)
+    (ensure-directories-exist mp3-path)
     (loop
        for stimulus in stimuli
        for i from 1
        as label = (cdr (assoc :label stimulus))
-       as filename = (merge-pathnames midi-path (format nil "~A.mid" label))
+       as filename-midi = (merge-pathnames midi-path (format nil "~A.mid" label))
+       as filename-wav = (merge-pathnames wav-path (format nil "~A.wav" label))
+       as filename-mp3 = (merge-pathnames mp3-path (format nil "~A.mp3" label))
        as music-data = (cdr (assoc :music-data stimulus))
        do
-	 (md:export-midi music-data midi-path :filename filename)
+	 (md:export-midi music-data midi-path :filename filename-midi)
+	 (midi->wav filename-midi filename-wav)
+	 (wav->mp3 filename-wav filename-mp3)
 	 (utils:update-progress-bar bar i))))
+
+(defun midi->wav (midi-file wav-file)
+  (ensure-directories-exist wav-file)
+  (sb-ext:run-program "/usr/local/Cellar/timidity/2.14.0/bin/timidity"
+		      (list "-Ow" "-o" (namestring wav-file) (namestring midi-file))))
+
+(defun wav->mp3 (wav-file mp3-file)
+  (ensure-directories-exist mp3-file)
+  (ensure-directories-exist wav-file)
+  (sb-ext:run-program "/usr/local/Cellar/lame/3.99.5/bin/lame"
+		      (list "-b" (format nil "~A" *mp3-bit-rate*)
+			    (namestring wav-file) (namestring mp3-file))))
 
 
 (defun add-metadata (stimuli)
@@ -244,7 +271,8 @@ The old side effects on <used-compositions> have been removed."
 			   stimulus)))))
 
 (defun construct-stimuli ()
-  (let ((h-cpitch-analyses (load-h-cpitch-analyses)))
+  (let ((h-cpitch-analyses (load-h-cpitch-analyses))
+	(*random-state* (sb-ext:seed-random-state *random-seed*)))
     (loop
        for genre in *genres*
        for dataset-id in *genre-dataset-ids*
@@ -346,12 +374,3 @@ The old side effects on <used-compositions> have been removed."
 					 :detail 1))
 	 (predictions (car (gethash :mean.information.content (utils:data predictions)))))
     predictions))
-
-;;;; TODO
-;; Synthesise mp3
-;; Add tests
-;; Add random state for reproducibility
-
-;;;; TO DISCUSS
-;; Pop has a lot more STM repetition than the other corpora, and it's difficult to filter it out.
-;; Is that ok?
