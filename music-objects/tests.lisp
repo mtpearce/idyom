@@ -2,7 +2,7 @@
 ;;;; File:       tests.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-04-24 20:51:10 peter>                            
-;;;; Time-stamp: <2017-06-20 14:16:41 peter>                           
+;;;; Time-stamp: <2017-07-25 18:17:53 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -277,14 +277,16 @@ be a list the ith element of which is the duration of the ith chord.
   (5am:is (equal (cdr (assoc :segment-ends-relative
 			     (find-canonic-harmonic-rhythm 2 48)))
 		 '(24 48))))
+;; 3/8 is one beat in a bar
 (5am:test find-canonic-harmonic-rhythm-ex-3
   (5am:is (equal (cdr (assoc :segment-starts-relative
-			     (find-canonic-harmonic-rhythm 3 72)))
+			     (find-canonic-harmonic-rhythm 3 36)))
 		 '(0))))
 (5am:test find-canonic-harmonic-rhythm-ex-4
   (5am:is (equal (cdr (assoc :segment-ends-relative
-			     (find-canonic-harmonic-rhythm 3 72)))
-		 '(72))))
+			     (find-canonic-harmonic-rhythm 3 36)))
+		 '(36))))
+;; 6/8 is 2 beats in a bar
 (5am:test find-canonic-harmonic-rhythm-ex-5
   (5am:is (equal (cdr (assoc :segment-starts-relative
 			     (find-canonic-harmonic-rhythm 6 72)))
@@ -293,6 +295,20 @@ be a list the ith element of which is the duration of the ith chord.
   (5am:is (equal (cdr (assoc :segment-ends-relative
 			     (find-canonic-harmonic-rhythm 6 72)))
 		 '(36 72))))
+;; 3/4 is 3 beats in a bar
+(5am:test find-canonic-harmonic-rhythm-ex-7
+  (5am:is (equal (cdr (assoc :segment-starts-relative
+			     (find-canonic-harmonic-rhythm 3 72)))
+		 '(0 24 48))))
+(5am:test find-canonic-harmonic-rhythm-ex-8
+  (5am:is (equal (cdr (assoc :segment-ends-relative
+			     (find-canonic-harmonic-rhythm 3 72)))
+		 '(24 48 72))))
+
+;; General rule: divide by 3 if
+;; a) pulses divides by 3
+;; AND
+;; b) pulses >=6 OR barlength <= 36
 
 ;;;; slices->pc-weights
 (5am:def-suite slices->pc-weights :in music-data)
@@ -464,6 +480,29 @@ be a list the ith element of which is the duration of the ith chord.
 				  150 200)
 		   'list))
 		 (list 50 50 50))))
+;; Check bass notes
+(5am:test slices->slice-ex-7
+  (5am:is (equal (mapcar
+		  #'chromatic-pitch
+		  (coerce 
+		   (slices->slice (coerce (harm-seq
+					   '((52) (60) (64) (67)))
+					  'list)
+				  0 100)
+		   'list))
+		 (list 52 60 67))))
+;; In this example, we want to ensure that the bottom D of the arpeggio
+;; is filtered out and not included as the bass note
+(5am:test slices->slice-ex-8
+  (5am:is (equal (mapcar
+		  #'chromatic-pitch
+		  (coerce 
+		   (slices->slice (coerce (harm-seq
+					   '((50) (60) (64) (67)))
+					  'list)
+				  0 100)
+		   'list))
+		 (list 48 64 67))))
 
 ;;;; Serialization
 (5am:def-suite serial :in music-data)

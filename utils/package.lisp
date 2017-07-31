@@ -2,7 +2,7 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-06-19 19:12:23 peter>                           
+;;;; Time-stamp: <2017-07-31 10:01:29 peter>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -14,7 +14,7 @@
 	   "DOLIST-PB" "DOTIMES-PB" "UPDATE-ALIST"
            "ROUND-TO-NEAREST-DECIMAL-PLACE" "AVERAGE" "GENERATE-INTEGERS"
 	   "POWERSET" "QUOTIENT" "FACTORIAL" "N-PERMUTATIONS" "N-COMBINATIONS"
-	   "SAMPLE"
+	   "SAMPLE" "PARSE-NUMBER"
 	   "SHUFFLE" "NTH-ROOT" "STRING-APPEND" "SPLIT-STRING" "ANY-DUPLICATED"
            "INSERTION-SORT" "CARTESIAN-PRODUCT" "FLATTEN" "COMBINATIONS"
 	   "FLATTEN-ORDER" "COUNT-FREQUENCIES" "NUMERIC-FREQUENCIES"
@@ -30,6 +30,7 @@
            "COLLECT-GARBAGE" "SHELL-COMMAND" "SET-TEST-SUITE-DEPENDENCIES"
 	   "DATAFRAME" "ADD-ROW" "BIND-BY-ROW" "REMOVE-COLUMNS-EXCEPT"
 	   "GET-COLUMN" "SORT-BY-COLUMNS" "PRINT-DATA"
+	   "DATA" "NUM-ROWS"
 	   "K-MEANS-1D" "K-MEANS-1D-SLOW")
   (:documentation "Utility functions of general use."))
 

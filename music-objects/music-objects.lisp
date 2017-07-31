@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2017-06-20 14:42:58 peter>
+;;;; Time-stamp: <2017-07-26 14:51:05 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -339,13 +339,13 @@ extracted or the harmony corresponding to all voices is used."
 					 :remove-repeated-chords
 					 remove-repeated-chords))
 		((numberp composition-indices)
-		 (get-harmonic-sequence dataset-indices composition-indices
-					:voices voices
-					:expansion polyphonic-expansion
-					:reduction harmonic-reduction
-					:slices-or-chords slices-or-chords
-					:remove-repeated-chords
-					 remove-repeated-chords))
+		 (list (get-harmonic-sequence dataset-indices composition-indices
+					      :voices voices
+					      :expansion polyphonic-expansion
+					      :reduction harmonic-reduction
+					      :slices-or-chords slices-or-chords
+					      :remove-repeated-chords
+					      remove-repeated-chords)))
 		(t 
 		 (mapcar
 		  #'(lambda (c)
@@ -831,7 +831,12 @@ to be the bass note."
 	 (pitches (mapcar #'(lambda (e)
 			      (get-attribute e 'cpitch))
 			  events))
-	 (min-pitch (apply #'min pitches))
+	 (chord-pitches (remove-if-not #'(lambda (pitch)
+					   (member (mod pitch 12)
+						   reduced-pcs
+						   :test #'=))
+				       pitches))
+	 (min-pitch (apply #'min chord-pitches))
 	 (bass-pc (mod min-pitch 12)))
     bass-pc))
 
@@ -1024,7 +1029,8 @@ Returns two lists, the first corresponding to the starts of
 each harmonic segment in basic time units, the second 
 corresponding to the ends of these harmonic segments."
   (declare (ignore slices))
-  (let* ((num-pulses-in-bar (if (and (= (mod pulses 3) 0) t) ;;(> pulses 5)
+  (let* ((num-pulses-in-bar (if (and (= (mod pulses 3) 0)
+				     (or (>= pulses 6) (<= barlength 36)))
 				(/ pulses 3)
 				pulses))
 	 (pulse-length (/ barlength num-pulses-in-bar))
@@ -1367,11 +1373,89 @@ is ignored."))
   (if (or (null value) (null timebase))
       nil
       (let ((multiplier (/ 96 timebase)))
-        (* value multiplier)))) 
+        (* value multiplier))))
 
 
+;;;; Manipulating music sequences
 
+(defgeneric subsequence (sequence first last)
+  (:documentation "Returns a subsequence of <sequence> with specified
+<first> and <last> elements (0-indexed). Non-destructive, but a significant
+amount of structure may be shared between <sequence> and the output."))
 
+(defmethod subsequence ((sequence music-sequence) first last)
+  (let ((seq (utils:copy-instance sequence :check-atomic nil)))
+    (setf (%list-slot-sequence-data seq)
+	  (subseq (%list-slot-sequence-data seq)
+		  first (1+ last)))
+    (update-metadata-from-events seq)
+    seq))
+
+(defgeneric update-metadata-from-events (seq)
+  (:documentation "Updates the metadata in the sequence <seq> to match
+the events contained in the <data> slot of <seq>."))
+
+(defmethod update-metadata-from-events ((seq music-sequence))
+  (setf (onset seq) (loop for event in (%list-slot-sequence-data seq)
+		       minimize (onset event))
+	(duration seq) (let ((max-offset
+			      (loop for event in (%list-slot-sequence-data seq)
+				 maximize (+ (onset event) (duration event)))))
+			 (- max-offset (onset seq)))
+	(midc seq) (midc (car (%list-slot-sequence-data seq)))
+	(timebase seq) (timebase (car (%list-slot-sequence-data seq))))
+  (let (new-bar-onsets new-bars)
+    (loop
+       for bar-onset in (bar-onsets seq)
+       for bar in (bars seq)
+       do
+	 (when (and (>= bar-onset (onset seq))
+		    (<= bar-onset (+ (onset seq) (duration seq))))
+	   (push bar-onset new-bar-onsets)
+	   (push bar new-bars)))
+    (setf (bar-onsets seq) (reverse new-bar-onsets)
+	  (bars seq) (reverse new-bars))))
+
+(defgeneric regularize-rhythm (seq &key tempo duration ioi pulses barlength)
+  (:documentation
+   "Updates <seq> to standardize event onsets, duration, and tempo
+in terms of a regular <tempo>, <duration>, and <ioi>
+for each event. <pulses> and <barlength> can optionally be provided."))
+
+(defmethod regularize-rhythm ((seq harmonic-sequence)
+			      &key (tempo 70) (duration 24) (ioi 24)
+				(pulses 1) (barlength 24))
+  (let* ((num-events (length seq))
+	 (onsets (loop for i from 0 to (1- num-events)
+		    collect (* i ioi))))
+    (loop
+       for event in (%list-slot-sequence-data seq)
+       for onset in onsets
+       do
+	 (set-attribute event 'onset onset)
+	 (set-attribute event 'dur duration)
+	 (set-attribute event 'tempo tempo)
+	 (set-attribute event 'pulses pulses)
+	 (set-attribute event 'barlength barlength))
+    (setf (bar-onsets seq) nil
+	  (bars seq) nil)
+    (update-metadata-from-events seq)
+    seq))
+
+;; (defgeneric zero-onset (seq)
+;;   (:documentation "Takes a sequence <seq> and shifts its onsets so that the 
+;; sequence begins at an onset of zero. Assumes that the sequence's metadata
+;; is up-to-date (this can be achieved using update-metadata-from-events)."))
+
+;; (defmethod zero-onset ((seq music-sequence))
+;;   (let ((shift (- 0 (onset seq))))
+;;     (incf (onset seq) shift)
+;;     (setf (bar-onsets seq) (loop for i in (bar-onsets seq)
+;; 			      collect (+ i shift)))
+;;     (loop for event in (%list-slot-sequence-data seq)
+;;        do (incf (onset event) shift))))
+  
+	  
 ;; Detritus
 
 ;; (defmethod crotchet ((mo music-object))
