@@ -140,7 +140,7 @@ of music-sequences or a list of music-sequences that have been coerced to lists.
 
 (defun get-alphabet-sizes
     (viewpoints dataset-ids
-     &key output-path
+     &key output-path overwrite
        ;; These are arguments to pass to md:get-music-objects,
        ;; make sure these are kept up to date when additional
        ;; arguments are added for md:get-music-objects.
@@ -157,42 +157,45 @@ of the datasets. If <output-path> is provided, the results will be saved
 to a csv file at that path."
   (assert (listp viewpoints))
   (assert (listp dataset-ids))
-  (utils:message "Iterating over datasets and viewpoints to compute alphabet sizes")
-  (let ((output (list (list "viewpoint" "dataset_ids" "alphabet_size"))))
-    (dolist (dataset-id dataset-ids)
-      (let* ((dataset-id (if (listp dataset-id) dataset-id (list dataset-id)))
-	     (compositions
-	      (md:get-music-objects dataset-id nil
-				    :voices voices
-				    :texture texture
-				    :polyphonic-expansion polyphonic-expansion
-				    :harmonic-reduction harmonic-reduction
-				    :slices-or-chords slices-or-chords
-				    :remove-repeated-chords
-				    remove-repeated-chords)))
-	(utils:message (format nil "Analysing dataset(s) ~A" dataset-id))
-	(utils:dolist-pb (viewpoint viewpoints)
-	  (let ((alphabet)
-		(v (viewpoints:get-viewpoint viewpoint)))
-	    (dolist (composition compositions)
-	      (let ((viewpoint-sequence (viewpoint-sequence v composition)))
-		(dolist (viewpoint-element viewpoint-sequence)
-		  (unless (or (undefined-p viewpoint-element)
-			      (member viewpoint-element alphabet :test #'equal))
-		    (push viewpoint-element alphabet)))))
-	    (push (list (string-downcase
-			 (if (listp viewpoint)
-			     (format nil "~{~A~^-x-~}"
-				     (mapcar #'symbol-name
-					     viewpoint))
-			     (symbol-name viewpoint)))
-			 (format nil "~{~A~^ ~}" dataset-id)
-			(length alphabet))
-		  output)))))
-    (setf output (reverse output))
-    (when output-path
-      (with-open-file (s (ensure-directories-exist (pathname output-path))
-			 :direction :output :if-exists :supersede)
-	(cl-csv:write-csv output :stream s)))
-    output))
+  (if (and (probe-file output-path) (null overwrite))
+      (utils:message "Alphabet size output file already exists and overwrite option is nil, skipping analysis.")
+      (progn
+	(utils:message "Iterating over datasets and viewpoints to compute alphabet sizes")
+	(let ((output (list (list "viewpoint" "dataset_ids" "alphabet_size"))))
+	  (dolist (dataset-id dataset-ids)
+	    (let* ((dataset-id (if (listp dataset-id) dataset-id (list dataset-id)))
+		   (compositions
+		    (md:get-music-objects dataset-id nil
+					  :voices voices
+					  :texture texture
+					  :polyphonic-expansion polyphonic-expansion
+					  :harmonic-reduction harmonic-reduction
+					  :slices-or-chords slices-or-chords
+					  :remove-repeated-chords
+					  remove-repeated-chords)))
+	      (utils:message (format nil "Analysing dataset(s) ~A" dataset-id))
+	      (utils:dolist-pb (viewpoint viewpoints)
+			       (let ((alphabet)
+				     (v (viewpoints:get-viewpoint viewpoint)))
+				 (dolist (composition compositions)
+				   (let ((viewpoint-sequence (viewpoint-sequence v composition)))
+				     (dolist (viewpoint-element viewpoint-sequence)
+				       (unless (or (undefined-p viewpoint-element)
+						   (member viewpoint-element alphabet :test #'equal))
+					 (push viewpoint-element alphabet)))))
+				 (push (list (string-downcase
+					      (if (listp viewpoint)
+						  (format nil "~{~A~^-x-~}"
+							  (mapcar #'symbol-name
+								  viewpoint))
+						  (symbol-name viewpoint)))
+					     (format nil "~{~A~^ ~}" dataset-id)
+					     (length alphabet))
+				       output)))))
+	  (setf output (reverse output))
+	  (when output-path
+	    (with-open-file (s (ensure-directories-exist (pathname output-path))
+			       :direction :output :if-exists :supersede)
+	      (cl-csv:write-csv output :stream s)))
+	  output))))
 	  
