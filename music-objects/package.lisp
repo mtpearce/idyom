@@ -26,6 +26,6 @@
    ;; Manipulating sequences
    "REGULARIZE-RHYTHM" "SUBSEQUENCE"
    ;; MIDI
-   "EXPORT-MIDI")
+   "EXPORT-MIDI" "MIDI->PDF")
   (:documentation "Musical data."))
 
