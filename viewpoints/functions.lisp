@@ -131,8 +131,8 @@ of music-sequences or a list of music-sequences that have been coerced to lists.
 				   collect (list quantile)))
 			  :stream s)))
     (setf (gethash (viewpoints:viewpoint-name v)
-		     *viewpoint-quantiles*)
-	    quantiles)))
+		   *viewpoint-quantiles*)
+	  quantiles)))
 
 ;; The previous version computed real quantiles; the new version
 ;; computes k-means quantiles.
