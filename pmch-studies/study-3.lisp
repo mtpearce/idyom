@@ -2,7 +2,7 @@
 ;;;; File:       study-3.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-07-26 19:12:50 peter>                        
-;;;; Time-stamp: <2017-07-31 14:07:37 peter>                           
+;;;; Time-stamp: <2017-08-04 14:44:22 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -23,6 +23,7 @@
 (defparameter *target-chord-position* 5) ;; 0-indexed
 (defparameter *tempo* 70)
 (defparameter *exclude-unisons* t)
+(defparameter *filter-stm* nil)
 (defparameter *min-stm-ic* 2.0)
 (defparameter *mp3-bit-rate* 256)
 
@@ -108,6 +109,9 @@ The old side effects on <used-compositions> have been removed."
      used-compositions
      num-pcs-in-chords)
   ;; Note: num-events = (length ics) = (length c-ids) etc.
+  (assert (utils:all-eql (list (length c-ids) (length e-ids)
+			       (length ics) num-events
+			       (length num-pcs-in-chords))))
   (let ((desired-num-chords-post-target (- *num-chords-in-stimulus*
 					   *target-chord-position* 1)))
     (loop for j from 0 to (1- num-events)
@@ -164,6 +168,7 @@ The old side effects on <used-compositions> have been removed."
 ;;;; Method
 
 (defun generate-stimuli (&optional (output-dir "/Users/peter/tmp/"))
+  (ensure-directories-exist (utils:ensure-directory output-dir))
   (let* ((stimuli (construct-stimuli))
 	 (stimuli (add-metadata stimuli)))
     (when output-dir
@@ -210,10 +215,14 @@ The old side effects on <used-compositions> have been removed."
 	(mp3-path (merge-pathnames (make-pathname :directory
 						  '(:relative "mp3"))
 				   output-path))
+	(pdf-path (merge-pathnames (make-pathname :directory
+						  '(:relative "pdf"))
+				   output-path))
 	(bar (utils:initialise-progress-bar (length stimuli))))
     (ensure-directories-exist midi-path)
     (ensure-directories-exist wav-path)
     (ensure-directories-exist mp3-path)
+    (ensure-directories-exist pdf-path)
     (loop
        for stimulus in stimuli
        for i from 1
@@ -221,11 +230,13 @@ The old side effects on <used-compositions> have been removed."
        as filename-midi = (merge-pathnames midi-path (format nil "~A.mid" label))
        as filename-wav = (merge-pathnames wav-path (format nil "~A.wav" label))
        as filename-mp3 = (merge-pathnames mp3-path (format nil "~A.mp3" label))
+       as filename-pdf = (merge-pathnames pdf-path (format nil "~A.pdf" label))
        as music-data = (cdr (assoc :music-data stimulus))
        do
 	 (md:export-midi music-data midi-path :filename filename-midi)
 	 (midi->wav filename-midi filename-wav)
 	 (wav->mp3 filename-wav filename-mp3)
+	 (md:midi->pdf filename-midi filename-pdf)
 	 (utils:update-progress-bar bar i))))
 
 (defun midi->wav (midi-file wav-file)
@@ -327,9 +338,11 @@ The old side effects on <used-compositions> have been removed."
 			      (mapcar #'(lambda (s)
 			     		  (acons :stm-ic (get-stm-ic (cdr (assoc :music-data s))) s))
 			     	      refined-candidates))
-			     (refined-candidates (remove-if #'(lambda (s) (< (cdr (assoc :stm-ic s))
+			     (refined-candidates (if *filter-stm*
+						     (remove-if #'(lambda (s) (< (cdr (assoc :stm-ic s))
 									       *min-stm-ic*))
-							      refined-candidates))
+								refined-candidates)
+						     refined-candidates))
 			     (refined-candidates (utils:sample *num-stimuli-per-ic-category* refined-candidates)))
 			(setf used-compositions (append (mapcar #'(lambda (s) (cdr (assoc :c-id s))) refined-candidates)
 							  used-compositions))
