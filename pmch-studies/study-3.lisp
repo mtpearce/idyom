@@ -2,7 +2,7 @@
 ;;;; File:       study-3.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-07-26 19:12:50 peter>                        
-;;;; Time-stamp: <2017-08-04 14:44:22 peter>                           
+;;;; Time-stamp: <2017-08-07 10:21:48 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -18,10 +18,10 @@
 (defparameter *genre-reduce-harmony* '(t nil nil))
 (defparameter *num-ic-categories* 10)
 (defparameter *num-stimuli-per-ic-category* 3)
-(defparameter *num-stimuli-per-ic-category-intermediate* 25) ;; intermediate filtering threshold imposed for computational tractability
-(defparameter *num-chords-in-stimulus* 10)
+(defparameter *num-stimuli-per-ic-category-intermediate* 3) ;; intermediate filtering threshold imposed for computational tractability
+(defparameter *num-chords-in-stimulus* 8)
 (defparameter *target-chord-position* 5) ;; 0-indexed
-(defparameter *tempo* 70)
+(defparameter *tempo* 60)
 (defparameter *exclude-unisons* t)
 (defparameter *filter-stm* nil)
 (defparameter *min-stm-ic* 2.0)
