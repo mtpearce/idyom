@@ -208,4 +208,3 @@ to a csv file at that path."
 			 :direction :output :if-exists :supersede)
 	(cl-csv:write-csv output :stream s)))
     output))
-	  
