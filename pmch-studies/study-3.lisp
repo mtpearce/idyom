@@ -2,7 +2,7 @@
 ;;;; File:       study-3.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-07-26 19:12:50 peter>                        
-;;;; Time-stamp: <2017-08-07 10:21:48 peter>                           
+;;;; Time-stamp: <2017-08-15 09:20:22 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -327,25 +327,46 @@ The old side effects on <used-compositions> have been removed."
 							     used-compositions))
 			     (refined-candidates
 			      (mapcar #'(lambda (s)
-					  (acons :music-data (md:regularize-rhythm
-							      (md:subsequence (nth (cdr (assoc :c-id s)) music-data)
-									      (cdr (assoc :first-e-id s))
-									      (cdr (assoc :last-e-id s)))
-							      :tempo *tempo*)
+					  (acons :music-data
+						 (md:regularize-rhythm
+						  (md:subsequence (nth (cdr (assoc :c-id s)) music-data)
+								  (cdr (assoc :first-e-id s))
+								  (cdr (assoc :last-e-id s)))
+						  :tempo *tempo*)
 						 s))
 				      refined-candidates))
 			     (refined-candidates
 			      (mapcar #'(lambda (s)
 			     		  (acons :stm-ic (get-stm-ic (cdr (assoc :music-data s))) s))
 			     	      refined-candidates))
+			     (refined-candidates
+			      (mapcar #'(lambda (s)
+					  (acons :milne-full-seq
+						 (viewpoints:viewpoint-sequence (viewpoints:get-viewpoint
+										 'h-cpc-milne-sd-cont=min)
+										(assoc :music-data s))
+						 s))
+				      refined-candidates))
+			     (refined-candidates
+			      (mapcar #'(lambda (s)
+					  (acons :milne-target
+						 (viewpoints:viewpoint-element (viewpoints:get-viewpoint
+										'h-cpc-milne-sd-cont=min)
+									       (subseq (assoc :music-data s)
+										       0 (1+ *target-chord-position*)))
+						 s))
+				      refined-candidates))	 
 			     (refined-candidates (if *filter-stm*
 						     (remove-if #'(lambda (s) (< (cdr (assoc :stm-ic s))
-									       *min-stm-ic*))
+										 *min-stm-ic*))
 								refined-candidates)
 						     refined-candidates))
-			     (refined-candidates (utils:sample *num-stimuli-per-ic-category* refined-candidates)))
-			(setf used-compositions (append (mapcar #'(lambda (s) (cdr (assoc :c-id s))) refined-candidates)
-							  used-compositions))
+			     (refined-candidates (utils:sample *num-stimuli-per-ic-category*
+							       refined-candidates)))
+					  (setf used-compositions (append (mapcar #'(lambda (s)
+										      (cdr (assoc :c-id s)))
+										  refined-candidates)
+							used-compositions))
 		        refined-candidates)))))))
 
 (defun break-me (x)
