@@ -2,7 +2,7 @@
 ;;;; File:       study-3.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-07-26 19:12:50 peter>                        
-;;;; Time-stamp: <2017-08-15 09:20:22 peter>                           
+;;;; Time-stamp: <2017-08-15 09:37:23 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -178,7 +178,7 @@ The old side effects on <used-compositions> have been removed."
 (defun save-stimuli (stimuli output-dir)
   (let* ((output-dir (ensure-directories-exist
 		      (utils:ensure-directory output-dir)))
-	 (metadata-path (merge-pathnames output-dir "metadata.csv"))
+	 (metadata-path (merge-pathnames output-dir "lisp_metadata.csv"))
 	 (audio-path (merge-pathnames (make-pathname :directory
 						     '(:relative "audio"))
 				      output-dir)))
@@ -344,7 +344,7 @@ The old side effects on <used-compositions> have been removed."
 					  (acons :milne-full-seq
 						 (viewpoints:viewpoint-sequence (viewpoints:get-viewpoint
 										 'h-cpc-milne-sd-cont=min)
-										(assoc :music-data s))
+										(cdr (assoc :music-data s)))
 						 s))
 				      refined-candidates))
 			     (refined-candidates
@@ -352,7 +352,7 @@ The old side effects on <used-compositions> have been removed."
 					  (acons :milne-target
 						 (viewpoints:viewpoint-element (viewpoints:get-viewpoint
 										'h-cpc-milne-sd-cont=min)
-									       (subseq (assoc :music-data s)
+									       (subseq (cdr (assoc :music-data s))
 										       0 (1+ *target-chord-position*)))
 						 s))
 				      refined-candidates))	 
@@ -363,9 +363,9 @@ The old side effects on <used-compositions> have been removed."
 						     refined-candidates))
 			     (refined-candidates (utils:sample *num-stimuli-per-ic-category*
 							       refined-candidates)))
-					  (setf used-compositions (append (mapcar #'(lambda (s)
-										      (cdr (assoc :c-id s)))
-										  refined-candidates)
+			(setf used-compositions (append (mapcar #'(lambda (s)
+								    (cdr (assoc :c-id s)))
+								refined-candidates)
 							used-compositions))
 		        refined-candidates)))))))
 
