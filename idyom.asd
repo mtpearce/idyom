@@ -16,7 +16,7 @@
   :author "Marcus Pearce"
   :licence "GPL (see COPYING file for details)"
   :description "Information Dynamics of Music (see README for details)"
-  :depends-on (clsql cl-ppcre fiveam midi closer-mop psgraph sb-md5)
+  :depends-on (clsql cl-ppcre fiveam midi closer-mop psgraph)
   :serial t
   :components
   (;; General utilities  
@@ -24,9 +24,7 @@
 	    :serial t
             :components 
             ((:file "package")
-             (:file "utils")
-             (:file "promises")
-             (:file "python")))
+             (:file "utils")))
    ;; Database for storage and retrieval of music
    (:module database
 	    :serial t
@@ -56,8 +54,7 @@
 	    ((:file "package")
 	     (:file "extended-sequence")
 	     (:file "time")
-             (:file "music-objects")
-             (:file "meter")))
+             (:file "music-objects")))
    ;; Viewpoints
    (:module viewpoints
 	    :serial t
