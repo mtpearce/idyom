@@ -14,5 +14,7 @@
 	   #:list-threaded #:list-test #:predictors #:predictable
            #:attribute-equal #:viewpoint #:viewpoint-equal #:basic-p 
            #:in-typeset-p #:alphabet->events #:viewpoint-element-equal
-	   #:composition-viewpoint #:dataset-viewpoint)
+	   #:composition-viewpoint #:dataset-viewpoint
+	   #:*hidden-state* #:with-hidden-state #:get-hidden-state-parameter
+	   #:latent-variables)
   (:documentation "Multiple viewpoint framework for music representation."))
