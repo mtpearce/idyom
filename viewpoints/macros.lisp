@@ -27,6 +27,23 @@
                     (declare (ignorable events element))
                     ,f*)))))))
 
+
+(defmacro define-abstract-viewpoint ((name typeset latent-vars parameters) 
+                            ((events class) element)
+				     &key function function*)
+  (let* ((parameters `(loop for p in (list ,@parameters)
+			 collect (get-hidden-state-parameter p)))
+	 (function `(apply #',function ,parameters))
+	 (function* (if (null function*) nil
+			`(apply #',function* ,parameters))))
+    `(progn
+       (define-viewpoint (,name abstract ,typeset)
+	   ((,events ,class) ,element)
+	 :function ,function :function* ,function*)
+       (defmethod latent-vars ((v ,name))
+	 (declare (ignorable v))
+	 ',latent-vars))))
+
 (defmacro define-basic-viewpoint (name ((events class)) function)
   `(progn 
      (register-basic-type ',name '(elt ,events 0))

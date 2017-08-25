@@ -42,3 +42,9 @@ viewpoints."))
   ()
   (:documentation "A threaded viewpoint represents an attribute whose
 values are only defined at designated points in a sequence."))
+
+(defclass abstract (derived)
+  ()
+  (:documentation "An abstract viewpoint represents an attribute whose
+value are conditioned on the value of one or more parameters of a 
+latent state."))

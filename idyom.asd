@@ -68,6 +68,8 @@
 	     (:file "methods")
 	     (:file "functions")
 	     (:file "macros")
+	     (:file "latent-variables")
+	     (:file "latent-variables-tests")
              (:module melody :serial t
 		      :components
 		      ((:file "basic-viewpoints")
@@ -76,6 +78,7 @@
 		       (:file "temporal")
                        (:file "phrase")
 		       (:file "threaded")
+		       (:file "abstract-temporal")
 		       (:file "implication-realisation")))
              ;; useful extensions for modelling 
              ;; (not strictly part of the representation scheme)
