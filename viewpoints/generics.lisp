@@ -37,4 +37,4 @@ returns the supplied object."))
 (defgeneric strip-until-true (test-viewpoint composition))
 (defgeneric filter (viewpoint events))
 
-(defgeneric latent-vars (v))
+(defgeneric latent-variable-attribute (v))

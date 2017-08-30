@@ -236,6 +236,9 @@ Borrowed from https://www.pvk.ca/Blog/Lisp/trivial_uniform_shuffling.html"
                    (t (rbp (cdr l) (1+ i) (cons (car l) r))))))
     (rbp list 0 nil)))
 
+(defun make-plist (indicators values)
+  (apply #'append (mapcar #'list indicators values)))
+
 ;;;===========================================================================
 ;;; Nested lists
 ;;;===========================================================================

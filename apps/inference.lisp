@@ -62,10 +62,9 @@
 (defun category-model (segmented-training-set targets sources category)
   (let ((ltms (get-long-term-category-models category sources segmented-training-set)))
     (mvs:make-mvs targets sources ltms)))
-	  
 
 (defun get-long-term-category-models (category sources training-data)
-  (viewpoints:with-hidden-state category
+  (viewpoints:with-latent-state category
     ;;; Fix caching
     (resampling:get-long-term-models sources training-data
 				     nil nil nil nil nil nil nil)))
@@ -127,9 +126,9 @@ not change. Return <categories>, updated with any new categories encountered, an
 
 ;; Model and latent-variable specific
 (defun interpretation-predictions (category model sequence)
-  (viewpoints:with-hidden-state category
+  (viewpoints:with-latent-state category
     (loop for phase below (getf category :barlength) collecting
-	 (viewpoints:with-hidden-state '(:phase phase)
+	 (viewpoints:with-latent-state '(:phase phase)
 	   (mvs:model-sequence model sequence)))))
 
 (defun prediction-sets->likelihoods (prediction-sets)

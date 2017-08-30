@@ -1,7 +1,7 @@
 (cl:in-package #:viewpoints)
 
-(5am:def-suite latent-variables)
-(5am:in-suite latent-variables)
+(5am:def-suite abstract-viewpoints)
+(5am:in-suite abstract-viewpoints)
 
 (defparameter timebase 16)
 (defparameter midc 60)
@@ -35,27 +35,6 @@
 (defun crotchets-dur (crotchets)
   (* (/ 1 4) crotchets timebase))
 
-(5am:test get-hidden-state-parameter
-  (let ((viewpoints::*hidden-state* '(:a 0)))
-    (5am:is (eq (viewpoints:get-hidden-state-parameter :a)
-		0))))
-
-(5am:test (hidden-state-shadowing :depends-on get-hidden-state-parameter)
-  (let* ((initial 0)
-	 (shadowed 5)
-	 (viewpoints::*hidden-state* (list :a initial :b 'do-not-touch)))
-    (5am:is (eq (viewpoints:get-hidden-state-parameter :a)
-		initial))
-    (with-hidden-state (list :a shadowed)
-      (5am:is (eq (viewpoints:get-hidden-state-parameter :a)
-		  shadowed))
-      (5am:is (eq (viewpoints:get-hidden-state-parameter :b)
-		  'do-not-touch)))
-    (5am:is (eq (viewpoints:get-hidden-state-parameter :a)
-		initial))
-    (5am:is (eq (viewpoints:get-hidden-state-parameter :b)
-		'do-not-touch))))
-
 (defun test-viewpoint (events attribute true-elements)
   (let* ((viewpoint (viewpoints:get-viewpoint attribute))
 	 (sequence (viewpoints:viewpoint-sequence viewpoint events)))
@@ -68,28 +47,28 @@
 
 (5am:test metpos-viewpoint
   (mock-mel-seq
-   (with-hidden-state (list :barlength (crotchets-dur 4) :phase (crotchets-dur 0))
+   (lv:with-latent-state (list :barlength (crotchets-dur 4) :phase (crotchets-dur 0))
      (test-viewpoint mel-seq 'metpos
 		     (mapcar #'crotchets-dur (list 0 1 (+ 1 (/ 1 2)) 2 3 1 2))))
-   (with-hidden-state (list :barlength (crotchets-dur 4) :phase (crotchets-dur 1))
+   (lv:with-latent-state (list :barlength (crotchets-dur 4) :phase (crotchets-dur 1))
      (test-viewpoint mel-seq 'metpos
 		     (mapcar #'crotchets-dur (list 3 0 (+ 0 (/ 1 2)) 1 2 0 1))))))
 
 (5am:test bardist-viewpoint
   (mock-mel-seq
-   (with-hidden-state (list :barlength (crotchets-dur 4) :phase (crotchets-dur 0))
+   (lv:with-latent-state (list :barlength (crotchets-dur 4) :phase (crotchets-dur 0))
      (test-viewpoint mel-seq 'bardist '(1 0 0 0 0 1 0)))
-   (with-hidden-state (list :barlength (crotchets-dur 4) :phase (crotchets-dur 1))
+   (lv:with-latent-state (list :barlength (crotchets-dur 4) :phase (crotchets-dur 1))
      (test-viewpoint mel-seq 'bardist '(1 1 0 0 0 1 0)))))
 
 (5am:test (bardist-metpos-viewpoint
 	   :depends-on (and . (bardist-viewpoint metpos-viewpoint)))
   (mock-mel-seq
-   (with-hidden-state (list :barlength (crotchets-dur 4) :phase (crotchets-dur 0))
+   (lv:with-latent-state (list :barlength (crotchets-dur 4) :phase (crotchets-dur 0))
      (test-viewpoint mel-seq '(bardist metpos)
 		     (mapcar #'list '(1 0 0 0 0 1 0)
 			     (mapcar #'crotchets-dur (list 0 1 (+ 1 (/ 1 2)) 2 3 1 2)))))
-   (with-hidden-state (list :barlength (crotchets-dur 4) :phase (crotchets-dur 1))
+   (lv:with-latent-state (list :barlength (crotchets-dur 4) :phase (crotchets-dur 1))
      (test-viewpoint mel-seq '(bardist metpos)
 		     (mapcar #'list '(1 1 0 0 0 1 0)
 			     (mapcar #'crotchets-dur (list 3 0 (+ 0 (/ 1 2)) 1 2 0 1)))))))

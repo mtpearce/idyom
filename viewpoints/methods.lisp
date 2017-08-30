@@ -48,9 +48,20 @@
 ;;; Viewpoint methods 
 
 (defmethod viewpoint-alphabet ((v viewpoint)) (%viewpoint-alphabet v))
+(defmethod viewpoint-alphabet ((v abstract))
+  (let ((category (lv:get-latent-category (latent-variable v))))
+    (cdr (assoc category (%viewpoint-alphabet v) :test #'equal))))
 
 (defmethod (setf viewpoint-alphabet) (alphabet (v viewpoint))
   (setf (%viewpoint-alphabet v) alphabet))
+(defmethod (setf viewpoint-alphabet) (alphabet (v abstract))
+  (let* ((category (lv:get-latent-category (latent-variable v)))
+	 (alphabets (%viewpoint-alphabet v))
+	 (place (cdr (assoc category alphabets :test #'equal))))
+    (if (null category)
+	(setf (%viewpoint-alphabet v) (acons category alphabet alphabets))
+	(replacd place alphabet))))
+
 
 (defmethod viewpoint-typeset ((v viewpoint)) (%viewpoint-typeset v))
 

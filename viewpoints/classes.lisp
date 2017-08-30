@@ -44,7 +44,14 @@ viewpoints."))
 values are only defined at designated points in a sequence."))
 
 (defclass abstract (derived)
-  ()
+  ((latent-variable :accessor latent-variable
+		    :initarg :latent-variable
+		    :type latent-variables:latent-variable))
+  (:documentation "An abstract viewpoint represents an attribute whose
+value are conditioned on the value of one or more parameters of a 
+latent state."))
+
+(defclass abstract-linked (linked abstract) ()
   (:documentation "An abstract viewpoint represents an attribute whose
 value are conditioned on the value of one or more parameters of a 
 latent state."))

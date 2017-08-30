@@ -282,15 +282,7 @@ objects."
                                        :update-exclusion stm-update-exclusion
                                        :escape stm-escape))
        (mvs-stm m)))
-                   
-(defun get-short-term-models (viewpoints)
-  "Returns a vector of freshly initialised ppm short term models
-corresponding to the supplied list of viewpoints and initialised with
-the supplied parameters."
-  (apply #'vector (mapcar #'(lambda (v) (make-ppm (viewpoint-alphabet v)))
-                          viewpoints)))
-
-
+                  
 ;;;========================================================================
 ;;; Model Construction and Prediction 
 ;;;========================================================================

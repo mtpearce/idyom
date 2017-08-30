@@ -58,6 +58,16 @@
 	     (:file "time")
              (:file "music-objects")
              (:file "meter")))
+   ;; Latent variables
+   (:module latent-variables
+	    :serial t
+	    :components
+	    ((:file "package")
+	     (:file "generics")
+	     (:file "classes")
+	     (:file "methods")
+	     (:file "functions")
+	     (:file "tests")))
    ;; Viewpoints
    (:module viewpoints
 	    :serial t
@@ -68,8 +78,7 @@
 	     (:file "methods")
 	     (:file "functions")
 	     (:file "macros")
-	     (:file "latent-variables")
-	     (:file "latent-variables-tests")
+	     (:file "abstract-viewpoints-tests")
              (:module melody :serial t
 		      :components
 		      ((:file "basic-viewpoints")
@@ -100,7 +109,8 @@
              (:file "params") 
              (:file "generics")
              (:file "prediction-sets")		
-             (:file "multiple-viewpoint-system")))
+             (:file "multiple-viewpoint-system")
+	     (:file "extended-multiple-viewpoint-system")))
    ;; Applications 
    (:module apps 
             :serial t
