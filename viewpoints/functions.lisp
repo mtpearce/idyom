@@ -34,10 +34,6 @@ symbol if they are lists else nil."
   "Returns a list of viewpoint objects corresponding to <attributes>."
   (mapcar #'get-viewpoint attributes))
 
-(defun get-viewpoint-instance (attribute)
-  (let* ((symbol (find-symbol (symbol-name attribute) (find-package :viewpoints))))
-    (make-instance symbol)))
-
 (defun abstract? (viewpoint)
   (typep viewpoint 'abstract))
 
@@ -46,33 +42,17 @@ symbol if they are lists else nil."
   (flet ((merge-typesets (links)
            (remove-duplicates 
             (reduce #'append links :key #'viewpoint-typeset))))
-    (if (atom attribute)
-	(let ((viewpoint (get-viewpoint-instance attribute)))
-	  (when (abstract? viewpoint)
-	    (let* ((latent-variable-attribute (latent-variable-attribute viewpoint))
-		   (latent-variable
-		    (lv:get-latent-variable latent-variable-attribute)))
-	      (setf (latent-variable viewpoint) latent-variable)))
-	  viewpoint)
-        (let* ((links (mapcar #'get-viewpoint-instance (flatten attribute)))
+    (if (atom attribute)	
+	(make-instance (find-symbol (symbol-name attribute) (find-package :viewpoints)))
+        (let* ((links (mapcar #'get-viewpoint (flatten attribute)))
 	       (typeset (merge-typesets links))
 	       (links (stable-sort links #'(lambda (x y)
 					     (string< (viewpoint-name x)
 						      (viewpoint-name y)))))
-	       (lv-attribute (mapcar (lambda (vp)
-				       (when (abstract? vp)
-					 (list (latent-variable-attribute vp))))
-				     links))
-	       (lv-attribute (stable-sort (remove-duplicates
-					   (apply #'append
-						  lv-attribute))
-					  (lambda (x y) (string< (symbol-name x)
-								 (symbol-name y))))))
-	  (if (null lv-attribute)
-	      (make-instance 'linked :links links :typeset typeset)
-	      (make-instance 'abstract-linked :links links :typeset typeset
-			     :latent-variable (lv:get-latent-variable lv-attribute)))))))
-					       
+	       (class (if (some #'abstract? links)
+			  'abstract-linked
+			  'linked)))
+	  (make-instance class :links links :typeset typeset)))))					       
 
 (defun attribute-equal (a1 a2) 
   (cond ((and (symbolp a1) (symbolp a2))

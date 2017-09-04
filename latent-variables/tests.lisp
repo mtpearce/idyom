@@ -24,5 +24,5 @@
   (let ((m (make-instance 'metre))
 	(k (make-instance 'key)))
     (5am:is (equal (get-latent-states '(4 2) m) '((4 2 0)))
-    (5am:is (equal (get-latent-states nil k) '(x y z)))))
+    (5am:is (equal (get-latent-states nil k) '(x y z))))))
 

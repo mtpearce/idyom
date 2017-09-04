@@ -273,6 +273,51 @@ are the same, returns T, otherwise NIL."
 		   (cdr entry))
 	  (format stream "~&"))))))
 
+
+;;;=====================
+;;;* Generative systems*
+;;;=====================
+
+(5am:def-suite generative-systems :in resampling)
+(5am:in-suite generative-systems)
+
+(5am:test (filter-and-merge-var-sets :depends-on utils::set-equal)
+  (5am:is (set-equal (filter-and-merge-var-sets '((a) (b)))
+		     '((a) (b)) :test #'set-equal))
+  (5am:is (reduce #'(lambda (a b) (set-equal a b :test #'set-equal))
+		  (list (filter-and-merge-var-sets '((a) (a b)))
+			(filter-and-merge-var-sets '((a b) (b)))
+			'((a b)))))
+  (5am:is (reduce #'(lambda (a b) (set-equal a b :test #'set-equal))
+		  (list (filter-and-merge-var-sets '((a b) (b c)))
+			(filter-and-merge-var-sets '((b c) (a b)))
+			'((a b c)))))
+  (5am:is (reduce #'(lambda (a b) (set-equal a b :test #'set-equal))
+		  (list (filter-and-merge-var-sets '((a b) (b) (a)))
+			(filter-and-merge-var-sets '((a) (b) (a b)))
+			'((a b)))))
+  (5am:is (reduce #'(lambda (a b) (set-equal a b :test #'set-equal))
+		  (list (filter-and-merge-var-sets '((a) (b) (b c)))
+			(filter-and-merge-var-sets '((b c) (b) (a)))
+			'((a) (b c))))))
+
+(5am:test align-variables-with-viewpoints
+  (let* ((test-viewpoint-attributes '(metpos abstract-sdeg (metpos style-onset)))
+	 (viewpoints (viewpoints:get-viewpoints test-viewpoint-attributes))
+	 (test-variable-attributes-1 '(style key metre))
+	 (test-variable-attributes-2 '(key))
+	 (variables-1 (lv:get-latent-variables test-variable-attributes-1))
+	 (variables-2 (lv:get-latent-variables test-variable-attributes-2)))
+  (5am:is ((align-variables-with-viewpoints viewpoints variables-1)
+  ;; TODO
+  nil)
+
+(5am:test (create-generative-systems
+	   :depends-on (and . (filter-and-merge-var-sets
+			       align-variables-with-viewpoints)))
+  ;; TODO
+  nil)
+
 ;; Example composition 1
 
 (defparameter *ex-composition-1-string*

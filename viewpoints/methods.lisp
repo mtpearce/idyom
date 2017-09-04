@@ -57,11 +57,17 @@
 (defmethod (setf viewpoint-alphabet) (alphabet (v abstract))
   (let* ((category (lv:get-latent-category (latent-variable v)))
 	 (alphabets (%viewpoint-alphabet v))
-	 (place (cdr (assoc category alphabets :test #'equal))))
-    (if (null category)
+	 (place (assoc category alphabets :test #'equal)))
+    (if (null place)
 	(setf (%viewpoint-alphabet v) (acons category alphabet alphabets))
-	(replacd place alphabet))))
+	(rplacd place alphabet))))
 
+(defmethod training-viewpoint ((a abstract-linked))
+  (let ((links (viewpoint-links a)))
+    (mapcar (lambda (link) (if (abstract? link)
+			       (training-viewpoint link)
+			       (type-of link)))
+	    links)))
 
 (defmethod viewpoint-typeset ((v viewpoint)) (%viewpoint-typeset v))
 
@@ -117,6 +123,10 @@
             links element1 element2)
       elements-equal)))
 
+(defmethod latent-parameters ((v viewpoint)) nil)
+(defmethod latent-parameters ((l linked))
+  (mapcar #'latent-parameters (viewpoint-links l)))
+
 ;;; Inverse viewpoint methods
 
 (defmethod basic-sequence ((v viewpoint) (b basic) element-list event-list)
@@ -167,7 +177,7 @@
 ;;; Strip-until-true and filter
 
 (defmethod strip-until-true ((test-viewpoint test) (events md:music-composition))
-  (strip-until-true test (coerce events 'list)))
+  (strip-until-true test-viewpoint (coerce events 'list)))
 
 (defmethod strip-until-true ((test-viewpoint test) (events md:music-sequence))
   (let ((new-events (strip-until-true test-viewpoint (coerce events 'list)))

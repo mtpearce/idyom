@@ -1,5 +1,17 @@
 (cl:in-package #:latent-variables)
 
+(defmethod latent-variable-attribute ((v latent-variable))
+  (type-of v))
+
+(defmethod latent-variable-attribute ((l linked))
+  (mapcar #'latent-variable-attribute (latent-variable-links l)))
+
+(defmethod latent-variable-name ((l latent-variable))
+  (string-downcase (symbol-name (latent-variable-attribute l))))
+
+(defmethod latent-variable-name ((l linked))
+  (format nil "~{~A~^-~}" (latent-variable-attribute l)))
+
 (defmethod latent-state-parameters ((v latent-variable))
   (union (category-parameters v) (interpretation-parameters v)))
 
@@ -20,6 +32,16 @@
   (mapcar #'(lambda (param) (getf latent-state param))
 	  (interpretation-parameters v)))
 
+(defmethod get-sub-category (category (sub-v latent-variable) (l latent-variable))
+  category)
+
+(defmethod get-sub-category (category (sub-v latent-variable) (l linked))
+  (let ((annotated-latent-state (utils:make-plist (category-parameters l)
+						  category)))
+    (mapcar #'(lambda (p) (getf annotated-latent-state p))
+	    (category-parameters sub-v))))
+	 
+
 (defmethod get-event-category (event (v latent-variable))
   (let ((event-attributes (mapcar #'(lambda (attrib)
 				      (symbol-name attrib))
@@ -37,19 +59,21 @@
     (mapcar (lambda (param) (getf parameters param))
 	    (latent-state-parameters v))))
   
-(defmethod initialise-prior-distribution (categories training-data
+(defmethod initialise-prior-distribution (training-data
 					  (v latent-variable))
-  (let* ((category-counts (mapcar #'length training-data))
+  (let* ((categories (mapcar #'car training-data))
+	 (category-counts (mapcar #'length training-data))
 	 (total-observations (apply #'+ category-counts))
 	 (latent-states) (distribution))
-    (loop for category in categories for count in category-counts collecting
+    (loop for category in categories for count in category-counts do
 	 (let ((rel-freq (/ count total-observations)))
 	   (loop for latent-state in (get-latent-states category v) do
-		(progn
-		  (push latent-state latent-states)
-		  (push rel-freq distribution)))))
-    (values latent-states (let ((scaling (apply #' + distribution)))
-			    (mapcar #'(lambda (p) (* p scaling)) distribution)))))
+		(push latent-state latent-states)
+		(push rel-freq distribution))))
+    (mapcar #'cons
+	    latent-states
+	    (let ((scaling (apply #' + distribution)))
+	      (mapcar #'(lambda (p) (/ p scaling)) distribution)))))
 
 (defmethod get-latent-states (category (l linked))
   (let* ((variables (latent-variable-links l))
@@ -84,26 +108,34 @@
 
 ;;;;;; METRE (empirical phase prior) ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defmethod initialise-prior-distribution (categories training-data
+(defmethod initialise-prior-distribution (training-data
 					  (v metre-phase))
-  (let* ((category-counts (mapcar #'length training-data))
+  (let* ((categories (mapcar #'car training-data))
+	 (training-sets (mapcar #'cdr training-data))
+	 (category-counts (mapcar #'length training-sets))
 	 (observation-count (apply #'+ category-counts))
-	 (latent-states) (distribution))
-    (loop for category in categories for category-count in category-counts collecting
-	 (let ((category-rel-freq (/ category-count observation-count))
-	       (phases
-		(mapcar #'(lambda (event-sequence) (md:bioi (first event-sequence)))))
-	       (unique-phases (remove-duplicates phases))
-	       (phase-counts (mapcar #'(lambda (phase)
-					 (loop for p in phases counting
-					      (equalp p phase) into count
-					    finally (return counts)))
-				     unique-phases)))
-	   (loop for phase in unique-phases for phase-count in phase-counts do
-		(let ((phase-rel-freq (/ count phase-count category-count)))
-		  (push (append category phase) latent-states)
-		  (push (* category-rel-freq phase-rel-freq) distribution)))))
-    (values latent-states distribution)))
+	 (distribution))
+    (loop for category in categories
+       for category-count in category-counts
+       for training-set in training-sets do
+	 (let* ((category-rel-freq (/ category-count observation-count))
+		(phases
+		 (mapcar #'(lambda (event-sequence) (md:bioi (first event-sequence)))
+			 training-set))
+		(phase-counts (utils:count-frequencies phases #'<)))
+	   (loop for phase-count in phase-counts do
+		(let ((phase (car phase-count))
+		      (count (cdr phase-count)))
+		  (let ((phase-rel-freq (/ count category-count)))
+		    (push (cons (create-latent-state category
+						     (create-interpretation
+						      v :barlength
+						      (get-category-parameter
+						       category :barlength v)
+						      :phase phase) v)
+				(* category-rel-freq phase-rel-freq))
+			  distribution))))))
+    distribution))
 	   
 ;;;;;; KEY ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

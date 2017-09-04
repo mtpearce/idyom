@@ -67,8 +67,12 @@
    (loop for n from min below max by step
       collect n))
 
-
-
+(defun set-equal (a b &key (test #'eql))
+  "Return <a> when all unique elements in <a> appear in <b> and 
+all unique elements in <b> appear in <a>. Otherwise return nil"
+  (when (and (null (set-difference a b :test test))
+	     (null (set-difference b a :test test)))
+    a))
 
 ;;;===========================================================================
 ;;; Sequences

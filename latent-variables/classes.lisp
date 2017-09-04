@@ -1,8 +1,8 @@
 (cl:in-package #:latent-variables)
 
 (defclass latent-variable ()
-  ((states :reader latent-states
-	   :initarg states)
+  ((categories :initarg categories
+	       :accessor categories)
    (prior-distribution :accessor prior-distribution
 		       :initarg :prior-distribution)
    (interpretation-parameters :accessor interpretation-parameters

@@ -40,5 +40,7 @@ details. Default = 2, all basic viewpoints.")
 ;ranked-combination
 (defparameter *ltm-stm-combination* 'geometric-combination)
 (defparameter *viewpoint-combination* 'geometric-combination)
+(defparameter *mvs-combination* 'geometric-combination)
 (defparameter *ltm-stm-bias* 7)
 (defparameter *viewpoint-bias* 2)
+(defparameter *mvs-bias* 2)

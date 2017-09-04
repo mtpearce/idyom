@@ -63,8 +63,10 @@
 	    :serial t
 	    :components
 	    ((:file "package")
-	     (:file "generics")
 	     (:file "classes")
+	     (:file "macros")
+	     (:file "latent-variables")
+	     (:file "generics")
 	     (:file "methods")
 	     (:file "functions")
 	     (:file "tests")))

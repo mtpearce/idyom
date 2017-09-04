@@ -8,12 +8,8 @@
        (loop for param-b in params-b collect
 	    (append param-a param-b))))
 
-(defun joint-distribution (dist-a dist-b)
-  (let ((joint-distribution))
-    (dolist (param-a dist-a)
-      (dolist (param-b dist-b)
-	(push (* dist-a dist-b) joint-distribution)))
-    joint-distribution))
+(defun get-latent-variables (attributes)
+  (mapcar #'get-latent-variable attributes))
 
 (defun get-latent-variable (attribute)
     (if (atom attribute)

@@ -1,4 +1,4 @@
-(cl:in-package #:idyom)
+;(cl:in-package #:idyom)
 
 (5am:def-suite inference)
 (5am:in-suite inference)
@@ -38,28 +38,28 @@
 (defun crotchets-dur (crotchets)
   (* (/ 1 4) crotchets timebase))
 
-(5am:test marginal-likelihood
-  (let ((prior '(0.0001 0.9999))  ; (have-disease not-have-disease)
-	(likelihood '(0.99 0.1))) ; (test-positive|disease test-positive|not-have-disease)
-    (5am:is (eql (idyom::marginal-likelihood prior likelihood)
-		 (+ (* 0.0001 0.99) (* 0.9999 0.1))))))
+;(5am:test marginal-likelihood
+;  (let ((prior '(0.0001 0.9999))  ; (have-disease not-have-disease)
+;	(likelihood '(0.99 0.1))) ; (test-positive|disease test-positive|not-have-disease)
+;    (5am:is (eql (idyom::marginal-likelihood prior likelihood)
+;		 (+ (* 0.0001 0.99) (* 0.9999 0.1))))))
 	  
-(5am:test (infer-posterior :depends-on marginal-likelihood)
-  (let ((prior '(0.0001 0.9999)) 
-	(likelihood '(0.99 0.1)))
-    (let ((evidence (idyom::marginal-likelihood prior likelihood)))
-      (5am:is (equal (infer-posterior evidence prior likelihood)
-		     (list (/ (* 0.0001 0.99) evidence)
-			   (/ (* 0.9999 0.1) evidence)))))))
+;(5am:test (infer-posterior :depends-on marginal-likelihood)
+;  (let ((prior '(0.0001 0.9999)) 
+;	(likelihood '(0.99 0.1)))
+;    (let ((evidence (idyom::marginal-likelihood prior likelihood)))
+;      (5am:is (equal (infer-posterior evidence prior likelihood)
+;		     (list (/ (* 0.0001 0.99) evidence)
+;			   (/ (* 0.9999 0.1) evidence)))))))
 
-(5am:test segment-composition
+(5am:test partition-composition
   (mock-mel-seq (append (iois->onset-events test-iois 16 4)
-			(iois->onset-events test-iois-compound 12 2))
-    (multiple-value-bind (categories segmented-dataset)
-	(idyom::segment-composition () () (coerce mel-seq 'list))
+			(iois->onset-events test-iois-compound 12 2)
+			(iois->onset-events test-iois-compound 16 4))
+    (multiple-value-bind (categories partitioned-dataset)
+	(partition-composition () (coerce mel-seq 'list) (make-instance 'lv::metre))
       ;; All categories appear in categories
       ;; All excerpts in each segment are associated with one category only
       ;; All excerpts in the dataset appear in segmented-composition
-      (5am:is (
       (print categories)
-      (print segmented-dataset))))
+      (print partitioned-dataset))))

@@ -229,10 +229,8 @@ See also VIEWPOINTS:SET-ALPHABET-FROM-CONTEXT."
 ;;; Model Initialisation 
 ;;;========================================================================
 
-(defun make-mvs (basic-viewpoints viewpoints ltms)
-  "Returns an mvs object initialised with <viewpoints>, a list of
-viewpoint objects, <ltm> and <stm> each of which is a list of ppm
-objects."
+(defun make-mvs (basic-viewpoints viewpoints ltms
+		 &key (class 'mvs) class-args)
   (flet ((sanity-check-basic-viewpoints ()
            (dolist (bv basic-viewpoints basic-viewpoints)
              (unless (find (type-of bv) viewpoints 
@@ -252,24 +250,27 @@ objects."
     ;;(format t "~&MAKE-MVS: basic-viewpoints = ~A~&MAKE-MVS: viewpoints = ~A"
     ;;        (sanity-check-basic-viewpoints) 
     ;;        (sanity-check-viewpoints))
-    (let ((mvs (make-instance 'mvs
-                              :basic (sanity-check-basic-viewpoints)
-                              :viewpoints (apply #'vector 
-                                                 (sanity-check-viewpoints))
-                              :ltm (apply #'vector ltms)
-                              :stm (get-short-term-models viewpoints))))
+    (let ((mvs (apply #'make-instance
+		      (append (list class
+				    :basic (sanity-check-basic-viewpoints)
+				    :viewpoints (apply #'vector 
+						       (sanity-check-viewpoints))
+				    :ltm (apply #'vector ltms)
+				    :stm (get-short-term-models viewpoints))
+			      class-args))))
       (set-mvs-parameters mvs)
       mvs)))
-                                   
-(defmethod set-mvs-parameters ((m mvs) &key
-                               (ltm-order-bound *ltm-order-bound*)
-                               (ltm-mixtures *ltm-mixtures*)
-                               (ltm-update-exclusion *ltm-update-exclusion*)
-                               (ltm-escape *ltm-escape*)
-                               (stm-order-bound *stm-order-bound*)
-                               (stm-mixtures *stm-mixtures*)
-                               (stm-update-exclusion *stm-update-exclusion*)
-                               (stm-escape *stm-escape*))
+
+
+(defun set-mvs-parameters-function (m &key
+					(ltm-order-bound *ltm-order-bound*)
+					(ltm-mixtures *ltm-mixtures*)
+					(ltm-update-exclusion *ltm-update-exclusion*)
+					(ltm-escape *ltm-escape*)
+					(stm-order-bound *stm-order-bound*)
+					(stm-mixtures *stm-mixtures*)
+					(stm-update-exclusion *stm-update-exclusion*)
+					(stm-escape *stm-escape*))
   (map 'vector #'(lambda (model)
                    (set-ppm-parameters model :order-bound ltm-order-bound
                                        :mixtures ltm-mixtures
@@ -282,6 +283,19 @@ objects."
                                        :update-exclusion stm-update-exclusion
                                        :escape stm-escape))
        (mvs-stm m)))
+
+(defmethod set-mvs-parameters ((m mvs) &rest parameters
+			       &key &allow-other-keys)
+  (apply #'set-mvs-parameters-function (cons m parameters)))
+  
+(defmethod get-short-term-model ((v viewpoints:viewpoint))
+  (make-ppm (viewpoint-alphabet v)))
+
+(defun get-short-term-models (viewpoints)
+  "Returns a vector of freshly initialised ppm short term models
+corresponding to the supplied list of viewpoints and initialised with
+the supplied parameters."
+  (apply #'vector (mapcar #'get-short-term-model viewpoints)))
                   
 ;;;========================================================================
 ;;; Model Construction and Prediction 
@@ -345,7 +359,7 @@ appropriate sequence index before this method is called."
     (sequence-prediction-sets m sequence (reverse prediction-sets))))
 
 (defmethod model-event ((m mvs) event-array events &key ltm-locations
-                        stm-locations construct? predict?)
+						     stm-locations construct? predict?)
   "Models a vector of events <event-array> appearing at a vector of
 locations (<ltm-locations> and <stm-locations>) in the ltm and stm of
 multiple viewpoint system <m>."

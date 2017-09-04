@@ -12,9 +12,8 @@
            #:inverse-viewpoint-function-defined-p #:basic-element
 	   #:list-viewpoints #:list-basic #:list-derived
 	   #:list-threaded #:list-test #:predictors #:predictable
-           #:attribute-equal #:viewpoint #:viewpoint-equal #:basic-p 
+           #:attribute-equal #:viewpoint #:abstract #:viewpoint-equal #:basic-p 
            #:in-typeset-p #:alphabet->events #:viewpoint-element-equal
-	   #:composition-viewpoint #:dataset-viewpoint
-	   #:latent-variable #:latent-variable-attribute
-	   #:training-viewpoint)
+	   #:composition-viewpoint #:dataset-viewpoint #:latent-variable
+	   #:latent-parameters #:training-viewpoint #:abstract?)
   (:documentation "Multiple viewpoint framework for music representation."))

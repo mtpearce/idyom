@@ -3,32 +3,17 @@
 (5am:def-suite extended-multiple-viewpoint-system)
 (5am:in-suite extended-multiple-viewpoint-system)
 
-(5am:test set-equal
-  (5am:is (not (set-equal nil nil)))
-  (5am:is (set-equal '(a) '(a)))
-  (5am:is (set-equal '(a b) '(b a)))
-  (5am:is (not (set-equal '(a c) '(b a))))
-  (5am:is (not (set-equal '() '(b a))))
-  (5am:is (not (set-equal '(a b) '(b a c))))
-  (5am:is (set-equal (set-equal '(c a b) '(b c a))
-		     '(a b c))))
-  
-(5am:test (filter-and-merge-var-sets :depends-on set-equal)
-  (5am:is (set-equal (filter-and-merge-var-sets '((a) (b)))
-		     '((a) (b)) :test #'set-equal))
-  (5am:is (reduce #'(lambda (a b) (set-equal a b :test #'set-equal))
-		  (list (filter-and-merge-var-sets '((a) (a b)))
-			(filter-and-merge-var-sets '((a b) (b)))
-			'((a b)))))
-  (5am:is (reduce #'(lambda (a b) (set-equal a b :test #'set-equal))
-		  (list (filter-and-merge-var-sets '((a b) (b c)))
-			(filter-and-merge-var-sets '((b c) (a b)))
-			'((a b c)))))
-  (5am:is (reduce #'(lambda (a b) (set-equal a b :test #'set-equal))
-		  (list (filter-and-merge-var-sets '((a b) (b) (a)))
-			(filter-and-merge-var-sets '((a) (b) (a b)))
-			'((a b)))))
-  (5am:is (reduce #'(lambda (a b) (set-equal a b :test #'set-equal))
-		  (list (filter-and-merge-var-sets '((a) (b) (b c)))
-			(filter-and-merge-var-sets '((b c) (b) (a)))
-			'((a) (b c))))))
+;;; GENERATIVE MULTIPLE VIEWPOINT SYSTEMS
+
+(5am:test get-short-term-models
+  (let ((viewpoints (viewpoints:get-viewpoints '(metpos)))
+	(latent-variables (lv:get-latent-variables '(metre))))
+    (loop for viewpoint in viewpoints for latent-variable in latent-variables do
+	 (setf (lv:categories latent-variable) '((4 2) (3 2)))
+	 (setf (viewpoints:latent-variable viewpoint) latent-variable))
+    (let ((stms (get-short-term-models viewpoints)))
+      (5am:is (eq (array-dimension stms 0) (length viewpoints)))
+      (5am:is (eq (type-of (cdr (assoc '(4 2) (aref stms 0) :test #'equal))) 'ppm-star:ppm))
+      (5am:is (eq (type-of (cdr (assoc '(3 2) (aref stms 0) :test #'equal))) 'ppm-star:ppm)))))
+
+

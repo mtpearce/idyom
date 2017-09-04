@@ -42,6 +42,9 @@
    (element   :accessor prediction-element :initarg :element)
    (set       :accessor prediction-set :initarg :set :type list)))
 
+(defclass marginal-event-prediction (event-prediction)
+  ((prior     :accessor prior :initarg :order)))
+
 (defun make-dataset-prediction (&key viewpoint set basic-viewpoint)
   (make-instance 'dataset-prediction :viewpoint viewpoint :set set 
                  :basic-viewpoint basic-viewpoint))
@@ -56,6 +59,33 @@
                  :set set :event event :weights weights 
                  :order order :basic-viewpoint basic-viewpoint))
 
+(defun marginal-likelihood (prior-distribution likelihood-distribution)
+  (apply #'+
+	 (mapcar (lambda (prior likelihood) (* prior likelihood))
+		 prior-distribution likelihood-distribution)))
+
+(defun make-marginal-event-prediction (prior events event-predictions basic-viewpoint)
+  (when (string-equal (viewpoint-name basic-viewpoint) "onset")
+    (viewpoints:set-onset-alphabet (butlast events)))
+  (let ((distribution-symbols (viewpoint-alphabet basic-viewpoint))
+	(distribution))
+    (loop for symbol in distribution-symbols collect
+	 (let ((likelihood 
+		(marginal-likelihood prior
+				     (mapcar (lambda (ep) (cadr (assoc symbol
+								       (prediction-set ep)
+								       :test #'equal)))
+					     event-predictions))))
+	   (push (list symbol likelihood) distribution)))
+    (make-instance 'marginal-event-prediction
+		   :basic-viewpoint basic-viewpoint
+		   :viewpoint (prediction-viewpoint (car event-predictions))
+		   :event (car (last events))
+		   :weights (mapcar #'prediction-weights event-predictions)
+		   :order (mapcar #'prediction-order event-predictions)
+		   :element (viewpoint-element basic-viewpoint events)
+		   :set distribution)))
+  
 ;;;========================================================================
 ;;; Entropies for dataset and sequence prediction sets
 ;;;========================================================================
@@ -98,6 +128,18 @@
 (defmethod sequence-probability ((s sequence-prediction))
   (let ((predictions (mapcar #'event-prediction (prediction-set s))))
     (reduce #'* predictions :key #'(lambda (x) (nth 1 x)))))
+
+(defmethod prediction-set->likelihoods ((prediction-sets list))
+  (mapcar #'prediction-set->likelihoods prediction-sets))
+
+(defmethod prediction-set->likelihoods ((sequence-prediction sequence-prediction))
+  (mapcar #'cadr (event-predictions sequence-prediction)))
+
+(defmethod prediction-set->likelihoods ((dataset-prediction dataset-prediction))
+  (mapcar #'prediction-set->likelihoods (prediction-set dataset-prediction)))
+
+(defmethod prediction-set->likelihoods ((prediction-set event-prediction))
+  (cadr (event-prediction prediction-set)))
   
 ;;;========================================================================
 ;;; Functions for distributions 

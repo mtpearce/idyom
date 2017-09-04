@@ -47,28 +47,28 @@
 
 (5am:test metpos-viewpoint
   (mock-mel-seq
-   (lv:with-latent-state (list :barlength (crotchets-dur 4) :phase (crotchets-dur 0))
+   (lv::with-latent-state (list :barlength (crotchets-dur 4) :phase (crotchets-dur 0))
      (test-viewpoint mel-seq 'metpos
 		     (mapcar #'crotchets-dur (list 0 1 (+ 1 (/ 1 2)) 2 3 1 2))))
-   (lv:with-latent-state (list :barlength (crotchets-dur 4) :phase (crotchets-dur 1))
+   (lv::with-latent-state (list :barlength (crotchets-dur 4) :phase (crotchets-dur 1))
      (test-viewpoint mel-seq 'metpos
 		     (mapcar #'crotchets-dur (list 3 0 (+ 0 (/ 1 2)) 1 2 0 1))))))
 
 (5am:test bardist-viewpoint
   (mock-mel-seq
-   (lv:with-latent-state (list :barlength (crotchets-dur 4) :phase (crotchets-dur 0))
+   (lv::with-latent-state (list :barlength (crotchets-dur 4) :phase (crotchets-dur 0))
      (test-viewpoint mel-seq 'bardist '(1 0 0 0 0 1 0)))
-   (lv:with-latent-state (list :barlength (crotchets-dur 4) :phase (crotchets-dur 1))
+   (lv::with-latent-state (list :barlength (crotchets-dur 4) :phase (crotchets-dur 1))
      (test-viewpoint mel-seq 'bardist '(1 1 0 0 0 1 0)))))
 
 (5am:test (bardist-metpos-viewpoint
 	   :depends-on (and . (bardist-viewpoint metpos-viewpoint)))
   (mock-mel-seq
-   (lv:with-latent-state (list :barlength (crotchets-dur 4) :phase (crotchets-dur 0))
+   (lv::with-latent-state (list :barlength (crotchets-dur 4) :phase (crotchets-dur 0))
      (test-viewpoint mel-seq '(bardist metpos)
 		     (mapcar #'list '(1 0 0 0 0 1 0)
 			     (mapcar #'crotchets-dur (list 0 1 (+ 1 (/ 1 2)) 2 3 1 2)))))
-   (lv:with-latent-state (list :barlength (crotchets-dur 4) :phase (crotchets-dur 1))
+   (lv::with-latent-state (list :barlength (crotchets-dur 4) :phase (crotchets-dur 1))
      (test-viewpoint mel-seq '(bardist metpos)
 		     (mapcar #'list '(1 1 0 0 0 1 0)
 			     (mapcar #'crotchets-dur (list 3 0 (+ 0 (/ 1 2)) 1 2 0 1)))))))

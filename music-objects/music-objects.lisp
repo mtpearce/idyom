@@ -677,7 +677,7 @@ scale. Show a warning when the resulting time is not a whole number."
   (if (or (null value) (null timebase))
       nil
       (let ((multiplier (/ *md-timebase* timebase)))
-	(* value multiplier)))) 
+	(* value multiplier))))
 
 
 

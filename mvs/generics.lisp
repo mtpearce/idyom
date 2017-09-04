@@ -14,12 +14,14 @@
 (defgeneric event-prediction (event-prediction))
 (defgeneric event-predictions (prediction))
 (defgeneric sequence-probability (sequence-prediction))
+(defgeneric prediction-set->likelihoods (prediction-set))
 
 (cl:in-package #:multiple-viewpoint-system)
 
 (defgeneric count-viewpoints (mvs))
 (defgeneric get-event-array (mvs sequence))
 (defgeneric operate-on-models (mvs operation &key models ltm-args stm-args))
+(defgeneric get-short-term-model (viewpoint))
 (defgeneric set-model-alphabets (mvs event events viewpoint ltm stm 
                                      unconstrained))
 (defgeneric get-basic-viewpoint (mvs derived-viewpoint))
@@ -27,7 +29,8 @@
 (defgeneric dataset-prediction-sets (mvs sequence-prediction-sets))
 (defgeneric set-mvs-parameters (mvs &key ltm-order-bound ltm-mixtures
                                 ltm-update-exclusion ltm-escape stm-order-bound
-                                stm-mixtures stm-update-exclusion stm-escape))
+				      stm-mixtures stm-update-exclusion stm-escape))
+
 
 (defgeneric model-event (model event events &key construct? predict? 
                          &allow-other-keys))
