@@ -62,6 +62,7 @@
 	(setf (%viewpoint-alphabet v) (acons category alphabet alphabets))
 	(rplacd place alphabet))))
 
+
 (defmethod training-viewpoint ((a abstract-linked))
   (let ((links (viewpoint-links a)))
     (mapcar (lambda (link) (if (abstract? link)

@@ -115,7 +115,7 @@ in <events>."
   ;;                (onset (+ (md:get-attribute last-event :onset)
   ;;                          (md:get-attribute last-event :dur))))
   ;;           (mapcar #'(lambda (a) (+ onset a)) deltast-alphabet)))))
-  ;; Based on BIOI alphabet 
+  ;; Based on BIOI alphabet
   (let ((bioi-alphabet (remove nil (viewpoint-alphabet (get-viewpoint 'bioi)))))
     (if (null previous-events) bioi-alphabet
         (let* ((last-event (car (reverse previous-events)))

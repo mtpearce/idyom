@@ -275,13 +275,13 @@ are the same, returns T, otherwise NIL."
 
 
 ;;;=====================
-;;;* Generative systems*
+;;; *Generative systems*
 ;;;=====================
 
 (5am:def-suite generative-systems :in resampling)
 (5am:in-suite generative-systems)
 
-(5am:test (filter-and-merge-var-sets :depends-on utils::set-equal)
+(5am:test (filter-and-merge-var-sets :depends-on set-equal)
   (5am:is (set-equal (filter-and-merge-var-sets '((a) (b)))
 		     '((a) (b)) :test #'set-equal))
   (5am:is (reduce #'(lambda (a b) (set-equal a b :test #'set-equal))
@@ -308,15 +308,18 @@ are the same, returns T, otherwise NIL."
 	 (test-variable-attributes-2 '(key))
 	 (variables-1 (lv:get-latent-variables test-variable-attributes-1))
 	 (variables-2 (lv:get-latent-variables test-variable-attributes-2)))
-  (5am:is ((align-variables-with-viewpoints viewpoints variables-1)
-  ;; TODO
-  nil)
+  (5am:is ((align-variables-with-viewpoints viewpoints variables-1)))))
+
 
 (5am:test (create-generative-systems
 	   :depends-on (and . (filter-and-merge-var-sets
-			       align-variables-with-viewpoints)))
-  ;; TODO
-  nil)
+			       align-variables-with-viewpoints))))
+(5am:test partition-dataset)
+(5am:test partition-composition)
+(5am:test make-viewpoint-model)
+(5am:test make-abstract-viewpoint-model)
+(5am:test get-long-term-models)
+(5am:test get-long-term-generative-models)
 
 ;; Example composition 1
 

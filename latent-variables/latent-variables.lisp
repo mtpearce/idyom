@@ -2,9 +2,45 @@
 
 (define-latent-variable metre (:barlength :pulses) (:barlength :phase))
 
-; Extension of metre with different method of prior calculation
-(defclass metre-phase (metre) ())
+(defmethod get-latent-states (category (v metre))
+  (let ((barlength (get-category-parameter category :barlength v)))
+    (loop for phase below barlength collecting
+       (create-latent-state v category :phase phase))))
+
+(defclass metre-phase (metre) ()
+  (:documentation "Like metre, but calculates the prior distribution
+based on the relative frequency of phases in the training data."))
+
+(defmethod get-prior-distribution (training-data categories
+					  (v metre-phase))
+  (let* ((category-counts (mapcar #'length training-sets))
+	 (observation-count (apply #'+ category-counts))
+	 (distribution))
+    (loop for category in categories
+       for category-count in category-counts
+       for training-set in training-sets do
+	 (let* ((category-rel-freq (/ category-count observation-count))
+		(phases
+		 (mapcar #'(lambda (event-sequence) (md:bioi (first event-sequence)))
+			 training-set))
+		(phase-counts (utils:count-frequencies phases #'<)))
+	   (loop for phase-count in phase-counts do
+		(let ((phase (car phase-count))
+		      (count (cdr phase-count)))
+		  (let ((phase-rel-freq (/ count category-count)))
+		    (push (cons (create-latent-state v category
+						      :phase phase)
+				(* category-rel-freq phase-rel-freq))
+			  distribution))))))
+    distribution))
 
 (define-latent-variable key () (:keysig))
 
-(define-latent-variable style (:style) (:style))
+(defmethod get-latent-states (category (v key))
+  (loop for key below 12 collecting
+       (create-latent-state v category :keysig key)))
+
+(define-latent-variable style (:style) ())
+
+(defmethod get-latent-states (category (v style))
+  (create-latent-state category v))

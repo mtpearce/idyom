@@ -6,14 +6,26 @@
 (defmethod latent-variable-attribute ((l linked))
   (mapcar #'latent-variable-attribute (latent-variable-links l)))
 
+(defmethod category-parameters ((l linked))
+  (let ((parameters (reduce #'union
+			    (mapcar #'category-parameters
+				    (latent-variable-links l)))))
+    (utils:sort-symbols (copy-list parameters))))
+
+(defmethod interpretation-parameters ((l linked))
+  (let ((parameters (reduce #'union (mapcar #'interpretation-parameters
+					    (latent-variable-links l)))))
+    (utils:sort-symbols (copy-list parameters))))
+
+(defmethod latent-state-parameters ((v latent-variable))
+  (utils:sort-symbols (copy-list (append (category-parameters v)
+					 (interpretation-parameters v)))))
+
 (defmethod latent-variable-name ((l latent-variable))
   (string-downcase (symbol-name (latent-variable-attribute l))))
 
 (defmethod latent-variable-name ((l linked))
   (format nil "~{~A~^-~}" (latent-variable-attribute l)))
-
-(defmethod latent-state-parameters ((v latent-variable))
-  (union (category-parameters v) (interpretation-parameters v)))
 
 (defmethod get-category-parameter (category parameter (v latent-variable))
   (let ((param-category (utils:make-plist (category-parameters v) category)))
@@ -32,37 +44,75 @@
   (mapcar #'(lambda (param) (getf latent-state param))
 	  (interpretation-parameters v)))
 
-(defmethod get-sub-category (category (sub-v latent-variable) (l latent-variable))
+(defmethod get-link-category ((l latent-variable) category (link latent-variable))
   category)
 
-(defmethod get-sub-category (category (sub-v latent-variable) (l linked))
+(defmethod get-link-category ((l linked) category (link latent-variable))
+  (unless (member (type-of link) (latent-variable-links l) :key #'type-of)
+    (warn "Attempt to get category of latent variable ~a from category of ~a while
+~2:*~a is not a link of ~a" (latent-variable-name link) (latent-variable-name l)))
   (let ((annotated-latent-state (utils:make-plist (category-parameters l)
 						  category)))
     (mapcar #'(lambda (p) (getf annotated-latent-state p))
-	    (category-parameters sub-v))))
+	    (category-parameters link))))
 	 
 
 (defmethod get-event-category (event (v latent-variable))
-  (let ((event-attributes (mapcar #'(lambda (attrib)
+  (let ((attribute-names (mapcar #'(lambda (attrib)
 				      (symbol-name attrib))
 				  (category-parameters v))))
-    (loop for attrib in event-attributes collect
-	 (apply (find-symbol attrib (find-package :md)) (list event)))))
+    (loop for name in attribute-names collect
+	 (apply (find-symbol name (find-package :md)) (list event)))))
 
-(defmethod create-interpretation ((v latent-variable)
-				  &rest keys &key &allow-other-keys)
-  (mapcar (lambda (key) (getf keys key)) (interpretation-parameters v)))
+(defmethod create-category ((v latent-variable) &rest parameters)
+  (mapcar (lambda (parameter) (getf parameters parameter))
+	  (category-parameters v)))
 
-(defmethod create-latent-state (category interpretation (v latent-variable))
+(defmethod create-latent-state ((v latent-variable) category
+				&rest interpretation-parameters)
   (let ((parameters (append (utils:make-plist (category-parameters v) category)
-			    (utils:make-plist (interpretation-parameters v) interpretation))))
+			    interpretation-parameters)))
     (mapcar (lambda (param) (getf parameters param))
 	    (latent-state-parameters v))))
+
+
+(defmethod get-link-categories ((variable latent-variable) (link latent-variable))
+  (remove-duplicates
+   (mapcar (lambda (category)
+	     (get-link-category variable category link))
+	   (categories variable))
+   :test #'equal))
+
+(defmethod set-link-categories ((variable latent-variable))
+  "Nothing needs to be done here.")
   
+(defmethod set-link-categories ((variable linked))
+  "This method determines the unique categories of <variable> that are represented in 
+the categories of <variable> and sets the *category* slots of <link>."
+  (dolist (link (latent-variable-links variable))
+    (setf (categories link)
+	  (get-link-categories variable link))))
+
 (defmethod initialise-prior-distribution (training-data
 					  (v latent-variable))
-  (let* ((categories (mapcar #'car training-data))
-	 (category-counts (mapcar #'length training-data))
+  "Retrieves the prior distribution based on <training-data> using the 
+GET-PRIOR-DISTRIBUTION method of <v> and sets the *prior-distribution* slot 
+of <v> as well as the *categories* slot of <v>."
+  (let ((categories (mapcar #'car training-data))
+	(training-data (mapcar #'cdr training-data)))
+    (setf (prior-distribution v)
+	  (get-prior-distribution training-data categories v))
+    (setf (categories v) categories)))
+  
+(defmethod get-prior-distribution (training-data categories
+				   (v latent-variable))
+  "This method implements a default strategy for estimating the prior distribution of
+a latent variable <v> based on <training-data> which is a list whose elements are lists
+of all events sequences in the category at the same serial position in <categories>.
+The relative frequency of each category is determed, each interpretation
+ of each category is assigned a probability of relative to the category's relative frequency and
+ the resulting distribution is re-normalised."
+  (let* ((category-counts (mapcar #'length training-data))
 	 (total-observations (apply #'+ category-counts))
 	 (latent-states) (distribution))
     (loop for category in categories for count in category-counts do
@@ -75,77 +125,29 @@
 	    (let ((scaling (apply #' + distribution)))
 	      (mapcar #'(lambda (p) (/ p scaling)) distribution)))))
 
+(defmethod get-latent-states (category (v latent-variable))
+  (list category))
+
 (defmethod get-latent-states (category (l linked))
-  (let* ((variables (latent-variable-links l))
-	 (categories (mapcar #'(lambda (var) (loop for param in (category-parameters var)
-						collect (get-category-parameter category
-										param l)))
-			     variables)) ; The category of each variable
+  (let* ((links (latent-variable-links l))
+	 ;; Obtain the category of each individual variable as encoded in the linked
+	 ;; category
+	 (categories (mapcar #'(lambda (link) (get-link-category l category link))
+			     links))
+	 ;; Obtain the latent states for each variable
 	 (latent-states (mapcar #'(lambda (var category) (get-latent-states category var))
-				variables categories)) ; Latent states for each variable
-	 (combined-latent-states (print (apply #'utils:cartesian-product latent-states)))
-	 ;; So ugly...
+				links categories))
+	 ;; Obtain all possible combinations of latent-states
+	 (combined-latent-states (apply #'utils:cartesian-product latent-states))
 	 (combined-latent-states (mapcar (lambda (combined-latent-state)
 					   (apply #'append
-						  (mapcar (lambda (latent-state var)
+						  (mapcar (lambda (latent-state link)
 							    (utils:make-plist
-							     (latent-state-parameters var)
+							     (latent-state-parameters link)
 							     latent-state))
-							  combined-latent-state variables)))
+							  combined-latent-state links)))
 					 combined-latent-states)))
     (loop for latent-state in combined-latent-states collect
 	 (loop for param in (latent-state-parameters l) collect
 	      (getf latent-state param)))))
 
-;;;;;; METRE ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defmethod get-latent-states (category (v metre))
-  (let ((barlength (get-category-parameter category :barlength v)))
-    (loop for phase below barlength collecting
-       (create-latent-state category
-			    (create-interpretation v :barlength barlength :phase phase)
-			    v))))
-
-;;;;;; METRE (empirical phase prior) ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defmethod initialise-prior-distribution (training-data
-					  (v metre-phase))
-  (let* ((categories (mapcar #'car training-data))
-	 (training-sets (mapcar #'cdr training-data))
-	 (category-counts (mapcar #'length training-sets))
-	 (observation-count (apply #'+ category-counts))
-	 (distribution))
-    (loop for category in categories
-       for category-count in category-counts
-       for training-set in training-sets do
-	 (let* ((category-rel-freq (/ category-count observation-count))
-		(phases
-		 (mapcar #'(lambda (event-sequence) (md:bioi (first event-sequence)))
-			 training-set))
-		(phase-counts (utils:count-frequencies phases #'<)))
-	   (loop for phase-count in phase-counts do
-		(let ((phase (car phase-count))
-		      (count (cdr phase-count)))
-		  (let ((phase-rel-freq (/ count category-count)))
-		    (push (cons (create-latent-state category
-						     (create-interpretation
-						      v :barlength
-						      (get-category-parameter
-						       category :barlength v)
-						      :phase phase) v)
-				(* category-rel-freq phase-rel-freq))
-			  distribution))))))
-    distribution))
-	   
-;;;;;; KEY ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defmethod get-latent-states (category (v key))
-  (loop for key below 12 collecting
-       (create-latent-state category
-			    (create-interpretation v :keysig key)
-			    v)))
-
-;;;;;; STYLE ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defmethod get-latent-states (category (v style))
-  (create-latent-state category nil v))

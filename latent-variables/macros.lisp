@@ -22,16 +22,16 @@
 					 ,category)))
     `(with-latent-state ,latent-state ,@body)))
 
-(defmacro with-latent-interpretation (interpretation variable &body body)
-  (let ((latent-state (utils:make-plist (interpretation-parameters variable)
-					interpretation)))
+(defmacro with-latent-interpretation ((interpretation variable) &body body)
+  (let ((latent-state `(utils:make-plist (interpretation-parameters ,variable)
+					,interpretation)))
     `(with-latent-state ,latent-state ,@body)))
 
 (defmacro define-latent-variable (name category-parameters interpretation-parameters)
-  `(defclass ,name (latent-variable)
-     ((interpretation-parameters :reader interpretation-parameters
-				 :initform '(,@interpretation-parameters)
-				 :allocation :class)
-      (category-parameters :reader category-parameters
-			   :initform '(,@category-parameters)
-			   :allocation :class))))
+  `(progn 
+     (defclass ,name (latent-variable) ())
+     (defmethod category-parameters ((v ,name))
+       ',(utils:sort-symbols category-parameters))
+     (defmethod interpretation-parameters ((v ,name))
+       ',(utils:sort-symbols interpretation-parameters))))
+

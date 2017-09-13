@@ -69,45 +69,37 @@
          (sources (get-viewpoints source-viewpoints))
 	 (abstract-sources (remove-if (lambda (s) (not (viewpoints:abstract? s)))
 				      sources))
-	 (all-targets
+	 (targets
           (viewpoints:get-basic-viewpoints target-viewpoints (append dataset pretraining-set)))
-	 ;; target viewpoints not predicted by
-	 (targets (remove-if (lambda (b) (find (type-of b) abstract-sources
-					       :key #'viewpoints:viewpoint-typeset
-					       :test #'(lambda (x y) (member x y))))
-			     all-targets))
-	 (sources (remove-if (lambda (v) (viewpoints:abstract? v))
-			     sources)))
+	 ;; resampling sets
+	 (k (if (eq k :full) (length dataset) k))
+	 (resampling-sets (get-resampling-sets dataset-id :k k
+					       :use-cache? use-resampling-set-cache?))
+	 (resampling-id 0)
+	 ;; If no resampling sets specified, then use all sets
+	 (resampling-indices (if (null resampling-indices)
+				 (utils:generate-integers 0 (1- k))
+				 resampling-indices))
+	 ;; the result
+	 (sequence-predictions))
     (multiple-value-bind (target-sets source-sets latent-variable-groups mvs-latent-variables)
-	(create-generative-systems all-targets abstract-sources latent-variables)
-      (let* (;; resampling sets
-	     (k (if (eq k :full) (length dataset) k))
-	     (resampling-sets (get-resampling-sets dataset-id :k k
-						   :use-cache? use-resampling-set-cache?))
-	     (resampling-id 0)
-	     ;; If no resampling sets specified, then use all sets
-	     (resampling-indices (if (null resampling-indices)
-				     (utils:generate-integers 0 (1- k))
-				     resampling-indices))
-	     ;; the result
-	     (sequence-predictions))
-	(dolist (resampling-set resampling-sets sequence-predictions)
-	  ;; (format t "~&~0,0@TResampling set ~A: ~A~%" resampling-id resampling-set)
+	(create-generative-systems targets abstract-sources latent-variables)
+      (dolist (resampling-set resampling-sets sequence-predictions)
+	;; (format t "~&~0,0@TResampling set ~A: ~A~%" resampling-id resampling-set)
 					;(format t "~&Resampling ~A" resampling-id)
-	  (when (member resampling-id resampling-indices)
-	    (let* ((training-set (get-training-set dataset resampling-set))
-		   (training-set (monodies-to-lists (append pretraining-set training-set)))
-		   (test-set (monodies-to-lists (get-test-set dataset resampling-set)))
-		   (model-training-sets (mapcar #'(lambda (latent-variable)
-						    (partition-dataset dataset
-								       latent-variable))
-						mvs-latent-variables))
-		   (prior-distributions
-		    (mapcar (lambda (training-data latent-variable)
-			      (lv:initialise-prior-distribution training-data
-								latent-variable))
-			    model-training-sets mvs-latent-variables))
-		   (generative-ltms (mapcar #'(lambda (sources latent-variables
+	(when (member resampling-id resampling-indices)
+	  (let* ((training-set (get-training-set dataset resampling-set))
+		 (training-set (monodies-to-lists (append pretraining-set training-set)))
+		 (test-set (monodies-to-lists (get-test-set dataset resampling-set)))
+		 (model-training-sets (mapcar #'(lambda (latent-variable)
+						  (partition-dataset dataset
+								     latent-variable))
+					      mvs-latent-variables)))
+	    ;; Initialize prior distributions
+	    (loop for training-data in model-training-sets
+	       for latent-variable in mvs-latent-variables do
+		 (lv:initialise-prior-distribution training-data latent-variable))
+	    (let* ((generative-ltms (mapcar #'(lambda (sources latent-variables
 						       latent-variable partitioned-training-set)
 						(get-long-term-generative-models
 						 sources latent-variables
@@ -119,25 +111,24 @@
 						 use-ltms-cache?))
 					    source-sets latent-variable-groups
 					    mvs-latent-variables model-training-sets))
-		   (ltms (get-long-term-models sources training-set
+		   (ltms (get-long-term-models (remove-if (lambda (v)
+							    (viewpoints:abstract? v))
+							  sources)
+					       training-set
 					       pretraining-ids dataset-id
 					       resampling-id k 
 					       voices texture
 					       use-ltms-cache?))
-		   (mvs (let ((mvs (unless (null targets) (make-mvs targets sources ltms)))
-			      (generative-mvs-models
-			       (mvs:make-generative-mvs-models target-sets source-sets
-							       latent-variable-groups
-							       mvs-latent-variables
-							       generative-ltms
-							       prior-distributions)))
-			  (if (null abstract-sources) mvs
-			      (mvs:make-combined-mvs all-targets
-						     mvs generative-mvs-models))))
+		   (mvs (mvs:get-predictive-system targets sources
+						   target-sets source-sets
+						   latent-variable-groups
+						   mvs-latent-variables
+						   ltms
+						   generative-ltms))
 		   (predictions
 		    (mvs:model-dataset mvs test-set :construct? t :predict? t)))
-	      (push predictions sequence-predictions)))
-	  (incf resampling-id))))))
+	      (push predictions sequence-predictions))))
+	(incf resampling-id)))))
 
 (defun align-variables-with-viewpoints (viewpoints latent-variables)
   (let* ((viewpoint-parameters (mapcar #'viewpoints:latent-parameters viewpoints)))
@@ -155,7 +146,7 @@
 						(find-matching-variable parameter-set
 									latent-variables))
 					    parameter-set))))
-		   (if (eq (length attributes) 1) (first attributes) attributes))))))))qq
+		   (if (eq (length attributes) 1) (first attributes) attributes))))))))
 
 (defun atoms->unit-sets (l)
   (mapcar #'(lambda (item) (if (atom item) (list item) item)) l))
@@ -538,19 +529,18 @@ is a list of composition prediction sets, ordered by composition ID."
 
 (defun make-abstract-viewpoint-model (viewpoint latent-variable training-sets
 				      cache-params use-cache?)
-  (let* ((training-viewpoint (viewpoints:get-viewpoint
-			      (viewpoints:training-viewpoint viewpoint)))
-	 (categories (mapcar #'car training-sets)))
-    (setf (lv:categories latent-variable) categories)
+  (let* ((training-attribute (viewpoints:training-viewpoint viewpoint))
+	 (training-viewpoint (viewpoints:get-viewpoint training-attribute)))
     (loop for training-set in training-sets collect
 	 (let ((category (car training-set))
 	       (training-set (cdr training-set)))
-	   (cons category (make-viewpoint-model training-viewpoint training-set
-						(append cache-params
-							(list category
-							      (lv:latent-variable-name
-							       latent-variable)))
-						use-cache?))))))
+	   (cons category
+		 (make-viewpoint-model training-viewpoint training-set
+				       (append cache-params
+					       (list category
+						     (lv:latent-variable-name
+						      latent-variable)))
+				       use-cache?))))))
 
 (defun make-viewpoint-model (viewpoint training-set cache-params use-cache?)
   (if use-cache?
@@ -571,30 +561,35 @@ is a list of composition prediction sets, ordered by composition ID."
 					resampling-count
 					voices texture
 					use-cache?)
-  (let* ((categories (mapcar #'car partitioned-training-set)))
-    (setf (lv:categories mvs-latent-variable) categories)
-    (flet ((get-viewpoint-categories (latent-variable)
-	     (remove-duplicates (mapcar #'(lambda (category)
-					    (lv:get-sub-category category
-								 latent-variable
-								 mvs-latent-variable))
-					categories)
-				:test #'equal))
-	   (get-viewpoint-training-set (partitioned-training-set viewpoint-categories
-								 latent-variable)
-	     (loop for category in viewpoint-categories collect
-		  (apply #' append
-			    (loop for partition in partitioned-training-set
-			       if (eq (lv:get-sub-category (car partition) latent-variable
-							   mvs-latent-variable)
-				      category) collect (cons category (cdr partition)))))))
-      (let* ((viewpoint-categories (mapcar #'get-viewpoint-categories
-					   viewpoint-latent-variables))
-	     (training-sets (mapcar #'(lambda (lv viewpoint-categories)
-					(get-viewpoint-training-set partitioned-training-set
-								    viewpoint-categories
-								    lv))
-				    viewpoint-latent-variables viewpoint-categories)))
+  "Given a set of abstract viewpoints, <viewpoints>; a set of latent variables aligned to 
+<viewpoints>, <viewpoint-latent-variables>; a dataset partitioned by categories of 
+<mvs-latent-variable>, <partitioned-dataset>; a latent variable representing slots of the 
+(joint) distribution modelled by the generative system, <mvs-latent-variable>; and 
+remaining cache-related arguments, do the following for each latent variable and viewpoint
+pair: 
+1. Construct a partitioned training-set containing the categories of that specific latent
+variable by 'marginalising' over the categories of <partitioned-training-set> (i.e., merging
+all <mvs-latent-variable> categories that subsume the same category of this specific latent
+variable).
+2. Call MAKE-ABSTRACT-VIEWPOINT-MODEL for the resulting viewpoint-dataset pairs.
+In addition, set the *categories* slot of <mvs-latent-variable> to the categories found in
+<partitioned-training-set> and initialise the prior distribution of <mvs-latent-variable> 
+by calling INITIALISE-PRIOR-DISTRIBUTION. The *categories* slot of the individual 
+latent-variables are set by MAKE-ABSTRACT-VIEWPOINT-MODEL.
+Return a list with long-term generative models for each viewpoint in <viewpoints>."
+(lv:initialise-prior-distribution partitioned-training-set mvs-latent-variable)
+(lv:set-link-categories mvs-latent-variable)
+(flet ((get-training-set (partitioned-training-set latent-variable)
+	 (loop for category in (lv:categories latent-variable) collect
+	      (apply #'append
+		     (loop for partition in partitioned-training-set
+			if (eq (lv:get-link-category mvs-latent-variable
+						     (car partition)
+						     latent-variable)
+			       category) collect (cons category (cdr partition)))))))
+  (let* ((training-sets (mapcar #'(lambda (lv)
+				    (get-training-set partitioned-training-set lv))
+				viewpoint-latent-variables)))
 	(mapcar #'(lambda (viewpoint latent-variable training-set)
 		    (make-abstract-viewpoint-model viewpoint latent-variable
 						   training-set (list pretraining-ids
@@ -602,7 +597,7 @@ is a list of composition prediction sets, ordered by composition ID."
 								      resampling-count 
 								      voices texture)
 						   use-cache?))
-		viewpoints viewpoint-latent-variables training-sets)))))
+		viewpoints viewpoint-latent-variables training-sets))))
 
 (defun get-long-term-models (viewpoints training-set pretraining-ids
                              training-id resampling-id

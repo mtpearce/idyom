@@ -64,23 +64,22 @@
 	    :components
 	    ((:file "package")
 	     (:file "classes")
-	     (:file "macros")
-	     (:file "latent-variables")
 	     (:file "generics")
 	     (:file "methods")
 	     (:file "functions")
+	     (:file "macros")
+	     (:file "latent-variables")
 	     (:file "tests")))
    ;; Viewpoints
    (:module viewpoints
 	    :serial t
 	    :components
 	    ((:file "package")
-	     (:file "generics")
+'	     (:file "generics")
 	     (:file "classes")
 	     (:file "methods")
 	     (:file "functions")
 	     (:file "macros")
-	     (:file "abstract-viewpoints-tests")
              (:module melody :serial t
 		      :components
 		      ((:file "basic-viewpoints")

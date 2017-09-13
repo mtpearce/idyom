@@ -8,7 +8,8 @@
 	   #:abstract? #:get-latent-variable #:get-latent-variables
 	   #:get-latent-category #:get-latent-interpretation
 	   #:get-interpretation #:get-category #:get-event-category
-	   #:get-sub-category #:get-latent-states #:interpretation-parameters
-	   #:categories #:latent-states #:prior-distribution
+	   #:get-link-category #:get-link-categories #:get-latent-states
+	   #:interpretation-parameters #:set-link-categories
+	   #:categories #:prior-distribution
 	   #:initialise-prior-distribution)
   (:documentation ""))

@@ -337,7 +337,7 @@ appropriate sequence index before this method is called."
              (construct? (if (< event-index construct-from) nil construct?))
              (predict? (if (< event-index predict-from) nil predict?)))
 ;;         (set-model-alphabets m event-array events 
-;;                              *marginalise-using-current-event*)
+	;;                              *marginalise-using-current-event*)
         (multiple-value-bind (ltm-next-locations stm-next-locations
                               ltm-prediction-sets stm-prediction-sets)
             (model-event m event-array events :ltm-locations ltm-locations 
@@ -380,14 +380,14 @@ multiple viewpoint system <m>."
           (when (and *debug* predict?) (format t "~&LTM: ~S" (viewpoints:viewpoint-name viewpoint)))
           (multiple-value-bind (ltm-next-location ltm-distribution ltm-order)
               (ppm:ppm-model-event ltm event :location ltm-location 
-                               :construct? (and construct? 
-                                                (or (eq *models* :ltm+)
-                                                    (eq *models* :both+)))
-                               :predict? (and predict? 
-                                              (or (eq *models* :ltm+)
-                                                  (eq *models* :ltm)
-                                                  (eq *models* :both)
-                                                  (eq *models* :both+))))
+				   :construct? (and construct? 
+						    (or (eq *models* :ltm+)
+							(eq *models* :both+)))
+				   :predict? (and predict? 
+						  (or (eq *models* :ltm+)
+						      (eq *models* :ltm)
+						      (eq *models* :both)
+						      (eq *models* :both+))))
             (setf (aref ltm-locations i) ltm-next-location)
             (when (and *debug* predict?) (format t "~&ltm-distribution = ~&~A~%" ltm-distribution))
             (push (make-event-prediction :order ltm-order
@@ -400,13 +400,13 @@ multiple viewpoint system <m>."
           (when (and *debug* predict?) (format t "~&STM: ~S" (viewpoints:viewpoint-name viewpoint)))
           (multiple-value-bind (stm-next-location stm-distribution stm-order)
               (ppm:ppm-model-event stm event :location stm-location 
-                               :construct? (or (eq *models* :stm)
-                                               (eq *models* :both) 
-                                               (eq *models* :both+))
-                               :predict? (and predict? 
-                                              (or (eq *models* :stm)
-                                                  (eq *models* :both) 
-                                                  (eq *models* :both+))))
+				   :construct? (or (eq *models* :stm)
+						   (eq *models* :both) 
+						   (eq *models* :both+))
+				   :predict? (and predict? 
+						  (or (eq *models* :stm)
+						      (eq *models* :both) 
+						      (eq *models* :both+))))
             (setf (aref stm-locations i) stm-next-location)
             (when (and *debug* predict?) (format t "~&stm-distribution = ~&~A~%" stm-distribution))
             (push (make-event-prediction :order stm-order

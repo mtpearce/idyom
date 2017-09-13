@@ -1,12 +1,6 @@
 (cl:in-package #:latent-variables)
 
 (defparameter *latent-state* ())
-(defconstant +default-state+ 'default-state)
-
-(defun merge-parameters (params-a params-b)
-  (loop for param-a in params-a collect
-       (loop for param-b in params-b collect
-	    (append param-a param-b))))
 
 (defun get-latent-variables (attributes)
   (mapcar #'get-latent-variable attributes))
@@ -15,13 +9,12 @@
     (if (atom attribute)
 	(make-instance 
 	 (find-symbol (symbol-name attribute) (find-package :latent-variables)))
-	(let ((variables (mapcar #'get-latent-variable attribute)))
-	  (make-instance 'linked
-			 :links variables
-			 :interpretation-parameters
-			 (reduce #'union (mapcar #'interpretation-parameters variables))
-			 :category-parameters
-			 (reduce #'union (mapcar #'category-parameters variables))))))
+	(let* ((links (mapcar #'get-latent-variable attribute))
+	       (links (stable-sort links #'(lambda (x y)
+					     (string< (latent-variable-name x)
+						      (latent-variable-name y))))))
+	    (make-instance 'linked
+			   :links links))))
 
 (defun get-latent-category (variable)
   (let ((parameters (category-parameters variable)))

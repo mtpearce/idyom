@@ -36,24 +36,48 @@ an abstract mvs can specialize on the generative-mvs wrapper, iterate over
 ;;; Model Initialisation 
 ;;;========================================================================
 
-(defun make-combined-mvs (basic-viewpoints mvs generative-mvs-models)
-  (let ((mvs-models (if (null mvs) generative-mvs-models
-			(cons mvs generative-mvs-models))))
-    (make-instance 'combined-mvs :mvs-models mvs-models
-		   :basic basic-viewpoints)))
+(defun get-predictive-system (basic-viewpoints viewpoints
+			      basic-viewpoint-sets
+			      viewpoint-sets latent-variable-sets
+			      mvs-latent-variables ltms generative-ltms)
+  (let* ((mvs-viewpoints (remove-if (lambda (v) (viewpoints:abstract? v))
+				    viewpoints))
+	 (mvs-basic-viewpoints (remove-if (lambda (b)
+					    (find (type-of b) viewpoints
+						  :key #'viewpoints:viewpoint-typeset
+						  :test #'(lambda (x y) (member x y))))
+					  basic-viewpoints))
+	 (generative-models (get-generative-mvs-models basic-viewpoint-sets
+							viewpoint-sets
+							latent-variable-sets
+							mvs-latent-variables
+							generative-ltms)))
+    (cond ((and (null mvs-basic-viewpoints)
+		(null basic-viewpoint-sets))
+	   (warn "~&None of the supplied basic features can be predicted by any of the
+supplied viewpoints.~%"))
+	  ((null basic-viewpoints)
+	   (make-instance 'combined-mvs :mvs-models generative-models
+			  :basic basic-viewpoints))
+	  ((null basic-viewpoint-sets)
+	   (make-mvs mvs-basic-viewpoints mvs-viewpoints
+		     ltms))
+	  (t (make-instance 'combined-mvs
+			    :mvs-models
+			    (cons (make-mvs mvs-basic-viewpoints
+					    mvs-viewpoints ltms)
+				  generative-models)
+			    :basic basic-viewpoints)))))
 
-(defun make-generative-mvs-models (target-sets source-sets latent-variable-sets
-				   merged-latent-variables generative-ltms
-				   prior-distributions)
+(defun get-generative-mvs-models (target-sets source-sets latent-variable-sets
+				   mvs-latent-variables generative-ltms)
   (loop
      for targets in target-sets
      for sources in source-sets
      for latent-variables in latent-variable-sets
-     for latent-variable in merged-latent-variables
-     for ltms in generative-ltms
-     for prior-distribution in prior-distributions collect
+     for latent-variable in mvs-latent-variables
+     for ltms in generative-ltms collect
        (progn
-	 (setf (lv:prior-distribution latent-variable) prior-distribution)
 	 (make-instance 'generative-mvs
 			:mvs (make-mvs targets sources ltms 
 				       :class 'abstract-mvs
@@ -95,8 +119,10 @@ an abstract mvs can specialize on the generative-mvs wrapper, iterate over
   (mvs-latent-variable (abstract-mvs m)))
 
 (defmethod get-short-term-model ((v viewpoints:abstract))
-  (loop for category in (lv:categories (viewpoints:latent-variable v)) collect
-       (cons category (make-ppm (viewpoint-alphabet v)))))
+  (let ((latent-variable (viewpoints:latent-variable v)))
+    (loop for category in (lv:categories latent-variable) collect
+       (lv:with-latent-category (category latent-variable)
+	 (cons category (make-ppm (viewpoint-alphabet v)))))))
 
 (defmethod set-mvs-parameters ((m abstract-mvs) &rest parameters)
   (let ((latent-variable (mvs-latent-variable m)))

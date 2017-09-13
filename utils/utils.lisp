@@ -72,7 +72,7 @@
 all unique elements in <b> appear in <a>. Otherwise return nil"
   (when (and (null (set-difference a b :test test))
 	     (null (set-difference b a :test test)))
-    a))
+    t))
 
 ;;;===========================================================================
 ;;; Sequences
@@ -242,6 +242,11 @@ Borrowed from https://www.pvk.ca/Blog/Lisp/trivial_uniform_shuffling.html"
 
 (defun make-plist (indicators values)
   (apply #'append (mapcar #'list indicators values)))
+
+(defun sort-symbols (symbols)
+  (stable-sort symbols (lambda (a b)
+			 (string< (symbol-name a)
+				  (symbol-name b)))))
 
 ;;;===========================================================================
 ;;; Nested lists

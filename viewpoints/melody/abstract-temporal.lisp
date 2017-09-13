@@ -11,28 +11,34 @@
   :function (lambda (barlength phase)
 	      (multiple-value-bind (e1 e2)
 		  (values-list (last events 2))
-		(cond 
-		  ((null e1) +undefined+)
-		  ((null e2) 1)
-		  (t (let ((barnum-e1 (floor (/ (- (onset (list e1)) phase) barlength)))
-                           (barnum-e2 (floor (/ (- (onset (list e2)) phase) barlength))))
-                       (- barnum-e2 barnum-e1)))))))
+		(if (null e1) +undefined+
+		    (let ((barnum-e1 (floor (/ (+ (onset (list e1))
+						  (mod (- barlength phase)
+						       barlength))
+					       barlength))))
+		      (if (null e2) barnum-e1
+			  (let ((barnum-e2 (floor (/ (+ (onset (list e2))
+							(mod (- barlength phase)
+							     barlength))
+						     barlength))))
+			    (- barnum-e2 barnum-e1))))))))
 
 (define-viewpoint (bardist-train derived (onset))
     ((events md:melodic-sequence) element)
   :function (let ((barlength (barlength events)))
 	      (multiple-value-bind (e1 e2)
 		  (values-list (last events 2))
-		(cond 
-		  ((null e1) +undefined+)
-		  ((null e2) 1)
-		  (t (let ((barnum-e1 (floor (/ (onset (list e1)) barlength)))
-			   (barnum-e2 (floor (/ (onset (list e2)) barlength))))
-		       (- barnum-e2 barnum-e1)))))))
+		(if (null e1) +undefined+
+		    (let ((barnum-e1 (floor (/ (onset (list e1))
+					       barlength))))
+		      (if (null e2) barnum-e1
+			  (let ((barnum-e2 (floor (/ (onset (list e2))
+						     barlength))))
+			    (- barnum-e2 barnum-e1))))))))
 
 
 ;;; DUMMY-VIEWPOINTS for testing only
-(define-abstract-viewpoint (style-onset (onset) (:style) onset)
+(define-abstract-viewpoint (style-onset (onset) () onset)
     ((events md:melodic-sequence) element)
   :function (lambda (style)
 	      (onset events)))

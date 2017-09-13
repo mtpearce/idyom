@@ -37,6 +37,6 @@ distributions."))
            "STORE-EP-CACHE" "LOAD-EP-CACHE" "INITIALISE-EP-CACHE" 
            "DISABLE-EP-CACHE" "CACHE-EP" "CACHED-EP" "*EP-CACHE-DIR*"
 	   "MEMORY-STORE-PARAMS" "*MARGINALISE-USING-CURRENT-EVENT*"
-	   "MAKE-GENERATIVE-MVS-MODELS" "MAKE-COMBINED-MVS")
+	   "GET-PREDICTIVE-SYSTEM")
   (:documentation "A multiple viewpoint system."))
 
