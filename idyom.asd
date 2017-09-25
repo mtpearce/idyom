@@ -75,11 +75,12 @@
 	    :serial t
 	    :components
 	    ((:file "package")
-'	     (:file "generics")
+	     (:file "generics")
 	     (:file "classes")
 	     (:file "methods")
 	     (:file "functions")
 	     (:file "macros")
+	     (:file "tests")
              (:module melody :serial t
 		      :components
 		      ((:file "basic-viewpoints")
@@ -89,7 +90,8 @@
                        (:file "phrase")
 		       (:file "threaded")
 		       (:file "abstract-temporal")
-		       (:file "implication-realisation")))
+		       (:file "implication-realisation")
+		       (:file "tests")))
              ;; useful extensions for modelling 
              ;; (not strictly part of the representation scheme)
 	     (:file "extensions")))
@@ -111,7 +113,8 @@
              (:file "generics")
              (:file "prediction-sets")		
              (:file "multiple-viewpoint-system")
-	     (:file "extended-multiple-viewpoint-system")))
+	     (:file "extended-multiple-viewpoint-system")
+	     (:file "tests")))
    ;; Applications 
    (:module apps 
             :serial t

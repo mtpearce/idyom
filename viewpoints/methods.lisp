@@ -64,11 +64,13 @@
 
 
 (defmethod training-viewpoint ((a abstract-linked))
-  (let ((links (viewpoint-links a)))
-    (mapcar (lambda (link) (if (abstract? link)
-			       (training-viewpoint link)
-			       (type-of link)))
-	    links)))
+  (flet ((viewpoint-attrib (v)
+	   (intern (symbol-name (type-of v)))))
+    (let ((links (viewpoint-links a)))
+      (get-viewpoint (mapcar (lambda (link) (viewpoint-attrib (if (abstract? link)
+								  (training-viewpoint link)
+								  link)))
+			     links)))))
 
 (defmethod viewpoint-typeset ((v viewpoint)) (%viewpoint-typeset v))
 

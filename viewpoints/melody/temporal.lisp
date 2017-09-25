@@ -116,16 +116,17 @@
                                         (viewpoint-alphabet (get-viewpoint 'bioi)))))
                (mapcar #'(lambda (x) (+ onset x)) ioi-set)))
 
+(defun get-posinbar (onset barlength)
+  (cond ((undefined-p onset barlength) +undefined+)
+	((zerop barlength) +undefined+)
+	((zerop onset) 0)
+	((> onset 0) (mod onset barlength))
+	(t +undefined+)))
+
 ;; Time offset from beginning of bar.
 (define-viewpoint (posinbar derived (onset))
     ((events md:music-sequence) element) 
-  :function (let ((onset (onset events))
-                  (barlength (barlength events)))
-              (cond ((undefined-p onset barlength) +undefined+)
-                    ((zerop barlength) +undefined+)
-                    ((zerop onset) 0)
-                    ((> onset 0) (mod onset barlength))
-                    (t +undefined+)))
+  :function (get-posinbar (onset events) (barlength events))
   ;; TODO: function*
   )
 

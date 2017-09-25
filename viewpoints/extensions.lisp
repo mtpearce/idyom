@@ -77,6 +77,11 @@ in <events>."
                   (md:set-attribute e attribute element))
               d attributes)
         (let ((ve (viewpoint-element v (append context (list e)))))
+;	  (when (and (eq (getf lv::*latent-state* :barlength) 12)
+;		     (eq (getf lv::*latent-state* :pulses) 6)
+;		     (eq (length context) 1)
+;		     (eq (getf lv::*latent-state* :phase) 0))
+;	    (print ve))
           (unless (or (undefined-p ve) (member ve derived-alphabet :test #'equal))
             (push ve derived-alphabet))))
       ;;(format t "~&type = ~A; alphabet = ~A~%" (viewpoint-type v) derived-alphabet) ; 

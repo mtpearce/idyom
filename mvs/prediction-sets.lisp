@@ -43,8 +43,26 @@
    (set       :accessor prediction-set :initarg :set :type list)))
 
 (defclass marginal-event-prediction (event-prediction)
-  ((prior     :accessor prior :initarg :order)))
+  ((inference-state :accessor prediction-inference-state :initarg :inference-state)))
 
+(defclass inference-state ()
+  ((viewpoints :accessor inference-state-viewpoints
+	       :initarg :viewpoints)
+   (distribution :accessor inference-state-prior-distribution
+		       :initarg :prior-distribution)
+   (latent-variable :accessor inference-state-latent-variable
+		    :initarg :latent-variable)))
+
+(defun next-inference-state (inference-state likelihoods)
+  (let ((prior-distribution (inference-state-prior-distribution inference-state))
+	(evidence (marginal-likelihood prior-distribution likelihoods))
+	(posterior-distribution (infer-posterior-distribution evidence prior-distribution
+							      likelihoods)))
+  (make-instance 'inference-state
+		 :viewpoints (inference-state-viewpoints inference-state)
+		 :distribution posterior-distribution
+		 :latent-variable (inference-state-latent-variable inference-state)
+		 
 (defun make-dataset-prediction (&key viewpoint set basic-viewpoint)
   (make-instance 'dataset-prediction :viewpoint viewpoint :set set 
                  :basic-viewpoint basic-viewpoint))
@@ -78,6 +96,7 @@
 					     event-predictions))))
 	   (push (list symbol likelihood) distribution)))
     (make-instance 'marginal-event-prediction
+		   :prior prior
 		   :basic-viewpoint basic-viewpoint
 		   :viewpoint (prediction-viewpoint (car event-predictions))
 		   :event (car (last events))

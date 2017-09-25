@@ -7,6 +7,7 @@
 (defgeneric latent-state-parameters (variable))
 (defgeneric get-category-parameter (category parameter variable))
 (defgeneric get-interpretation-parameter (interpretation parameter variable))
+(defgeneric get-latent-state-parameter (interpretation parameter variable))
 (defgeneric get-category (latent-state variable))
 (defgeneric get-interpretation (latent-state variable))
 (defgeneric get-link-category (linked-variable category link))
@@ -18,4 +19,4 @@
 (defgeneric get-link-categories (variable link))
 (defgeneric create-category (variable &rest parameters))
 (defgeneric create-latent-state (variable category &rest parameters))
-(defgeneric initialise-prior-distribution (training-data categories variable))
+(defgeneric initialise-prior-distribution (training-data variable))

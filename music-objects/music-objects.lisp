@@ -32,7 +32,6 @@
 
 (defparameter *md-timebase* 96 "Target timebase for music objects")
 
-
 ;;; Classes for music objects
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -595,6 +594,8 @@ scale. Show a warning when the resulting time is not a whole number."
       dataset)))
 #.(clsql:restore-sql-reader-syntax-state)
 
+
+
 #.(clsql:locally-enable-sql-reader-syntax)
 (defmethod get-composition ((identifier composition-identifier))
   (let* ((dataset-id (get-dataset-index identifier))
@@ -678,7 +679,6 @@ scale. Show a warning when the resulting time is not a whole number."
       nil
       (let ((multiplier (/ *md-timebase* timebase)))
 	(* value multiplier))))
-
 
 
 

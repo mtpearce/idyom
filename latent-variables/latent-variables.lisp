@@ -13,12 +13,12 @@ based on the relative frequency of phases in the training data."))
 
 (defmethod get-prior-distribution (training-data categories
 					  (v metre-phase))
-  (let* ((category-counts (mapcar #'length training-sets))
+  (let* ((category-counts (mapcar #'length training-data))
 	 (observation-count (apply #'+ category-counts))
 	 (distribution))
     (loop for category in categories
        for category-count in category-counts
-       for training-set in training-sets do
+       for training-set in training-data do
 	 (let* ((category-rel-freq (/ category-count observation-count))
 		(phases
 		 (mapcar #'(lambda (event-sequence) (md:bioi (first event-sequence)))
@@ -34,13 +34,26 @@ based on the relative frequency of phases in the training data."))
 			  distribution))))))
     distribution))
 
-(define-latent-variable key () (:keysig))
+(defmethod get-latent-states (category (v metre-phase))
+  (loop for latent-state in (mapcar #'car (prior-distribution v))
+     when (equal (get-category latent-state v) category)
+       collect latent-state))
+
+(define-latent-variable key () (:keysig :mode))
 
 (defmethod get-latent-states (category (v key))
-  (loop for key below 12 collecting
-       (create-latent-state v category :keysig key)))
+  (let ((latent-states))
+    ;; TODO mode correct range?
+;    (dotimes (mode 12 latent-states)
+;      (dotimes (key 12)
+;	(push (create-latent-state v category :keysig (+ -7 key) :mode mode)
+					;	      latent-states)))))
+    (dotimes (mode 2 latent-states)
+      (dotimes (key 2)
+	(push (create-latent-state v category :keysig (+ -7 key) :mode mode)
+	      latent-states)))))
 
 (define-latent-variable style (:style) ())
 
-(defmethod get-latent-states (category (v style))
-  (create-latent-state category v))
+(defmethod get-event-category (event (v style))
+  (intern (md:description event)))

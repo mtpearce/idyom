@@ -125,7 +125,7 @@
       (setf (aref event-array i)
             (viewpoint-element (aref viewpoints i) sequence)))))
 
-(defmethod operate-on-models ((m mvs) operation &key (models 'both) 
+(defmethod operate-on-models ((m mvs) operation &key (models 'both)
                               ltm-args stm-args)
   "Calls a function <operation> which accepts a <ppm> object as it
 sole argument on all the long- and short-term models in mvs <m>."
@@ -230,7 +230,7 @@ See also VIEWPOINTS:SET-ALPHABET-FROM-CONTEXT."
 ;;;========================================================================
 
 (defun make-mvs (basic-viewpoints viewpoints ltms
-		 &key (class 'mvs) class-args)
+		 &key (class 'mvs) latent-variable viewpoint-latent-variables)
   (flet ((sanity-check-basic-viewpoints ()
            (dolist (bv basic-viewpoints basic-viewpoints)
              (unless (find (type-of bv) viewpoints 
@@ -250,17 +250,69 @@ See also VIEWPOINTS:SET-ALPHABET-FROM-CONTEXT."
     ;;(format t "~&MAKE-MVS: basic-viewpoints = ~A~&MAKE-MVS: viewpoints = ~A"
     ;;        (sanity-check-basic-viewpoints) 
     ;;        (sanity-check-viewpoints))
-    (let ((mvs (apply #'make-instance
-		      (append (list class
-				    :basic (sanity-check-basic-viewpoints)
-				    :viewpoints (apply #'vector 
-						       (sanity-check-viewpoints))
-				    :ltm (apply #'vector ltms)
-				    :stm (get-short-term-models viewpoints))
-			      class-args))))
-      (set-mvs-parameters mvs)
-      mvs)))
-
+    (let ((ltms-table (make-hash-table :test #'equal))
+	  (stms-table (make-hash-table :test #'equal))
+	  (all-ltm) (all-stm))
+      (when (eq class 'abstract-mvs)
+	(assert (every #'abstract? viewpoints) (viewpoints)
+		"~&All viewpoints of an abstract-mvs must be abstract.~%")
+	(assert (not (or (null latent-variable)
+			 (null viewpoint-latent-variables)))
+		(latent-variable viewpoint-latent-variables)
+		":categories, :latent-variable and :viewpoint-latent variables are required
+class-args when making an abstract-mvs")
+	(loop for viewpoint in viewpoints
+	   for vp-lv in viewpoint-latent-variables do
+	     (setf (viewpoints:latent-variable viewpoint) vp-lv
+		   (lv:categories vp-lv) (lv:get-link-categories latent-variable vp-lv)))
+	(let* ((stms (loop for viewpoint in viewpoints collect
+			  (get-short-term-model viewpoint)))
+	       (model-count (apply #'+ (mapcar #'(lambda (lv) (length (lv:categories lv)))
+					       viewpoint-latent-variables)))
+	       (model-index 0))
+	  (setf all-ltm (make-array (list model-count)))
+	  (setf all-stm (make-array (list model-count)))
+	  (loop for latent-variable in viewpoint-latent-variables
+	     for lt-models in ltms
+	     for st-models in stms do
+	       (dolist (category (lv:categories latent-variable))
+		 (let ((ltm (cdr (assoc category lt-models :test #'equal)))
+		       (stm (cdr (assoc category st-models :test #'equal))))
+		   (setf (aref all-ltm model-index) ltm
+			 (aref all-stm model-index) stm)
+		   (incf model-index))))
+	  (dolist (category (lv:categories latent-variable))
+	       (let* ((link-categories (mapcar (lambda (link)
+						 (lv:get-link-category latent-variable
+								       category
+								       link))
+					       viewpoint-latent-variables))
+		      (lt-models (map 'vector (lambda (models link-category)
+						(cdr (assoc link-category
+							    models :test #'equal)))
+				      ltms link-categories))
+		      (st-models (map 'vector (lambda (models link-category)
+						(cdr (assoc link-category
+							    models :test #'equal)))
+				      stms link-categories)))
+		 (setf (gethash category stms-table) st-models
+		       (gethash category ltms-table) lt-models)))))
+      (let ((mvs (apply #'make-instance
+			(append (list class
+				      :basic (sanity-check-basic-viewpoints)
+				      :viewpoints (apply #'vector 
+							 (sanity-check-viewpoints)))
+				
+				(if (eq class 'abstract-mvs)
+				    (list :ltm ltms-table :stm stms-table
+					  :all-ltm all-ltm :all-stm all-stm
+					  :latent-variable latent-variable
+					  :viewpoint-latent-variables
+					  (apply #'vector viewpoint-latent-variables))
+				    (list :ltm (apply #'vector ltms)
+					  :stm (get-short-term-models viewpoints)))))))
+	(set-mvs-parameters mvs)
+	mvs))))
 
 (defun set-mvs-parameters-function (m &key
 					(ltm-order-bound *ltm-order-bound*)
@@ -287,7 +339,7 @@ See also VIEWPOINTS:SET-ALPHABET-FROM-CONTEXT."
 (defmethod set-mvs-parameters ((m mvs) &rest parameters
 			       &key &allow-other-keys)
   (apply #'set-mvs-parameters-function (cons m parameters)))
-  
+
 (defmethod get-short-term-model ((v viewpoints:viewpoint))
   (make-ppm (viewpoint-alphabet v)))
 
@@ -295,7 +347,7 @@ See also VIEWPOINTS:SET-ALPHABET-FROM-CONTEXT."
   "Returns a vector of freshly initialised ppm short term models
 corresponding to the supplied list of viewpoints and initialised with
 the supplied parameters."
-  (apply #'vector (mapcar #'get-short-term-model viewpoints)))
+  (map 'vector #'get-short-term-model viewpoints))
                   
 ;;;========================================================================
 ;;; Model Construction and Prediction 
@@ -307,7 +359,7 @@ multiple-viewpoint system <m>."
   (labels ((model-d (dataset sequence-index prediction-sets)
              (when *debug* (format t "~&Composition ~A~%" sequence-index))
              (if (null dataset) (reverse prediction-sets)
-                 (let ((prediction-set (model-sequence m (car dataset) 
+                 (let ((prediction-set (model-sequence m (coerce (car dataset) 'list)
                                                        :construct? construct?
                                                        :predict? predict?)))
                    (unless (= sequence-index 1)
@@ -481,8 +533,8 @@ multiple viewpoint system <m>."
               ;; nil))
               ;; 2. Predict using current basic viewpoint 
               ;; ? 
-              ;; 3. uniform distrubution over basic alphabet; 
-              (push 
+              ;; 3. uniform distrubution over basic alphabet;
+	      (push 
                (combine-viewpoint-distributions
                 (mapcar #'(lambda (v)
                             (make-custom-event-prediction basic-viewpoint v events :flat))

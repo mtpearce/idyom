@@ -11,20 +11,22 @@
 
 ;; Keysig ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
+(defun get-referent (keysig mode)
+  ;;(declare (type (integer -7 7) keysig) (type (integer 0 11) mode))
+  (if (undefined-p keysig mode) +undefined+
+      (cond ((and (numberp keysig) (> keysig 0))
+	     (mod (+ (* keysig 7) mode) 12))
+	    ((and (numberp keysig) (< keysig 0))
+	     (mod (+ (* (- keysig) 5) mode) 12))
+	    ((numberp mode) mode)
+	    (t +undefined+))))
+
 ;;  Chromatic interval of tonic from C (e.g. C major gives 0, F minor
 ;;  gives 5, F major also 5, Bb minor 1).
 (define-viewpoint (referent derived (keysig))
     ((events md:music-sequence) element) 
-  :function (let ((keysig (keysig events))
-                  (mode (mode events)))
-              ;(declare (type (integer -7 7) keysig) (type (integer 0 11) mode))
-              (if (undefined-p keysig mode) +undefined+
-                  (cond ((and (numberp keysig) (> keysig 0))
-                         (mod (+ (* keysig 7) mode) 12))
-                        ((and (numberp keysig) (< keysig 0))
-                         (mod (+ (* (- keysig) 5) mode) 12))
-                        ((numberp mode) mode)
-			(t +undefined+)))) 
+  :function (get-referent (keysig events) (mode events))
   :function* (viewpoint-alphabet (get-viewpoint 'keysig)))
 
 

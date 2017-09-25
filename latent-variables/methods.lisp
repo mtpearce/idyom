@@ -18,8 +18,8 @@
     (utils:sort-symbols (copy-list parameters))))
 
 (defmethod latent-state-parameters ((v latent-variable))
-  (utils:sort-symbols (copy-list (append (category-parameters v)
-					 (interpretation-parameters v)))))
+  (utils:sort-symbols (copy-list (remove-duplicates (append (category-parameters v)
+							    (interpretation-parameters v))))))
 
 (defmethod latent-variable-name ((l latent-variable))
   (string-downcase (symbol-name (latent-variable-attribute l))))
@@ -36,6 +36,11 @@
 						interpretation)))
     (getf param-interpretation parameter)))
 
+(defmethod get-latent-state-parameter (latent-state parameter (v latent-variable))
+  (let ((param-interpretation (utils:make-plist (latent-state-parameters v)
+						latent-state)))
+    (getf param-interpretation parameter)))
+
 (defmethod get-category (latent-state (v latent-variable))
   (mapcar #'(lambda (param) (getf latent-state param))
 	  (category-parameters v)))
@@ -48,14 +53,10 @@
   category)
 
 (defmethod get-link-category ((l linked) category (link latent-variable))
-  (unless (member (type-of link) (latent-variable-links l) :key #'type-of)
-    (warn "Attempt to get category of latent variable ~a from category of ~a while
-~2:*~a is not a link of ~a" (latent-variable-name link) (latent-variable-name l)))
   (let ((annotated-latent-state (utils:make-plist (category-parameters l)
 						  category)))
     (mapcar #'(lambda (p) (getf annotated-latent-state p))
 	    (category-parameters link))))
-	 
 
 (defmethod get-event-category (event (v latent-variable))
   (let ((attribute-names (mapcar #'(lambda (attrib)
@@ -126,7 +127,7 @@ The relative frequency of each category is determed, each interpretation
 	      (mapcar #'(lambda (p) (/ p scaling)) distribution)))))
 
 (defmethod get-latent-states (category (v latent-variable))
-  (list category))
+  (list (create-latent-state v category)))
 
 (defmethod get-latent-states (category (l linked))
   (let* ((links (latent-variable-links l))

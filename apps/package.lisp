@@ -24,7 +24,8 @@
            "BUILD-EP-CACHE" "SELECT-VIEWPOINTS-FOR-GENERATION" 
            "GET-RESAMPLING-SETS" "GET-TRAINING-SET" "GET-TEST-SET" 
            "GET-LONG-TERM-MODELS"
-           "TEST-COMBINATIONS")
+           "TEST-COMBINATIONS"
+	   "COMPOSITIONS")
   (:documentation "Prediction of datasets using cross-validation."))
 
 (defpackage #:viewpoint-selection

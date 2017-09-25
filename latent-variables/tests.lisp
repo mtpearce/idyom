@@ -163,15 +163,21 @@
 	 (latent2 (get-latent-variable 'latent2))
 	 (*latent-state* '(:barlength 0 :phase 1 :add 4 :foo 'a :bar 3))
 	 (latent-category-1 (create-category latent1 :barlength 3 :pulses 2))
-	 (latent-category-2 (create-category latent2 :add 3)))
+	 (latent-category-2 (create-category latent2)))
     (5am:is (equal (get-latent-category latent1) (create-category latent1 :barlength 0
 								  :phase 1)))
     (5am:is (equal (get-latent-category latent2) (create-category latent2 :add 4)))
+    (5am:is (not (latent-category-set-p latent1)))
+    (5am:is (not (latent-category-set-p latent2)))
     (with-latent-category (latent-category-1 latent1)
       (5am:is (equal (get-latent-category latent1) latent-category-1))
+      (5am:is (latent-category-set-p latent1))
+      (5am:is (not (latent-category-set-p latent2)))
       (with-latent-category (latent-category-2 latent2)
+	(5am:is (latent-category-set-p latent1))
+	(5am:is (latent-category-set-p latent2))
 	(5am:is (equal (get-latent-category latent1) latent-category-1))
-	(5am:is (equal (get-latent-category latent2) latent-category-2))))))
+	(5am:is (equal (print (get-latent-category latent2)) latent-category-2))))))
 
 ;;; Three different latent-variable behaviors can be achieved depending on the
 ;;; category and interpretation parameter lists:

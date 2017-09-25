@@ -27,20 +27,30 @@
                     (declare (ignorable events element))
                     ,f*)))))))
 
-(defmacro define-abstract-viewpoint ((name typeset parameters training-viewpoint) 
+(defmacro define-abstract-viewpoint ((name typeset event-attributes
+					   parameters training-viewpoint) 
                             ((events class) element)
 				     &key function function*)
-  (let* ((parameter-values `(loop for p in (list ,@parameters) collect
-			   (getf lv::*latent-state* p)))
-	 (function `(apply #',function ,parameter-values))
-	 (function* (if (null function*) nil
-			`(apply #',function* ,parameter-values))))
-    `(progn
-       (define-viewpoint (,name abstract ,typeset)
-	   ((,events ,class) ,element)
-	 :function ,function :function* ,function*)
-       (defmethod training-viewpoint ((v ,name)) ',training-viewpoint)
-       (defmethod latent-parameters ((v ,name)) ',parameters))))
+  (let ((latent-state `(loop for p in (list ,@event-attributes ,@parameters) collect
+			    (lv:get-latent-state-value p)))
+	(event-category `(loop for p in (list ,@event-attributes) collect
+			      (apply (intern (symbol-name p) (find-package :viewpoints))
+				     (list events)))))
+    (let ((function `(apply #',function ,latent-state))
+	  (function* (if (null function*) nil
+			 `(apply #',function* ,latent-state)))
+	  (training-function `(apply #',function ,event-category))
+	  (training-function* (if (null function*) nil
+				  `(apply #',function* ,event-category))))
+      `(progn
+	 (define-viewpoint (,name abstract ,typeset)
+	     ((,events ,class) ,element)
+	   :function ,function :function* ,function*)
+	 (define-viewpoint (,training-viewpoint derived ,typeset)
+	     ((,events ,class) ,element)
+	   :function ,training-function :function* ,training-function*)
+	 (defmethod training-viewpoint ((v ,name)) (get-viewpoint ',training-viewpoint))
+	 (defmethod latent-parameters ((v ,name)) '(,@event-attributes ,@parameters))))))
 
 (defmacro define-basic-viewpoint (name ((events class)) function)
   `(progn 

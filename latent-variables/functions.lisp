@@ -16,11 +16,28 @@
 	    (make-instance 'linked
 			   :links links))))
 
+(defun %interpretation-set-symbol (variable)
+  (intern (string-upcase (format nil "~A-interpretation-set-p" (latent-variable-name variable)))
+	  (find-package 'keyword)))
+
+(defun %category-set-symbol (variable)
+  (intern (string-upcase (format nil "~A-category-set-p" (latent-variable-name variable)))
+	  (find-package 'keyword)))
+
+(defun latent-category-set-p (variable)
+  (get-latent-state-value (%variable-set-symbol variable "category")))
+
+(defun latent-interpretation-set-p (variable)
+  (get-latent-state-value (%variable-set-symbol variable "interpretation")))
+
+(defun get-latent-state-value (parameter)
+  (getf *latent-state* parameter))
+
 (defun get-latent-category (variable)
   (let ((parameters (category-parameters variable)))
-    (mapcar #'(lambda (p) (getf *latent-state* p)) parameters)))
+    (mapcar #'get-latent-state-value parameters)))
 
 (defun get-latent-interpretation (variable)
   (let ((parameters (interpretation-parameters variable)))
-    (mapcar #'(lambda (p) (getf *latent-state* p)) parameters)))
+    (mapcar #'get-latent-state-value parameters)))
 

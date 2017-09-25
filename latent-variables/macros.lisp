@@ -14,18 +14,24 @@
 
 (defmacro with-latent-variable-state ((latent-state variable) &body body)
   (let ((latent-state `(utils:make-plist (latent-state-parameters ,variable)
-					 ,latent-state)))
-    `(with-latent-state ,latent-state ,@body)))
+					 ,latent-state))
+	(category-set-symbol `(%category-set-symbol ,variable))
+	(interpretation-set-symbol `(%interpretation-set-symbol ,variable)))
+    `(with-latent-state (append ,latent-state
+				(list ,category-set-symbol t ,interpretation-set-symbol t))
+       ,@body)))
 
 (defmacro with-latent-category ((category variable) &body body)
   (let ((latent-state `(utils:make-plist (category-parameters ,variable)
-					 ,category)))
-    `(with-latent-state ,latent-state ,@body)))
+					 ,category))
+	(category-set-symbol `(%category-set-symbol ,variable)))
+    `(with-latent-state (append ,latent-state (list ,category-set-symbol t)) ,@body)))
 
 (defmacro with-latent-interpretation ((interpretation variable) &body body)
   (let ((latent-state `(utils:make-plist (interpretation-parameters ,variable)
-					,interpretation)))
-    `(with-latent-state ,latent-state ,@body)))
+					 ,interpretation))
+	(interpretation-set-symbol `(%interpretation-set-symbol ,variable)))
+    `(with-latent-state (append ,latent-state (list ,interpretation-set-symbol t)) ,@body)))
 
 (defmacro define-latent-variable (name category-parameters interpretation-parameters)
   `(progn 
