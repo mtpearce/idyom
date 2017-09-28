@@ -86,19 +86,27 @@ applying viewpoint-element directly to each prefix in the sequence."
                     ((> onset 0) (+ onset 2))
                     (t +undefined+))))
 
-;; Same as metpos
+;; Similar to abstract-posinbar.
 (define-abstract-viewpoint (abstract1 (onset) (:barlength) (:phase) normal1)
     ((events md:melodic-sequence) element)
   :function (lambda (barlength &optional (phase 0))
 	      (let ((onset (onset events)))
 		(mod (- onset phase) barlength))))
 
-;; Same as keysig
+;; Similar to abstract sdeg-west
 (define-abstract-viewpoint (abstract2 (onset) (:keysig) () normal2)
     ((events md:melodic-sequence) element)
   :function (lambda (add)
 	      (let ((onset (onset events)))
 		(+ onset add))))
+
+(define-basic-viewpoint description ((events md:music-sequence))
+  (md:description (last-element events)))
+
+;; Similar to abstract-onset (but using description which can be abused for anything)
+(define-abstract-viewpoint (abstract3 (description) () () normal3)
+    ((events md:melodic-sequence) element)
+  :function (lambda () (description events)))
 
 (5am:def-fixture abstract1 ()
   (let ((abstract1 (get-viewpoint 'abstract1)))

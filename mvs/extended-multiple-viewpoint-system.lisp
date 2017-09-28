@@ -163,6 +163,32 @@ sole argument on all the long- and short-term models in mvs <m>."
 ;;; Model construction and prediction 
 ;;;========================================================================
 
+(defmethod model-sequence-interpretations ((m generative-mvs) latent-states
+					   latent-variable events other-args)
+  (unless (null latent-states)
+    (let ((latent-state (car latent-states)))
+      (cons (lv:with-latent-variable-state (latent-state latent-variable)
+	      (apply #'model-sequence
+		     (append (list (abstract-mvs m) events)
+			     other-args)))
+	    (lv:with-latent-variable-state (latent-state latent-variable)
+	      (unless (null (cdr latent-states))
+		(operate-on-models m #'reinitialise-ppm :models 'mvs::stm))
+	      (model-sequence-interpretations m (cdr latent-states) latent-variable
+					      events other-args))))))
+
+(defmethod get-event-predictions (sequence-interpretation-predictions event-index
+				  (m generative-mvs))
+  (let ((event-interpretation-predictions))
+    (dotimes (bv-index (length (mvs-basic m)))
+      (push (mapcar (lambda (sequence-interpretation-prediction)
+		      (elt (prediction-set
+			    (elt sequence-interpretation-prediction bv-index))
+			   event-index))
+		    sequence-interpretation-predictions)
+	    event-interpretation-predictions))
+    (reverse event-interpretation-predictions)))
+
 (defmethod model-sequence ((m generative-mvs) events
 			   &rest other-args)
   "Models a sequence <sequence> given the generative multiple-viewpoint system <m>.
@@ -179,42 +205,36 @@ A sequence-prediction is returned."
 	 (prior-distribution (lv:prior-distribution latent-variable))
 	 (latent-states (mapcar #'car prior-distribution))
 	 (posteriors (list (mapcar #'cdr prior-distribution)))
-	 (predictions (loop for i below (length (mvs-basic m)) collect nil)))
-    (loop for latent-state in latent-states
-       for i below (length latent-states) do
-	 (lv:with-latent-variable-state
-	     (latent-state latent-variable)
-	   (let ((sequence-predictions
-		  (apply #'model-sequence
-			 (append (list (abstract-mvs m) events)
-				 other-args))))
-	     ;; Reset the short-term model for re-use in the next interpretation
-	     (unless (= i (1- (length latent-states)))
-	       (operate-on-models m #'reinitialise-ppm :models 'mvs::stm))
-	     (loop for basic-viewpoint-index below (length (mvs-basic m)) do
-		  (push (elt (mapcar #'prediction-set sequence-predictions)
-			     basic-viewpoint-index)
-			(elt predictions basic-viewpoint-index))))))
-    (let* ((prediction-sets (mapcar #'reverse (mapcar #'transpose-lists predictions)))
-	   (sequence-predictions))
-      (loop for index below (length events) do
-	   (let* ((events (subseq events 0 (1+ index)))
-		  (event-predictions (mapcar (lambda (ps) (elt ps index))
-					     prediction-sets))
-		  (likelihoods (likelihoods (length latent-states)
-					    event-predictions))
-		  (prior-distribution (car posteriors))
-		  (marginal-event-predictions (marginalize-event-predictions
-					       prior-distribution events event-predictions
-					       (mvs-basic m))))
-	     (push marginal-event-predictions sequence-predictions)
-	     (let ((evidence (marginal-likelihood likelihoods
-						  prior-distribution)))
-	       (push (infer-posterior-distribution evidence prior-distribution
-						   likelihoods)
-		     posteriors))))
-      (sequence-prediction-sets (abstract-mvs m)
-				events (reverse sequence-predictions)))))
+	 (sequence-interpretation-predictions
+	  (model-sequence-interpretations m latent-states latent-variable
+					  events other-args))
+	 (sequence-predictions))
+    ;; Transform each list of interpretations (where each such list is a list of
+    ;; event predictions in the corresponding interpretation) into a list of 
+    ;; each element of which is a list of event predictions for one event 
+    ;; containing predictions of the that event for each interpretation.
+    ;; This simply means applying the transpose operation to the list of interpretations
+    ;; (which can be seen as a matrix of interpretation by event position).
+    (loop for event-index below (length events) do
+	 (let* ((events (subseq events 0 (1+ event-index)))
+		(event-interpretation-predictions
+		 (get-event-predictions sequence-interpretation-predictions
+					event-index m))
+		(likelihoods (joint-interpretation-likelihoods
+			      event-interpretation-predictions))
+		(prior-distribution (car posteriors))
+		(marginal-event-predictions (marginalize-event-predictions
+					     prior-distribution events
+					     event-interpretation-predictions
+					     (mvs-basic m))))
+	   (push marginal-event-predictions sequence-predictions)
+	   (let ((evidence (marginal-likelihood likelihoods
+						prior-distribution)))
+	     (push (infer-posterior-distribution evidence prior-distribution
+						 likelihoods)
+		   posteriors))))
+    (sequence-prediction-sets (abstract-mvs m)
+			      events (reverse sequence-predictions))))
 
 (defmethod model-sequence ((m combined-mvs) events
 			   &rest other-args)
@@ -315,8 +335,13 @@ create a marginal event prediction."
 (defun transpose-lists (lists)
   (apply #'mapcar #'list lists))
 
-(defun likelihoods (n-interpretations event-predictions)
-  (let ((event-probabilities (mapcar #'event-predictions event-predictions)
-  (loop for i below n-interpretations collect
-       (apply #'* (mapcar (lambda (ep) (cadr (event-prediction (elt ep i))))
-			  event-predictions))))
+(defun joint-interpretation-likelihoods (event-interpretation-predictions)
+  "<event-interpretation-predictions> is a list whose elements are lists of
+event predictions, one for each interpretation. Each list of event predictions 
+corresponds to one basic viewpoint. Convert this structure to a list where each
+item of the list is the product of the event likelihoods (obtained from the 
+EVENT-PREDICTION-SET object using EVENT-PREDICTION) for each basic viewpoint and
+a single interpretation."
+  (mapcar (lambda (interpretation-predictions)
+	    (apply #'* (mapcar #'cadr (mapcar #'event-prediction interpretation-predictions))))
+	  (transpose-lists event-interpretation-predictions)))

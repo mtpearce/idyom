@@ -11,6 +11,36 @@
     (loop for phase below barlength collect
 	 (create-latent-state v category :phase phase))))
 
+;; Create a variant of latent1 that uses a custom method for calculating the
+;; prior distribution
+(defclass latent1-empirical (latent1) ())
+
+(defmethod get-prior-distribution (training-data categories
+				   (v latent1-empirical))
+  (let* ((category-counts (mapcar #'length training-data))
+	 (observation-count (apply #'+ category-counts))
+	 (distribution))
+    (loop for category in categories
+       for category-count in category-counts
+       for training-set in training-data do
+	 (let* ((category-rel-freq (/ category-count observation-count))
+		(phases training-set) ; dummy training-sets used here consist of numbers
+		(phase-counts (utils:count-frequencies phases #'<)))
+	   (loop for phase-count in phase-counts do
+		(let ((phase (car phase-count))
+		      (count (cdr phase-count)))
+		  (let ((phase-rel-freq (/ count category-count)))
+		    (push (cons (create-latent-state v category
+						      :phase phase)
+				(* category-rel-freq phase-rel-freq))
+			  distribution))))))
+    distribution))
+
+(defmethod get-latent-states (category (v latent1-empirical))
+  (loop for latent-state in (mapcar #'car (prior-distribution v))
+     when (equal (get-category latent-state v) category)
+       collect latent-state))
+
 ;; A latent variable whose interpretations are all part of a single category
 ;; (like key-signature)
 (define-latent-variable latent2 () (:keysig))
@@ -21,6 +51,9 @@
 
 ;; A latent variable whose categories do not impose interpretations
 (define-latent-variable latent3 (:style) ())
+
+(defmethod get-event-category (event (v latent3))
+  (list (md:description event)))
        
 (defun plist-equal (a b &key (test #'eq))
   (flet ((keys (plist)
@@ -194,26 +227,21 @@
 ;;; tested with linked variables whose links are different combinations of those
 ;;; types.
 
-(cl:in-package #:music-data)
-(defclass test-event (music-event)
-  ((style :initarg :style :accessor style)))
-(cl:in-package #:latent-variables)
-
 (5am:def-fixture event (&rest parameters)
   (let ((default-parameters '(:id identifier
 			      :voice 0 :vertint12 0 :articulation nil
 			      :comma nil :ornament nil :dyn nil
 			      :accidental 0 :mpitch 40 :cpitch 80
 			      :deltast 0 :bioi bioi :midc midc
-			      :timebase 96 :onset 0
+			      :timebase 96 :onset 0 :description nil
 			      :duration 1 :mode 0 :keysig 0
 			      :pulses nil :barlength nil
-			      :tempo nil :phrase nil :style nil)))
+			      :tempo nil :phrase nil)))
     (progn
       (dotimes (pair-index (/ (length parameters) 2))      
 	(setf (getf default-parameters (elt parameters (* pair-index 2)))
 	      (elt parameters (+ (* pair-index 2) 1))))
-      (let ((event (apply #'make-instance (cons 'md::test-event parameters))))
+      (let ((event (apply #'make-instance (cons 'md:music-event parameters))))
 	(&body)))))
 
 (5am:test create-category
@@ -257,7 +285,7 @@
   (let ((latent1 (get-latent-variable 'latent1))
 	(latent2 (get-latent-variable 'latent2))
     	(latent3 (get-latent-variable 'latent3)))
-    (5am:with-fixture event (:barlength 4 :pulses 2 :keysig 5 :style 'rock)
+    (5am:with-fixture event (:barlength 4 :pulses 2 :keysig 5 :description 'rock)
       (5am:is (equal (get-event-category event latent1)
 		     (create-category latent1 :barlength 4 :pulses 2)))
       (5am:is (equal (get-event-category event latent2)
@@ -269,6 +297,7 @@
   (let ((latent1 (get-latent-variable 'latent1))
 	(latent2 (get-latent-variable 'latent2))
     	(latent3 (get-latent-variable 'latent3))
+	(latent1-empirical (get-latent-variable 'latent1-empirical))
 	(linked-1-2 (get-latent-variable '(latent1 latent2)))
 	(linked-2-3 (get-latent-variable '(latent2 latent3)))
 	(linked-1-3 (get-latent-variable '(latent1 latent3)))
@@ -280,6 +309,12 @@
 			     (loop for i below 12 collect (list i))
 			     :test #'equal))
     (5am:is (utils:set-equal (get-latent-states '(baroque) latent3) '((baroque))
+			     :test #'equal))
+    (setf (prior-distribution latent1-empirical)
+	  '(((3 0 1) . 0.5) ((3 1 1) . 0.5)
+	    ((2 0 1) . 0.3) ((2 1 1) . 0.7)))
+    (5am:is (utils:set-equal (get-latent-states '(3 1) latent1-empirical)
+			     '((3 0 1) (3 1 1))
 			     :test #'equal))
     (let* ((variable linked-1-2)
 	   (category (create-category variable :barlength 4 :pulses 2)))
@@ -343,8 +378,7 @@
     (5am:is (equal (get-link-category linked-1-3 '(3 2 minimal) latent3) '(minimal)))
     (5am:is (equal (get-link-category linked-1-2-3 '(3 2 drumnbass) latent1) '(3 2)))
     (5am:is (equal (get-link-category linked-1-2-3 '(3 2 drumnbass) latent2) nil))
-    (5am:is (equal (get-link-category linked-1-2-3 '(3 2 drumnbass) latent3) '(drumnbass)))
-    (5am:signals warning (get-link-category linked-1-3 '(3 2) latent2))))
+    (5am:is (equal (get-link-category linked-1-2-3 '(3 2 drumnbass) latent3) '(drumnbass)))))
 	
 
 (5am:test get-link-categories
@@ -393,8 +427,7 @@
     (5am:is (utils:set-equal (get-link-categories linked-1-2-3 latent2)
 			     categories-2 :test #'equal))
     (5am:is (utils:set-equal (get-link-categories linked-1-2-3 latent3)
-			     categories-3 :test #'equal))
-    (5am:signals warning (get-link-categories linked-1-3 latent2))))
+			     categories-3 :test #'equal)))))
   
 (5am:test set-link-categories
   (let ((linked-1-2-3 (get-latent-variable '(latent1 latent2 latent3)))
@@ -417,20 +450,107 @@
       (5am:is (utils:set-equal (categories latent3) categories-3 :test #'equal)))))
 
 (5am:test get-prior-distribution
-  (let* ((linked-1-3 (get-latent-variable '(latent1 latent3)))
-	 (categories '((2 1 disco) (2 1 punk) (3 1 disco) (3 1 soul)))
-	 (counts '(2 3 1 4))
-	 (training-data (mapcar (lambda (c) (loop for i below c collect  i)) counts)))
-    (setf (categories linked-1-3) categories)
-    (let ((prior (get-prior-distribution training-data categories linked-1-3))
+  (let* ((latent1 (get-latent-variable 'latent1))
+	 (latent3 (get-latent-variable 'latent3))
+	 (latent1-empirical (get-latent-variable 'latent1-empirical))
+	 (linked-1-3 (get-latent-variable '(latent1 latent3)))
+	 (linked-1-empirical-3 (get-latent-variable '(latent1-empirical latent3)))
+	 ;; Training items (normally event sequences) are represented by numbers
+	 ;; which are used as phases by latent1-empirical.
+	 (2-1-disco '(0))
+	 (2-1-punk '(0 0 1))
+	 (3-1-disco '(0))
+	 (3-1-soul '(1 1 0 0 1))
+	 (latent1-categories '((2 1) (3 1)))
+	 (latent1-training (list (append 2-1-disco 2-1-punk) (append 3-1-disco 3-1-soul)))
+	 (latent3-categories '((disco) (punk) (soul)))
+	 (latent3-training (list (append 2-1-disco 3-1-disco) 2-1-punk 3-1-soul))
+	 (linked1-3-categories '((2 1 disco) (2 1 punk) (3 1 disco) (3 1 punk)))
+	 (linked-1-3-training (list 2-1-disco 2-1-punk 3-1-disco 3-1-soul)))
+    (flet ((test-references (var training-data categories)
+	     (let* ((prior (get-prior-distribution training-data categories var))
+		    (latent-states (apply #'append
+					  (mapcar (lambda (c) (get-latent-states c var))
+						  categories))))
+	       (values prior latent-states))))
+      (multiple-value-bind (prior latent-states)
+	  (test-references latent1 latent1-training latent1-categories)
+	(let* ((counts (mapcar #'length latent1-training))
+	       (normalisation (apply #'+ (mapcar (lambda (cat count)
+						   (* (/ count (apply #'+ counts))
+						      (get-category-parameter
+						       cat :barlength var)))
+						 latent1-categories counts))))
+	  ;; All priors must sum to one.
+	  (5am:is (equal (apply #'+ (mapcar #'cdr prior)) 1))
+	  ;; Number of parameters must equal number of latent states
+	  (5am:is (equal (length prior) (length latent-states)))
+	  ;; Default method for prior calculation spreads out probability mass equally
+	  ;; over different interpretations
+	  (5am:is (equal (cdr (assoc '(2 0 1) prior :test #'equal))
+			 (/ (/ 6 11) normalisation)))
+	  (5am:is (equal (cdr (assoc '(2 1 1) prior :test #'equal))
+			 (/ (/ 6 11) normalisation)))
+	  (5am:is (equal (cdr (assoc '(3 0 1) prior :test #'equal))
+			 (/ (/ 5 11) normalisation)))
+	  (5am:is (equal (cdr (assoc '(3 2 1) prior :test #'equal))
+			 (/ (/ 5 11) normalisation)))))
+      (multiple-value-bind (prior latent-states)
+	  (test-references latent3 latent3-training latent3-categories)
+	(5am:is (equal (apply #'+ (mapcar #'cdr prior)) 1))
+	(5am:is (equal (length prior) (length latent-states)))
+	;; Default method for prior calculation spreads out probability mass equally
+	;; over different interpretations
+	(5am:is (equal (cdr (assoc '(disco) prior :test #'equal))
+		       (/ 2 11)))
+	(5am:is (equal (cdr (assoc '(punk) prior :test #'equal))
+		       (/ 3 11)))
+	(5am:is (equal (cdr (assoc '(soul) prior :test #'equal))
+		       (/ 5 11))))
+      (multiple-value-bind (prior latent-states normalisation)
+	  (test-references latent1-empirical latent1-training latent1-categories)
+	(5am:is (equal (apply #'+ (mapcar #'cdr prior)) 1))
+	(5am:is (equal (length prior) (length latent-states)))
+	;; Default method for prior calculation spreads out probability mass equally
+	;; over different interpretations
+	(5am:is (equal (cdr (assoc '(2 0 1) prior :test #'equal))
+		       (/ 2 11)))
+	(5am:is (equal (cdr (assoc '(punk) prior :test #'equal))
+		       (/ 3 11)))
+	(5am:is (equal (cdr (assoc '(soul) prior :test #'equal))
+		       (/ 5 11)))))))
+(let* ((linked-1-3-prior (get-prior-distribution linked-1-3-training linked-1-3-categories
+						     linked-1-3))
+	   (linked-1-empirical-3-prior (get-prior-distribution linked-1-3-training
+							       linked-1-3-categories
+							       linked-1-empirical-3))
+	   (latent1-latent-states 
+	   (priors (list latent1-prior latent3-prior linked-1-3-prior
+			 linked-1-empirical-prior))
+	   (latent-variables (list latent1 latent3 linked-1-3 linked-1-empirical-3)))
+      
+    (dolist (prior priors)
+      (5am:is (equal (apply #'+ (mapcar #'cdr prior)) 1)))
+    (loop for prior in priors
+       for latent-variable in latent-variables do
+	 (5am:is (utils:set-equal (mapcar #'car prior) (print latent-states) :test #'equal)))
+    (5am:is (set-equal (prior-distribution (first latent-variable-links latent-1-3
+
+      ;; The probability of each interpretation (category with phase in this case) is
+      ;; equal to the probability of the category divided by the normalising constant.
+      (5am:is (equal (cdr (assoc '(2 0 1 disco) prior :test #'equal))
+		     (/ (/ 2 10) unnormalised-sum)))
+      (5am:is (equal (cdr (assoc '(3 2 1 disco) prior :test #'equal))
+		     (/ (/ 1 10) unnormalised-sum)))
+      ;; The pr
+      (5am:is (equal (print (cdr (assoc '(2 0 1 disco) prior :test #'equal)))
+		     (* (print (cdr (assoc '(2 0 1) latent1-prior :test #'equal)))
+			(print (cdr (assoc '(disco) latent3-prior :test #'equal)))))))))
+    (let ((prior (get-prior-distribution training-data categories linked-1-empirical-3))
 	  (latent-states (apply #'append
 				(mapcar (lambda (c) (get-latent-states c linked-1-3))
-					categories)))
-	  (unnormalised-sum (apply #'+ (mapcar (lambda (cat count)
-						 (* (/ count (apply #'+ counts))
-						    (get-category-parameter cat :barlength
-									    linked-1-3)))
-					       categories counts))))
+					categories))))
+      
       (5am:is (utils:set-equal (mapcar #'car prior) latent-states :test #'equal))
       (5am:is (equal (apply #'+ (mapcar #'cdr prior)) 1))
       (5am:is (equal (cdr (assoc '(2 0 1 disco) prior :test #'equal))

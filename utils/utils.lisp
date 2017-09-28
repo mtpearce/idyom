@@ -311,7 +311,7 @@ Borrowed from https://www.pvk.ca/Blog/Lisp/trivial_uniform_shuffling.html"
           alist)
     hashtable))
 
-(defun hash-table->sorted-alist (ht sort-fn &optional &key (by :keys))
+(defun hash-table->sorted-alist' (ht sort-fn &optional &key (by :keys))
   (let ((sorted-entries nil))
     (maphash #'(lambda (k v) (push (cons k v) sorted-entries) (remhash k ht)) ht)
     (let ((sort-key (if (eql by :keys) #'car #'cdr)))

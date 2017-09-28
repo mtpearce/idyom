@@ -55,7 +55,7 @@
 
 (define-abstract-viewpoint (abs-ioi (onset) () () abs-ioi-training)
     ((events md:melodic-sequence) element) 
-  :function (lambda () (onset events)))
+  :function (lambda () (ioi events)))
 
 ;; Pitch to tonic interval
 (define-abstract-viewpoint (abs-tonint (cpitch) (:keysig :mode) () abs-tonint-training)

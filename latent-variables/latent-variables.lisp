@@ -1,6 +1,6 @@
 (cl:in-package #:latent-variables)
 
-(define-latent-variable metre (:barlength :pulses) (:barlength :phase))
+(define-latent-variable metre (:barlength :pulses) (:phase))
 
 (defmethod get-latent-states (category (v metre))
   (let ((barlength (get-category-parameter category :barlength v)))

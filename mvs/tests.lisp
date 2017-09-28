@@ -32,12 +32,12 @@
 				    :barlength barlength :pulses pulses)))
 
 (defun models-equal (a b)
-  (let ((a-branches (loop for x being the hash-values in (ppm::ppm-branches a) collect x))
-	(b-branches (loop for x being the hash-values in (ppm::ppm-branches b) collect x))
-	(a-leaves (loop for x being the hash-values in (ppm::ppm-leaves a) collect x))
-	(b-leaves (loop for x being the hash-values in (ppm::ppm-leaves b) collect x)))
-    (and (equal a-branches b-branches)
-	 (equal a-leaves b-leaves))))
+   (let ((a-branches (utils:hash-table->alist (ppm::ppm-branches a)))
+	 (b-branches (utils:hash-table->alist (ppm::ppm-branches b)))
+	 (a-leaves (utils:hash-table->alist (ppm::ppm-leaves a)))
+	 (b-leaves (utils:hash-table->alist (ppm::ppm-leaves b))))
+    (and (utils:set-equal a-branches b-branches :test #'equalp)
+	 (utils:set-equal a-leaves b-leaves :test #'equalp))))
 	
 (defun mvs-model (rhythms viewpoint)
   (ppm:build-model (viewpoints:viewpoint-sequences viewpoint rhythms) nil))
@@ -348,18 +348,155 @@
 				    (cdr (first (sequence-predictions->event-likelihoods
 					    abstract-results)))
 				    (cdr (first (sequence-predictions->event-likelihoods
-					    mvs-results))))))))))))))
+						 mvs-results))))))))))))))
 
 (5am:test (generative-mvs-model-sequence :depends-on ())
+  (let* ((model-a (ppm:build-model '((a b a c a d a b r a) (b a b a)) nil))
+	 (model-b (ppm:build-model '((b b a a d d c c r r) (d d b b d d)) nil))
+	 (model-a-copy (ppm:build-model '((a b a c a d a b r a) (b a b a)) nil))
+	 (model-b-copy (ppm:build-model '((b b a a d d c c r r) (d d b b d d)) nil))
+	 (events (mapcar (lambda (s) (make-instance 'md:music-event
+						    :onset 0
+						    :id (make-instance 'md:event-identifier
+								       :event-index 0
+								       :composition-index 0
+								       :dataset-index 0)
+						    :description s))
+				'(b b r a a c c)))
+	 (generative-models (list (list (cons '(a) model-a)
+					(cons '(b) model-b))))
+	 (latent-variable (lv:get-latent-variable 'latent3))
+	 (targets (viewpoints:get-viewpoints '(description)))
+	 (sources (viewpoints:get-viewpoints '(abstract3)))
+	 (training-sources (mapcar #'training-viewpoint sources)))
+    (setf (viewpoints:viewpoint-alphabet (first targets))
+	  '(a b c d r))
+    (setf (viewpoints:viewpoint-alphabet (viewpoints:get-viewpoint 'bioi)) nil)
+    (setf (viewpoints:latent-variable (first sources)) latent-variable)
+    (lv:initialise-prior-distribution (list (cons '(a) '(whatever1 whatever2))
+					    (cons '(b) '(whatever1)))
+				      latent-variable)
+    (with-different-configurations
+      (let* ((mvs-models
+	     (list (cons '(a) (make-mvs targets training-sources (list model-a-copy)))
+		   (cons '(b) (make-mvs targets training-sources (list model-b-copy)))))
+	    (abstract-mvs (make-mvs targets sources generative-models
+				    :class 'abstract-mvs
+				    :latent-variable latent-variable
+				    :viewpoint-latent-variables
+				    (list latent-variable)))
+	    (generative-mvs (make-instance 'generative-mvs :mvs abstract-mvs))
+	    (generative-predictions (model-sequence generative-mvs events
+						    :predict? t :construct? t))
+	    (result-priors (mapcar (lambda (sequence-prediction)
+				     (mapcar #'prediction-sets::prediction-prior
+					     (prediction-set sequence-prediction)))
+				   generative-predictions))
+	    (prior-distribution (mapcar #'cdr (lv:prior-distribution latent-variable)))
+	    (latent-states (mapcar #'car (lv:prior-distribution latent-variable)))
+	    (joint-likelihood-sequences))
+	(dolist (latent-state latent-states)
+	  (let* ((mvs (cdr (assoc latent-state mvs-models :test #'equal)))
+		 (predictions
+		  (model-interpretation-with-mvs
+		   mvs events latent-state latent-variable))
+		 (likelihoods (sequence-predictions->event-likelihoods
+			       predictions))
+		 (joint-likelihoods (first likelihoods)))
+	    (operate-on-models mvs #'increment-sequence-front)
+	    (operate-on-models mvs #'reinitialise-ppm :models 'stm)
+	    (push joint-likelihoods joint-likelihood-sequences)))
+	(let* ((per-event-likelihoods (transpose-lists
+				       (reverse joint-likelihood-sequences)))
+	       (posteriors (list prior-distribution)))
+	  (loop for likelihoods in per-event-likelihoods
+	     for result-prior in (first result-priors) do
+	       (let* ((prior (car posteriors))
+		      (evidence (marginal-likelihood prior
+						     likelihoods)))
+		 (5am:is (equal result-prior prior))
+		 (push (infer-posterior-distribution evidence prior likelihoods)
+		       posteriors))))))))
+
+(5am:test (generative-mvs-model-onset-sequence :depends-on ())
+  (let* ((model-a (ppm:build-model '((0 1 3 5 6 8)) nil))
+	 (model-b (ppm:build-model '((3 4 7 9 11)) nil))
+	 (model-a-copy (ppm:build-model '((0 1 3 5 6 8)) nil))
+	 (model-b-copy (ppm:build-model '((3 4 7 9 11)) nil))
+	 (events (mapcar (lambda (s) (make-instance 'md:music-event
+						    :onset s
+						    :id (make-instance 'md:event-identifier
+								       :event-index 0
+								       :composition-index 0
+								       :dataset-index 0)))
+			 '(0 1 4)))
+	 (generative-models (list (list (cons '(2 0) model-a)
+					(cons '(3 0) model-b))))
+	 (latent-variable (lv:get-latent-variable 'metre))
+	 (targets (viewpoints:get-viewpoints '(onset)))
+	 (sources (viewpoints:get-viewpoints '(abs-posinbar)))
+	 (training-sources (mapcar #'training-viewpoint sources)))
+    (setf (viewpoints:viewpoint-alphabet (viewpoints:get-viewpoint 'bioi)) '(0 1 2 3))
+    (setf (viewpoints:latent-variable (first sources)) latent-variable)
+    (lv:initialise-prior-distribution (list (cons '(2 0) '(whatever1 whatever2))
+					    (cons '(3 0) '(whatever1)))
+				      latent-variable)
+    (with-different-configurations
+      (let* ((mvs-models
+	      (list (cons '(2 0) (make-mvs targets training-sources (list model-a-copy)))
+		    (cons '(3 0) (make-mvs targets training-sources (list model-b-copy)))))
+	     (abstract-mvs (make-mvs targets sources generative-models
+				     :class 'abstract-mvs
+				     :latent-variable latent-variable
+				     :viewpoint-latent-variables
+				     (list latent-variable)))
+	     (generative-mvs (make-instance 'generative-mvs :mvs abstract-mvs))
+	     (generative-predictions (model-sequence generative-mvs events
+						    :predict? t :construct? t))
+	     (result-priors (mapcar (lambda (sequence-prediction)
+				      (mapcar #'prediction-sets::prediction-prior
+					      (prediction-set sequence-prediction)))
+				    generative-predictions))
+	     (prior-distribution (mapcar #'cdr (lv:prior-distribution latent-variable)))
+	     (latent-states (mapcar #'car (lv:prior-distribution latent-variable)))
+	     (joint-likelihood-sequences))
+	;; Surgically replace viewpoints with abstract viewpoints
+	(mapcar (lambda (c)
+		  (setf (slot-value (cdr c) 'viewpoints) (apply #'vector sources)))
+		mvs-models)
+	(dolist (latent-state latent-states)
+	  (lv:with-latent-variable-state (latent-state latent-variable)
+	    (let* ((mvs (cdr (assoc (lv:get-category latent-state latent-variable)
+				    mvs-models :test #'equal)))
+		   (predictions (model-sequence mvs events :predict? t :construct? t))
+		   (likelihoods (sequence-predictions->event-likelihoods
+				 predictions))
+		   (joint-likelihoods (first likelihoods)))
+	      (operate-on-models mvs #'increment-sequence-front)
+	      (operate-on-models mvs #'reinitialise-ppm :models 'stm)
+	      (push joint-likelihoods joint-likelihood-sequences))))
+	(let* ((per-event-likelihoods (transpose-lists
+				       (reverse joint-likelihood-sequences)))
+	       (posteriors (list prior-distribution)))
+	  (loop for likelihoods in per-event-likelihoods
+	     for result-prior in (first result-priors) do
+	       (let* ((prior (car posteriors))
+		      (evidence (marginal-likelihood prior
+						     likelihoods)))
+		 (5am:is (equal result-prior prior))
+		 (push (infer-posterior-distribution evidence prior likelihoods)
+		       posteriors))))))))
+
+(5am:test (generative-mvs-model-sequence-2 :depends-on ())
   (let* ((2-rt-rhythms (random-event-sequences :barlength 2 :pulses 2 :keysig 1 :mode 0
 					       :amount 5 :description "ragtime"))
 	 (2-rhythms (random-event-sequences :barlength 2 :pulses 2 :keysig 2 :mode 0
 					    :amount 8 :description "afrocuban"))
 	 (3-rhythms (random-event-sequences :barlength 3 :pulses 1 :keysig 2 :mode 1
 					    :amount 6 :description "afrocuban"))
-	 (event-sequence (viewpoints::iois->onset-events '(0 3 2); 1 3 3)
+	 (event-sequence (viewpoints::iois->onset-events '(0 3 2 1 3 3 3)
 							 :cpitches
-							 '(80 75 75))); 76 75 79 80)))
+							 '(80 75 75 76 75 79)))
     	 (targets (viewpoints:get-basic-viewpoints '(onset cpitch)
 						   (append (list event-sequence)
 							   2-rt-rhythms 2-rhythms 3-rhythms))))
@@ -380,6 +517,16 @@
 	     (ac-style-model (mvs-model (append 2-rhythms 3-rhythms)
 					(viewpoints:training-viewpoint
 					 key-style-vp)))
+	     (2-metre-model-1 (mvs-model (append 2-rt-rhythms 2-rhythms)
+				       (viewpoints:training-viewpoint metre-key-vp)))
+	     (3-metre-model-1 (mvs-model 3-rhythms
+				       (viewpoints:training-viewpoint metre-key-vp)))
+	     (rt-style-model-1 (mvs-model 2-rt-rhythms
+					(viewpoints:training-viewpoint
+					 key-style-vp)))
+	     (ac-style-model-1 (mvs-model (append 2-rhythms 3-rhythms)
+					(viewpoints:training-viewpoint
+					 key-style-vp)))
 	     (generative-models (list (list (cons 2-metre
 						  2-metre-model)
 					    (cons 3-metre
@@ -388,7 +535,6 @@
 						  rt-style-model)
 					    (cons afrocuban
 						  ac-style-model)))))
-	(setf (lv:categories metre-style-key) (list 2-afrocuban 2-ragtime 3-afrocuban))
 	(lv:initialise-prior-distribution (list (cons 2-ragtime 2-rt-rhythms)
 						(cons 2-afrocuban 2-rhythms)
 						(cons 3-afrocuban 3-rhythms))
@@ -396,46 +542,63 @@
 	(setf (latent-variable metre-key-vp) metre-key)
 	(setf (latent-variable key-style-vp) key-style)
 	(with-different-configurations
+	  (print (list models stm-order-bound ltm-order-bound))
 	  (let* ((abstract-mvs (make-mvs targets sources generative-models :class 'abstract-mvs
 					 :latent-variable metre-style-key
 					 :viewpoint-latent-variables (list metre-key key-style)))
 		 (generative-mvs (make-instance 'generative-mvs :mvs abstract-mvs))
-		 (mvss (mapcar (lambda (metre-model style-model)
-				 (make-mvs targets (list (training-viewpoint
-							  metre-key-vp)
-							 (training-viewpoint
-							  key-style-vp))
-					   (list (cdr metre-model) (cdr style-model))))
-			       (first generative-models) (second generative-models)))
+		 (mvs-models
+		  (list (cons 2-afrocuban (make-mvs targets
+						    (list (training-viewpoint metre-key-vp)
+							  (training-viewpoint key-style-vp))
+						    (list 2-metre-model-1 ac-style-model-1)))
+			(cons 2-ragtime
+			      (make-mvs targets (list (training-viewpoint metre-key-vp)
+						      (training-viewpoint key-style-vp))
+					(list 2-metre-model-1 rt-style-model-1)))
+			(cons 3-afrocuban
+			      (make-mvs targets	(list (training-viewpoint metre-key-vp)
+						      (training-viewpoint key-style-vp))
+					(list 3-metre-model-1 ac-style-model-1)))))
 		 (generative-predictions (model-sequence generative-mvs event-sequence
-							 :predict? t :construct? t))
-		 (posteriors (list (mapcar #'cdr (lv:prior-distribution metre-style-key))))
+							 :predict? t :construct? nil))
 		 (result-priors (mapcar (lambda (sequence-prediction)
-					  (mapcar #'prediction-sets::prediction-prior (prediction-set
-								      sequence-prediction)))
+					  (mapcar #'prediction-sets::prediction-prior
+						  (prediction-set sequence-prediction)))
 					generative-predictions))
+		 (prior-distribution (mapcar #'cdr (lv:prior-distribution metre-style-key)))
+		 (latent-states (mapcar #'car (lv:prior-distribution metre-style-key)))
 		 (joint-likelihood-sequences))
-	    (loop for category in (lv:categories metre-style-key)
-	       for mvs in mvss do
-		 (dolist (latent-state (lv:get-latent-states category metre-style-key))
-		   (lv:with-latent-variable-state (latent-state metre-style-key)
-		     (let* ((predictions
-			     (model-interpretation-with-mvs
-			      mvs event-sequence latent-state metre-style-key))
-			    (likelihoods (sequence-predictions->event-likelihoods
-					  predictions))
-			    (joint-likelihoods (mapcar #'* (first likelihoods)
-						       (second likelihoods))))
-		       (push joint-likelihoods joint-likelihood-sequences)))))
-	    (let ((per-event-likelihoods (reverse (transpose-lists
-						   joint-likelihood-sequences))))
+	    (mapcar (lambda (c)
+		      (setf (slot-value (cdr c) 'viewpoints) (apply #'vector sources)))
+		    mvs-models)
+	    (dolist (latent-state latent-states)
+	      (lv:with-latent-variable-state (latent-state metre-style-key)
+		(let* ((mvs (cdr (assoc (lv:get-category latent-state metre-style-key)
+					mvs-models :test #'equal)))
+		       (predictions (model-sequence mvs event-sequence
+						    :predict? t :construct? t))
+		       (likelihoods (sequence-predictions->event-likelihoods
+				     predictions))
+		       (joint-likelihoods (mapcar #'* (first likelihoods)
+						  (second likelihoods))))
+		  (operate-on-models mvs #'increment-sequence-front)
+		  (operate-on-models mvs #'reinitialise-ppm :models 'stm)
+		     ;(lv:with-latent-variable-state (latent-state metre-style-key)
+		     ;  (5am:is (every #'numbers-approximately-equal 
+			;	      (mapcar #'cdr likelihoods)
+			;	      (mapcar #'cdr (sequence-predictions->event-likelihoods
+			;			     (model-sequence abstract-mvs event-sequence
+			;					     :predict? t :construct? nil))))))
+		  (push joint-likelihoods joint-likelihood-sequences))))
+	    (let ((per-event-likelihoods (transpose-lists
+					  (reverse joint-likelihood-sequences)))
+		  (posteriors (list prior-distribution)))
 	      (loop for likelihoods in per-event-likelihoods
 		 for result-prior in (first result-priors) do
 		   (let* ((prior (car posteriors))
 			  (evidence (marginal-likelihood prior
 							 likelihoods)))
-		     (print result-prior)
-		     (print prior)
 		     (5am:is (numbers-approximately-equal result-prior prior))
 		     (push (infer-posterior-distribution evidence prior likelihoods)
 			   posteriors))))))))))
@@ -463,6 +626,78 @@
 		 '((a 0) (b 1) (c 2))))
   (5am:is (equal (transpose-lists '((a b c) (p q r) (0 1 2)))
 		 '((a p 0) (b q 1) (c r 2)))))
+
+(5am:test joint-interpretation-likelihoods 
+    (let ((event-interpretation-predictions
+	   (list
+	    ;; Basic viewpoint 1.
+	    (mapcar (lambda (event set) (make-instance 'event-prediction :event event
+						       :element 0 :set set))
+		    '((0 0 0) (1 0 0) (2 0 0))
+		    '(((0 0.3) (1 0.7)) ((0 0.5) (1 0.5)) ((0 0.8) (1 0.2))))
+	    ;; Basic viewpoint 2
+	    (mapcar (lambda (event set) (make-instance 'event-prediction :event event
+						       :element 0 :set set))
+		    '((0 0 0) (1 0 0) (2 0 0))
+		    '(((0 0.2) (1 0.8)) ((0 0.3) (1 0.7)) ((0 0.9) (1 0.1)))))))
+      (let ((likelihoods (joint-interpretation-likelihoods
+				event-interpretation-predictions)))
+	(5am:is (typep likelihoods 'list))
+	(5am:is (eq (length likelihoods) 3))
+	(5am:is (equal likelihoods
+		       (list (* 0.3 0.2) (* 0.5 0.3) (* 0.8 0.9)))))))
+
+(5am:test get-event-predictions
+  (let ((mvs (make-instance 'generative-mvs :mvs
+			    (make-instance 'abstract-mvs :basic '(0 1))))
+	(sequence-interpretation-predictions
+	 (list
+	  ;; Interpretation 1
+	  (list
+	   ;; Basic viewpoint 1
+	   (make-instance 'sequence-prediction :set
+			  (list (make-instance 'event-prediction :event '(1 1 1))
+				(make-instance 'event-prediction :event '(1 1 2))))
+	   ;; Basic viewpoint 2
+	   (make-instance 'sequence-prediction :set
+			  (list (make-instance 'event-prediction :event '(1 2 1))
+				(make-instance 'event-prediction :event '(1 2 2)))))
+	  (list (make-instance 'sequence-prediction :set
+			       (list (make-instance 'event-prediction :event '(2 1 1))
+				     (make-instance 'event-prediction :event '(2 1 2))))
+		(make-instance 'sequence-prediction :set
+			       (list (make-instance 'event-prediction :event '(2 2 1))
+				     (make-instance 'event-prediction :event '(2 2 2)))))
+	  (list (make-instance 'sequence-prediction :set
+			       (list (make-instance 'event-prediction :event '(3 1 1))
+				     (make-instance 'event-prediction :event '(3 1 2))))
+		(make-instance 'sequence-prediction :set
+			       (list (make-instance 'event-prediction :event '(3 2 1))
+				     (make-instance 'event-prediction :event '(3 2 2))))))))
+    (let ((event-interpretation-predictions
+	   (get-event-predictions sequence-interpretation-predictions 0 mvs)))
+      (5am:is (typep event-interpretation-predictions 'list))
+      (5am:is (eq (length event-interpretation-predictions) 2))
+      (5am:is (typep (first event-interpretation-predictions) 'list))
+      (5am:is (eq (length (first event-interpretation-predictions)) 3))
+      (let ((events (mapcar (lambda (p) (mapcar #'prediction-event p))
+			    event-interpretation-predictions)))
+	;; event: (interpretation basic-viewpoint event-index)
+	(5am:is (equal events
+		       '(;; Basic viewpoint 1
+			 ((1 1 1) (2 1 1) (3 1 1))
+			 ;; Basic viewpoint 2
+			 ((1 2 1) (2 2 1) (3 2 1)))))))
+    (let* ((event-interpretation-predictions
+	    (get-event-predictions sequence-interpretation-predictions 1 mvs))
+	   (events (mapcar (lambda (p) (mapcar #'prediction-event p))
+			   event-interpretation-predictions)))
+      (5am:is (equal events
+		     '(;; Basic viewpoint 1
+		       ((1 1 2) (2 1 2) (3 1 2))
+		       ;; Basic viewpoint 2
+		       ((1 2 2) (2 2 2) (3 2 2))))))))
+		      
 	    					     
 
 (defun sequence-predictions->event-likelihoods (sequence-predictions)
@@ -473,17 +708,19 @@
     (reverse event-likelihoods)))
 
 (defun model-interpretation-with-mvs (mvs sequence latent-state latent-variable)
-    ;; Adjust the sequence to be correctly interpreted by posinbar.
+  ;; Adjust the sequence to be correctly interpreted by posinbar.
     (dolist (e sequence)
-      (dolist (parameter (lv::category-parameters latent-variable))
+      (dolist (parameter (lv::latent-state-parameters latent-variable))
 	(let ((symbol (intern (symbol-name parameter) (find-package :md))))
 	  (unless (not (member symbol md:*md-music-slots*))
+	    (lv:get-latent-state-parameter latent-state parameter latent-variable)
 	    (setf (slot-value e symbol)
 		  (lv:get-latent-state-parameter latent-state parameter latent-variable))))))
     ;; Further adjust the sequence to be interpreted in the correct phase
     ;; by posinbar.
+    
     (with-adjusted-phase (sequence (lv::get-latent-state-parameter latent-state :barlength
 								   latent-variable)
 				   (lv:get-latent-state-parameter  latent-state :phase
 								   latent-variable))
-      (model-sequence mvs sequence :construct? t :predict? t)))
+      (model-sequence mvs sequence :predict? t :construct? t)))
