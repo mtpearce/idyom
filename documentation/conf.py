@@ -31,9 +31,25 @@
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
+
 extensions = ['sphinx.ext.autodoc',
     'sphinx.ext.doctest',
     'sphinx.ext.mathjax']
+
+extensions.extend(['sphinxcontrib.cldomain',
+                   'sphinxcontrib.hyperspec'])
+
+from os.path import join, dirname, realpath
+cl_systems = [{"name": "idyom",
+               "path": join(dirname(realpath(__file__)), "../"),
+               "packages": ["idyom", "viewpoints"]}]
+                   
+                  # , "viewpoints", "resampling", 
+                  # "apps", "idyom", "viewpoint-selection", "database", "ppm", 
+                  # "prediction-sets", "generation", "idyom-db", "kern2db", 
+                  # "midi2db", "conklin2db", "text2db", "db2midi", 
+                  # "db2lilypond", "music-objects"]}]
+
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -195,4 +211,4 @@ epub_copyright = copyright
 # A list of files that should not be packed into the epub file.
 epub_exclude_files = ['search.html']
 
-
+from conf_local import *
