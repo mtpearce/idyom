@@ -5,10 +5,28 @@ data/
 ### Sphinx
 
 documentation/_*
+documentation/conf_local.py
+
+### Virtualenv
+
+env/
 
 ### Dropbox
 
 *.DS_Store
+
+### VIM
+
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-v][a-z]
+[._]sw[a-p]
+
+Session.vim
+
+.netrwhist
+*~
+tags
 
 ### CL
 
