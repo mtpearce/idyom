@@ -16,5 +16,7 @@ requests==2.18.4
 six==1.11.0
 snowballstemmer==1.2.1
 Sphinx==1.6.4
+-e git+git@github.com:russell/sphinxcontrib-cldomain.git@51274b22660f28b903c7a25056ca9d1e578b9fd0#egg=sphinxcontrib_cldomain
 sphinxcontrib-websupport==1.0.1
+typing==3.6.2
 urllib3==1.22
