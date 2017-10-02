@@ -30,6 +30,7 @@
    "HAS-TIME-SIGNATURE?" "SAME-TIME-SIGNATURE?" "PERIOD"
    "TIME-SIGNATURE->METRICAL-INTERPRETATION"
    ;; Representation
+   "MD-TIMEBASE"
    "RESCALE")
   (:documentation "Musical data."))
 
