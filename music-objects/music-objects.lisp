@@ -30,6 +30,8 @@
 (defvar *time-slots* '(onset dur deltast barlength bioi))
 (defvar *md-time-slots* (mapcar #'music-symbol *time-slots*))
 
+(defparameter *md-timebase* 96 "Target timebase for music objects")
+
 
 ;;; Classes for music objects
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -671,11 +673,11 @@ scale. Show a warning when the resulting time is not a whole number."
 
 (defun convert-time-slot (value timebase)
   "Convert native representation of time into a representation where
-    a crotchet has a value of 96."
+    a crotchet has a value of *md-timebase*."
   (if (or (null value) (null timebase))
       nil
-      (let ((multiplier (/ 96 timebase)))
-        (* value multiplier)))) 
+      (let ((multiplier (/ *md-timebase* timebase)))
+	(* value multiplier)))) 
 
 
 
