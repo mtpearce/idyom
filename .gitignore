@@ -11,6 +11,10 @@ documentation/conf_local.py
 
 env/
 
+### Python
+
+*.pyc
+
 ### Dropbox
 
 *.DS_Store
