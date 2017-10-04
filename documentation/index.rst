@@ -43,6 +43,7 @@ I'd be interested to hear if you're using IDyOM in your research, so do drop me 
    database
    viewpoints
    prediction
+   inference
    api_reference
 
 Indices and tables
