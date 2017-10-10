@@ -2,7 +2,7 @@
 ;;;; File:       main.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2010-11-01 15:19:57 marcusp>
-;;;; Time-stamp: <2017-06-20 14:44:57 peter>
+;;;; Time-stamp: <2017-10-06 09:34:21 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:idyom)
@@ -83,6 +83,7 @@
                 (detail 3)
 		(print-predictions nil)
                 (output-path nil)
+		(output-filename nil)
                 (overwrite nil)
 		(separator " ") (null-token "NA")
                 ;; Caching
@@ -104,16 +105,18 @@
 		      (cons mvs::*ltm-params* ltmo)))
          (stmo (apply #'resampling::check-model-defaults
 		      (cons mvs::*stm-params* stmo)))
-         (filename (apps:dataset-modelling-filename
-		    dataset-id
-		    target-viewpoints
-		    source-viewpoints
-		    :extension ".dat"
-		    :detail detail
-		    :pretraining-ids pretraining-ids
-		    :k k :resampling-indices resampling-indices
-		    :texture texture :voices voices
-		    :models models :ltmo ltmo :stmo stmo))
+         (filename (if output-filename
+		       output-filename
+		       (apps:dataset-modelling-filename
+			dataset-id
+			target-viewpoints
+			source-viewpoints
+			:extension ".dat"
+			:detail detail
+			:pretraining-ids pretraining-ids
+			:k k :resampling-indices resampling-indices
+			:texture texture :voices voices
+			:models models :ltmo ltmo :stmo stmo)))
          (filepath (when output-path (ensure-directories-exist
                                       (merge-pathnames filename
 						       (utils:ensure-directory
