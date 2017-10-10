@@ -2,7 +2,7 @@
 ;;;; File:       descriptives.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-07-23 12:30:38 peter>                          
-;;;; Time-stamp: <2017-10-10 09:15:50 peter>                           
+;;;; Time-stamp: <2017-10-10 09:33:22 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -118,6 +118,19 @@ to a unique transition. These elements should themselves be lists,
 the first element of which gives the context, the second giving 
 the continuation, the third giving the context count, the fourth giving 
 the continuation count, and the fifth giving the resulting MLE probability.")))
+
+(defgeneric as-data-frame (object))
+(defmethod as-data-frame ((object transition-probabilities))
+  (let ((df (make-instance 'utils::dataframe)))
+    (loop for row in (data object)
+       do (let ((ht (make-hash-table)))
+	    (setf (gethash :context ht) (first row))
+	    (setf (gethash :continuation ht) (second row))
+	    (setf (gethash :context-count ht) (third row))
+	    (setf (gethash :continuation-count ht) (fourth row))
+	    (setf (gethash :probability ht) (fifth row))
+	    (utils:add-row ht df))
+       finally (return df))))
 
 (defgeneric write-csv (object path))
 (defmethod write-csv ((object transition-probabilities) path)
