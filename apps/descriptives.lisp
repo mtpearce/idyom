@@ -2,7 +2,7 @@
 ;;;; File:       descriptives.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-07-23 12:30:38 peter>                          
-;;;; Time-stamp: <2017-07-24 17:04:00 peter>                           
+;;;; Time-stamp: <2017-10-10 09:15:50 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -155,28 +155,43 @@ the continuation count, and the fifth giving the resulting MLE probability.")))
     (when (> num-transitions 0)
       (let* ((contexts (loop for x in (data object) collect (first x)))
 	     (continuations (loop for x in (data object) collect (second x)))
-	     (probabilities (loop for x in (data object) collect (third x))))
+	     (context-counts (loop for x in (data object) collect (third x)))
+	     (continuation-counts (loop for x in (data object) collect (fourth x)))
+	     (probabilities (loop for x in (data object) collect (fifth x))))
 	(flet ((max-string-width (string-list)
-		 (apply #'max (mapcar #'(lambda (x) (length (princ-to-string x))) string-list))))
-	  (let* ((context-col-width (max 10 (max-string-width contexts)))
-		 (continuation-col-width (max 15 (max-string-width continuations)))
+		 (apply #'max (mapcar #'(lambda (x) (length (princ-to-string x)))
+				      string-list))))
+	  (let* ((context-col-width (max 10 (1+ (max-string-width contexts))))
+		 (continuation-col-width (max 15 (1+ (max-string-width continuations))))
+		 (context-count-col-width (max 15 (1+ (max-string-width context-counts))))
+		 (continuation-count-col-width (max 18 (1+ (max-string-width
+							    continuation-counts))))
 		 (probability-col-width 9)
 		 (total-width (+ context-col-width continuation-col-width
 				 probability-col-width)))
 	    (flet ((print-separator ()
-		       (format stream "~%~A"
-			       (make-sequence 'string total-width :initial-element #\-)))
+		     (format stream "~%~A"
+			     (make-sequence 'string total-width :initial-element #\-)))
 		   (print-header ()
-		     (format stream "~%~10A~15A~15A" "Context" "Continuation" "Probability"))
+		     (format stream "~%~vA~vA~vA~vA~vA"
+			     context-col-width "Context"
+			     continuation-col-width "Continuation"
+			     context-count-col-width "Context (N)"
+			     continuation-count-col-width "Continuation (N)"
+			     probability-col-width "Probability"))
 		   (print-data ()
 		     (loop
 			for context in contexts
 			for continuation in continuations
+			for context-count in context-counts
+			for continuation-count in continuation-counts
 			for probability in probabilities
 			do (format stream
-				   "~%~vA~vA~v$"
+				   "~%~vA~vA~vA~vA~v$"
 				   context-col-width context
 				   continuation-col-width continuation
+				   context-count-col-width context-count
+				   continuation-count-col-width continuation-count
 				   probability-col-width probability))))
 	      (print-separator)
 	      (print-header)
@@ -209,4 +224,3 @@ maximum-likelihood estimation (i.e. no escape probabilities)."))
 
 (defun get-viewpoint-transition-probabilities (data n viewpoint)
   (n-grams->transition-probabilities (count-viewpoint-n-grams data (1+ n) viewpoint)))
-
