@@ -22,3 +22,6 @@ tramp
 ### R
 .Rproj.user
 idyom.Rproj
+
+### Scratch folder
+scratch/*
