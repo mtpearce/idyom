@@ -2,7 +2,7 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-05-15 13:33:20 peter>                          
-;;;; Time-stamp: <2017-07-26 19:18:27 peter>                           
+;;;; Time-stamp: <2017-08-29 12:56:17 peter>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -23,6 +23,13 @@
 
 (defpackage #:pmch-s3
   (:use #:common-lisp)
-  (:export)
+  (:export "GENERATE-STIMULI")
   (:documentation "Utility functions for Peter Harrison's PhD study 3"))
 
+;;; ======================================================================
+;;; From Learning to Creativity (Ioanna Zioga collaboration)
+;;; ======================================================================
+
+(defpackage #:pmch-l2c
+  (:use #:common-lisp)
+  (:documentation "Utility functions for the Learning To Creativity project with Ioanna Zioga."))
