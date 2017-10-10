@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2017-07-27 11:07:50 peter>
+;;;; Time-stamp: <2017-08-29 14:53:37 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -903,8 +903,9 @@ is ordered by key."))
     (dotimes (i (1+ (num-rows data)))
       (dotimes (j num-cols)
 	(let* ((token (pop (svref columns j)))
-	       (token (if (and (null token) null-token) null-token token))) 
-	  (format destination "~A~A" token separator)))
+	       (token (if (and (null token) null-token) null-token token)))
+	  (format destination "~A" token)
+	  (when (< j (1- num-cols)) (format destination "~A" separator))))
       (format destination "~&"))))
 
 (defgeneric sort-by-columns (data columns &key descending)
