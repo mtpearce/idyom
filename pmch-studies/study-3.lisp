@@ -2,7 +2,7 @@
 ;;;; File:       study-3.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-07-26 19:12:50 peter>                        
-;;;; Time-stamp: <2017-08-15 09:37:23 peter>                           
+;;;; Time-stamp: <2017-08-27 14:20:53 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -11,14 +11,16 @@
 ;;;; Provides utility functions for Study 3 of Peter's PhD,
 ;;;; primarily the stimulus generation part.
 
+;; 
+
 (cl:in-package #:pmch-s3)
 
 (defparameter *genres* '(:classical :popular :jazz))
 (defparameter *genre-dataset-ids* '(1 2 3))
 (defparameter *genre-reduce-harmony* '(t nil nil))
-(defparameter *num-ic-categories* 10)
-(defparameter *num-stimuli-per-ic-category* 3)
-(defparameter *num-stimuli-per-ic-category-intermediate* 3) ;; intermediate filtering threshold imposed for computational tractability
+(defparameter *num-ic-categories* 1)
+(defparameter *num-stimuli-per-ic-category* 510)
+(defparameter *num-stimuli-per-ic-category-intermediate* 510) ;; intermediate filtering threshold imposed for computational tractability
 (defparameter *num-chords-in-stimulus* 8)
 (defparameter *target-chord-position* 5) ;; 0-indexed
 (defparameter *tempo* 60)
@@ -337,7 +339,15 @@ The old side effects on <used-compositions> have been removed."
 				      refined-candidates))
 			     (refined-candidates
 			      (mapcar #'(lambda (s)
-			     		  (acons :stm-ic (get-stm-ic (cdr (assoc :music-data s))) s))
+					  (acons :h-cpitch
+						 (viewpoints:viewpoint-sequence (viewpoints:get-viewpoint
+										 'h-cpitch)
+										(cdr (assoc :music-data s)))
+						 s))
+				      refined-candidates))
+			     (refined-candidates
+			      (mapcar #'(lambda (s)
+			     		  (acons :h-cpitch-stm-ic (get-stm-ic (cdr (assoc :music-data s))) s))
 			     	      refined-candidates))
 			     (refined-candidates
 			      (mapcar #'(lambda (s)
@@ -357,7 +367,7 @@ The old side effects on <used-compositions> have been removed."
 						 s))
 				      refined-candidates))	 
 			     (refined-candidates (if *filter-stm*
-						     (remove-if #'(lambda (s) (< (cdr (assoc :stm-ic s))
+						     (remove-if #'(lambda (s) (< (cdr (assoc :h-cpitch-stm-ic s))
 										 *min-stm-ic*))
 								refined-candidates)
 						     refined-candidates))
