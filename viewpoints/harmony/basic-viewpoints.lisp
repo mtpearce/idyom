@@ -2,7 +2,7 @@
 ;;;; File:       basic-viewpoints.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-25 19:09:17 marcusp>                           
-;;;; Time-stamp: <2017-05-04 10:23:51 peter>                           
+;;;; Time-stamp: <2017-10-10 10:33:51 peter>                           
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
@@ -59,7 +59,6 @@
 ;;;* Testing functions *
 ;;;==============================
 
-;; Note: this function is replicated in music-data
 (defun harm-seq
     (cpitch &key onset dur (ref-pitch 0))
   "Intended for testing purposes. Makes an object of class md:harmonic-sequence
