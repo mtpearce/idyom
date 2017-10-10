@@ -18,3 +18,7 @@ data/
 auto-save-list
 tramp
 .\#*
+
+### R
+.Rproj.user
+idyom.Rproj
