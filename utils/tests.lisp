@@ -2,7 +2,7 @@
 ;;;; File:       tests.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-04-27 16:17:12 peter>                         
-;;;; Time-stamp: <2017-05-18 23:47:43 peter>                           
+;;;; Time-stamp: <2017-10-11 09:25:42 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -76,4 +76,14 @@
   (5am:is (equal (get-column :hour (sort-by-columns (make-test-dataframe) '(:day :hour)))
 		 '(1 2 1 2 1 2))))
     
-    
+;;;; numeric
+
+(5am:def-suite numeric :in utils)
+(5am:in-suite numeric)
+
+(5am:test approx-equal-ex-1
+  (5am:is (approx-equal 1 1)))
+(5am:test approx-equal-ex-2
+  (5am:is (approx-equal 15.000001 15)))
+(5am:test approx-equal-ex-3
+  (5am:is (not (approx-equal 15.00001 15.0))))

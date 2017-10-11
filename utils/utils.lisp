@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2017-08-29 14:53:37 peter>
+;;;; Time-stamp: <2017-10-11 09:21:26 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -132,6 +132,15 @@
    <decimal-places>."
   (let ((factor (expt 10 decimal-places)))
     (/ (fround (* number factor)) factor)))
+
+(defun approx-equal (x y &optional (decimal-places 5))
+  "Returns whether numbers <x> and <y> are approximately equal.
+<decimal-places> determines the degree of equality."
+  (assert (numberp x))
+  (assert (numberp y))
+  (assert (integerp decimal-places))
+  (= (round-to-nearest-decimal-place x decimal-places)
+     (round-to-nearest-decimal-place y decimal-places)))
 
 (defun average (&rest numbers)
   "Returns the average of <numbers>."
