@@ -2,7 +2,7 @@
 ;;;; File:       descriptives-tests.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-07-24 09:34:35 peter>                             
-;;;; Time-stamp: <2017-10-11 09:40:12 peter>                           
+;;;; Time-stamp: <2017-10-11 10:29:54 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -75,4 +75,14 @@
   (5am:is (utils:approx-equal (milne-sd '(0 3 7) '(0 4 7))
 			      (milne-sd '(0 4 7) '(0 3 7)))))
 
-			 
+
+(5am:def-suite hutch-knopoff :in descriptives)
+(5am:in-suite hutch-knopoff)
+
+(5am:test hutch-knopoff-ex-1
+  (5am:is (utils:approx-equal (hutch-knopoff '(60)) 0 2)))
+(5am:test hutch-knopoff-ex-2
+  (5am:is (utils:approx-equal (hutch-knopoff '(60 72)) 0 2)))
+(5am:test hutch-knopoff-ex-3
+  (5am:is (< (hutch-knopoff '(60 64 67))
+	     (hutch-knopoff '(60 61 64 67)))))			 

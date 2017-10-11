@@ -2,7 +2,7 @@
 ;;;; File:       descriptives.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-07-23 12:30:38 peter>                          
-;;;; Time-stamp: <2017-10-11 09:39:24 peter>                           
+;;;; Time-stamp: <2017-10-11 10:19:07 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -260,5 +260,14 @@ maximum-likelihood estimation (i.e. no escape probabilities)."))
   (assert (every #'numberp chord-2))
   (let ((seq (viewpoints:harm-seq (list chord-1 chord-2)))
 	(viewpoint (viewpoints:get-viewpoint 'h-cpc-milne-sd-cont=min)))
+    (car (viewpoints:viewpoint-sequence viewpoint seq))))
+
+(defun hutch-knopoff (chord)
+  "Computes roughness of a single chord according
+to the model of Hutchinson & Knopoff (1978, 1979)."
+  (assert (listp chord))
+  (assert (every #'numberp chord))
+  (let ((seq (viewpoints:harm-seq (list chord)))
+	(viewpoint (viewpoints:get-viewpoint 'h-hutch-rough)))
     (car (viewpoints:viewpoint-sequence viewpoint seq))))
     
