@@ -2,7 +2,7 @@
 ;;;; File:       descriptives.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-07-23 12:30:38 peter>                          
-;;;; Time-stamp: <2017-10-11 10:19:07 peter>                           
+;;;; Time-stamp: <2017-10-11 10:52:52 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -248,6 +248,28 @@ maximum-likelihood estimation (i.e. no escape probabilities)."))
 
 (defun get-viewpoint-transition-probabilities (data n viewpoint)
   (n-grams->transition-probabilities (count-viewpoint-n-grams data (1+ n) viewpoint)))
+
+(defun get-h-cpitch-0-order-tps-with-roughness (data)
+  "For each unique <h-cpitch> in <data>, get 0th-order
+transition probabilities and roughness estimates."
+  (let ((tps (as-assoc-list (get-viewpoint-transition-probabilities
+			     data 0 'h-cpitch))))
+    (loop for elt in tps
+       collect (acons :roughness
+		      (hutch-knopoff (cdr (assoc :continuation elt)))
+		      elt))))
+
+(defun get-h-cpitch-1-order-tps-with-dissonance (data)
+  "For each unique <h-cpitch> in <data>, get 1st-order
+transition probabilities and sequential dissonance estimates.
+Sequential dissonance is estimated as Milne's spectral distance."
+  (let ((tps (as-assoc-list (get-viewpoint-transition-probabilities
+			     data 1 'h-cpitch))))
+    (loop for elt in tps
+       collect (acons :sequential-dissonance
+		      (milne-sd (car (cdr (assoc :context elt)))
+				   (cdr (assoc :continuation elt)))
+		      elt))))
 
 ;;;; Calculating dissonance for chords
 
