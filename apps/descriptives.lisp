@@ -2,7 +2,7 @@
 ;;;; File:       descriptives.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-07-23 12:30:38 peter>                          
-;;;; Time-stamp: <2017-10-10 09:33:22 peter>                           
+;;;; Time-stamp: <2017-10-11 09:39:24 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -132,6 +132,17 @@ the continuation count, and the fifth giving the resulting MLE probability.")))
 	    (utils:add-row ht df))
        finally (return df))))
 
+
+(defgeneric as-assoc-list (object))
+(defmethod as-assoc-list ((object transition-probabilities))
+    (loop for row in (data object)
+       collect (list (cons :context (first row))
+		     (cons :continuation (second row))
+		     (cons :context-count (third row))
+		     (cons :continuation-count (fourth row))
+		     (cons :probability (fifth row)))))
+   
+
 (defgeneric write-csv (object path))
 (defmethod write-csv ((object transition-probabilities) path)
   (let* ((data (sort (copy-list (data object))
@@ -237,3 +248,17 @@ maximum-likelihood estimation (i.e. no escape probabilities)."))
 
 (defun get-viewpoint-transition-probabilities (data n viewpoint)
   (n-grams->transition-probabilities (count-viewpoint-n-grams data (1+ n) viewpoint)))
+
+;;;; Calculating dissonance for chords
+
+(defun milne-sd (chord-1 chord-2)
+  "Computes Milne's spectral distance between <chord-1> and <chord-2>.
+<chord-1> and <chord-2> should each be lists of MIDI note numbers."
+  (assert (listp chord-1))
+  (assert (listp chord-2))
+  (assert (every #'numberp chord-1))
+  (assert (every #'numberp chord-2))
+  (let ((seq (viewpoints:harm-seq (list chord-1 chord-2)))
+	(viewpoint (viewpoints:get-viewpoint 'h-cpc-milne-sd-cont=min)))
+    (car (viewpoints:viewpoint-sequence viewpoint seq))))
+    

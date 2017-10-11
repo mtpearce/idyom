@@ -2,7 +2,7 @@
 ;;;; File:       descriptives-tests.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-07-24 09:34:35 peter>                             
-;;;; Time-stamp: <2017-07-24 10:53:55 peter>                           
+;;;; Time-stamp: <2017-10-11 09:40:12 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -59,3 +59,20 @@
 		   (eql (get-count '(cat cat fish) n-grams) 2)
 		   (eql (get-count '(dog cat cat) n-grams) 1))))))
 
+;;;; Dissonance
+
+(5am:def-suite milne-sd :in descriptives)
+(5am:in-suite milne-sd)
+
+(5am:test milne-sd-ex-1
+  (5am:is (utils:approx-equal (milne-sd '(0 3 7) '(0 3 7)) 0)))
+(5am:test milne-sd-ex-2
+  (5am:is (utils:approx-equal (milne-sd '(0 3 7) '(0 4 7))
+			      (milne-sd '(50 53 57) '(50 54 57)))))
+(5am:test milne-sd-ex-3
+  (5am:is (> (milne-sd '(0 3 7) '(0 4 7)) 0)))
+(5am:test milne-sd-ex-4
+  (5am:is (utils:approx-equal (milne-sd '(0 3 7) '(0 4 7))
+			      (milne-sd '(0 4 7) '(0 3 7)))))
+
+			 
