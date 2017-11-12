@@ -2,7 +2,7 @@
 ;;;; File:       study-1.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-05-15 13:37:26 peter>                          
-;;;; Time-stamp: <2017-07-26 16:31:58 peter>                           
+;;;; Time-stamp: <2017-10-13 17:40:07 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -299,9 +299,42 @@ to the size that each training set should be downsized to."
 	     :overwrite nil
 	     :output-path output-analysis-path))))))
 
+(defun analyse-h-cpitch-tps
+    (dataset &key output-path reduce-harmony (remove-repeated-chords t))
+  (utils:message
+   (format nil "Analysing h-cpitch TPs for dataset ~A..." dataset))
+  (let* ((data (md:get-music-objects (list dataset) nil
+				     :voices nil :texture :harmony
+				     :harmonic-reduction (if reduce-harmony
+							     :regular-harmonic-rhythm
+							     :none)
+				     :slices-or-chords :chords
+				     :remove-repeated-chords remove-repeated-chords))
+	 (data (progn (utils:message "Adding local key cache.")
+		      (mapcar #'viewpoints:add-local-key-cache data)))
+	 (output-root-dir output-path)
+	 (output-leaf-dir
+	  (ensure-directories-exist
+	   (merge-pathnames
+	    (make-pathname
+	     :directory
+	     (list :relative
+		   "h-cpitch-tp-analysis"
+		   (format nil "~A-harmonic-reduction-~A" dataset
+			   (string-downcase (symbol-name reduce-harmony)))))
+	    output-root-dir)))
+	 (path-0 (merge-pathnames "0-order.csv" output-leaf-dir))
+	 (path-1 (merge-pathnames "1-order.csv" output-leaf-dir)))
+    (descriptives:get-h-cpitch-0-order-tps-with-roughness data path-0)
+    (descriptives:get-h-cpitch-1-order-tps-with-dissonance data path-1))
+  t)
+
 (defun analyse-tps-all-viewpoints
     (dataset &key output-path reduce-harmony (remove-repeated-chords t)
 	       n num-quantiles)
+  (analyse-h-cpitch-tps dataset :output-path output-path
+			:reduce-harmony reduce-harmony
+			:remove-repeated-chords remove-repeated-chords)
   (utils:message (format nil "Analysing transition probabilities (n = ~A) for ~A viewpoints in dataset ~A..."
 			 n (length *harmony-viewpoints*) dataset))
   (let* ((data (md:get-music-objects (list dataset) nil
