@@ -2,7 +2,7 @@
 ;;;; File:       descriptives.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-07-23 12:30:38 peter>                          
-;;;; Time-stamp: <2017-10-11 10:52:52 peter>                           
+;;;; Time-stamp: <2017-10-13 16:11:14 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -249,27 +249,37 @@ maximum-likelihood estimation (i.e. no escape probabilities)."))
 (defun get-viewpoint-transition-probabilities (data n viewpoint)
   (n-grams->transition-probabilities (count-viewpoint-n-grams data (1+ n) viewpoint)))
 
-(defun get-h-cpitch-0-order-tps-with-roughness (data)
+(defun get-h-cpitch-0-order-tps-with-roughness (data &optional output-path)
   "For each unique <h-cpitch> in <data>, get 0th-order
 transition probabilities and roughness estimates."
-  (let ((tps (as-assoc-list (get-viewpoint-transition-probabilities
-			     data 0 'h-cpitch))))
-    (loop for elt in tps
-       collect (acons :roughness
-		      (hutch-knopoff (cdr (assoc :continuation elt)))
-		      elt))))
+  (let* ((tps (as-assoc-list (get-viewpoint-transition-probabilities
+			      data 0 'h-cpitch)))
+	 (res
+	  (loop for elt in tps
+	     collect (acons :roughness
+			    (hutch-knopoff (cdr (assoc :continuation elt)))
+			    elt))))
+    (when output-path
+      (utils:write-csv (utils:as-dataframe res)
+		       (pathname output-path)))
+    res))
 
-(defun get-h-cpitch-1-order-tps-with-dissonance (data)
+(defun get-h-cpitch-1-order-tps-with-dissonance (data &optional output-path)
   "For each unique <h-cpitch> in <data>, get 1st-order
 transition probabilities and sequential dissonance estimates.
 Sequential dissonance is estimated as Milne's spectral distance."
-  (let ((tps (as-assoc-list (get-viewpoint-transition-probabilities
-			     data 1 'h-cpitch))))
-    (loop for elt in tps
-       collect (acons :sequential-dissonance
-		      (milne-sd (car (cdr (assoc :context elt)))
-				   (cdr (assoc :continuation elt)))
-		      elt))))
+  (let* ((tps (as-assoc-list (get-viewpoint-transition-probabilities
+			      data 1 'h-cpitch)))
+	 (res 
+	  (loop for elt in tps
+	     collect (acons :sequential-dissonance
+			    (milne-sd (car (cdr (assoc :context elt)))
+				      (cdr (assoc :continuation elt)))
+			    elt))))
+    (when output-path
+      (utils:write-csv (utils:as-dataframe res)
+		       (pathname output-path)))
+    res))
 
 ;;;; Calculating dissonance for chords
 
