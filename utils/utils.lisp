@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2017-10-11 09:21:26 peter>
+;;;; Time-stamp: <2017-10-13 16:05:58 peter>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -945,6 +945,55 @@ ascending order or in descending order."))
 			  collect (svref column i))))
 	     (data dataframe))
     dataframe))
+
+(defgeneric as-list (data))
+(defmethod as-list ((data dataframe))
+  (let* ((columns (loop
+		     for key being the hash-keys of (data data)
+		     using (hash-value value)
+		     collect (cons (string-downcase (symbol-name key))
+				   (reverse value))))
+	 (columns (coerce columns 'vector))
+	 (num-rows (num-rows data))
+	 (num-cols (array-dimension columns 0)))
+    (assert (> num-rows 0))
+    (assert (> num-cols 0))
+    (assert (eql (num-rows data) (1- (length (svref columns 0)))))
+    (let ((list nil))
+      (dotimes (i (1+ (num-rows data)))
+	(let ((row nil))
+	  (dotimes (j num-cols)
+	    (let* ((token (pop (svref columns j))))
+	      (push token row)))
+	  (push (reverse row) list)))
+      (reverse list))))
+
+(defgeneric as-dataframe (obj)
+  (:documentation "Converts <obj> into a dataframe representation."))
+(defmethod as-dataframe ((obj list))
+  (let ((format-error "<obj> must be a list of assoc-lists."))
+    (loop
+       for row in obj
+       with df = (make-instance 'dataframe)
+       do (progn
+	    (when (not (listp row)) (error format-error))
+	    (loop
+	       for cons in row
+	       with row  = (make-hash-table)
+	       do (progn
+		    (when (not (consp cons)) (error format-error))
+		    (let ((key (car cons))
+			  (value (cdr cons)))
+		      (when (not (null (nth-value 1 (gethash key row))))
+			(error "Duplicated keys not allowed in <obj>."))
+		      (setf (gethash key row) value)))
+	       finally (add-row row df)))
+       finally (return df))))
+
+(defgeneric write-csv (obj path))
+(defmethod write-csv ((obj dataframe) path)
+  (cl-csv:write-csv (as-list obj) :stream path))
+		 
 
 ;;;===========================================================================
 ;;; Quantisation 
