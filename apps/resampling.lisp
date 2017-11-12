@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-11-12 11:21:48 peter>                           
+;;;; Time-stamp: <2017-11-12 11:25:48 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -79,22 +79,26 @@
 	 (dataset-id (if (listp dataset-id)
 			 dataset-id (list dataset-id)))
          ;; data
-         (dataset (md:get-music-objects dataset-id
-                                        nil :voices voices
-					:texture texture
-					:polyphonic-expansion polyphonic-expansion
-					:harmonic-reduction harmonic-reduction
-					:slices-or-chords slices-or-chords
-					:remove-repeated-chords
-					remove-repeated-chords))
+         (dataset (if (typep (car dataset-id) 'md:music-object)
+		      dataset-id
+		      (md:get-music-objects dataset-id
+					    nil :voices voices
+					    :texture texture
+					    :polyphonic-expansion polyphonic-expansion
+					    :harmonic-reduction harmonic-reduction
+					    :slices-or-chords slices-or-chords
+					    :remove-repeated-chords
+					    remove-repeated-chords)))
          (pretraining-set
-	  (md:get-music-objects
-	   pretraining-ids nil :voices voices :texture texture
-	   :polyphonic-expansion polyphonic-expansion
-	   :harmonic-reduction pretraining-harmonic-reduction
-	   :slices-or-chords slices-or-chords
-	   :remove-repeated-chords
-	   remove-repeated-chords))
+	  (if (typep (car pretraining-ids) 'md:music-object)
+	      pretraining-ids
+	      (md:get-music-objects
+	       pretraining-ids nil :voices voices :texture texture
+	       :polyphonic-expansion polyphonic-expansion
+	       :harmonic-reduction pretraining-harmonic-reduction
+	       :slices-or-chords slices-or-chords
+	       :remove-repeated-chords
+	       remove-repeated-chords)))
 	 (dataset
 	  (progn
 	    (utils:message "Adding local key cache to the main dataset.")
