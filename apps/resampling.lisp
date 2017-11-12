@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-11-12 11:25:48 peter>                           
+;;;; Time-stamp: <2017-11-12 16:22:18 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -27,7 +27,7 @@
 ;;;===========================================================================
 ;;; Dataset Prediction 
 ;;;===========================================================================
-    
+
 (defun idyom-resample (dataset-id target-viewpoints source-viewpoints
                        &key pretraining-ids (k 10)
                          resampling-indices (models :both+)
@@ -116,7 +116,7 @@
          ;; resampling sets
          (k (if (eq k :full) (length dataset) k))
          (resampling-sets (get-resampling-sets
-			   dataset-id :k k
+			   dataset-id dataset :k k
 			   :use-cache? use-resampling-set-cache?
 			   :resampling-set-cache-path resampling-set-cache-path
 			   :training-set-size training-set-size))
@@ -127,40 +127,40 @@
                                  resampling-indices))
          ;; the result
          (sequence-predictions))
-      (utils:message (format nil "Iterating over ~A resampling indice(s)."
-			     (length resampling-indices)))
-      (dolist (resampling-set resampling-sets sequence-predictions)
-	;; (format t "~&~0,0@TResampling set ~A: ~A~%" resampling-id resampling-set)
+    (utils:message (format nil "Iterating over ~A resampling indice(s)."
+			   (length resampling-indices)))
+    (dolist (resampling-set resampling-sets sequence-predictions)
+      ;; (format t "~&~0,0@TResampling set ~A: ~A~%" resampling-id resampling-set)
 					;(format t "~&Resampling ~A" resampling-id)
-	(when (member resampling-id resampling-indices)
-	  (utils:message (format nil "Modelling resampling fold ~A/~A."
-				 (1+ resampling-id) (length resampling-indices)))
-	  (let* ((resampling-training-set (get-training-set dataset resampling-set))
-		 (training-set (monodies-to-lists (append pretraining-set
-							  resampling-training-set))))
-	    (discretise-viewpoints (append sources targets) training-set num-quantiles)
-	    (let* ((viewpoints:*discretise-viewpoints* t)
-		   (test-set (monodies-to-lists (get-test-set dataset
-							      resampling-set)))
-		   (ltms (get-long-term-models sources training-set
-					       pretraining-ids dataset-id
-					       resampling-id k 
-					       voices texture
-					       use-ltms-cache?))
-		   (mvs (make-mvs targets sources ltms))
-		   (predictions (mvs:model-dataset mvs test-set
-						   :construct? t :predict? t
-						   :detail detail)))
-	      (if (typep predictions 'utils:dataframe)
-		  (if sequence-predictions
-		      (setf sequence-predictions
-			    (utils:bind-by-row sequence-predictions predictions))
-		      (setf sequence-predictions predictions))
-		  (push predictions sequence-predictions))
-	      (incf resampling-id)))))
-      (when (typep sequence-predictions 'utils:dataframe)
-	(utils:sort-by-columns sequence-predictions '(:melody.id)))
-      sequence-predictions))
+      (when (member resampling-id resampling-indices)
+	(utils:message (format nil "Modelling resampling fold ~A/~A."
+			       (1+ resampling-id) (length resampling-indices)))
+	(let* ((resampling-training-set (get-training-set dataset resampling-set))
+	       (training-set (monodies-to-lists (append pretraining-set
+							resampling-training-set))))
+	  (discretise-viewpoints (append sources targets) training-set num-quantiles)
+	  (let* ((viewpoints:*discretise-viewpoints* t)
+		 (test-set (monodies-to-lists (get-test-set dataset
+							    resampling-set)))
+		 (ltms (get-long-term-models sources training-set
+					     pretraining-ids dataset-id
+					     resampling-id k 
+					     voices texture
+					     use-ltms-cache?))
+		 (mvs (make-mvs targets sources ltms))
+		 (predictions (mvs:model-dataset mvs test-set
+						 :construct? t :predict? t
+						 :detail detail)))
+	    (if (typep predictions 'utils:dataframe)
+		(if sequence-predictions
+		    (setf sequence-predictions
+			  (utils:bind-by-row sequence-predictions predictions))
+		    (setf sequence-predictions predictions))
+		(push predictions sequence-predictions))
+	    (incf resampling-id)))))
+    (when (typep sequence-predictions 'utils:dataframe)
+      (utils:sort-by-columns sequence-predictions '(:melody.id)))
+    sequence-predictions))
 
 (defun discretise-viewpoints (viewpoints sequences num-quantiles)
   "Takes as input a list of viewpoints, <viewpoint-list>, and iterates
@@ -176,17 +176,17 @@ quantiles are calculated for it."
       (viewpoints:set-viewpoint-quantiles v sequences num-quantiles))))
 
 (defun check-model-defaults (defaults &key
-			      (order-bound (getf defaults :order-bound))
-			      (mixtures (getf defaults :mixtures))
-			      (update-exclusion (getf defaults :update-exclusion))
-			      (escape (getf defaults :escape)))  
+					(order-bound (getf defaults :order-bound))
+					(mixtures (getf defaults :mixtures))
+					(update-exclusion (getf defaults :update-exclusion))
+					(escape (getf defaults :escape)))  
   (list :order-bound order-bound :mixtures mixtures :update-exclusion update-exclusion :escape escape))
 
 
 (defun monodies-to-lists (monodies) (mapcar #'monody-to-list monodies))
 (defun monody-to-list (monody) (coerce monody 'list))
 
-; Deprecated
+					; Deprecated
 (defun output-information-content (resampling-predictions &optional (detail 3))
   "Processes the output of IDYOM-RESAMPLE. <detail> is an integer
 specifying the desired level of detail."
@@ -198,7 +198,7 @@ specifying the desired level of detail."
       (2 (values overall-ics melody-ics))
       (3 (values overall-ics melody-ics event-ics)))))
 
-; Deprecated
+					; Deprecated
 (defun information-content-profiles (dataset-predictions) 
   "Processes the output of IDYOM-RESAMPLE, multiplying
 probabilities for different attributes and returning a list of lists
@@ -343,8 +343,8 @@ is a list of composition prediction sets, ordered by composition ID."
 				    (md:get-attribute event 'identifier))))
 		    (setf (gethash (list composition-id event-id) results)
 			  (mvs:format-event-prediction ep results
-						   dataset-id composition-id
-						   feature))))))
+						       dataset-id composition-id
+						       feature))))))
 	    (maphash #'(lambda (k v)
 			 (setf (gethash k results)
 			       (mvs:combine-event-probabilities v features)))
@@ -411,8 +411,8 @@ for <viewpoint> in <dataset-id>."
                                               resampling-id)))
                        (t 
                         (format nil "-~A:~A" (if (numberp resampling-id)
-                                              (1+ resampling-id)
-                                              resampling-id)
+						 (1+ resampling-id)
+						 resampling-id)
                                 resampling-count)))
                  (format nil "_~(~A~)" texture)
                  (format nil "~{-~A~}" voices)
@@ -447,28 +447,25 @@ for <viewpoint> in <dataset-id>."
       (incf composition-index))
     (reverse test-set)))
 
-(defun get-resampling-sets (dataset-id &key (k 10) (use-cache? t)
-					 resampling-set-cache-path
-					 training-set-size)
+(defun get-resampling-sets (dataset-id dataset &key (k 10) (use-cache? t)
+						 resampling-set-cache-path
+						 training-set-size)
   "Returns the resampling-sets for dataset <dataset-id>. If
    <use-cache?> is T and the cache file exists, they are read from
    file, otherwise they are created and optionally cached if
    <use-cache?> is T. If <training-set-size> is not nil, it must
    be a positive integer corresponding to the number of compositions
    that each training set should be downsampled to."
-  (assert (or (null training-set-size)
-	      (integerp training-set-size)))
+  (assert (or (null training-set-size) (integerp training-set-size)))
   (let* ((dataset-ids (if (consp dataset-id) dataset-id (list dataset-id)))
-         (filename (if resampling-set-cache-path
-		       resampling-set-cache-path
-		       (get-resampling-sets-filename dataset-ids k
-						     training-set-size))))
+         (filename (if use-cache?
+		       (if resampling-set-cache-path
+			   resampling-set-cache-path
+			   (get-resampling-sets-filename dataset-ids k
+							 training-set-size)))))
     (if (and use-cache? (file-exists filename))
-        ;; Retrieve the previously cached resampling-set.
         (read-object-from-file filename :resampling)
-        (let* ((composition-count
-                (apply #'+ (mapcar #'md:count-compositions
-                                   dataset-ids)))
+        (let* ((composition-count (length dataset))
                (resampling-sets (create-resampling-sets
                                  composition-count k training-set-size)))
           (when use-cache? (write-resampling-sets-to-file
@@ -492,7 +489,7 @@ for <viewpoint> in <dataset-id>."
 				     training-set-size)
 			     ""))
                  ".resample"))
-  
+
 
 ;;;===========================================================================
 ;;; Constructing random partitions of each dataset 
@@ -518,7 +515,7 @@ for <viewpoint> in <dataset-id>."
        collect (let* ((test-set (sort (copy-list (svref test-sets i))
 				      #'<))
 		      (train-set (remove-if #'(lambda (x) (member x test-set))
-						  indices))
+					    indices))
 		      (train-set (if training-set-size
 				     (utils::sample training-set-size train-set)
 				     train-set))
