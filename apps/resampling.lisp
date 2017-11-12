@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-06-20 14:44:18 peter>                           
+;;;; Time-stamp: <2017-11-12 11:21:48 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -76,9 +76,10 @@
          (mvs::*stm-mixtures* (getf stmo :mixtures))
          (mvs::*stm-update-exclusion* (getf stmo :update-exclusion))
          (mvs::*stm-escape* (getf stmo :escape))
+	 (dataset-id (if (listp dataset-id)
+			 dataset-id (list dataset-id)))
          ;; data
-         (dataset (md:get-music-objects (if (listp dataset-id)
-					    dataset-id (list dataset-id))
+         (dataset (md:get-music-objects dataset-id
                                         nil :voices voices
 					:texture texture
 					:polyphonic-expansion polyphonic-expansion
