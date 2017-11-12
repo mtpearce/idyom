@@ -2,7 +2,7 @@
 ;;;; File:       study-3.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-07-26 19:12:50 peter>                        
-;;;; Time-stamp: <2017-11-12 16:12:42 peter>                           
+;;;; Time-stamp: <2017-11-12 17:47:36 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -424,8 +424,12 @@ The old side effects on <used-compositions> have been removed."
     predictions))
 
 ;;;; ======================================================================
-;;;; Performing further analyses on the stimuli ==== ======================
+;;;; Performing further analyses on the stimuli ===========================
 ;;;; ======================================================================
+
+;; Instructions:
+;; Run further-analyses to construct single-viewpoint model predictions.
+;; Then run mvm_stimulus_analysis.R to construct multiple-viewpoint model predictions.
 
 (defun further-analyses
     (&key
@@ -434,9 +438,8 @@ The old side effects on <used-compositions> have been removed."
 	"/Users/peter/Dropbox/Academic/projects/idyom/studies/HarmonyPerception/interface/www/stimuli/lisp_metadata.csv")
        (output-dir
 	"/Users/peter/Dropbox/Academic/projects/idyom/studies/HarmonyPerception/interface/www/stimuli/further-idyom-analyses/")
-       (downsample t)
-       (do-single-viewpoint-analyses t)
-       (do-multiple-viewpoint-analyses t))
+       (downsample nil)
+       (do-single-viewpoint-analyses t))
   (assert (listp genres-to-analyse))
   (let ((stimuli-all-genres (import-initial-stimulus-file input-file))
 	(output-dir (utils:ensure-directory output-dir))
@@ -449,18 +452,10 @@ The old side effects on <used-compositions> have been removed."
 				   output-dir))
 		 (genre-single-viewpoint-output-dir
 		  (merge-pathnames (make-pathname :directory (list :relative "single-viewpoint"))
-				   genre-output-dir))
-		 (genre-multiple-viewpoint-output-dir
-		  (merge-pathnames (make-pathname :directory (list :relative "multiple-viewpoint"))
 				   genre-output-dir)))
 	    (when do-single-viewpoint-analyses
 	      (single-viewpoint-analyses genre-stimuli viewpoints
-					 genre-single-viewpoint-output-dir))
-	    (when do-multiple-viewpoint-analyses
-	      (multiple-viewpoint-analyses genre-stimuli
-					   genre-single-viewpoint-output-dir
-					   genre-multiple-viewpoint-output-dir))))
-    stimuli-all-genres))
+					 genre-single-viewpoint-output-dir))))))
 
 (defun import-initial-stimulus-file (input-file)
   "Imports the initial csv file describing the stimuli, as constructed by <generate-stimuli>."
@@ -638,10 +633,4 @@ to single-viewpoint analysis output from IDyOM."
      :overwrite t
      :output-path stimulus-output-dir
      :output-filename output-filename)))
-
-(defun multiple-viewpoint-analyses
-    (stimuli single-viewpoint-output-dir  multiple-viewpoint-output-dir)
-  ;; Compile the viewpoint analyses into one probability matrix
-  ;; Find optimal weights using R and save the resulting probability profile
-  nil)
 
