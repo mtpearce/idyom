@@ -2,7 +2,7 @@
 ;;;; File:       study-3.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-07-26 19:12:50 peter>                        
-;;;; Time-stamp: <2017-11-12 13:37:47 peter>                           
+;;;; Time-stamp: <2017-11-12 16:12:42 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -544,31 +544,104 @@ The old side effects on <used-compositions> have been removed."
 	(subseq all-viewpoints 0 3)
 	all-viewpoints)))
 
+(defun format-viewpoint-name (viewpoint)
+  (assert (or (listp viewpoint) (symbolp viewpoint)))
+  (string-downcase
+   (if (listp viewpoint)
+       (format nil "~{~A~^-x-~}"
+	       (mapcar #'symbol-name
+		       viewpoint))
+       (symbol-name viewpoint))))
+
 (defun single-viewpoint-analyses (stimuli viewpoints output-dir)
-  "Performs single-viewpoint analyses. <stimuli> should be a list of stimuli,
-as constructed by <import-initial-stimulus-file. <output-dir> should be
+  "Performs single-viewpoint analyses. <output-dir> should be
 the path to the desired output directory, which will be created if it 
 doesn't exist.
-The top level of the output is a set of folders, each folder corresponding to one
-musical genre. The second level of the output is a set of text files corresponding
+The top level of the output is a set of text files corresponding
 to single-viewpoint analysis output from IDyOM."
   (assert (listp stimuli))
+  (assert (> (length stimuli) 0))
   (assert (listp viewpoints))
-  (assert (listp genres-to-analyse))
-  (let* ((output-dir (utils:ensure-directory output-dir)))
-    (error "Don't need this loop eventually")
-    (loop for genre in genres-to-analyse
-       do
-	 (progn
-	   ;; Load the dataset for the entire music corpus
-	   ;; Loop over stimuli and analyse them
-	   )))
-  nil)
+  (let* ((output-dir (ensure-directories-exist (utils:ensure-directory output-dir)))
+	 (dataset-id (cdr (assoc :dataset-id (car stimuli))))
+	 (reduce-harmony (cdr (assoc :reduce-harmony (car stimuli))))
+	 (harmonic-reduction (if reduce-harmony
+				 :regular-harmonic-rhythm
+				 :none)))
+    (utils:message (format nil "Loading dataset ~A, harmonic-reduction = ~A..."
+			   dataset-id harmonic-reduction))
+    (let ((music-data (md:get-music-objects (list dataset-id) nil
+					    :voices nil :texture :harmony
+					    :harmonic-reduction harmonic-reduction
+					    :slices-or-chords :chords
+					    :remove-repeated-chords t)))
+      (loop
+	 for stimulus in stimuli
+	 for i from 1
+	 with n = (length stimuli)
+	 do (let* ((stimulus-id (cdr (assoc :id stimulus)))
+		   (c-id (cdr (assoc :c-id stimulus)))
+		   (first-e-id (cdr (assoc :first-e-id stimulus)))
+		   (last-e-id (cdr (assoc :last-e-id stimulus)))
+		   (stimulus-output-dir (merge-pathnames (make-pathname :directory
+									(list :relative
+									      (princ-to-string stimulus-id)))
+							 output-dir))
+		   (music-data-pretraining (remove-if #'(lambda (c) (= (md:get-composition-index (md:get-identifier c))
+								       c-id))
+						      music-data))
+		   (music-data-test-composition (find c-id music-data
+						      :key #'(lambda (c) (md:get-composition-index
+									  (md:get-identifier c)))))
+		   (music-data-test-stimulus (md:subsequence music-data-test-composition
+							     first-e-id last-e-id)))
+	      (utils:message (format nil "Running SV analyses for stimulus ~A/~A..." i n))
+	      (utils:message (format nil "Chords: ~A" (viewpoints:viewpoint-sequence (viewpoints:get-viewpoint 'h-cpitch)
+										     music-data-test-stimulus)))
+	      (loop for model in '(:ltm :stm)
+		 do (loop for viewpoint in viewpoints
+		       do (let* ((viewpoint-label (format-viewpoint-name viewpoint))
+				 (model-label (string-downcase (symbol-name model)))
+				 (model-viewpoint-label (concatenate 'string model-label "-" viewpoint-label))
+				 (output-filename (make-pathname :name model-viewpoint-label :type "txt")))
+			    (single-vp-analyse-stimulus music-data-pretraining
+							music-data-test-stimulus
+							viewpoint
+							model
+							stimulus-output-dir
+							output-filename)))))))))
+
+(defun single-vp-analyse-stimulus (music-data-pretraining
+				   music-data-test-stimulus
+				   viewpoint
+				   model
+				   stimulus-output-dir
+				   output-filename)
+  (assert (member model '(:ltm :stm)))
+  (assert (listp music-data-pretraining))
+  (assert (typep music-data-test-stimulus 'md:music-object))
+  (utils:message (format nil "Viewpoint = ~A, model = ~A." viewpoint model))
+  (ensure-directories-exist (utils:ensure-directory stimulus-output-dir))
+  (let ((viewpoints::*basic-types* (list :h-cpitch)))
+    (idyom:idyom
+     (list music-data-test-stimulus)
+     '(h-cpitch) (list viewpoint)
+     :k 1 :texture :harmony :models model
+     :pretraining-ids music-data-pretraining
+     ;; Note: we don't have to provide harmonic-reduction or repeated-chords arguments
+     ;; because the database is being bypassed
+     :separator #\tab :detail 2.5
+     :use-resampling-set-cache? nil
+     :slices-or-chords :chords
+     :num-quantiles 12
+     :use-ltms-cache? nil
+     :overwrite t
+     :output-path stimulus-output-dir
+     :output-filename output-filename)))
 
 (defun multiple-viewpoint-analyses
     (stimuli single-viewpoint-output-dir  multiple-viewpoint-output-dir)
   ;; Compile the viewpoint analyses into one probability matrix
   ;; Find optimal weights using R and save the resulting probability profile
   nil)
-
 
