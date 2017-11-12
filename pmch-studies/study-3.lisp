@@ -2,21 +2,21 @@
 ;;;; File:       study-3.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-07-26 19:12:50 peter>                        
-;;;; Time-stamp: <2017-11-12 10:08:37 peter>                           
+;;;; Time-stamp: <2017-11-12 13:37:47 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
 ;;;; ======================================================================
 ;;;;
 ;;;; Provides utility functions for Study 3 of Peter's PhD,
-;;;; primarily the stimulus generation part.
+;;;; termed 'HarmonyPerception', primarily the stimulus generation part.
 
 ;; 
 
 (cl:in-package #:pmch-s3)
 
 ;;;; ======================================================================
-;;;; Constructing the stimuli =============================================
+;;;; Constructing the stimuli, with initial analyses ======================
 ;;;; ======================================================================
 
 (defparameter *genres* '(:classical :popular :jazz))
@@ -422,3 +422,153 @@ The old side effects on <used-compositions> have been removed."
 					 :detail 1))
 	 (predictions (car (gethash :mean.information.content (utils:data predictions)))))
     predictions))
+
+;;;; ======================================================================
+;;;; Performing further analyses on the stimuli ==== ======================
+;;;; ======================================================================
+
+(defun further-analyses
+    (&key
+       (genres-to-analyse (list :popular))
+       (input-file
+	"/Users/peter/Dropbox/Academic/projects/idyom/studies/HarmonyPerception/interface/www/stimuli/lisp_metadata.csv")
+       (output-dir
+	"/Users/peter/Dropbox/Academic/projects/idyom/studies/HarmonyPerception/interface/www/stimuli/further-idyom-analyses/")
+       (downsample t)
+       (do-single-viewpoint-analyses t)
+       (do-multiple-viewpoint-analyses t))
+  (assert (listp genres-to-analyse))
+  (let ((stimuli-all-genres (import-initial-stimulus-file input-file))
+	(output-dir (utils:ensure-directory output-dir))
+	(viewpoints (list-viewpoints :downsample downsample)))
+    (loop
+       for genre in genres-to-analyse
+       do (let* ((genre-stimuli (get-genre-stimuli stimuli-all-genres genre :downsample downsample))
+		 (genre-output-dir
+		  (merge-pathnames (make-pathname :directory (list :relative (string-downcase (symbol-name genre))))
+				   output-dir))
+		 (genre-single-viewpoint-output-dir
+		  (merge-pathnames (make-pathname :directory (list :relative "single-viewpoint"))
+				   genre-output-dir))
+		 (genre-multiple-viewpoint-output-dir
+		  (merge-pathnames (make-pathname :directory (list :relative "multiple-viewpoint"))
+				   genre-output-dir)))
+	    (when do-single-viewpoint-analyses
+	      (single-viewpoint-analyses genre-stimuli viewpoints
+					 genre-single-viewpoint-output-dir))
+	    (when do-multiple-viewpoint-analyses
+	      (multiple-viewpoint-analyses genre-stimuli
+					   genre-single-viewpoint-output-dir
+					   genre-multiple-viewpoint-output-dir))))
+    stimuli-all-genres))
+
+(defun import-initial-stimulus-file (input-file)
+  "Imports the initial csv file describing the stimuli, as constructed by <generate-stimuli>."
+  (let* ((csv (cl-csv:read-csv (pathname input-file)))
+	 (header (car csv))
+	 (body (cdr csv)))
+    (assert (= (length header)
+	       (length (car body))))
+    (let ((types (list (cons :id :literal)
+		       (cons :label :string)
+		       (cons :genre :keyword)
+		       (cons :dataset-id :literal)
+		       (cons :reduce-harmony :literal)
+		       (cons :TARGET-CHORD-POSITION-1-INDEXED :literal)
+		       (cons :milne-target :literal)
+		       (cons :milne-full-seq :literal)
+		       (cons :h-cpitch-stm-ic :literal)
+		       (cons :h-cpitch :literal)
+		       (cons :music-data :string)
+		       (cons :c-id :literal)
+		       (cons :e-id :literal)
+		       (cons :first-e-id :literal)
+		       (cons :last-e-id :literal)
+		       (cons :num-pcs-in-chords :literal)
+		       (cons :ic :literal)
+		       (cons :ic-category :literal))))
+      (loop
+	 for line in body
+	 collect (loop
+		    for field in header
+		    for elt in line
+		    collect
+		      (let* ((field-symbol (intern (string-upcase field) 'keyword))
+			     (field-type (cdr (assoc field-symbol types)))
+			     (elt-parsed (case field-type
+					   (:literal (if (string= elt "") nil (read-from-string elt)))
+					   (:string elt)
+					   (:keyword (intern (string-upcase elt) 'keyword))
+					   (t (error "Unrecognised column type")))))
+			(cons field-symbol elt-parsed)))))))
+
+(defun get-genre-stimuli (stimuli-all-genres genre &key downsample)
+  (let ((all-genre-stimuli
+	 (remove-if-not #'(lambda (stimulus) (eql (cdr (assoc :genre stimulus))
+						  genre))
+			stimuli-all-genres)))
+    (if downsample
+	(subseq all-genre-stimuli 0 5)
+	all-genre-stimuli)))	
+
+(defun list-viewpoints (&key downsample)
+  "Lists the viewpoints to be analysed in the present study."
+  (let ((all-viewpoints
+	 '(h-bass-cpc
+	   h-bass-cpcint
+	   h-bass-csd
+	   h-bass-int-from-gct-root
+	   h-cpc-int-from-bass
+	   h-cpc-int-from-gct-root
+	   h-cpc-milne-sd-cont=min
+	   h-cpc-vl-dist-p=1
+	   h-cpitch
+	   h-cpitch-class-set
+	   h-csd
+	   h-gct-3rd-type
+	   h-gct-7th-type
+	   h-gct-base
+	   h-gct-ext
+	   h-gct-meeus-int
+	   h-gct-root-5ths-dist
+	   h-gct-root-cpc
+	   h-gct-root-cpcint
+	   h-gct-root-csd
+	   h-hash-12
+	   h-hedges-chord-type
+	   h-hutch-rough
+	   (h-csd h-bass-csd)
+	   (h-cpc-int-from-bass h-bass-cpcint)
+	   (h-cpc-int-from-gct-root h-gct-root-cpcint))))
+    (if downsample
+	(subseq all-viewpoints 0 3)
+	all-viewpoints)))
+
+(defun single-viewpoint-analyses (stimuli viewpoints output-dir)
+  "Performs single-viewpoint analyses. <stimuli> should be a list of stimuli,
+as constructed by <import-initial-stimulus-file. <output-dir> should be
+the path to the desired output directory, which will be created if it 
+doesn't exist.
+The top level of the output is a set of folders, each folder corresponding to one
+musical genre. The second level of the output is a set of text files corresponding
+to single-viewpoint analysis output from IDyOM."
+  (assert (listp stimuli))
+  (assert (listp viewpoints))
+  (assert (listp genres-to-analyse))
+  (let* ((output-dir (utils:ensure-directory output-dir)))
+    (error "Don't need this loop eventually")
+    (loop for genre in genres-to-analyse
+       do
+	 (progn
+	   ;; Load the dataset for the entire music corpus
+	   ;; Loop over stimuli and analyse them
+	   )))
+  nil)
+
+(defun multiple-viewpoint-analyses
+    (stimuli single-viewpoint-output-dir  multiple-viewpoint-output-dir)
+  ;; Compile the viewpoint analyses into one probability matrix
+  ;; Find optimal weights using R and save the resulting probability profile
+  nil)
+
+
