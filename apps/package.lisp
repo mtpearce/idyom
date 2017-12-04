@@ -2,7 +2,7 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                        
-;;;; Time-stamp: <2017-10-18 12:03:37 peter>                           
+;;;; Time-stamp: <2017-12-04 11:00:16 peter>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -45,4 +45,5 @@
   (:export "COUNT-VIEWPOINT-N-GRAMS" "GET-VIEWPOINT-TRANSITION-PROBABILITIES"
 	   "TRANSITION-PROBABILITIES" "WRITE-CSV"
 	   "GET-H-CPITCH-0-ORDER-TPS-WITH-ROUGHNESS"
-	   "GET-H-CPITCH-1-ORDER-TPS-WITH-DISSONANCE"))
+	   "GET-H-CPITCH-1-ORDER-TPS-WITH-DISSONANCE"
+	   "AS-HASH-TABLE" "AS-ASSOC-LIST"))

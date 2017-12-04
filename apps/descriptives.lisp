@@ -2,7 +2,7 @@
 ;;;; File:       descriptives.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-07-23 12:30:38 peter>                          
-;;;; Time-stamp: <2017-10-13 16:11:14 peter>                           
+;;;; Time-stamp: <2017-12-04 10:59:18 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -141,7 +141,10 @@ the continuation count, and the fifth giving the resulting MLE probability.")))
 		     (cons :context-count (third row))
 		     (cons :continuation-count (fourth row))
 		     (cons :probability (fifth row)))))
-   
+
+(defgeneric as-hash-table (object))
+(defmethod as-hash-table ((object count-table))
+  (%data object))
 
 (defgeneric write-csv (object path))
 (defmethod write-csv ((object transition-probabilities) path)

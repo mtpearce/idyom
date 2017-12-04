@@ -2,7 +2,7 @@
 ;;;; File:       study-3.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-07-26 19:12:50 peter>                        
-;;;; Time-stamp: <2017-11-12 17:47:36 peter>                           
+;;;; Time-stamp: <2017-12-04 13:28:51 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -439,11 +439,13 @@ The old side effects on <used-compositions> have been removed."
        (output-dir
 	"/Users/peter/Dropbox/Academic/projects/idyom/studies/HarmonyPerception/interface/www/stimuli/further-idyom-analyses/")
        (downsample nil)
-       (do-single-viewpoint-analyses t))
+       (do-single-viewpoint-analyses nil)
+       (do-miles-2017-analyses t))
   (assert (listp genres-to-analyse))
   (let ((stimuli-all-genres (import-initial-stimulus-file input-file))
 	(output-dir (utils:ensure-directory output-dir))
-	(viewpoints (list-viewpoints :downsample downsample)))
+	(viewpoints (list-viewpoints :downsample downsample))
+	(output))
     (loop
        for genre in genres-to-analyse
        do (let* ((genre-stimuli (get-genre-stimuli stimuli-all-genres genre :downsample downsample))
@@ -452,10 +454,17 @@ The old side effects on <used-compositions> have been removed."
 				   output-dir))
 		 (genre-single-viewpoint-output-dir
 		  (merge-pathnames (make-pathname :directory (list :relative "single-viewpoint"))
-				   genre-output-dir)))
+				   genre-output-dir))
+		 (genre-miles-2017-output-file
+		  (merge-pathnames
+		   (make-pathname :name "miles-2017-analysis" :type "csv")
+		   genre-output-dir)))
 	    (when do-single-viewpoint-analyses
 	      (single-viewpoint-analyses genre-stimuli viewpoints
-					 genre-single-viewpoint-output-dir))))))
+					 genre-single-viewpoint-output-dir))
+	    (when do-miles-2017-analyses
+	      (setf output (miles-2017-analyses genre-stimuli genre-miles-2017-output-file)))))
+    output))
 
 (defun import-initial-stimulus-file (input-file)
   "Imports the initial csv file describing the stimuli, as constructed by <generate-stimuli>."
@@ -552,11 +561,18 @@ The old side effects on <used-compositions> have been removed."
   "Performs single-viewpoint analyses. <output-dir> should be
 the path to the desired output directory, which will be created if it 
 doesn't exist.
+All stimuli must be from the same dataset and harmonic reduction rule.
 The top level of the output is a set of text files corresponding
 to single-viewpoint analysis output from IDyOM."
   (assert (listp stimuli))
   (assert (> (length stimuli) 0))
   (assert (listp viewpoints))
+  (assert (utils:all-eql (mapcar #'(lambda (stimulus)
+				     (cdr (assoc :dataset-id stimulus)))
+				 stimuli)))
+  (assert (utils:all-eql (mapcar #'(lambda (stimulus)
+				     (cdr (assoc :reduce-harmony stimulus)))
+				 stimuli)))
   (let* ((output-dir (ensure-directories-exist (utils:ensure-directory output-dir)))
 	 (dataset-id (cdr (assoc :dataset-id (car stimuli))))
 	 (reduce-harmony (cdr (assoc :reduce-harmony (car stimuli))))
@@ -633,4 +649,76 @@ to single-viewpoint analysis output from IDyOM."
      :overwrite t
      :output-path stimulus-output-dir
      :output-filename output-filename)))
+
+;; After Miles, S. A., Rosen, D. S., & Grzywacz, N. M. (2017).
+;; A Statistical Analysis of the Relationship Between Harmonic Surprise
+;; and Preference in Popular Music. Frontiers in Human Neuroscience, 11, 1–13.
+;; https://doi.org/10.3389/fnhum.2017.00263
+
+(defun miles-2017-analyses (stimuli output-file)
+  (assert (listp stimuli))
+  (assert (> (length stimuli) 0))
+  (assert (utils:all-eql (mapcar #'(lambda (stimulus)
+				     (cdr (assoc :dataset-id stimulus)))
+				 stimuli)))
+  (assert (utils:all-eql (mapcar #'(lambda (stimulus)
+				     (cdr (assoc :reduce-harmony stimulus)))
+				 stimuli)))
+  (let* ((output-file (ensure-directories-exist (pathname output-file)))
+	 (dataset-id (cdr (assoc :dataset-id (car stimuli))))
+	 (reduce-harmony (cdr (assoc :reduce-harmony (car stimuli))))
+	 (harmonic-reduction (if reduce-harmony
+				 :regular-harmonic-rhythm
+				 :none)))
+    (utils:message (format nil "Loading dataset ~A, harmonic-reduction = ~A..."
+			   dataset-id harmonic-reduction))
+    (let* ((music-data (md:get-music-objects (list dataset-id) nil
+					     :voices nil :texture :harmony
+					     :harmonic-reduction harmonic-reduction
+					     :slices-or-chords :chords
+					     :remove-repeated-chords t))
+	   (transition-probabilities (descriptives:get-viewpoint-transition-probabilities
+	   			      music-data 0 '(h-csd h-bass-csd)))
+	   (transition-probabilities (descriptives:as-assoc-list transition-probabilities))
+	   (chord-probabilities
+	    (loop
+	       with ht = (make-hash-table :test 'equal)
+	       for elt in transition-probabilities
+	       do (setf (gethash (cdr (assoc :continuation elt)) ht)
+			(cdr (assoc :probability elt)))
+	       finally (return ht)))
+	   (terms-to-keep (list :id :label :genre :dataset-id :reduce-harmony :c-id :e-id
+				:target-chord-position-1-indexed))
+	   ;; Loop over stimuli and make a new list that contains the probability estimate
+	   ;; and the surprisal estimate
+	   (results
+	    (loop
+	       for stimulus in stimuli
+	       collect (let* ((c-id (cdr (assoc :c-id stimulus)))
+			      (first-e-id (cdr (assoc :first-e-id stimulus)))
+			      (e-id (cdr (assoc :e-id stimulus)))
+			      (music-data-test-composition
+			       (find c-id music-data
+				     :key #'(lambda (c) (md:get-composition-index
+							 (md:get-identifier c)))))
+			      (music-data-test-seq (md:subsequence music-data-test-composition
+								   first-e-id e-id))
+			      (h-csd-x-h-bass-csd (viewpoints:viewpoint-element
+						   (viewpoints:get-viewpoint '(h-csd h-bass-csd))
+						   music-data-test-seq))
+			      (h-hutch-rough (viewpoints:viewpoint-element
+						   (viewpoints:get-viewpoint 'h-hutch-rough)
+						   music-data-test-seq))
+			      (probability (gethash h-csd-x-h-bass-csd chord-probabilities))
+			      (surprise (* (log probability 2) -1)))
+			 (append (remove-if-not #'(lambda (x) (member (car x) terms-to-keep))
+						stimulus)
+				 (list (cons :h-hutch-rough h-hutch-rough)
+				       (cons :h-csd-x-h-bass-csd h-csd-x-h-bass-csd)
+				       (cons :miles-2017-probability probability)
+				       (cons :miles-2017-surprise surprise)))))))
+      ;; Save as csv
+      (utils:write-csv (utils:as-dataframe results) output-file)
+      results)))
+
 
