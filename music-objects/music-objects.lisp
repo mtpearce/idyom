@@ -210,8 +210,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun get-music-objects (dataset-indices composition-indices
-                          &key voices (texture :melody) (time-representation :event)
-                            (grid-resolution 16) (hide-meter nil))
+                          &key voices (texture :melody) (time-representation :event))
   "Return music objects from the database corresponding to
   DATASET-INDICES, COMPOSITION-INDICES which may be single numeric IDs
   or lists of IDs. COMPOSITION-INDICES is only considered if

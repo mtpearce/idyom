@@ -25,16 +25,3 @@
 	   "SET-EQUAL" "COLLECT-GARBAGE" "SHELL-COMMAND")
   (:documentation "Utility functions of general use."))
 
-(defpackage #:python
-  (:use #:cl)
-  (:export "ALIST->DICT" "PLIST->DICT" "LIST->LIST")
-  (:documentation "Utility functions for exporting python code."))
-
-(defpackage #:promises
-  (:use #:cl)
-  (:export "MAKE-PROMISE" "PROMISE" "RETRIEVE" "GET-IDENTIFIER")
-  (:documentation "Objects for postponing calling resource intensive functions until
-their result is required because of cache misses."))
-
-
-
