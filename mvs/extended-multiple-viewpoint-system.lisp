@@ -201,6 +201,8 @@ a posterior distribution over latent-variable states is inferred. A sequence of
 event predictions is obtained by marginalizing event predictions out of the joint
 distribution over events and latent variable states. 
 A sequence-prediction is returned."
+  (assert (not (member *models* '(:both+ :ltm+)))
+	  "LTM model cannot be updated when modelling inference.")
   (let* ((latent-variable (mvs-latent-variable m))
 	 (prior-distribution (lv:prior-distribution latent-variable))
 	 (latent-states (mapcar #'car prior-distribution))
