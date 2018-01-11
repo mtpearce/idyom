@@ -2,13 +2,15 @@
 ;;;; File:       pmch-utils.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2018-01-11 17:56:42 peter>                          
-;;;; Time-stamp: <2018-01-11 20:07:01 peter>                           
+;;;; Time-stamp: <2018-01-11 21:54:26 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
 ;;;; ======================================================================
 ;;;;
 ;;;; Some misc. utility functions.
+
+(cl:in-package #:pmch-s1)
 
 ;; Exports selected harmony corpora to a directory
 (defun export-harmony-corpora (dir)
