@@ -2,7 +2,7 @@
 ;;;; File:       mcgill2db.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-02-16 15:38:15 peter>                           
-;;;; Time-stamp: <2017-05-23 21:31:38 peter>                           
+;;;; Time-stamp: <2018-01-11 21:41:43 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -913,7 +913,7 @@
 		      (#\A 9)
 		      (#\B 11)
 		      (otherwise -99)))
-	 (pc (- (+ letter-pc num-sharps) num-flats)))
+	 (pc (mod (- (+ letter-pc num-sharps) num-flats) 12)))
     pc))
 
 (defun parse-chord-text (text)
