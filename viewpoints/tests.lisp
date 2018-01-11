@@ -2,7 +2,7 @@
 ;;;; File:       tests.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-03-28 21:04:43 peter>                             
-;;;; Time-stamp: <2017-07-14 10:27:18 peter>                           
+;;;; Time-stamp: <2017-12-20 23:52:12 peter>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -1020,31 +1020,31 @@
 		:pitch
 		:taxicab)
 	       3)))
-(5am:test vl-set-distance-ex-4
+(5am:test vl-set-distance-ex-6
   (5am:is (equalp (vl-set-distance
 		   '(60 64 67) '(60 63 67)
 		   :pitch
 		   :euclidean)
 		  1)))
-(5am:test vl-set-distance-ex-5
+(5am:test vl-set-distance-ex-7
   (5am:is (equalp (vl-set-distance
 		   '(58 64 67) '(55 68 67)
 		   :pitch
 		   :euclidean)
 		  5)))
-(5am:test vl-set-distance-ex-6
+(5am:test vl-set-distance-ex-8
   (5am:is (equalp (vl-set-distance
 		   '(11 0 4) '(2 0 8)
 		   :pitch-class
 		   :euclidean)
 		  5)))
-(5am:test vl-set-distance-ex-7
+(5am:test vl-set-distance-ex-9
   (5am:is (equalp (vl-set-distance
 		   '(37 38 45) '(47 40 42)
 		   :pitch
 		   :infinity)
 		  10)))
-(5am:test vl-set-distance-ex-8
+(5am:test vl-set-distance-ex-10
   (5am:is (equalp (vl-set-distance
 		   '(11 0 4) '(5 0 8)
 		   :pitch-class
