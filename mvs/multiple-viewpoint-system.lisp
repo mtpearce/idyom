@@ -193,9 +193,9 @@ See also VIEWPOINTS:SET-ALPHABET-FROM-CONTEXT."
            (2 (mapcar #'viewpoints:get-viewpoint (viewpoints:get-basic-types event)))
            ;; 3 = a specified list of basic viewpoints         
            (t unconstrained))))
+    (viewpoints::set-onset-alphabet (butlast events))
     (unless (or (viewpoints:basic-p viewpoint) (undefined-p event)) 
       (viewpoints:set-alphabet-from-context viewpoint events unconstrained))
-    (viewpoints::set-onset-alphabet (butlast events))
     ;(format t "~&Viewpoint: ~A; Event: ~A; Alphabet length: ~A~%" 
     ;        (viewpoint-type viewpoint) event 
     ;        (length (viewpoint-alphabet viewpoint)))
@@ -251,52 +251,37 @@ See also VIEWPOINTS:SET-ALPHABET-FROM-CONTEXT."
     ;;        (sanity-check-basic-viewpoints) 
     ;;        (sanity-check-viewpoints))
     (let ((ltms-table (make-hash-table :test #'equal))
-	  (stms-table (make-hash-table :test #'equal))
-	  (all-ltm) (all-stm))
+	  (stms-table (make-hash-table :test #'equal)))
       (when (eq class 'abstract-mvs)
 	(assert (every #'abstract? viewpoints) (viewpoints)
-		"~&All viewpoints of an abstract-mvs must be abstract.~%")
+		"~&All viewpoints of an abstract multiple-viewpoint system must be abstract.~%")
 	(assert (not (or (null latent-variable)
 			 (null viewpoint-latent-variables)))
 		(latent-variable viewpoint-latent-variables)
-		":categories, :latent-variable and :viewpoint-latent variables are required
-class-args when making an abstract-mvs")
+		":CATEGORIES, :LATENT-VARIABLE and :VIEWPOINT-LATENT-VARIABLES keyword
+ arguments to MAKE-MVS are required when :CLASS equals ABSTRACT-MVS.~%")
+	;; First, link each viewpoint to the provided contituent latent variables
+	;; (VIEWPOINT-LATENT-VARIABLES), and derive and set the categories for each
+	;; of the constituent latent variables from the latent variable.
 	(loop for viewpoint in viewpoints
 	   for vp-lv in viewpoint-latent-variables do
 	     (setf (viewpoints:latent-variable viewpoint) vp-lv
 		   (lv:categories vp-lv) (lv:get-link-categories latent-variable vp-lv)))
+	;; Create short-term model sets for each abstract viewpoint.
 	(let* ((stms (loop for viewpoint in viewpoints collect
-			  (get-short-term-model viewpoint)))
-	       (model-count (apply #'+ (mapcar #'(lambda (lv) (length (lv:categories lv)))
-					       viewpoint-latent-variables)))
-	       (model-index 0))
-	  (setf all-ltm (make-array (list model-count)))
-	  (setf all-stm (make-array (list model-count)))
+			  (get-short-term-model viewpoint))))
+	  ;; Store all models for all viewpoints in a hash table whose 
+	  ;; keys consist of the latent-variable name and category.
 	  (loop for latent-variable in viewpoint-latent-variables
 	     for lt-models in ltms
 	     for st-models in stms do
 	       (dolist (category (lv:categories latent-variable))
 		 (let ((ltm (cdr (assoc category lt-models :test #'equal)))
-		       (stm (cdr (assoc category st-models :test #'equal))))
-		   (setf (aref all-ltm model-index) ltm
-			 (aref all-stm model-index) stm)
-		   (incf model-index))))
-	  (dolist (category (lv:categories latent-variable))
-	       (let* ((link-categories (mapcar (lambda (link)
-						 (lv:get-link-category latent-variable
-								       category
-								       link))
-					       viewpoint-latent-variables))
-		      (lt-models (map 'vector (lambda (models link-category)
-						(cdr (assoc link-category
-							    models :test #'equal)))
-				      ltms link-categories))
-		      (st-models (map 'vector (lambda (models link-category)
-						(cdr (assoc link-category
-							    models :test #'equal)))
-				      stms link-categories)))
-		 (setf (gethash category stms-table) st-models
-		       (gethash category ltms-table) lt-models)))))
+		       (stm (cdr (assoc category st-models :test #'equal)))
+		       (key (cons (lv:latent-variable-attribute latent-variable)
+				  category)))
+		   (setf (gethash key ltms-table) ltm)
+		   (setf (gethash key stms-table) stm))))))
       (let ((mvs (apply #'make-instance
 			(append (list class
 				      :basic (sanity-check-basic-viewpoints)
@@ -305,7 +290,6 @@ class-args when making an abstract-mvs")
 				
 				(if (eq class 'abstract-mvs)
 				    (list :ltm ltms-table :stm stms-table
-					  :all-ltm all-ltm :all-stm all-stm
 					  :latent-variable latent-variable
 					  :viewpoint-latent-variables
 					  (apply #'vector viewpoint-latent-variables))
@@ -395,6 +379,11 @@ appropriate sequence index before this method is called."
             (model-event m event-array events :ltm-locations ltm-locations 
                          :stm-locations stm-locations 
                          :construct? construct? :predict? predict?)
+;	  (when (equal event-index 0)
+;	    (print (map 'list #'md:onset events))
+;	    (print (viewpoints:viewpoint-alphabet (viewpoints:get-viewpoint 'bioi)))
+;	    (print (viewpoints:viewpoint-alphabet (viewpoints:get-viewpoint 'onset)))
+;	    (print (prediction-set (first ltm-prediction-sets))))
           (setf ltm-locations ltm-next-locations
                 stm-locations stm-next-locations)
           (operate-on-models m #'increment-event-front)
@@ -440,6 +429,9 @@ multiple viewpoint system <m>."
 						      (eq *models* :ltm)
 						      (eq *models* :both)
 						      (eq *models* :both+))))
+;	    (when (equal (length events) 1)
+;	      (print "LTM Distribution")
+;	      (print ltm-distribution))
             (setf (aref ltm-locations i) ltm-next-location)
             (when (and *debug* predict?) (format t "~&ltm-distribution = ~&~A~%" ltm-distribution))
             (push (make-event-prediction :order ltm-order

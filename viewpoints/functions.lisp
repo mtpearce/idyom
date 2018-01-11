@@ -35,6 +35,7 @@ symbol if they are lists else nil."
   (mapcar #'get-viewpoint attributes))
 
 (defun abstract? (viewpoint)
+  "Return true if viewpoint VIEWPOINT is abstract."
   (typep viewpoint 'abstract))
 
 (defun get-viewpoint (attribute)

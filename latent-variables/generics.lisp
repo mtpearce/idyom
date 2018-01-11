@@ -20,3 +20,8 @@
 (defgeneric create-category (variable &rest parameters))
 (defgeneric create-latent-state (variable category &rest parameters))
 (defgeneric initialise-prior-distribution (training-data variable))
+(defgeneric get-link-training-sets (training-data linked))
+(defgeneric combine-prior-distributions (linked))
+(defgeneric combine-link-parameters (linked parameter-sets &key parameter-name-fn))
+(defgeneric combine-link-categories (linked categories))
+(defgeneric combine-link-latent-states (linked latent-states))

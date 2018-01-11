@@ -6,7 +6,7 @@
    (prior-distribution :accessor prior-distribution
 		       :initarg :prior-distribution))
   (:documentation "A latent variable represents a set of event attributes that 
-can be inferred from the event sequences with abstract viewpoints."))
+can be inferred from the event sequences."))
 
 (defclass linked (latent-variable)
   ((links :accessor latent-variable-links

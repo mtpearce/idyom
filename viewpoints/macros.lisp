@@ -27,21 +27,22 @@
                     (declare (ignorable events element))
                     ,f*)))))))
 
-(defmacro define-abstract-viewpoint ((name typeset event-attributes
-					   parameters training-viewpoint) 
+(defmacro define-abstract-viewpoint ((name typeset event-attribute-parameters
+					   additional-parameters training-viewpoint) 
                             ((events class) element)
 				     &key function function*)
-  (let ((latent-state `(loop for p in (list ,@event-attributes ,@parameters) collect
-			    (lv:get-latent-state-value p)))
-	(event-category `(loop for p in (list ,@event-attributes) collect
+  (let ((abstract-args `(loop for p in
+			    (list ,@event-attribute-parameters ,@additional-parameters)
+			  collect (lv:get-latent-state-value p)))
+	(training-args `(loop for p in (list ,@event-attribute-parameters) collect
 			      (apply (intern (symbol-name p) (find-package :viewpoints))
 				     (list events)))))
-    (let ((function `(apply #',function ,latent-state))
+    (let ((function `(apply #',function ,abstract-args))
 	  (function* (if (null function*) nil
-			 `(apply #',function* ,latent-state)))
-	  (training-function `(apply #',function ,event-category))
+			 `(apply #',function* ,abstract-args)))
+	  (training-function `(apply #',function ,training-args))
 	  (training-function* (if (null function*) nil
-				  `(apply #',function* ,event-category))))
+				  `(apply #',function* ,training-args))))
       `(progn
 	 (define-viewpoint (,name abstract ,typeset)
 	     ((,events ,class) ,element)
@@ -50,7 +51,8 @@
 	     ((,events ,class) ,element)
 	   :function ,training-function :function* ,training-function*)
 	 (defmethod training-viewpoint ((v ,name)) (get-viewpoint ',training-viewpoint))
-	 (defmethod latent-parameters ((v ,name)) '(,@event-attributes ,@parameters))))))
+	 (defmethod latent-parameters ((v ,name)) '(,@event-attribute-parameters
+						    ,@additional-parameters))))))
 
 (defmacro define-basic-viewpoint (name ((events class)) function)
   `(progn 

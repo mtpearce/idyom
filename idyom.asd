@@ -54,8 +54,7 @@
 	    ((:file "package")
 	     (:file "extended-sequence")
 	     (:file "time")
-         (:file "music-objects")
-         (:file "meter")))
+         (:file "music-objects")))
    ;; Latent variables
    (:module latent-variables
 	    :serial t

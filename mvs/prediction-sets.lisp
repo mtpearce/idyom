@@ -42,6 +42,9 @@
    (element   :accessor prediction-element :initarg :element)
    (set       :accessor prediction-set :initarg :set :type list)))
 
+(defclass marginal-event-prediction (event-prediction)
+  ((prior :accessor prediction-prior :initarg :prior)))
+
 (defun make-dataset-prediction (&key viewpoint set basic-viewpoint)
   (make-instance 'dataset-prediction :viewpoint viewpoint :set set 
                  :basic-viewpoint basic-viewpoint))
@@ -68,11 +71,10 @@
 	(distribution))
     (loop for symbol in distribution-symbols collect
 	 (let ((likelihood 
-		(marginal-likelihood prior
-				     (mapcar (lambda (ep) (cadr (assoc symbol
-								       (prediction-set ep)
-								       :test #'equal)))
-					     event-predictions))))
+		(marginal-likelihood
+		 prior (mapcar (lambda (ep) (cadr (assoc symbol (prediction-set ep)
+							 :test #'equal)))
+			       event-predictions))))
 	   (push (list symbol likelihood) distribution)))
     (make-instance 'marginal-event-prediction
 		   :prior prior

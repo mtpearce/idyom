@@ -140,7 +140,8 @@
 ;;; Configure mvs to produce same results as in validation fixture.
 (5am:def-fixture comparison-environment ()
   (let ((mvs::*ltm-order-bound* nil)
-	(mvs::*models* :ltm))
+	(mvs::*models* :ltm)
+	(md::*md-timebase* 16))
     (&body)))
 		       
 (5am:def-fixture abstract-mvs (targets sources training-set viewpoint-latent-variables
@@ -210,7 +211,7 @@
       ("/home/bastiaan/projects/idyom/apps/fixtures/test-dataset-training.lisp")
     (let* ((training-set compositions)
 	   (latent-variable (lv:get-latent-variable 'metre))
-	   (sources (viewpoints:get-viewpoints '((metpos bardist-legacy))))
+	   (sources (viewpoints:get-viewpoints '((abs-posinbar bardist-legacy))))
 	   (targets (viewpoints:get-basic-viewpoints '(onset) training-set))
 	   (viewpoint-latent-variables (list latent-variable)))
       (5am:with-fixture abstract-mvs (targets sources training-set viewpoint-latent-variables
@@ -220,23 +221,23 @@
 	  (let ((test-set compositions))
 	    (5am:with-fixture comparison-environment ()
 	      (dotimes (composition-index (min (length test-set) 2))
-		  (5am:with-fixture results-fixture
-		      ((format nil
-			       "/home/bastiaan/projects/idyom/apps/fixtures/test-results/simulations/~a"
-			       composition-index))
-		    (5am:with-fixture legacy->native (likelihoods posteriors
-								  latent-variable)
-		      posteriors
-		      (dolist (category (lv:categories latent-variable))
-			(dolist (latent-state (reverse (lv:get-latent-states category latent-variable)))
-			  (lv:with-latent-variable-state (latent-state latent-variable)
-			    (let* ((predictions (model-sequence abstract-mvs (coerce
-									      (elt test-set
-										   composition-index)
-									      'list)
-								:construct? t :predict? t)))
-			      ;;(operate-on-models abstract-mvs #'increment-sequence-front)
-			      (operate-on-models abstract-mvs #'reinitialise-ppm :models 'mvs::stm)
+		(5am:with-fixture results-fixture
+		    ((format nil
+			     "/home/bastiaan/projects/idyom/apps/fixtures/test-results/simulations/~a"
+			     composition-index))
+		  (5am:with-fixture legacy->native (likelihoods posteriors
+								latent-variable)
+		    posteriors
+		    (dolist (category (lv:categories latent-variable))
+		      (dolist (latent-state (reverse (lv:get-latent-states category latent-variable)))
+			(lv:with-latent-variable-state (latent-state latent-variable)
+			  (let* ((predictions (model-sequence abstract-mvs (coerce
+									    (elt test-set
+										 composition-index)
+									    'list)
+							      :construct? t :predict? t)))
+			    ;;(operate-on-models abstract-mvs #'increment-sequence-front)
+			    (operate-on-models abstract-mvs #'reinitialise-ppm :models 'mvs::stm)
 			    (flet ((event-probabilities (prediction-set)
 				     (let* ((event-predictions (event-predictions prediction-set)))
 				       (mapcar #'cadr event-predictions))))
@@ -252,12 +253,12 @@
 								     fixture-likelihoods :tolerance 1.e-5))))))))))))))))))
 
 (5am:test (generative-mvs-against-fixture :depends-on (and . (partition-dataset 
-							    get-long-term-generative-models)))
+							      get-long-term-generative-models)))
   (5am:with-fixture dataset-fixture
       ("/home/bastiaan/projects/idyom/apps/fixtures/test-dataset-training.lisp")
     (let* ((training-set compositions)
 	   (latent-variable (lv:get-latent-variable 'metre))
-	   (sources (viewpoints:get-viewpoints '((metpos bardist-legacy))))
+	   (sources (viewpoints:get-viewpoints '((abs-posinbar bardist-legacy))))
 	   (targets (viewpoints:get-basic-viewpoints '(onset) training-set))
 	   (viewpoint-latent-variables (list latent-variable)))
       (5am:with-fixture abstract-mvs (targets sources training-set viewpoint-latent-variables
@@ -280,12 +281,12 @@
 				 composition-index))
 			(flet ((event-probabilities (prediction-set)
 				 (mapcar #'cadr (event-predictions prediction-set))))
-			  (let* (event-likelihoods (event-likelihoods likelihoods posteriors))
+			  (let* ((event-likelihoods (event-likelihoods likelihoods posteriors))
 				 (generative-likelihoods
 				  (event-probabilities (first predictions))))
-			    (print (length generative-likelihoods))
-			    (print (length event-likelihoods))
-			    (5am:is (numbers-approximately-equal (print generative-likelihoods)
-								 (print event-likelihoods)))))))))))))))))
+;			    (print (length generative-likelihoods))
+;			    (print (length event-likelihoods))
+			    (5am:is (numbers-approximately-equal generative-likelihoods
+								 event-likelihoods)))))))))))))))
 
       

@@ -69,6 +69,10 @@
 	  (lv:with-latent-variable-state (latent-state ,latent-variable)
 	    ,@body))))
 
+(5am:test fail
+  "Add this test to the dependencies of other tests to disable them."
+  (5am:is (eq (+ 1 1) 3)))
+
 (5am:def-fixture metre-categories ()
   (let* ((metre (lv:get-latent-variable 'metre))
 	 (2-metre (lv::create-category metre :barlength 2 :pulses 2))
@@ -88,7 +92,9 @@
 	 (2-afrocuban (lv::create-category metre-style-key
 					   :barlength 2 :pulses 2 :style 'afrocuban))
 	 (3-afrocuban (lv::create-category metre-style-key
-					   :barlength 3 :pulses 1 :style 'afrocuban)))
+					   :barlength 3 :pulses 1 :style 'afrocuban))
+    	 (3-ragtime (lv::create-category metre-style-key
+					   :barlength 3 :pulses 1 :style 'ragtime)))
     (&body)))
 
 (5am:test make-mvs-normal
@@ -113,7 +119,12 @@
     (let* ((sources (viewpoints:get-viewpoints '(ioi cpint))))
       (5am:signals warning (make-mvs targets sources nil)))))
 
-(5am:test (make-mvs-abstract-single-latent-variable :depends-on fail)
+(5am:test (make-mvs-abstract-single-latent-variable :depends-on ())
+  "Create an instance of ABSTRACT-MVS using MAKE-MVS. Create PPM models based on two
+random sets of rhythms annotated with a duple and a triple meter.
+Use a single abstract viewpoint (abs-posinbar linked with bardist), a single 
+latent variable, namely meter.
+Test whether MAKE-MVS initialises the slot values of ABSTRACT-MVS correctly."
   (let* ((2-rhythms (random-event-sequences :barlength 2 :pulses 2 :amount 8))
 	 (3-rhythms (random-event-sequences :barlength 3 :pulses 1 :amount 6))
 	 (targets (viewpoints:get-basic-viewpoints '(onset)
@@ -127,12 +138,10 @@
       (let* ((metre (lv:get-latent-variable 'metre))
 	     (abs-posinbar-bardist (viewpoints:get-viewpoint '(abs-posinbar bardist)))
 	     (abs-posinbar-bardist-train (viewpoints:training-viewpoint abs-posinbar-bardist))
-	     (generative-models (list (list (cons 2-metre
-						  (mvs-model 2-rhythms
-							     abs-posinbar-bardist-train))
-					    (cons 3-metre
-						  (mvs-model 3-rhythms
-							     abs-posinbar-bardist-train)))))
+	     (2-metre-model (mvs-model 2-rhythms abs-posinbar-bardist-train))
+	     (3-metre-model (mvs-model 3-rhythms abs-posinbar-bardist-train))
+	     (generative-models (list (list (cons 2-metre 2-metre-model)
+					    (cons 3-metre 3-metre-model))))
 	     (mvs::*ltm-order-bound* 42)
 	     (mvs::*stm-order-bound* 77))
 	(setf (lv:categories metre) (list 2-metre 3-metre))
@@ -145,19 +154,25 @@
 	  (5am:is (eq (type-of (slot-value mvs 'stm)) 'hash-table))
 	  (5am:is (typep (mvs-basic mvs) 'list))
 	  (5am:is (typep (mvs-viewpoints mvs) 'vector))
+	  (5am:is (every #'models-equal
+			 (list (gethash '(lv::metre 2 2) (slot-value mvs 'ltm))
+			       (gethash '(lv::metre 3 1) (slot-value mvs 'ltm)))
+			 (list 2-metre-model
+			       3-metre-model)))
 	  (dolist (cat (lv:categories metre))
-	    (let ((lt-models (gethash cat (slot-value mvs 'ltm)))
-		  (st-models (gethash cat (slot-value mvs 'stm))))
-	      (5am:is (not (null lt-models)))
-	      (5am:is (not (null st-models)))
-	      (5am:is (eq (array-dimension lt-models 0) 1))
-	      (5am:is (eq (array-dimension st-models 0) 1))
-	      (5am:is (eq (type-of (aref lt-models 0)) 'ppm:ppm))
-	      (5am:is (eq (type-of (aref st-models 0)) 'ppm:ppm))
-	      (5am:is (eq (ppm::ppm-order-bound (aref lt-models 0)) 42))
-	      (5am:is (eq (ppm::ppm-order-bound (aref st-models 0)) 77)))))))))
+	    (lv:with-latent-category (cat metre)
+	      (let ((lt-models (mvs-ltm mvs))
+		    (st-models (mvs-stm mvs)))
+		(5am:is (not (null lt-models)))
+		(5am:is (not (null st-models)))
+		(5am:is (eq (array-dimension lt-models 0) 1))
+		(5am:is (eq (array-dimension st-models 0) 1))
+		(5am:is (eq (type-of (aref lt-models 0)) 'ppm:ppm))
+		(5am:is (eq (type-of (aref st-models 0)) 'ppm:ppm))
+		(5am:is (eq (ppm::ppm-order-bound (aref lt-models 0)) 42))
+		(5am:is (eq (ppm::ppm-order-bound (aref st-models 0)) 77))))))))))
 
-(5am:test (make-mvs-abstract-linked-latent-variable :depends-on fail)
+(5am:test (make-mvs-abstract-linked-latent-variable :depends-on ())
   (let* ((2-rt-rhythms (random-event-sequences :barlength 2 :pulses 2
 					       :amount 5 :description "ragtime"))
 	 (2-rhythms (random-event-sequences :barlength 2 :pulses 2
@@ -197,7 +212,8 @@
 						  ac-style-model))
 				      (list (cons nil
 						  abs-sdeg-west-model)))))
-	(setf (lv:categories metre-style-key) (list 2-afrocuban 2-ragtime 3-afrocuban))
+	(setf (lv:categories metre-style-key) (list 2-afrocuban 2-ragtime
+						    3-afrocuban 3-ragtime))
 	(lv:set-link-categories metre-style-key)
 	(setf (latent-variable abs-posinbar-bardist) metre)
 	(setf (latent-variable abs-sdeg-west) key)
@@ -208,10 +224,12 @@
 	(let ((mvs (make-mvs targets sources generative-models :class 'abstract-mvs
 			     :latent-variable metre-style-key
 			     :viewpoint-latent-variables (list metre style key))))
-	  (5am:is (eq (array-dimension (%all-stm mvs) 0) 5))
-	  (5am:is (eq (array-dimension (%all-ltm mvs) 0) 5))
 	  (5am:is (every #'models-equal
-			 (coerce (%all-ltm mvs) 'list)
+			 (list (gethash '(lv::metre 2 2) (slot-value mvs 'ltm))
+			       (gethash '(lv::metre 3 1) (slot-value mvs 'ltm))
+			       (gethash '(lv::style ragtime) (slot-value mvs 'ltm))
+			       (gethash '(lv::style afrocuban) (slot-value mvs 'ltm))
+			       (gethash '(lv::key) (slot-value mvs 'ltm)))
 			 (list 2-abs-posinbar-bardist-model
 			       3-abs-posinbar-bardist-model
 			       rt-style-model
@@ -236,7 +254,7 @@
 	      (5am:is (models-equal metre-model 3-abs-posinbar-bardist-model))
 	      (5am:is (models-equal style-model ac-style-model)))))))))
 
-(5am:test (make-mvs-abstract-linked-latent-variable-2 :depends-on fail)
+(5am:test (make-mvs-abstract-linked-latent-variable-2 :depends-on ())
   (let* ((2-rt-rhythms (random-event-sequences :barlength 2 :pulses 2
 					       :amount 5 :description "ragtime"))
 	 (2-rhythms (random-event-sequences :barlength 2 :pulses 2
@@ -270,7 +288,8 @@
 						  rt-style-model)
 					    (cons afrocuban
 						  ac-style-model)))))
-	(setf (lv:categories metre-style-key) (list 2-afrocuban 2-ragtime 3-afrocuban))
+	(setf (lv:categories metre-style-key) (list 2-afrocuban 2-ragtime
+						    3-afrocuban 3-ragtime))
 	(setf (latent-variable metre-key-vp) metre-key)
 	(setf (latent-variable key-style-vp) key-style)
 	(let ((mvs (make-mvs targets sources generative-models :class 'abstract-mvs
@@ -292,15 +311,14 @@
 	      (5am:is (models-equal metre-key-model 3-metre-model))
 	      (5am:is (models-equal key-style-model ac-style-model)))))))))
 
-(5am:test fail
-  (5am:is (eq (+ 1 1) 3)))
-
 ;;; Compare an abstract-mvs to individual normal mvs models and ensure that
 ;;; their results match. The normal mvs uses a posinbar viewpoint.
 ;;; To test the normal mvs for different phases, the event sequence is locally
 ;;; phase-shifted by the macro WITH-ADJUSTED-PHASE.
 ;;; Use a toy dataset with two categories: (3 1) and (2 1) (barlength pulses).
 (5am:test abstract-mvs-model-sequence
+  "Use MAKE-MVS to create an instance of ABSTRACT-MVS. Compare the results of model
+sequence to results calculated with normal MVS instances for each category."
   (5am:with-fixture metre-categories ()
     (let* ((2-rhythms (random-event-sequences :barlength 2 :pulses 2 :amount 8))
 	   (3-rhythms (random-event-sequences :barlength 3 :pulses 1 :amount 6))
@@ -339,11 +357,15 @@
 		     (dolist (mvs (list abstract-mvs mvs))
 		       (operate-on-models mvs #'increment-sequence-front)
 		       (operate-on-models mvs #'reinitialise-ppm :models 'stm))
-		     ;; The first prediction may diverge due to differences
-		     ;; in the alphabet derived from BIOI which is
-		     ;; transformed with the abstract viewpoint in the
-		     ;; abstract-mvs but remains unaltered in the normal
-		     ;; case.
+		     ;; The predictions for the first event may not match. This is
+		     ;; due to differences in how phase is handled. The function
+		     ;; MODEL-INTERPRETATION-WITH-MVS shifts events in time to
+		     ;; simulate different phases, whereas ABSTRACT-MVS uses an abstract
+		     ;; viewpoint to obtain this effect. As a result, the BIOI alphabet
+		     ;; for the first event is slightly different, resulting in slightly
+		     ;; different predictive distributions.
+		     ;; Therefore only the CDRs of the predictions
+		     ;; are compared.
 		     (5am:is (every #'equal
 				    (cdr (first (sequence-predictions->event-likelihoods
 					    abstract-results)))
@@ -559,9 +581,13 @@
 			(cons 3-afrocuban
 			      (make-mvs targets	(list (training-viewpoint metre-key-vp)
 						      (training-viewpoint key-style-vp))
-					(list 3-metre-model-1 ac-style-model-1)))))
+					(list 3-metre-model-1 ac-style-model-1)))
+			(cons 3-ragtime
+			      (make-mvs targets	(list (training-viewpoint metre-key-vp)
+						      (training-viewpoint key-style-vp))
+					(list 3-metre-model-1 rt-style-model-1)))))
 		 (generative-predictions (model-sequence generative-mvs event-sequence
-							 :predict? t :construct? nil))
+							 :predict? t :construct? t))
 		 (result-priors (mapcar (lambda (sequence-prediction)
 					  (mapcar #'prediction-sets::prediction-prior
 						  (prediction-set sequence-prediction)))
@@ -572,6 +598,7 @@
 	    (mapcar (lambda (c)
 		      (setf (slot-value (cdr c) 'viewpoints) (apply #'vector sources)))
 		    mvs-models)
+	    ;; Obtain predictions with normal multiple viewpoint systems for all categories.
 	    (dolist (latent-state latent-states)
 	      (lv:with-latent-variable-state (latent-state metre-style-key)
 		(let* ((mvs (cdr (assoc (lv:get-category latent-state metre-style-key)
@@ -589,11 +616,14 @@
 			;	      (mapcar #'cdr likelihoods)
 			;	      (mapcar #'cdr (sequence-predictions->event-likelihoods
 			;			     (model-sequence abstract-mvs event-sequence
-			;					     :predict? t :construct? nil))))))
+					;					     :predict? t :construct? nil))))))
 		  (push joint-likelihoods joint-likelihood-sequences))))
 	    (let ((per-event-likelihoods (transpose-lists
 					  (reverse joint-likelihood-sequences)))
 		  (posteriors (list prior-distribution)))
+	      ;; Calculate the posterior distributions using the prediction data
+	      ;; and compare them to the posterior distributions inferred by the
+	      ;; generative multiple viewpoint system.
 	      (loop for likelihoods in per-event-likelihoods
 		 for result-prior in (first result-priors) do
 		   (let* ((prior (car posteriors))
@@ -697,8 +727,6 @@
 		       ((1 1 2) (2 1 2) (3 1 2))
 		       ;; Basic viewpoint 2
 		       ((1 2 2) (2 2 2) (3 2 2))))))))
-		      
-	    					     
 
 (defun sequence-predictions->event-likelihoods (sequence-predictions)
   (let ((event-likelihoods))
@@ -718,7 +746,6 @@
 		  (lv:get-latent-state-parameter latent-state parameter latent-variable))))))
     ;; Further adjust the sequence to be interpreted in the correct phase
     ;; by posinbar.
-    
     (with-adjusted-phase (sequence (lv::get-latent-state-parameter latent-state :barlength
 								   latent-variable)
 				   (lv:get-latent-state-parameter  latent-state :phase

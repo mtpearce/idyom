@@ -25,10 +25,10 @@
 	  (find-package 'keyword)))
 
 (defun latent-category-set-p (variable)
-  (get-latent-state-value (%variable-set-symbol variable "category")))
+  (get-latent-state-value (%category-set-symbol variable)))
 
 (defun latent-interpretation-set-p (variable)
-  (get-latent-state-value (%variable-set-symbol variable "interpretation")))
+  (get-latent-state-value (%interpretation-set-symbol variable)))
 
 (defun get-latent-state-value (parameter)
   (getf *latent-state* parameter))
@@ -40,4 +40,6 @@
 (defun get-latent-interpretation (variable)
   (let ((parameters (interpretation-parameters variable)))
     (mapcar #'get-latent-state-value parameters)))
+
+
 
