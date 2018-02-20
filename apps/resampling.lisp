@@ -123,11 +123,17 @@
 	(incf resampling-id)))))
 
 (defun align-variables-with-viewpoints (viewpoints latent-variables)
-  (let* ((viewpoint-parameters (mapcar #'viewpoints:latent-parameters viewpoints)))
+  "For each viewpoint in VIEWPOINTS, find a latent-variable whose interpretation
+parameters match the latent parameters of the viewpoint."
+  (let* ((viewpoint-parameters (print (mapcar #'viewpoints:latent-parameters viewpoints))))
     (flet ((find-matching-variable (parameter-set latent-variables)
 	     (find parameter-set latent-variables
-		   :key #'lv:interpretation-parameters
-		   :test #'utils:set-equal)))
+		   :key (lambda (v) (append (lv:interpretation-parameters v)
+					    (lv:category-parameters v)))
+		   :test #'subsetp)))
+      (print (mapcar (lambda (v) (append (lv:interpretation-parameters v)
+					 (lv:category-parameters v)))
+		     latent-variables))
       (loop for viewpoint in viewpoints
 	 for parameter-set in viewpoint-parameters collect
 	   (let ((viewpoint-links (viewpoints:viewpoint-links viewpoint)))
@@ -244,46 +250,6 @@ system."
 				   (if discard? result
 				       (cons var-set result))))))
     
-	  
-(defun partition-dataset (dataset latent-variable &optional categories partitioned-dataset)
-  "Collect subsequences of compositions in <dataset> into an ALIST whose CARs 
-correspond to unique categories and whose CDRs correspond to lists of all
- subsequences of that category in <dataset>, where a subsequence is defined 
-as the longest lists of subsequent events with the same event category found 
-with the get-event-category method of <latent-variable>."
-  (let* ((composition (car dataset))
-	 (remaining-compositions (cdr dataset))
-	 (partitioned-dataset (partition-composition partitioned-dataset
-						     (coerce composition 'list)
-						     latent-variable)))
-    (if (null remaining-compositions)
-	partitioned-dataset
-	(partition-dataset remaining-compositions latent-variable
-			   categories partitioned-dataset))))
-
-(defun partition-composition (partitioned-dataset composition latent-variable
-			    &optional subsequence category)
-  (let* ((event (car composition))
-	 (remaining-events (cdr composition))
-	 (category (if (null category) (lv:get-event-category event latent-variable)
-		       category)))
-    (if (and (equal (lv:get-event-category event latent-variable)
-		    category)
-	     (not (null remaining-events)))
-	;; While category does not change, accumulate events into subsequence
-	(partition-composition partitioned-dataset remaining-events
-			     latent-variable (cons event subsequence) category)
-	(let* ((item (assoc category partitioned-dataset :test #'equal))
-	       (result (reverse (cons event subsequence))))
-	  (if (null item)
-	      (setf partitioned-dataset
-		    (acons category (list result) partitioned-dataset))
-	      (push result (cdr item)))
-	  (if (null remaining-events)
-	      partitioned-dataset
-	      (partition-composition partitioned-dataset remaining-events
-				     latent-variable))))))
-
 
 (defun check-model-defaults (defaults &key
 			      (order-bound (getf defaults :order-bound))
@@ -545,24 +511,6 @@ is a list of composition prediction sets, ordered by composition ID."
 	    (alphabet (viewpoint-alphabet viewpoint)))
 	(build-model training-set alphabet))))
 
-;;; TODO put docstring in get-long-term-generative-models
-  "Given a set of abstract viewpoints, <viewpoints>; a set of latent variables aligned to 
-<viewpoints>, <viewpoint-latent-variables>; a dataset partitioned by categories of 
-<mvs-latent-variable>, <partitioned-dataset>; a latent variable representing slots of the 
-(joint) distribution modelled by the generative system, <mvs-latent-variable>; and 
-remaining cache-related arguments, do the following for each latent variable and viewpoint
-pair: 
-1. Construct a partitioned training-set containing the categories of that specific latent
-variable by 'marginalising' over the categories of <partitioned-training-set> (i.e., merging
-all <mvs-latent-variable> categories that subsume the same category of this specific latent
-variable).
-2. Call MAKE-ABSTRACT-VIEWPOINT-MODEL for the resulting viewpoint-dataset pairs.
-In addition, set the *categories* slot of <mvs-latent-variable> to the categories found in
-<partitioned-training-set> and initialise the prior distribution of <mvs-latent-variable> 
-by calling INITIALISE-PRIOR-DISTRIBUTION. The *categories* slot of the individual 
-latent-variables are set by MAKE-ABSTRACT-VIEWPOINT-MODEL.
-Return a list with long-term generative models for each viewpoint in <viewpoints>."
-
 (defun get-long-term-generative-models (viewpoints viewpoint-latent-variables
 					training-set
 					mvs-latent-variable pretraining-ids
@@ -570,9 +518,23 @@ Return a list with long-term generative models for each viewpoint in <viewpoints
 					resampling-count
 					voices texture
 					use-cache?)
+  "Given a set of abstract viewpoints, <viewpoints>; a set of latent variables aligned 
+to <viewpoints>, <viewpoint-latent-variables>; a dataset partitioned by categories 
+of <mvs-latent-variable>, <partitioned-dataset>; a latent variable representing slots of 
+the (joint) distribution modelled by the generative system, <mvs-latent-variable>; and 
+remaining cache-related arguments, do the following for each latent variable and viewpoint
+pair: 
+1. Construct a partitioned training-set containing the categories of that specific latent
+variable by 'marginalising' over the categories of <partitioned-training-set> (i.e., merging
+all <mvs-latent-variable> categories that subsume the same category of this specific latent
+variable).
+2. Call MAKE-ABSTRACT-VIEWPOINT-MODEL for the resulting viewpoint-dataset pairs.
+In addition, set the *categories* slot of <mvs-latent-variable> to the categories found 
+in <partitioned-training-set> and initialise the prior distribution of <mvs-latent-variable> 
+by calling INITIALISE-PRIOR-DISTRIBUTION. The *categories* slot of the individual 
+latent-variables are set by MAKE-ABSTRACT-VIEWPOINT-MODEL.
+Return a list with long-term generative models for each viewpoint in <viewpoints>."
   (let ((partitioned-training-set (partition-dataset training-set mvs-latent-variable)))
-    ;; Also sets categories of mvs-latent-variable
-    (lv:initialise-prior-distribution partitioned-training-set mvs-latent-variable)
     (flet ((get-training-set (partitioned-training-set latent-variable)
 	     (loop for category in (lv:get-link-categories mvs-latent-variable
 							   latent-variable) collect
@@ -582,6 +544,13 @@ Return a list with long-term generative models for each viewpoint in <viewpoints
 							 (car partition)
 							 latent-variable)
 				   category) collect (cons category (cdr partition)))))))
+    ;; Initialise the prior distribution of the linked latent variable
+    ;; INITIALISE-PRIOR-DISTRIBUTION sets the prior distributions of the constituent
+    ;; links and derives the joint prior distribution by assuming independence among
+    ;; the constituent links.
+    ;; A side effect of this function is that it sets the CATEGORIES slot of
+    ;; of mvs-latent-variable.
+    (lv:initialise-prior-distribution link-training-sets mvs-latent-variable)
       (let* ((training-sets (mapcar #'(lambda (lv)
 					(get-training-set partitioned-training-set lv))
 				    viewpoint-latent-variables)))

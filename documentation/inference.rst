@@ -122,7 +122,21 @@ ABSTRACT-MVS should be initialized with the MAKE-MVS function, which takes care 
 While a normal mvs stores long- and short-term models as a VECTOR of PPM models, one for each viewpoint, an abstract mvs needs to store considerably more models: per viewpoint, one model for each category needs to be stored.
 This models are stored in the mvs-ltm and mvs-stm class slots, but instead of VECTORs, these slots hold hash tables where each model can be accessed by its latent-variable attribute and category.
 
-An abstract mvs achieves its dependence on the latent state By overriding the MVS-LTM and MVS-STM
+An abstract mvs achieves its dependence on the latent state by overriding the MVS-LTM and MVS-STM slot acccessor methods.
+The LTM and STM accessor methods return a vector of models, with one model for each viewpoint of the mvs.
+However, in an abstract mvs, each viewpoint is associated with a latent variable.
+Which models are returned depends on the latent category of each latent variable as encoded in the current latent state.
+A generative system with latent variables
+
+Prediction 
+
+Inference and prediction
+------------------------
+
+Latent variable inference is fully integrated into the IDyOM top-level function.
+In order to use it, 
+
+
 
 
 

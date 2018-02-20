@@ -4,7 +4,7 @@
 ;;; Data Structures
 ;;;========================================================================
 
-(defclass combined-mvs (mvs) 
+(defclass combined-mvs () 
   ((mvs-models :reader mvs-models
 	       :initarg :mvs-models
 	       :type (vector generative-mvs)))

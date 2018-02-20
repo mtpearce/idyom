@@ -231,6 +231,9 @@ See also VIEWPOINTS:SET-ALPHABET-FROM-CONTEXT."
 
 (defun make-mvs (basic-viewpoints viewpoints ltms
 		 &key (class 'mvs) latent-variable viewpoint-latent-variables)
+  "Instantiate a multiple viewpoint system with basic viewpoints BASIC-VIEWPOINTS, 
+basic or derived viewpoints VIEWPOINTS, and a set of long-term models LTMS, with one model 
+for each viewpoint in VIEWPOINTS. :CLASS can be used to specify subclasses of MVS."
   (flet ((sanity-check-basic-viewpoints ()
            (dolist (bv basic-viewpoints basic-viewpoints)
              (unless (find (type-of bv) viewpoints 
@@ -282,6 +285,7 @@ See also VIEWPOINTS:SET-ALPHABET-FROM-CONTEXT."
 				  category)))
 		   (setf (gethash key ltms-table) ltm)
 		   (setf (gethash key stms-table) stm))))))
+      ;; Instantiate the class.
       (let ((mvs (apply #'make-instance
 			(append (list class
 				      :basic (sanity-check-basic-viewpoints)

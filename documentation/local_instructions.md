@@ -75,7 +75,21 @@ and perhaps replace it by a print statement
                 print("can't find method %s" % name)
 ```
 
-With these tweaks, everything seems to sort of work. Beware that the warning message for not finding a method specializer that you refer to in the documentation will also not work. Gotchas include having to add the package name with :: for symbols that are not external in the list of specializer arguments, and having to include common-lisp:t for all arguments that do not specialize on a specific class. See the example documentation for the viewpoints module at `documentation/api_reference.rst` for reference.
+### Troubleshooting.
+
+With these tweaks, everything seems to sort of work. 
+However, warning messages when symbols specified in the documentation don't always work, making the build process crash rather than displaying a warning.
+
+In particular, when documenting methods, you may run in one of the following errors:
+
+```
+Exception occurred:
+  File "/home/bastiaan/projects/idyom/env/local/lib/python2.7/site-packages/sphinx/environment/__init__.py", line 309, in warn_node
+    self._warnfunc(msg, '%s:%s' % get_source_line(node), **kwargs)
+TypeError: 'NoneType' object is not callable
+```
+
+Beware that the warning message for not finding a method specializer that you refer to in the documentation will also not work. Gotchas include having to add the package name with :: for symbols that are not external in the list of specializer arguments, and having to include common-lisp:t for all arguments that do not specialize on a specific class. See the example documentation for the viewpoints module at `documentation/api_reference.rst` for reference.
 
 ### Writing documentation
 

@@ -42,7 +42,7 @@ extensions.extend(['sphinxcontrib.cldomain',
 from os.path import join, dirname, realpath
 cl_systems = [{"name": "idyom",
                "path": join(dirname(realpath(__file__)), "../"),
-               "packages": ["idyom", "viewpoints"]}]
+               "packages": ["idyom", "viewpoints", "mvs", 'latent-variables']}]
                    
                   # , "viewpoints", "resampling", 
                   # "apps", "idyom", "viewpoint-selection", "database", "ppm", 

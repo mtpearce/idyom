@@ -9,7 +9,7 @@
 	   #:get-latent-variables #:get-latent-category #:get-latent-interpretation
 	   #:get-interpretation #:get-category #:get-event-category
 	   #:get-link-category #:get-link-categories #:get-latent-states
-	   #:interpretation-parameters #:set-link-categories
+	   #:interpretation-parameters #:category-parameters #:set-link-categories
 	   #:latent-category-set-p #:latent-interpretation-set-p
 	   #:categories #:prior-distribution
 	   #:initialise-prior-distribution)

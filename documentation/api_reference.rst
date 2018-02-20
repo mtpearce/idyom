@@ -172,15 +172,110 @@ PPM* Statistical Models
 
 .. cl:package:: ppm
 
+Latent variables
+----------------
+
+.. cl:package:: latent-variables
+
+Classes 
+^^^^^^^
+
+.. cl:type:: latent-variable
+
+.. cl:type:: latent-variables::linked
+
+Methods
+^^^^^^^
+
+.. cl:method:: latent-variable-attribute latent-variable
+
+.. cl:method:: latent-variable-attribute latent-variables::linked
+
+.. cl:method:: category-parameters latent-variables::linked
+
+.. cl:method:: interpretation-parameters latent-variables::linked
+
+.. cl:method:: latent-state-parameters latent-variable
+
+.. cl:method:: latent-variable-name latent-variable
+
+.. cl:method:: latent-variable-name latent-variables::linked
+
+.. cl:method:: get-category-parameter common-lisp:t common-lisp:t latent-variable
+
+.. cl:method:: get-interpretation-parameter common-lisp:t common-lisp:t latent-variable
+
+.. cl:method:: get-latent-state-parameter common-lisp:t common-lisp:t latent-variable
+
+.. cl:method:: get-category common-lisp:t latent-variable
+
+.. cl:method:: get-interpretation common-lisp:t latent-variable
+
+.. cl:method:: get-link-category latent-variable common-lisp:t latent-variable
+
+.. cl:method:: get-link-category latent-variables::linked common-lisp:t latent-variable
+
+.. cl:method:: get-event-category common-lisp:t latent-variable
+
+.. cl:method:: create-category latent-variable common-lisp:t
+
+.. cl:method:: create-latent-state latent-variable common-lisp:t
+
+.. cl:method:: get-link-categories latent-variables::linked latent-variable
+
+.. cl:method:: set-link-categories latent-variable
+
+.. cl:method:: get-link-training-sets common-lisp:t latent-variables::linked
+
+.. cl:method:: combine-link-categories latent-variables::linked common-lisp:t
+
+.. cl:method:: combine-link-latent-states latent-variables::linked common-lisp:t
+
+.. cl:method:: initialise-prior-distribution common-lisp:t latent-variable
+
+.. cl:method:: initialise-prior-distribution common-lisp:t latent-variables::linked
+
+.. cl:method:: get-prior-distribution common-lisp:t common-lisp:t latent-variable
+
+.. cl:method:: combine-prior-distributions latent-variables::linked
+
+.. cl:method:: get-latent-states common-lisp:t latent-variable
+
+.. cl:method:: get-latent-states common-lisp:t latent-variables::linked
+
+Functions
+^^^^^^^^^
+
 Multiple viewpoint systems
 --------------------------
 
 Prediction using multiple viewpoint systems (MVS).
 
-.. cl:package:: mvs
+.. cl:package:: multiple-viewpoint-system
+
+Classes
+^^^^^^^
+
+.. cl:type:: mvs
+
+.. cl:type:: abstract-mvs
+
+.. cl:type:: generative-mvs
+
+.. cl:type:: combined-mvs
+
+Functions
+^^^^^^^^^
+
+.. cl:function:: make-mvs
+
+Methods
+^^^^^^^
+
+.. cl:method:: model-sequence mvs common-lisp:t common-lisp:t common-lisp:t common-lisp:t common-lisp:t
 
 Prediction sets
-^^^^^^^^^^^^^^^
+---------------
 
 .. cl:package:: prediction-sets
 
