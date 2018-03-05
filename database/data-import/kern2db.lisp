@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-05-12 21:18:51 peter>                           
+;;;; Time-stamp: <2018-03-03 22:51:21 peter>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -420,7 +420,7 @@
    format using the default parameters."
   (let* ((kern-data (read-kern-data file-name))
          (processed-data (process-kern-data kern-data)))
-    (cons (cons :file-name (pathname-name file-name))
+    (cons (cons :description (pathname-name file-name))
 	  processed-data)))
 
 (defun print-status ()

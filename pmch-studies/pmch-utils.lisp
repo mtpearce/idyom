@@ -2,7 +2,7 @@
 ;;;; File:       pmch-utils.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2018-01-11 17:56:42 peter>                          
-;;;; Time-stamp: <2018-01-11 21:54:51 peter>                           
+;;;; Time-stamp: <2018-03-05 16:11:49 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -48,20 +48,21 @@
 				   :none)
 	   :slices-or-chords :chords
 	   :remove-repeated-chords remove-repeated-chords))
-	 ;; This returns a list of harmonic sequence objects
-	 (data
-	  (mapcar #'(lambda (x) (coerce x 'list)) data))
-	 ;; Now each composition is represented as a list of chords
 	 (data
 	  (mapcar
-	   #'(lambda (seq) (mapcar #'(lambda (chord)
+	   #'(lambda (x)
+	       (let ((desc (md:description x))
+		     (seq (mapcar #'(lambda (chord)
 				       (mapcar #'round
 					       (md:get-attribute chord
 								 'h-cpitch)))
-				   seq))
-	   data))) ;; Now chords are represented as lists of integers
+				  (coerce x 'list))))
+		 (list (cons :description desc)
+		       (cons :chords seq))))
+	   data)))
     (with-open-file (stream (pathname path)
 			    :direction :output
 			    :if-exists :supersede)
       (cl-json:encode-json data stream))))
   
+;; (export-harmony-corpora "/Users/peter/Dropbox/Academic/projects/idyom/studies/HarmonyCorpora/data-raw/new-corpora-with-names/")
