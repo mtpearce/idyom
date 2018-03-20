@@ -1,47 +1,80 @@
 Inference
 =========
 
-Using abstract viewpoints and annotated training data, it is possible to use idiom for inferring certain kinds of latent variables from a musical surface.
-Examples of latent variables which might underly a musical surface are *meter*, *key*, or *style*. 
-The inference functionality in IDyOM supports the specification of a simple generative model involving one or more latent variables.
-When this model is used to predict new sequences of events, the generative model is used to infer probability distributions defined over the state space of the latent variables.
-Predictions are made by marginalizing out the latent variables.
+The techniques described in this section explain how IDyOM can be used for inferring latent variables from compositions using supervised learning.
+Examples of latent variables that might be hypothesized to underlie compositions are *meter*, *key*, or *style*. 
+The techniques described here support a the specification of a limited class of generative models in which a composition is represented as a set of observed variables and one or more latent variables can be specified.
+In this limited class of generative models, inference can be performed *online*, that is after processing each event.
+Thus, inference can be used to support prediction of musical events.
 
-Two entities are key in the specification of the generative model: the latent variables themselves and *interpretation*. 
-Interpretation here refers to transforming the musical surface into a representation that depends on one (or more) of the latent variables.
-Interpretation is implemented by *abstract viewpoints*: viewpoints that are a function of both a sequence of events as well as the state of one or more latent variables.
-Latent variables represent independent probabilistic variables.
-A latent variable definition defines a state-space for the latent variable, as well as methods for calculating the prior distribution.
+In IDyOM, music is represented as a sequence of temporally ordered events, :math:`\textbf{events}_0^i = [\text{event}_0, \text{event}_1, \cdots, \text{event}_i]`.
+We denote the set of latent variables used for prediction by :math:`\textbf{lvars}`.
+Supported generative models can in general be described as follows:
 
-A distinction is made between *categories* and *interpretations*.
-For some latent variables, inference relies on (or can be enhanced by) learning different predictive models for different categories.
-For example, in order to figure out the style of a piece, different predictive models are learned for different styles.
-Inference relies on checking which predictive model most effectively predicts the current sequence of events.
-In inferring meter, such techniques may be of use too: learning separate predictive models for each meter helps inferring meter.
-However, in order to interpret a rhythm in a meter, it is also necessary to know how the meter aligns wiht the rhythm.
-Not all latent variables 
+.. math:: p(\textbf{events}_0^i, \textbf{lvars}) = p(\textbf{events}_0^i|\textbf{lvars}) p(\textbf{lvars})
 
-The type generative models that can be defined are restricted in several ways: it is assumed that each latent variable has a single value for each composition.
-Each composition that is part of the training set or the test set must, for example, be in a single meter and key for meter and key inference to work optimally.
+The above equation can be factorized as follows.
 
-Latent-variables and abstract viewpoints can be customly defined using macros in the latent-variables and viewpoints modules. 
-The sections below describe how this works. 
+.. math:: p(\textbf{events}_0^i, \textbf{lvars}) = p(\textbf{lvars}) p(\text{event}_0 | \textbf{lvars}) \prod_{j=1}^{i} p(\text{event}_j | \textbf{events}_0^{j-1}, \textbf{lvars})
 
-Latent-variables can be defined with a macro in the latent-variables module.
-Depending on the complexity of the custom latent variable, some methods may need to be specialized on its type.
-The viewpoints module provides a macro for defining abstract viewpoints.
-There are some constraints on the kind of generative models that can be specified.
-Each latent variable is assumed to only have a single value for each piece.
-Examples of such variables are key and meter for a repertory in which key and meter do not change.
+In online inference we have an a-priori distribution over the latent variables, and we want to find the posterior distribution using
+The a-prior distribution may be :math:`p(\textbf{lvars})` in case no events have been observed, or in may be the posterior distribution given events 0 to :math:`i - 1` :math:`p(\textbf{lvars}|\textbf{events}_0^{i-1})`.
+Inference can be performed online in such a model as follows.
+
+.. math:: p(\textbf{lvars}|\textbf{events}_0^i) = \frac{p(\text{event}_i | \textbf{events}_0^{i-1}, \textbf{lvars}) p(\textbf{lvars}|\textbf{events}_0^{i-1}) }{p(\text{event}_i | \textbf{events}_0^{i-1})}
+
+Two concepts play key role in the generative models: latent variables and interpretation.
+Interpretation, here, means transforming the musical surface into a representation that depends on the state of the latent variables.
+Such interpretation is implemented with *abstract viewpoints*: viewpoints defined as a function of both an event-sequence and the state of the latent variables.
+
+The hypothesized states of latent variables are called *latent-states*, and these latent states may be of different *categories*.
+This difference is relevant to the likelihood model, :math:`p(\textbf{events}|\textbf{lvars})`: the parameters of the model depend only on the category of a latent state.
+The likelihood of a latent state is determined by the probability of the sequence of events. 
+The likelihood is based on event predictions generated by a full-fledged multiple viewpoint system, which may be based on abstract and normal viewpoints.
+
+That is, for each unique category of :math:`\textbf{lvars}`, a single model is learned.
+
+Category labels are, for convenience, assumed to be part of the event representation.
+Categories for a latent variable representing meter could for example be derived from the :math:`\texttt{pulses}` and :math:`\texttt{bardur}` event attributes.
+Methods that specialize on specific latent variables can be written to define how categories are derived from basic event attributes.
+
+Interpretations are refinements of categories.
+The parameters of the likelihood model do not depend on interpretation, interpretation, implemented by abstract viewpoints, depends on both category and interpretation.
+
+It is possible for latent variables to only have on category and multiple interpretations.
+Key, for example, could be defined with one likelihood model that describes how melodies develop across scale degrees.
+The scale degrees themselves depend on in which key a composition is interpreted.
+It is also possible for latent variables to have multiple categories but no interpretations.
+Style inference, for example, can be implemented by learning one model of melodic intervals per style.
+
+The class supported generative models is restricted: it is assumed that each latent variable has a single true value per composition.
+That is, there are no transition probabilities for :math:`lvars`.
+
+Custom latent variables and abstract viewpoints can be defined with macros provided in the LATENT-VARIABLES and VIEWPOINTS modules. 
+The sections below describe these modules in more detail.
 
 Latent variables
 ----------------
 
-Latent-variables, in a probabilistic sense, are variables that form part of a generative model but are not directly observable.
-Latent-variables, as implemented in IDyOM, represent event attributes that can be inferred from the musical surface, represented by compositions consisting of sequences of events.
+Latent variables can represent analytical properties of a piece of music that are not directly observable but can be inferred from observable events.
+The implementation of latent variables in IDyOM supports discrete latent variables for which a single value, or *state*, is assumed to underlie a composition. 
+Each state of a latent variable is uniquely specified by the values of a set of parameters.
+These parameters are split between two types: *category parameters*, and a set of *interpretation parameters*.
+Any instantiation of the category and interpretation parameters is called a *latent state*, whilst any instantation of just the category parameters is called a *category*.
 
-Latent variables are are defined by a set of *category parameters*, and a set of *interpretation parameters*.
-Any instantiation of the category and interpretation parameters is called a *latent state*.
+There is an important distinction in categories are used
+
+
+The set of possible categories is determined by training data.
+
+Events -> latent category
+GET-EVENT-CATEGORY
+
+Category -> interpretations
+
+Parameter names and values -> category
+CREATE-CATEGORY
+
 During inference, a posterior is derived over the latent states of each participating latent variables.
 
 Latent variables may be defined either without category parameters or without interpretation parameters.
@@ -72,31 +105,40 @@ For example, latent variables A and B are linked and latent variables B and C ar
 Abstract viewpoints
 -------------------
 
-Abstract viewpoints abstract away one or more attributes of the basic event representation.
-They are defined as functions of both a sequence of events and the *latent-variable-state*.
-The latent variable state is represented as a dynamic variable, \*LATENT-VARIABLE-STATE\*, which stores the current latent state of one or more latent variables.
+Abstract viewpoints are variants of derived viewpoints where some of the basic attributes in their typeset are replaced by values from the latent variable state.
+Additionally, supplementary parameters may be taken from the latent variabel state that represent attributes to be inferred which would otherwise 
+Abstract viewpoints are viewpoints of both an event sequence and the *latent variable state*.
+The latent variable state contains the currently hypothesized value of any number of latent variables.
+Abstract viewpoints may take as their function arguments parameters from  
+The latent variable state is represented by a dynamic variable, \*LATENT-VARIABLE-STATE\*, which stores the current latent state of one or more latent variables.
+
+Defining abstract viewpoints
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The macro DEFINE-ABSTRACT-VIEWPOINT can be used to define abstract viewpoints.
-Defining an abstract viewpoint is similar to defining derived viewpoints: a name, typeset, and event-type specializer are needed.
-In addition, a set of *event attributes* and *parameters* is needed.
-The event attributes specify which event attributes the viewpoint abstracts away from.
-The attributes in this list can only be actual attributes of the chosen event type.
-The parameters can be any other parameters that may be provided by latent-variable states.
+Like derived viewpoints, abstract viewpoint require NAME, TYPESET and event class specializer parameters in their definition.
+Additionally, abstract viewpoints require a set of *event-attribute parameters* and *interpretation parameters*.
+Event-attribute parameters represent event attributes that the viewpoint abstracts away from and must be actual basic attributes of the chosen event class.
+Interpretation parameters specify any other parameters required by the abstract viewpoint that are available in the latent variable state, but not part of the event representation.
 
-The DEFINE-ABSTRACT-VIEWPOINT macro simply creates a normal viewpoint with the DEFINE-VIEWPOINT macro, but the function that is passed to this macro is wrapped in a function which extracts the values of the event attributes and remaining parameters from the current latent variable state, and passes the event attribute parameters as positional arguments and the additional parameters as keyword arguments to the viewpoint function.
-Hence, the viewpoint function should be defined as a higher-order function which takes the event-attribute parameters followed by the additional parameters as positional arguments in the order in which they are given to the DEFINE-ABSTRACT-VIEWPOINT macro and returns a regular viewpoint function.
-For the additional parameters, a default value should be specified which is used when the viewpoint is used in the training phase (see below).
-For example, an abstract viewpoint function that performs metrical interpretation takes as arguments a metrical interpretation, say 6/8, and returns a function that interprets event sequences in 6/8.
+Like other viewpoints, abstract viewpoints rely on a viewpoint function.
+For abstract viewpoints, this function should be a higher-order function that, given the parameters extracted from the latent variables states, returns a regular viewpoint function that performs the desired interpretation.
+For example, an abstract viewpoint that returns the sequence of scale degrees of a melody based on a given key and mode should be defined using a higher-order function which takes a key and mode as arguments and returns a function that interprets event sequences in that key and mode.
 
-Both latent variables and abstract viewpoints are defined by two disjoint sets of parameters.
-In the case of latent variables, these are called category parameters and interpretation parameters, while in the case of abstract viewpoints they are called event attributes and parameters.
-There are subtle differences between these pairs of parameter sets.
+The DEFINE-ABSTRACT-VIEWPOINT macro creates a normal viewpoint using the DEFINE-VIEWPOINT macro, but wraps the provided viewpoint function in a function that extracts the provided event-attribute and interpretation parameters from the latent variable state and passes the former as positional arguments and the latter as keyword arguments to the viewpoint function.
+
+For interpretation parameters, a default value should be specified which is used when the viewpoint is used in the training phase (see below).
+
+Importantly, event-attribute and interpretation parameters are not the same as categories and interpretations.
+Categories are derived from event attributes and need not correspond to actual event attributes.
+They specify when a different model should be used.
+Interpretation, implemented by abstract viewpoints, may be independent of some aspects of categories 
 While category parameters are typically actual event attributes, they are not required to be. 
 The event attributes of abstract viewpoints on the other hand necessarily need to be event attributes.
 The parameters are any remaining parameters that are required for interpretation, but are not event attributes (for example the phase of a metrical interpretation).
 The *raison d'etre* of these remaining parameters (such as phase of a metre), is that certain aspects that one may want to infer are implicitly encoded in the event representation.
 The absolute onset times in the MELODY representation, for example, implicitly encode information about the possible presence of an anacrusis since they are defined such that time 0 corresponds to the downbeat of the first bar.
-This distinction---wile it may seem a bit confusing---has a technical reason which is related to the automatic generation of *training viewpoints*.
+This distinction---which may seem pointlessly confusing---has a technical reason that is related to the automatic generation of *training viewpoints*.
 When an abstract viewpoint is defined, a training viewpoint (whose name should be provided to the DEFINE-ABSTRACT-VIEWPOINT macro) is automatically created.
 A training viewpoint is used to train the predictive model for an abstract viewpoint.
 This can be done simply by applying the training viewpoint to a set of training sequences like one would with any normal viewpoint (although the training sequences should be limited to a specific category for which a predictive model is being trained) and learning a predictive model from the resulting sequences.
@@ -108,14 +150,15 @@ Generative multiple viewpoint systems
 
 Three additional classes of multiple viewpoint systems are defined to support inference.
 The most central of these is the abstract multiple viewpoint system, ABSTRACT-MVS.
-With some exceptions, an abstract multiple viewpoint system appears to to other functions and methods to behave exactly like a normal multiple viewpoint, but its behavior is dependent on the current \*LATENT-VARIABLE-STATE\*.
+With some exceptions, an abstract multiple viewpoint system appears to other functions and methods to behave exactly like a normal multiple viewpoint system.
+The twist is that its behavior depends on the current \*LATENT-VARIABLE-STATE\*.
 
 During inference, latent variables provided to be inferred for predictions are grouped together into independent *generative systems*. 
 A generative system is a group of latent variables whose posterior distribution needs to be inferred jointly.
-For example, if we specify latent variables $(A B)$, $C$, $(A C)$ and $D$ to be inferred (where variables grouped by brackets are linked together to be inferred jointly), two independent generative systems will be created:
-One will jointly infer latent variables $A$, $B$ and $C$ by linking latent variables $A$, $B$, and $C$ together.
-Another will infer latent variable $D$.
-The user could of course have anticipated this transformation and have specified $(A B C)$ and $D$ to be inferred, but the system can take care of this reasoning as well.
+For example, if we specify latent variables :math:`(A B)`, :math:`C`, :math:`(A C)` and :math:`D` to be inferred (where variables grouped by brackets are linked together to be inferred jointly), two independent generative systems will be created:
+One will jointly infer latent variables :math:`A`, :math:`B` and :math:`C` by linking latent variables :math:`A`, :math:`B`, and :math:`C` together.
+Another will infer latent variable :math:`D`.
+The user could of course have anticipated this transformation and have specified :math:`(A B C)` and :math:`D` to be inferred, but the system can take care of this reasoning as well.
 
 ABSTRACT-MVS is initialized with a short-term model, a long-term model, a list of basic viewpoints, a list of viewpoints, a (possibly linked) latent variable and individual latent variables, one for each viewpoint.
 ABSTRACT-MVS should be initialized with the MAKE-MVS function, which takes care of initializing its fields properly.

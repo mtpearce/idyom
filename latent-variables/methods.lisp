@@ -170,14 +170,10 @@ L, generate a tuple representing the category of L."
 L, generate a tuple representing the latent state of L."
   (%combine-link-parameters l latent-states :parameter-name-fn #'latent-state-parameters))
 
-(defmethod initialise-prior-distribution (dataset (l linked))
-  "Split TRAINING-DATA, which consists of a ALIST of categories (labels) and
-lists of compositions (training items associated with each label) into training 
-data (with the same structure) for each of the constituent links of L.
-Initialise prior distributions for each constituent link with GET-PRIOR-DISTRIBUTION 
-based on this training data, then calculate the joint distribution, again using
-GET-PRIOR-DISTRIBUTION.
-Finally, initialise the PRIOR-DISTRIBUTION and CATEGORIES slot of L."
+(defmethod initialise-prior-distribution (category-training-sets (l linked))
+  "Given a list of training sets per category of L, initialize the prior distributions
+of the links of L and combine them. The parameters of the combined distribution are the
+Cartesian product of the parameters of the constituent prior distributions."
   (let* ((link-training-data (get-link-training-sets dataset l))
 	 (link-categories (mapcar #'categories (latent-variable-links l)))
 	 (categories (mapcar (lambda (categories)
