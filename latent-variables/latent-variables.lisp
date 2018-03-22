@@ -39,19 +39,14 @@ based on the relative frequency of phases in the training data."))
      when (equal (get-category latent-state v) category)
        collect latent-state))
 
-(define-latent-variable key () (:keysig :mode))
+(define-latent-variable key (:mode) (:keysig))
 
 (defmethod get-latent-states (category (v key))
   (let ((latent-states))
-    ;; TODO mode correct range?
-;    (dotimes (mode 12 latent-states)
-;      (dotimes (key 12)
-;	(push (create-latent-state v category :keysig (+ -7 key) :mode mode)
-					;	      latent-states)))))
-    (dotimes (mode 2 latent-states)
-      (dotimes (key 2)
-	(push (create-latent-state v category :keysig (+ -7 key) :mode mode)
-	      latent-states)))))
+    (dotimes (keysig 15)
+      (push (create-latent-state v category :keysig (- keysig 7))
+	    latent-states))
+    latent-states))
 
 (define-latent-variable style (:style) ())
 

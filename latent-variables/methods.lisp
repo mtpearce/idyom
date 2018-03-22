@@ -143,14 +143,6 @@ the categories of L and set the CATEGORY slot of each contituent link of L."
     (setf (categories link)
 	  (get-link-categories l link))))
 
-(defmethod get-link-training-sets (dataset (l linked))
-  "Given TRAINING-DATA, an ALIST whose keys represent categorical labels of the
-training-items in their associated values, generate n training-data lists where 
-n is the number of constituent links of L and each training-data list contains
-labels and training items for its corresponding contituent link."
-  (mapcar (lambda (link) (partition-dataset dataset link))
-	  (latent-variable-links l)))
-
 (defmethod %combine-link-parameters ((l linked) parameter-sets
 				    &key (parameter-name-fn #'category-parameters))
     (let* ((parameter-names (apply #'append (mapcar parameter-name-fn
@@ -170,32 +162,14 @@ L, generate a tuple representing the category of L."
 L, generate a tuple representing the latent state of L."
   (%combine-link-parameters l latent-states :parameter-name-fn #'latent-state-parameters))
 
-(defmethod initialise-prior-distribution (category-training-sets (l linked))
-  "Given a list of training sets per category of L, initialize the prior distributions
-of the links of L and combine them. The parameters of the combined distribution are the
-Cartesian product of the parameters of the constituent prior distributions."
-  (let* ((link-training-data (get-link-training-sets dataset l))
-	 (link-categories (mapcar #'categories (latent-variable-links l)))
-	 (categories (mapcar (lambda (categories)
-			       (combine-link-categories l categories))
-			     (apply #'utils:cartesian-product
-				    link-categories))))
-    ;; Initialise prior distributions of constituent links
-    (mapcar #'initialise-prior-distribution
-	    link-training-data (latent-variable-links l))
-    (setf (prior-distribution l)
-	  (combine-prior-distributions l))
-    (setf (categories l) categories)))
-
-(defmethod initialise-prior-distribution (dataset (v latent-variable))
+(defmethod initialise-prior-distribution (category-training-sets (v latent-variable))
   "Calculate the prior distribution of V with GET-PRIOR-DISTRIBUTION based on
 TRAINING-DATA, which is an ALIST whose keys correspond to categories (labels), and
 whose values correspond to list of training items associated with the category."
-  (let* ((training-data (partition-dataset dataset v))
-	 (categories (mapcar #'car training-data))
-	 (training-sequences (mapcar #'cdr training-data)))
+  (let* ((categories (mapcar #'car category-training-sets))
+	 (training-sets (mapcar #'cdr category-training-sets)))
     (setf (prior-distribution v)
-	  (get-prior-distribution training-sequences categories v))
+	  (get-prior-distribution training-sets categories v))
     (setf (categories v) categories)))
 
 (defmethod combine-prior-distributions ((l linked))
@@ -259,3 +233,17 @@ certain classes of latent variables."
 	 (latent-state-sets (apply #'utils:cartesian-product latent-states)))
     (loop for latent-state-set in latent-state-sets collect
 	 (combine-link-latent-states l latent-state-set))))
+
+(defmethod print-latent-variable ((v latent-variable))
+  (let ((categories (categories v)))
+    (format t "Category: (~{~A~^, ~}). Interpretation: ~{~A~^, ~}~%"
+	    (category-parameters v)
+	    (interpretation-parameters v))
+    (loop for c in categories do
+	 (let ((latent-states (get-latent-states c v)))
+	   (format t "P(~A) = ~A~%" c (apply #'+ (mapcar (lambda (l)
+							 (cdr (assoc l (prior-distribution v))))
+						       latent-states)))
+	   (loop for l in latent-states do
+		(format t "----P(~A)
+						       

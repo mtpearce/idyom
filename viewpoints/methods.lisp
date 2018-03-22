@@ -62,7 +62,7 @@
 	(setf (%viewpoint-alphabet v) (acons category alphabet alphabets))
 	(rplacd place alphabet))))
 
-
+(defmethod training-viewpoint ((v viewpoint)) v)
 (defmethod training-viewpoint ((a abstract-linked))
   (flet ((viewpoint-attrib (v)
 	   (intern (symbol-name (type-of v)))))

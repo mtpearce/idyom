@@ -114,7 +114,7 @@
           ;; Derive target viewpoint IC profile from source viewpoints
           (let* ((predictions 
                   (resampling:idyom-resample dataset-id target-viewpoints source-viewpoints
-					     :latent-variables latent-variables
+					     :generative-systems generative-systems
                                              :pretraining-ids pretraining-ids
                                              :k k :resampling-indices resampling-indices
                                              :models models :ltmo ltmo :stmo stmo
@@ -124,11 +124,6 @@
             (when output-path
               (resampling:format-information-content predictions filepath dataset-id detail :separator separator))
             (resampling:output-information-content predictions detail))))))
-
-(defun parse-generative-systems (generative-systems)
-  "Given a list of generative systems specified as CONSes with the following structure:
-(LVAR . SOURCE-VIEWPOINTS), where LVAR is a symbol specifying a latent variable, and 
-SOURCE-VIEWPOINTS is a list of symbols specifying the viewpoints used by the system,")
 
 (defun find-selection-basis (targets basis)
   "Determine which viewpoints are to be used in selection process"

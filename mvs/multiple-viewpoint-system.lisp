@@ -230,7 +230,7 @@ See also VIEWPOINTS:SET-ALPHABET-FROM-CONTEXT."
 ;;;========================================================================
 
 (defun make-mvs (basic-viewpoints viewpoints ltms
-		 &key (class 'mvs) latent-variable viewpoint-latent-variables)
+		 &key (class 'mvs) latent-variable)
   "Instantiate a multiple viewpoint system with basic viewpoints BASIC-VIEWPOINTS, 
 basic or derived viewpoints VIEWPOINTS, and a set of long-term models LTMS, with one model 
 for each viewpoint in VIEWPOINTS. :CLASS can be used to specify subclasses of MVS."
@@ -256,35 +256,23 @@ for each viewpoint in VIEWPOINTS. :CLASS can be used to specify subclasses of MV
     (let ((ltms-table (make-hash-table :test #'equal))
 	  (stms-table (make-hash-table :test #'equal)))
       (when (eq class 'abstract-mvs)
-	(assert (every #'abstract? viewpoints) (viewpoints)
-		"~&All viewpoints of an abstract multiple-viewpoint system must be abstract.~%")
-	(assert (not (or (null latent-variable)
-			 (null viewpoint-latent-variables)))
-		(latent-variable viewpoint-latent-variables)
-		":CATEGORIES, :LATENT-VARIABLE and :VIEWPOINT-LATENT-VARIABLES keyword
- arguments to MAKE-MVS are required when :CLASS equals ABSTRACT-MVS.~%")
-	;; First, link each viewpoint to the provided contituent latent variables
-	;; (VIEWPOINT-LATENT-VARIABLES), and derive and set the categories for each
-	;; of the constituent latent variables from the latent variable.
-	(loop for viewpoint in viewpoints
-	   for vp-lv in viewpoint-latent-variables do
-	     (setf (viewpoints:latent-variable viewpoint) vp-lv
-		   (lv:categories vp-lv) (lv:get-link-categories latent-variable vp-lv)))
-	;; Create short-term model sets for each abstract viewpoint.
-	(let* ((stms (loop for viewpoint in viewpoints collect
-			  (get-short-term-model viewpoint))))
-	  ;; Store all models for all viewpoints in a hash table whose 
-	  ;; keys consist of the latent-variable name and category.
-	  (loop for latent-variable in viewpoint-latent-variables
-	     for lt-models in ltms
-	     for st-models in stms do
-	       (dolist (category (lv:categories latent-variable))
-		 (let ((ltm (cdr (assoc category lt-models :test #'equal)))
-		       (stm (cdr (assoc category st-models :test #'equal)))
-		       (key (cons (lv:latent-variable-attribute latent-variable)
-				  category)))
-		   (setf (gethash key ltms-table) ltm)
-		   (setf (gethash key stms-table) stm))))))
+	(assert (not (null latent-variable))
+		(latent-variable)
+		":LATENT-VARIABLE keyword argument is required for MAKE-MVS when
+ :CLASS is ABSTRACT-MVS.~%")
+	;; Because viewpoint-alphabet is stored in viewpoints, and these may depend on
+	;; the latent state, viewpoints need to know the latent variable.
+	(loop for viewpoint in viewpoints do
+	     (setf (viewpoints:latent-variable viewpoint) latent-variable))
+	;; Store all models for all viewpoints in a hash table whose 
+	;; keys consist of the latent-variable name and category.
+	(loop for category-models in ltms do
+	     (let* ((category (car category-models))
+		    (lt-models (cdr category-models))
+		    (st-models (lv:with-latent-category (category latent-variable)
+				 (get-short-term-models viewpoints))))
+	       (setf (gethash category ltms-table) lt-models)
+	       (setf (gethash category stms-table) st-models))))
       ;; Instantiate the class.
       (let ((mvs (apply #'make-instance
 			(append (list class
@@ -294,13 +282,11 @@ for each viewpoint in VIEWPOINTS. :CLASS can be used to specify subclasses of MV
 				
 				(if (eq class 'abstract-mvs)
 				    (list :ltm ltms-table :stm stms-table
-					  :latent-variable latent-variable
-					  :viewpoint-latent-variables
-					  (apply #'vector viewpoint-latent-variables))
+					  :latent-variable latent-variable)
 				    (list :ltm (apply #'vector ltms)
 					  :stm (get-short-term-models viewpoints)))))))
-	(set-mvs-parameters mvs)
-	mvs))))
+    (set-mvs-parameters mvs)
+    mvs))))
 
 (defun set-mvs-parameters-function (m &key
 					(ltm-order-bound *ltm-order-bound*)
@@ -328,14 +314,11 @@ for each viewpoint in VIEWPOINTS. :CLASS can be used to specify subclasses of MV
 			       &key &allow-other-keys)
   (apply #'set-mvs-parameters-function (cons m parameters)))
 
-(defmethod get-short-term-model ((v viewpoints:viewpoint))
-  (make-ppm (viewpoint-alphabet v)))
-
 (defun get-short-term-models (viewpoints)
   "Returns a vector of freshly initialised ppm short term models
 corresponding to the supplied list of viewpoints and initialised with
 the supplied parameters."
-  (map 'vector #'get-short-term-model viewpoints))
+  (map 'vector #'(lambda (v) (make-ppm (viewpoint-alphabet v))) viewpoints))
                   
 ;;;========================================================================
 ;;; Model Construction and Prediction 

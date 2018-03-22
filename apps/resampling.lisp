@@ -79,8 +79,8 @@
 	 (resampling-indices (if (null resampling-indices)
 				 (utils:generate-integers 0 (1- k))
 				 resampling-indices))
-	 (latent-variables (mapcar (lambda (spec) (get-latent-variable (car spec))) latent-variables))
-	 (generative-sources (mapcar (lambda (spec) (get-viewpoints (cdr 
+	 (latent-variables (mapcar (lambda (spec) (lv:get-latent-variable (car spec))) generative-systems))
+	 (generative-sources (mapcar (lambda (spec) (get-viewpoints (cdr spec))) generative-systems))
 	 ;; the result
 	 (sequence-predictions))
     (dolist (resampling-set resampling-sets sequence-predictions)
@@ -90,19 +90,17 @@
 	(let* ((training-set (get-training-set dataset resampling-set))
 	       (training-set (monodies-to-lists (append pretraining-set training-set)))
 	       (test-set (monodies-to-lists (get-test-set dataset resampling-set))))
-	  (let* ((generative-ltms (mapcar #'(lambda (sources latent-variable)
+	  (let* ((generative-ltms (mapcar #'(lambda (latent-variable sources)
 					      (get-long-term-generative-models
 					       sources
-					       training-set
 					       latent-variable
+					       training-set
 					       pretraining-ids dataset-id
 					       resampling-id k
 					       voices texture
 					       use-ltms-cache?))
 					  latent-variables generative-sources))
-		 (ltms (get-long-term-models (remove-if (lambda (v)
-							  (viewpoints:abstract? v))
-							sources)
+		 (ltms (get-long-term-models sources
 					     training-set
 					     pretraining-ids dataset-id
 					     resampling-id k 
@@ -115,7 +113,7 @@
 		 (predictions
 		  (mvs:model-dataset mvs test-set :construct? t :predict? t)))
 	    (push predictions sequence-predictions))))
-      (incf resampling-id)))))    
+      (incf resampling-id))))
 
 (defun check-model-defaults (defaults &key
 			      (order-bound (getf defaults :order-bound))
@@ -351,20 +349,6 @@ is a list of composition prediction sets, ordered by composition ID."
 ;;; Constructing the Long term models 
 ;;;===========================================================================
 
-(defun make-abstract-viewpoint-model (viewpoint latent-variable training-sets
-				      cache-params use-cache?)
-  (let* ((training-viewpoint (viewpoints:training-viewpoint viewpoint)))
-    (loop for training-set in training-sets collect
-	 (let ((category (car training-set))
-	       (training-set (cdr training-set)))
-	   (cons category
-		 (make-viewpoint-model training-viewpoint training-set
-				       (append cache-params
-					       (list category
-						     (lv:latent-variable-name
-						      latent-variable)))
-				       use-cache?))))))
-
 (defun make-viewpoint-model (viewpoint training-set cache-params use-cache?)
   (if use-cache?
       (let ((filename (apply #'get-model-filename (cons viewpoint cache-params)))
@@ -389,17 +373,21 @@ Call make-abstract-viewpoint-model for each viewpoint to construct a set
 of long-term models using the partitioned dataset. 
 Furthermore, initialize the prior distribution of the LATENT VARIABLE using
 the partitioned training set."
-  (let ((category-training-sets (partition-dataset training-set latent-variable)))
+  (let ((category-training-sets (lv::partition-dataset training-set latent-variable)))
     (lv:initialise-prior-distribution category-training-sets latent-variable)
-    (mapcar #'(lambda (viewpoint)
-		(make-abstract-viewpoint-model viewpoint latent-variable
-					       category-training-sets
-					       (list pretraining-ids
-						     training-id resampling-id
-						     resampling-count 
-						     voices texture)
-					       use-cache?))
-	    viewpoints)))
+    (loop for category-training-set in category-training-sets collect
+	 (let ((category (car category-training-set))
+	       (training-set (cdr category-training-set)))
+	   (flet ((make-vp-model (v)
+		    (make-viewpoint-model (viewpoints:training-viewpoint v)
+					  training-set
+					  (list pretraining-ids
+						training-id resampling-id
+						resampling-count 
+						voices texture)
+					  use-cache?)))
+	   (cons category
+		 (map 'vector #'make-vp-model viewpoints)))))))
   
 (defun get-long-term-models (viewpoints training-set pretraining-ids
 			     training-id resampling-id

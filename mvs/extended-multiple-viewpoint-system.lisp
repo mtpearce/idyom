@@ -4,7 +4,7 @@
 ;;; Data Structures
 ;;;========================================================================
 
-(defclass combined-mvs () 
+(defclass combined-mvs (mvs) 
   ((mvs-models :reader mvs-models
 	       :initarg :mvs-models
 	       :type (vector generative-mvs)))
@@ -15,10 +15,7 @@ multiple viewpoint system."))
 (defclass abstract-mvs (mvs)
   ((stm :initarg :stm :type hashtable)
    (ltm :initarg :ltm :type hashtable)
-   (viewpoint-latent-variables :initarg :viewpoint-latent-variables
-			       :accessor viewpoint-latent-variables
-			       :type (vector latent-variable))
-   (latent-variable :accessor mvs-latent-variable
+   (latent-variable :accessor latent-variable
 		    :initarg :latent-variable))
   (:documentation "An abstract mvs pretends to be a normal mvs, but switches 
 between predictive models based on categories encoded in the current latent 
@@ -36,122 +33,98 @@ latent states, and apply the method to the abstract-mvs."))
 ;;;========================================================================
 
 (defun get-predictive-system (basic-viewpoints viewpoints
-			      basic-viewpoint-sets
-			      viewpoint-sets latent-variable-sets
-			      mvs-latent-variables ltms generative-ltms)
-  (let* ((mvs-viewpoints (remove-if (lambda (v) (viewpoints:abstract? v))
-				    viewpoints))
-	 (mvs-basic-viewpoints (remove-if (lambda (b)
-					    (not (find (type-of b) viewpoints
-						       :key #'viewpoints:viewpoint-typeset
-						       :test #'(lambda (x y) (member x y)))))
-					  basic-viewpoints))
-	 (generative-models (get-generative-mvs-models basic-viewpoint-sets
-						       viewpoint-sets
-						       latent-variable-sets
-						       mvs-latent-variables
-						       generative-ltms)))
-    (cond ((and (null mvs-basic-viewpoints)
-		(null basic-viewpoint-sets))
-	   (warn "~&None of the supplied basic features can be predicted by any of the
-supplied viewpoints.~%"))
-	  ((null basic-viewpoints)
-	   (make-instance 'combined-mvs :mvs-models generative-models
-			  :basic basic-viewpoints))
-	  ((null basic-viewpoint-sets)
-	   (make-mvs mvs-basic-viewpoints mvs-viewpoints
+			      generative-viewpoints latent-variables
+			      ltms generative-ltms)
+  (let* ((targets (remove-if (lambda (b)
+			       (not (find (type-of b) viewpoints
+					  :key #'viewpoints:viewpoint-typeset
+					  :test #'(lambda (x y) (member x y)))))
+			     basic-viewpoints))
+	 (generative-models (get-generative-mvs-models basic-viewpoints
+						       generative-viewpoints
+						       latent-variables generative-ltms)))
+    (cond ((and (null targets)
+		(null viewpoints)) ; is the case when only using generative systems
+	   (make-instance 'combined-mvs :basic basic-viewpoints
+			  :mvs-models generative-models))
+	  ((null generative-models) ; is the case when only using sequential prediction
+	   (make-mvs targets viewpoints
 		     ltms))
 	  (t (make-instance 'combined-mvs
+			    :basic basic-viewpoints
 			    :mvs-models
-			    (cons (make-mvs mvs-basic-viewpoints
-					    mvs-viewpoints ltms)
-				  generative-models)
-			    :basic basic-viewpoints)))))
+			    (cons (make-mvs targets
+					    viewpoints ltms)
+				  generative-models))))))
 
-(defun get-generative-mvs-models (target-sets source-sets latent-variable-sets
-				   mvs-latent-variables generative-ltms)
+(defun get-generative-mvs-models (targets generative-viewpoints latent-variables
+				  generative-ltms)
   (loop
-     for targets in target-sets
-     for sources in source-sets
-     for latent-variables in latent-variable-sets
-     for latent-variable in mvs-latent-variables
+     for sources in generative-viewpoints
+     for latent-variable in latent-variables
      for ltms in generative-ltms collect
-       (progn
+       (let ((targets (remove-if (lambda (target)
+				   (not (find (type-of target) sources
+					      :key #'viewpoints:viewpoint-typeset
+					      :test #'(lambda (x y) (member x y)))))
+				 targets)))
+	 (when (null targets)
+	   (warn "~&No predictable targets available for generative system with latent variable
+~A and viewpoint(s) ~{~A~^, ~}.~%"
+		 (lv:latent-variable-name latent-variable)
+		 (mapcar #'viewpoints:viewpoint-name sources)))
 	 (make-instance 'generative-mvs
 			:mvs (make-mvs targets sources ltms 
 				       :class 'abstract-mvs
-				       :latent-variable latent-variable
-				       :viewpoint-latent-variables
-				       latent-variables)))))
+				       :latent-variable latent-variable)))))
 
 ;;;========================================================================
 ;;; Methods for abstract and generative multiple viewpoint systems
 ;;;========================================================================
 
 (defmethod mvs-ltm ((m abstract-mvs))
-  (let ((latent-variable (mvs-latent-variable m))
-	(viewpoint-latent-variables (viewpoint-latent-variables m)))
+  (let ((latent-variable (latent-variable m)))
     (when (not (lv:latent-category-set-p latent-variable))
       (warn "Attempt to retrieve long-term model of abstract mvs while latent category is not set."))
-    (let ((category (lv:get-latent-category (mvs-latent-variable m))))
-      (map 'vector (lambda (link)
-		     (gethash (cons (lv:latent-variable-attribute link)
-				    (lv:get-link-category latent-variable category link))
-			      (slot-value m 'ltm)))
-	   viewpoint-latent-variables))))
+    (let ((category (lv:get-latent-category (latent-variable m))))
+      (gethash category (slot-value m 'ltm)))))
   
 (defmethod mvs-stm ((m abstract-mvs))
-  (let ((latent-variable (mvs-latent-variable m))
-	(viewpoint-latent-variables (viewpoint-latent-variables m)))
+  (let ((latent-variable (latent-variable m)))
     (when (not (lv:latent-category-set-p latent-variable))
       (warn "Attempt to retrieve short-term model of abstract mvs while latent category is not set."))
-    (let ((category (lv:get-latent-category (mvs-latent-variable m))))
-      (map 'vector (lambda (link)
-		     (gethash (cons (lv:latent-variable-attribute link)
-				    (lv:get-link-category latent-variable category link))
-			      (slot-value m 'stm)))
-	   viewpoint-latent-variables))))
+    (let ((category (lv:get-latent-category (latent-variable m))))
+      (gethash category (slot-value m 'stm)))))
 
 (defmethod mvs-basic ((m generative-mvs))
   (mvs-basic (abstract-mvs m)))
 
-(defmethod viewpoint-latent-variables ((m generative-mvs))
-  (viewpoint-latent-variables (abstract-mvs m)))
-
-(defmethod mvs-latent-variable ((m generative-mvs))
-  (mvs-latent-variable (abstract-mvs m)))
-
-(defmethod get-short-term-model ((v viewpoints:abstract))
-  (let ((latent-variable (viewpoints:latent-variable v)))
-    (loop for category in (lv:categories latent-variable) collect
-       (lv:with-latent-category (category latent-variable)
-         (cons category (make-ppm (viewpoint-alphabet v)))))))
+(defmethod latent-variable ((m generative-mvs))
+  (latent-variable (abstract-mvs m)))
 
 (defmethod set-mvs-parameters ((m abstract-mvs) &rest parameters)
-  (let ((latent-variable (mvs-latent-variable m)))
+  (let ((latent-variable (latent-variable m)))
     (loop for category in (lv:categories latent-variable) collect
          (lv:with-latent-category (category latent-variable)
            (apply #'set-mvs-parameters-function (cons m parameters))))))
 
 (defmethod operate-on-models ((m generative-mvs) operation &key (models 'both) 
 							     ltm-args stm-args)
-  "The generative version of this method needs to take care that each operation is
-only carried out once for each models. Iterating over the (joint) latent categories
-of M does not guarantee this as one model may appear in multiple latent categories."
+  "Calls a function <operation> which accepts a <ppm> object as it
+sole argument on all the long- and short-term models of all categories in mvs <m>."
   (let* ((m (abstract-mvs m))
+	 (latent-variable (latent-variable m))
 	 (viewpoint-count (count-viewpoints m)))
-    (dotimes (model-index viewpoint-count)
-      (let ((latent-variable (elt (viewpoint-latent-variables m) model-index))
-	    (ltm-args (mapcar #'(lambda (x) (nth model-index x)) ltm-args))
-	    (stm-args (mapcar #'(lambda (x) (nth model-index x)) stm-args)))
-	(dolist (category (lv:categories latent-variable))
-	  (let ((key (cons (lv:latent-variable-attribute latent-variable) category)))
-	    (unless (eql models 'stm)
-	      (let ((model (gethash key (slot-value m 'ltm))))
-		(apply operation (cons model ltm-args))))
-	    (unless (eql models 'ltm)
-	      (let ((model (gethash key (slot-value m 'stm))))
-		(apply operation (cons model stm-args))))))))))
+    (dolist (category (lv:categories latent-variable))
+      (let ((ltms (gethash category (slot-value m 'ltm)))
+	    (stms (gethash category (slot-value m 'stm))))
+	(dotimes (model-index viewpoint-count)
+	  (let ((ltm (aref ltms model-index))
+		(stm (aref stms model-index))
+		(ltm-args (mapcar #'(lambda (x) (nth model-index x)) ltm-args))
+		(stm-args (mapcar #'(lambda (x) (nth model-index x)) stm-args)))
+	    (unless (eql models 'stm) (apply operation (cons ltm ltm-args)))
+	    (unless (eql models 'ltm) (apply operation (cons stm stm-args)))))))))
 
 (defmethod operate-on-models ((m combined-mvs) operation &key (models 'both) 
 							     ltm-args stm-args)
@@ -205,7 +178,7 @@ distribution over events and latent variable states.
 A sequence-prediction is returned."
 ;  (assert (not (member *models* '(:both+ :ltm+)))
 ;	  "LTM model cannot be updated when modelling inference.")
-  (let* ((latent-variable (mvs-latent-variable m))
+  (let* ((latent-variable (latent-variable m))
 	 (prior-distribution (lv:prior-distribution latent-variable))
 	 (latent-states (mapcar #'car prior-distribution))
 	 (posteriors (list (mapcar #'cdr prior-distribution)))
@@ -237,12 +210,16 @@ A sequence-prediction is returned."
 	     (push (infer-posterior-distribution evidence prior-distribution
 						 likelihoods)
 		   posteriors))))
+    (let* ((posterior (car posteriors))
+	   (ordering (sort (print (utils:generate-integers 0 (1- (length posterior)))) #'> :key (lambda (i) (nth i posterior)))))
+      (print (nth (first ordering) latent-states)))
     (sequence-prediction-sets (abstract-mvs m)
 			      events (reverse sequence-predictions))))
 
 (defmethod model-sequence ((m combined-mvs) events
 			   &rest other-args)
-  (let* ((mvs-models (mvs-models m)) 
+  (let* ((mvs-models (mvs-models m))
+	 ;; Gather predictions using the prediction models
 	 (mvs-predictions (apply #'append
 				   (loop for model in mvs-models collect
 					(apply #'model-sequence
@@ -250,6 +227,7 @@ A sequence-prediction is returned."
 						       other-args)))))
 	 (basic-viewpoints (mvs-basic m))
 	 (prediction-sets))
+    ;; Group the predictions per basic viewpoint
     (dolist (basic-viewpoint basic-viewpoints)
       (push (remove-if (lambda (ps) (not (eq (type-of
 					      (prediction-viewpoint ps))
@@ -306,3 +284,26 @@ a single interpretation."
   (mapcar (lambda (interpretation-predictions)
 	    (apply #'* (mapcar #'cadr (mapcar #'event-prediction interpretation-predictions))))
 	  (transpose-lists event-interpretation-predictions)))
+
+;;;========================================================================
+;;; Model inspection
+;;;========================================================================
+
+
+(defmethod print-mvs ((m combined-mvs))
+  (let ((models (mvs-models m)))
+    (format t "Combined MVS~%")
+    (loop for model in models do
+	 (print-mvs model))))
+(defmethod print-mvs ((m generative-mvs))
+  (print-mvs (abstract-mvs m)))
+(defmethod print-mvs ((m abstract-mvs))
+  (format t "Generative MVS (~A): (~{~A~^, ~}) --> (~{~A~^, ~})~%"
+	  (lv:latent-variable-name (latent-variable m))
+	  (map 'list #'viewpoints:viewpoint-name (mvs-viewpoints m))
+	  (map 'list #'viewpoints:viewpoint-name (mvs-basic m)))
+  (lv::print-latent-variable (latent-variable m)))
+(defmethod print-mvs ((m mvs))
+    (format t "MVS: (~{~A~^, ~}) --> (~{~A~^, ~})~%"
+	  (map 'list #'viewpoints:viewpoint-name (mvs-viewpoints m))
+	  (map 'list #'viewpoints:viewpoint-name (mvs-basic m))))

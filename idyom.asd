@@ -87,6 +87,7 @@
                        (:file "phrase")
 		       (:file "threaded")
 		       (:file "abstract-temporal")
+		       (:file "abstract-scales")
 		       (:file "implication-realisation")
 		       (:file "tests")))
              ;; useful extensions for modelling 
