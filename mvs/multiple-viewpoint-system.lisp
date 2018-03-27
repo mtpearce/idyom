@@ -594,8 +594,9 @@ given a sequence of events <sequence>."
                    (basic-elements (nth 1 map))
                    (probability (nth 1 (assoc derived-element derived-distribution
                                               :test #'equal)))
-                   (basic-probability (/ probability (length basic-elements))))
-              (dolist (be basic-elements)
+		   (basic-probability (/ probability (length basic-elements))))
+	      	   ;;(basic-probability probability))
+	      (dolist (be basic-elements)
                 (if (gethash be basic-distribution)
                     (incf (gethash be basic-distribution) basic-probability)
                     (setf (gethash be basic-distribution) basic-probability)))))))

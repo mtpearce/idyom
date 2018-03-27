@@ -43,7 +43,9 @@
    (set       :accessor prediction-set :initarg :set :type list)))
 
 (defclass marginal-event-prediction (event-prediction)
-  ((prior :accessor prediction-prior :initarg :prior)))
+  ((prior :accessor prediction-prior :initarg :prior)
+   (latent-states :accessor prediction-latent-states :initarg :latent-states)
+   (latent-variable :accessor prediction-latent-variable :initarg :latent-variable)))
 
 (defun make-dataset-prediction (&key viewpoint set basic-viewpoint)
   (make-instance 'dataset-prediction :viewpoint viewpoint :set set 
@@ -140,7 +142,22 @@
 
 (defmethod prediction-set->likelihoods ((prediction-set event-prediction))
   (cadr (event-prediction prediction-set)))
-  
+
+(defmethod output-prediction ((prediction-set marginal-event-prediction))
+  (let* ((basic-viewpoint-name (viewpoint-name (basic-viewpoint prediction-set)))
+	 (distribution (prediction-set prediction-set))
+	 (event-identifier (md:get-identifier (prediction-event prediction-set)))
+	 (dataset-id (md:get-dataset-index event-identifier))
+	 (composition-id (md:get-composition-index event-identifier))
+	 (event-id (md:get-event-index event-identifier))
+	 (element (prediction-element prediction-set)))
+    (loop for pair in distribution do
+	 (let ((parameter (car pair))
+	       (p (cadr pair)))
+	   (format t "~A, ~A, ~A, event-prediction, ~A, ~A, ~A, ~F~%"
+		   dataset-id composition-id event-id
+		   basic-viewpoint-name element parameter p)))))
+
 ;;;========================================================================
 ;;; Functions for distributions 
 ;;;========================================================================

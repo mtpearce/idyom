@@ -109,11 +109,12 @@
 		 (mvs (mvs:get-predictive-system targets sources
 						 generative-sources
 						 latent-variables
-						 ltms generative-ltms))
-		 (predictions
-		  (mvs:model-dataset mvs test-set :construct? t :predict? t)))
-	    (push predictions sequence-predictions))))
-      (incf resampling-id))))
+						 ltms generative-ltms)))
+	    ;(mvs::print-mvs mvs)
+	    (let ((predictions
+		   (mvs:model-dataset mvs test-set :construct? t :predict? t)))
+	      (push predictions sequence-predictions))))
+	(incf resampling-id)))))
 
 (defun check-model-defaults (defaults &key
 			      (order-bound (getf defaults :order-bound))

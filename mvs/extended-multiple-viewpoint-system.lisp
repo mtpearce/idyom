@@ -146,9 +146,11 @@ sole argument on all the long- and short-term models in mvs <m>."
 	      (apply #'model-sequence
 		     (append (list (abstract-mvs m) events)
 			     other-args)))
-	    (lv:with-latent-variable-state (latent-state latent-variable)
-	      (unless (null (cdr latent-states))
-		(operate-on-models m #'reinitialise-ppm :models 'mvs::stm))
+	    (progn 
+	      (lv:with-latent-variable-state (latent-state latent-variable)
+		(unless (null (cdr latent-states)) ;
+		  ;; Reset the STM PPMs unless this is the last latent state
+		  (operate-on-models m #'reinitialise-ppm :models 'mvs::stm)))
 	      (model-sequence-interpretations m (cdr latent-states) latent-variable
 					      events other-args))))))
 
@@ -185,8 +187,12 @@ A sequence-prediction is returned."
 	 (sequence-interpretation-predictions
 	  (model-sequence-interpretations m latent-states latent-variable
 					  events other-args))
+	 (event-identifier (md:get-identifier (car events)))
+	 (dataset-id (md:get-dataset-index event-identifier))
+	 (composition-id (md:get-composition-index event-identifier))
 	 (sequence-predictions))
-    ;; Transform each list of interpretations (where each such list is a list of
+    (output-distribution dataset-id composition-id -1 latent-variable latent-states (car posteriors))
+    ;; Transform each list of interpretations (where each such list consists of
     ;; event predictions in the corresponding interpretation) into a list of 
     ;; each element of which is a list of event predictions for one event 
     ;; containing predictions of the that event for each interpretation.
@@ -194,6 +200,7 @@ A sequence-prediction is returned."
     ;; (which can be seen as a matrix of interpretation by event position).
     (loop for event-index below (length events) do
 	 (let* ((events (subseq events 0 (1+ event-index)))
+		(event-id (md:get-event-index (md:get-identifier (elt events event-index))))
 		(event-interpretation-predictions
 		 (get-event-predictions sequence-interpretation-predictions
 					event-index m))
@@ -209,10 +216,15 @@ A sequence-prediction is returned."
 						prior-distribution)))
 	     (push (infer-posterior-distribution evidence prior-distribution
 						 likelihoods)
-		   posteriors))))
-    (let* ((posterior (car posteriors))
-	   (ordering (sort (print (utils:generate-integers 0 (1- (length posterior)))) #'> :key (lambda (i) (nth i posterior)))))
-      (print (nth (first ordering) latent-states)))
+		   posteriors)
+	     (output-distribution dataset-id composition-id event-id
+				  latent-variable latent-states (car posteriors))
+	     (mapcar #'prediction-sets::output-prediction marginal-event-predictions))))
+;    (let* ((posterior (car posteriors))
+;	   (ordering (sort (utils:generate-integers 0 (1- (length posterior))) #'> :key (lambda (i) (nth i posterior)))))
+      ;(format t "Predicted: ~A~%Actual   : ~A~%"
+;	      (nth (first ordering) latent-states)
+;	      (viewpoints:viewpoint-element (viewpoints:get-viewpoint '(keysig mode)) events)))
     (sequence-prediction-sets (abstract-mvs m)
 			      events (reverse sequence-predictions))))
 
@@ -221,13 +233,13 @@ A sequence-prediction is returned."
   (let* ((mvs-models (mvs-models m))
 	 ;; Gather predictions using the prediction models
 	 (mvs-predictions (apply #'append
-				   (loop for model in mvs-models collect
-					(apply #'model-sequence
-					       (append (list model events)
-						       other-args)))))
+				 (loop for model in mvs-models collect
+				      (apply #'model-sequence
+					     (append (list model events)
+						     other-args)))))
 	 (basic-viewpoints (mvs-basic m))
 	 (prediction-sets))
-    ;; Group the predictions per basic viewpoint
+    ;; Group predictions per basic viewpoint
     (dolist (basic-viewpoint basic-viewpoints)
       (push (remove-if (lambda (ps) (not (eq (type-of
 					      (prediction-viewpoint ps))
@@ -242,17 +254,26 @@ A sequence-prediction is returned."
 					       (elt (prediction-set sequence-prediction)
 						    index))
 					     (elt prediction-sets basic-index))))
+	      (when 
 	      (push (combine-distributions event-predictions
 					   *mvs-combination*
 					   *mvs-bias*
 					   :mvs)
 		    combined-basic-predictions)))
 	  (push combined-basic-predictions combined-predictions)))
-      (sequence-prediction-sets m events (reverse combined-predictions)))))
+      (sequence-prediction-sets m events (reverse combined-predictions))))))
 
 ;;;========================================================================
 ;;; Inference utility functions
 ;;;========================================================================
+
+(defun output-distribution (did cid eid latent-variable latent-states distribution)
+  (let ((latent-variable-name (lv:latent-variable-name latent-variable)))
+    (loop for parameter in latent-states
+       for p in distribution do
+	 (format t "~A, ~A, ~A, lvar-dist, ~A, ~{~A, ~}~F~%"
+		 did cid eid latent-variable-name parameter p))))
+
 
 (defun infer-posterior-distribution (evidence prior-distribution likelihoods)
   (loop

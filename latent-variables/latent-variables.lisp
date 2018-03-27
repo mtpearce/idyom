@@ -39,12 +39,22 @@ based on the relative frequency of phases in the training data."))
      when (equal (get-category latent-state v) category)
        collect latent-state))
 
-(define-latent-variable key (:mode) (:keysig))
+(define-latent-variable key () (:keysig :mode))
 
 (defmethod get-latent-states (category (v key))
   (let ((latent-states))
-    (dotimes (keysig 15)
-      (push (create-latent-state v category :keysig (- keysig 7))
+    (loop for mode in '(0 9) do
+	 (dotimes (key 15)
+	   (push (create-latent-state v category :keysig (- key 7) :mode mode)
+		 latent-states)))
+    latent-states))
+
+(define-latent-variable key-mode-models (:mode) (:keysig :mode))
+
+(defmethod get-latent-states (category (v key-mode-models))
+  (let ((latent-states))
+    (dotimes (key 15)
+      (push (create-latent-state v category :keysig (- key 7))
 	    latent-states))
     latent-states))
 

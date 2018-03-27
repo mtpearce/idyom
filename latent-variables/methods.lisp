@@ -235,15 +235,16 @@ certain classes of latent variables."
 	 (combine-link-latent-states l latent-state-set))))
 
 (defmethod print-latent-variable ((v latent-variable))
-  (let ((categories (categories v)))
+  (let ((categories (categories v))
+	(prior (prior-distribution v)))
     (format t "Category: (~{~A~^, ~}). Interpretation: ~{~A~^, ~}~%"
 	    (category-parameters v)
 	    (interpretation-parameters v))
     (loop for c in categories do
 	 (let ((latent-states (get-latent-states c v)))
 	   (format t "P(~A) = ~A~%" c (apply #'+ (mapcar (lambda (l)
-							 (cdr (assoc l (prior-distribution v))))
+							   (cdr (assoc l prior :test #'equal)))
 						       latent-states)))
 	   (loop for l in latent-states do
-		(format t "----P(~A)
+		(format t "----P(~A) = ~A~%" l (cdr (assoc l prior :test #'equal))))))))
 						       
