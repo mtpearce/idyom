@@ -1,5 +1,7 @@
 (cl:in-package #:mvs)
 
+(defparameter *output-csv* nil "Turns on csv-formatted output")
+
 ;;;========================================================================
 ;;; Data Structures
 ;;;========================================================================
@@ -140,6 +142,9 @@ sole argument on all the long- and short-term models in mvs <m>."
 
 (defmethod model-sequence-interpretations ((m generative-mvs) latent-states
 					   latent-variable events other-args)
+  "Call model-sequence for each latent-variable-state in latent states of 
+M's latent variable. Return one list of sequence predictions (one sequence prediction
+for each target viewpoint) for each latent state."
   (unless (null latent-states)
     (let ((latent-state (car latent-states)))
       (cons (lv:with-latent-variable-state (latent-state latent-variable)
@@ -148,9 +153,9 @@ sole argument on all the long- and short-term models in mvs <m>."
 			     other-args)))
 	    (progn 
 	      (lv:with-latent-variable-state (latent-state latent-variable)
-		(unless (null (cdr latent-states)) ;
+		(unless (null (cdr latent-states))
 		  ;; Reset the STM PPMs unless this is the last latent state
-		  (operate-on-models m #'reinitialise-ppm :models 'mvs::stm)))
+		  (operate-on-models (abstract-mvs m) #'reinitialise-ppm :models 'mvs::stm)))
 	      (model-sequence-interpretations m (cdr latent-states) latent-variable
 					      events other-args))))))
 
@@ -191,12 +196,13 @@ A sequence-prediction is returned."
 	 (dataset-id (md:get-dataset-index event-identifier))
 	 (composition-id (md:get-composition-index event-identifier))
 	 (sequence-predictions))
-    (output-distribution dataset-id composition-id -1 latent-variable latent-states (car posteriors))
+    (when *output-csv*
+      (output-distribution dataset-id composition-id -1 latent-variable latent-states (car posteriors)))
     ;; Transform each list of interpretations (where each such list consists of
-    ;; event predictions in the corresponding interpretation) into a list of 
-    ;; each element of which is a list of event predictions for one event 
+    ;; event predictions in the corresponding interpretation) into a list, each
+    ;; element of which is a list of event predictions for one event 
     ;; containing predictions of the that event for each interpretation.
-    ;; This simply means applying the transpose operation to the list of interpretations
+    ;; This corresponds to applying the transpose operation to the list of interpretations
     ;; (which can be seen as a matrix of interpretation by event position).
     (loop for event-index below (length events) do
 	 (let* ((events (subseq events 0 (1+ event-index)))
@@ -217,9 +223,10 @@ A sequence-prediction is returned."
 	     (push (infer-posterior-distribution evidence prior-distribution
 						 likelihoods)
 		   posteriors)
-	     (output-distribution dataset-id composition-id event-id
-				  latent-variable latent-states (car posteriors))
-	     (mapcar #'prediction-sets::output-prediction marginal-event-predictions))))
+	     (when *output-csv*
+	       (output-distribution dataset-id composition-id event-id
+				    latent-variable latent-states (car posteriors))
+	       (mapcar #'prediction-sets::output-prediction marginal-event-predictions)))))
 ;    (let* ((posterior (car posteriors))
 ;	   (ordering (sort (utils:generate-integers 0 (1- (length posterior))) #'> :key (lambda (i) (nth i posterior)))))
       ;(format t "Predicted: ~A~%Actual   : ~A~%"
@@ -298,10 +305,10 @@ A sequence-prediction is returned."
 (defun joint-interpretation-likelihoods (event-interpretation-predictions)
   "<event-interpretation-predictions> is a list whose elements are lists of
 event predictions, one for each interpretation. Each list of event predictions 
-corresponds to one basic viewpoint. Convert this structure to a list where each
-item of the list is the product of the event likelihoods (obtained from the 
-EVENT-PREDICTION-SET object using EVENT-PREDICTION) for each basic viewpoint and
-a single interpretation."
+corresponds to a basic viewpoint. Convert this structure to a list where each
+item is the product of the event likelihoods for different basic viewpoints of that
+event (obtained from the EVENT-PREDICTION-SET object using EVENT-PREDICTION) for 
+each basic viewpoint and a single interpretation."
   (mapcar (lambda (interpretation-predictions)
 	    (apply #'* (mapcar #'cadr (mapcar #'event-prediction interpretation-predictions))))
 	  (transpose-lists event-interpretation-predictions)))
@@ -309,7 +316,6 @@ a single interpretation."
 ;;;========================================================================
 ;;; Model inspection
 ;;;========================================================================
-
 
 (defmethod print-mvs ((m combined-mvs))
   (let ((models (mvs-models m)))

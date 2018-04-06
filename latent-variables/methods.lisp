@@ -19,17 +19,6 @@ by concatenating them into a list and sorting that list alphabetically."
 				   (latent-variable-links l)))))
     (utils:sort-symbols (copy-list parameters))))
 
-;; TODO: This method may not be necessary (as may be the whole concept of an interpretation
-;;       in isolation of a category).
-(defmethod interpretation-parameters ((l linked))
-  "Return the interpretation parameters of linked latent variable L.
-These are derived from the interpretation parameters of the constituent links of L
-by concatenating them into a list and sorting that list alphabetically."
-  (let ((parameters (apply #'append 
-			   (mapcar #'interpretation-parameters
-				   (latent-variable-links l)))))
-    (utils:sort-symbols (copy-list parameters))))
-
 (defmethod latent-state-parameters ((v latent-variable))
   "Return the latent-state parameters of linked latent variable L.
 These are derived from the latent-state parameters of the constituent links of L
@@ -53,15 +42,6 @@ which is a category of latent variable V."
   (let ((param-category (utils:make-plist (category-parameters v) category)))
     (getf param-category parameter)))
 
-;; TODO: This method may not be necessary (as may be the whole concept of an interpretation
-;;       in isolation of a category).
-(defmethod get-interpretation-parameter (interpretation parameter (v latent-variable))
-  "Return the value of interpretation parameter PARAMETER as encoded in INTERPRETATION,
-which is an interpretation of latent variable V."
-  (let ((param-interpretation (utils:make-plist (interpretation-parameters v)
-						interpretation)))
-    (getf param-interpretation parameter)))
-
 (defmethod get-latent-state-parameter (latent-state parameter (v latent-variable))
   "Return the value of PARAMETER, which is a latent-state parameter of V, in latent 
 state LATENT-STATE, which is a latent-state of V."
@@ -76,16 +56,6 @@ which is a latent state of latent variable V."
 					      latent-state)))
   (mapcar #'(lambda (param) (getf latent-state-plist param))
 	  (category-parameters v))))
-
-;; TODO: This method may not be necessary (as may be the whole concept of an interpretation
-;;       in isolation of a category).
-(defmethod get-interpretation (latent-state (v latent-variable))
-  "Return only the values of the interpretation parameters encoded in LATENT-STATE, 
-which is a latent state of latent variable V."
-  (let ((latent-state-plist (utils:make-plist (latent-state-parameters v)
-					      latent-state)))
-  (mapcar #'(lambda (param) (getf latent-state-plist param))
-	  (interpretation-parameters v))))
 
 (defmethod get-link-category ((l latent-variable) category (link latent-variable))
   category)
@@ -124,44 +94,6 @@ some interpretation parameters provided as keyword arguments to this function."
     (mapcar (lambda (param) (getf parameters param))
 	    (latent-state-parameters v))))
 
-
-(defmethod get-link-categories ((l linked) (link latent-variable))
-  "Determine the set of categories for link V of linked latent variable L based on the
-categories of L."
-  (remove-duplicates
-   (mapcar (lambda (category)
-	     (get-link-category l category link))
-	   (categories l))
-   :test #'equal))
-
-(defmethod set-link-categories ((variable latent-variable))) ; No action required.
-  
-(defmethod set-link-categories ((l linked))
-  "Determine the categories of the constituent links of L represented in
-the categories of L and set the CATEGORY slot of each contituent link of L."
-  (dolist (link (latent-variable-links l))
-    (setf (categories link)
-	  (get-link-categories l link))))
-
-(defmethod %combine-link-parameters ((l linked) parameter-sets
-				    &key (parameter-name-fn #'category-parameters))
-    (let* ((parameter-names (apply #'append (mapcar parameter-name-fn
-						  (latent-variable-links l))))
-	 (annotated-parameters (utils:make-plist parameter-names
-						 (apply #'append parameter-sets))))
-    (loop for parameter in (apply parameter-name-fn (list l)) collect
-	 (getf annotated-parameters parameter))))
-
-(defmethod combine-link-categories ((l linked) categories)
-  "Given a combination of categories corresponding to the constituent links of
-L, generate a tuple representing the category of L."
-  (%combine-link-parameters l categories :parameter-name-fn #'category-parameters))
-
-(defmethod combine-link-latent-states ((l linked) latent-states)
-  "Given a combination of latent states corresponding to the constituent links of
-L, generate a tuple representing the latent state of L."
-  (%combine-link-parameters l latent-states :parameter-name-fn #'latent-state-parameters))
-
 (defmethod initialise-prior-distribution (category-training-sets (v latent-variable))
   "Calculate the prior distribution of V with GET-PRIOR-DISTRIBUTION based on
 TRAINING-DATA, which is an ALIST whose keys correspond to categories (labels), and
@@ -171,18 +103,6 @@ whose values correspond to list of training items associated with the category."
     (setf (prior-distribution v)
 	  (get-prior-distribution training-sets categories v))
     (setf (categories v) categories)))
-
-(defmethod combine-prior-distributions ((l linked))
-  "Calculate the prior distribution for a linked latent variable, L, whose constituent
-links' prior distributions have already been initialised, by calculating the joint 
-distribution of the (independent) constituent links of L."
-  (let* ((prior-distributions (mapcar #'prior-distribution (latent-variable-links l)))
-	 (combinations (apply #'utils:cartesian-product prior-distributions)))
-    (loop for combination in combinations collect
-	 (let* ((latent-state (combine-link-latent-states l (mapcar #'car combination)))
-		(probabilities (mapcar #'cdr combination))
-		(joint-probability (apply #'* probabilities)))
-	   (cons latent-state joint-probability)))))
 
 (defmethod get-prior-distribution (training-data categories (v latent-variable))
   "Default strategy for estimating the prior distribution. 

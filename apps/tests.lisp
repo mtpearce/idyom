@@ -144,43 +144,13 @@
 	(md::*md-timebase* 16))
     (&body)))
 		       
-(5am:def-fixture abstract-mvs (targets sources training-set viewpoint-latent-variables
-				   latent-variable)
-    (let ((ltms (get-long-term-generative-models sources viewpoint-latent-variables
-						 training-set latent-variable
+(5am:def-fixture abstract-mvs (targets sources training-set latent-variable)
+    (let ((ltms (get-long-term-generative-models sources latent-variable (reverse training-set)
 						 nil nil nil nil nil nil nil)))
-      (loop for vp in sources
-	 for lv in viewpoint-latent-variables do
-	   (setf (viewpoints:latent-variable vp) lv))
       (let ((abstract-mvs (make-mvs targets sources ltms
 				    :class 'mvs::abstract-mvs
-				    :latent-variable latent-variable
-				    :viewpoint-latent-variables
-				    viewpoint-latent-variables)))
+				    :latent-variable latent-variable)))
 	(&body))))
-
-
-(5am:test filter-and-merge-var-sets
-  (5am:is (set-equal (filter-and-merge-var-sets '((a) (b)))
-		     '((a) (b)) :test #'set-equal))
-  (5am:is (every #'(lambda (r) (set-equal r '((a b)) :test #'set-equal))
-		  (list (filter-and-merge-var-sets '((a) (a b)))
-			(filter-and-merge-var-sets '((a b) (b))))))
-  (5am:is (every #'(lambda (r) (set-equal r '((a b c)) :test #'set-equal))
-		  (list (filter-and-merge-var-sets '((a b) (b c)))
-			(filter-and-merge-var-sets '((b c) (a b))))))
-  (5am:is (every #'(lambda (r) (set-equal r '((a b)) :test #'set-equal))
-		  (list (filter-and-merge-var-sets '((a b) (b) (a)))	
-		(filter-and-merge-var-sets '((a) (b) (a b))))))
-  (5am:is (every #'(lambda (r) (set-equal r '((a) (b c)) :test #'set-equal))
-		  (list (filter-and-merge-var-sets '((a) (b) (b c)))
-			(filter-and-merge-var-sets '((b c) (b) (a)))))))
-
-(5am:test align-variables-with-viewpoints)
-
-(5am:test (create-generative-systems
-	   :depends-on (and . (filter-and-merge-var-sets
-			       align-variables-with-viewpoints))))
 
 (5am:test partition-dataset)
 (5am:test partition-composition)
@@ -190,36 +160,155 @@
 (5am:test (get-long-term-generative-models :depends-on make-abstract-viewpoint-model))
 
 (5am:test (prior-calculation-matches-fixture :depends-on (and . (partition-dataset)))
-  (5am:with-fixture dataset-fixture
-      ("/home/bastiaan/projects/idyom/apps/fixtures/test-dataset-training.lisp")
-    (let ((training-set compositions)
-	  (latent-variable (lv:get-latent-variable 'metre)))
-      (let ((training-data (partition-dataset training-set latent-variable)))
-	(lv:initialise-prior-distribution training-data latent-variable))
-      (5am:with-fixture results-fixture
-	  ("/home/bastiaan/projects/idyom/apps/fixtures/test-results/simulations/0")
-	(5am:with-fixture legacy->native (likelihoods posteriors latent-variable)
-	  likelihoods
-	  (5am:is (distributions-equal (lv:prior-distribution latent-variable)
-				       (first posteriors))))))))
+  (5am:with-fixture comparison-environment () 
+    (5am:with-fixture dataset-fixture
+	("/home/bastiaan/projects/idyom/apps/fixtures/test-dataset-training.lisp")
+      (let ((training-set compositions)
+	    (latent-variable (lv:get-latent-variable 'metre)))
+	(let ((training-data (lv::partition-dataset training-set latent-variable)))
+	  (lv:initialise-prior-distribution training-data latent-variable))
+	(5am:with-fixture results-fixture
+	    ("/home/bastiaan/projects/idyom/apps/fixtures/test-results/simulations/0")
+	  (5am:with-fixture legacy->native (likelihoods posteriors latent-variable)
+	    likelihoods
+	    (5am:is (distributions-equal (lv:prior-distribution latent-variable)
+					 (first posteriors)))))))))
 
 (5am:test fail (5am:is (eq (+ 1 1) 3)))
 
-(5am:test (abstract-mvs-against-fixture :depends-on (and . (partition-dataset 
+(5am:test (abstract-mvs-against-fixture-2 :depends-on (and . (fail
+							      partition-dataset 
 							    get-long-term-generative-models)))
-  (5am:with-fixture dataset-fixture
-      ("/home/bastiaan/projects/idyom/apps/fixtures/test-dataset-training.lisp")
-    (let* ((training-set compositions)
-	   (latent-variable (lv:get-latent-variable 'metre))
-	   (sources (viewpoints:get-viewpoints '((abs-posinbar bardist-legacy))))
-	   (targets (viewpoints:get-basic-viewpoints '(onset) training-set))
-	   (viewpoint-latent-variables (list latent-variable)))
-      (5am:with-fixture abstract-mvs (targets sources training-set viewpoint-latent-variables
-					      latent-variable)
-	(5am:with-fixture dataset-fixture
-	    ("/home/bastiaan/projects/idyom/apps/fixtures/test-dataset-test.lisp")
-	  (let ((test-set compositions))
-	    (5am:with-fixture comparison-environment ()
+  (5am:with-fixture comparison-environment ()
+    (5am:with-fixture dataset-fixture
+	("/home/bastiaan/projects/idyom/apps/fixtures/test-dataset-training.lisp")
+      (let* ((training-set compositions)
+	     (latent-variable (lv:get-latent-variable 'metre))
+	     (sources (viewpoints:get-viewpoints '((abs-posinbar bardist-legacy))))
+	     (targets (viewpoints:get-basic-viewpoints '(onset) training-set)))
+	(5am:with-fixture abstract-mvs (targets sources training-set latent-variable)
+	  (5am:with-fixture dataset-fixture
+	      ("/home/bastiaan/projects/idyom/apps/fixtures/test-dataset-test.lisp")
+	    (let ((composition (second compositions))
+		  (interpretations (utils:read-object-from-file "/home/bastiaan/projects/idyom/apps/fixtures/interpretations-1"))
+		  (interpretation-predictions (utils:read-object-from-file "/home/bastiaan/projects/idyom/apps/fixtures/interpretation-predictions-1")))
+	      (dolist (category (lv:categories latent-variable))
+		(dolist (latent-state (reverse (lv:get-latent-states category latent-variable)))
+		  (lv:with-latent-variable-state (latent-state latent-variable)
+		    (let* ((predictions (model-sequence abstract-mvs
+							(coerce composition 'list)
+							:construct? t :predict? t)))
+		      ;;(operate-on-models abstract-mvs #'increment-sequence-front)
+		      (flet ((event-probabilities (prediction-set)
+			       (let* ((event-predictions (event-predictions prediction-set)))
+				 (mapcar #'cadr event-predictions))))
+			(let* ((abstract-mvs-likelihoods (event-probabilities (first predictions)))
+			       (reference-likelihoods (cdr (assoc latent-state
+								   interpretation-predictions
+								   :key (lambda (s) (legacy-metre-string->latent-state s latent-variable))
+								   :test #'equal)))
+			       (reference-interpretation (cadr (assoc latent-state
+								      interpretations
+								      :key (lambda (s) (legacy-metre-string->latent-state s latent-variable))
+								      :test #'equal))))
+			  (when (not (numbers-approximately-equal abstract-mvs-likelihoods
+								  reference-likelihoods :tolerance 1.e-5))
+			    (format t "~A~%" latent-state))
+			  (5am:is (equal reference-interpretation (mapcar #'reverse (viewpoints:viewpoint-sequence (first sources) composition))))
+			  (5am:is (numbers-approximately-equal abstract-mvs-likelihoods
+							       reference-likelihoods :tolerance 1.e-5)))))))))))))))
+
+(5am:test (test-specifics :depends-on (and . (partition-dataset 
+					      get-long-term-generative-models)))
+  (5am:with-fixture comparison-environment ()
+    (5am:with-fixture dataset-fixture
+	("/home/bastiaan/projects/idyom/apps/fixtures/test-dataset-training.lisp")
+      (let* ((training-set compositions)
+	     (latent-variable (lv:get-latent-variable 'metre))
+	     (partitioned-training-set (lv::partition-dataset training-set latent-variable))
+	     (training-set (cdr (assoc '(16 4) partitioned-training-set :test #'equal)))
+	     (sources (viewpoints:get-viewpoints '((abs-posinbar bardist-legacy))))
+	     (targets (viewpoints:get-basic-viewpoints '(onset) training-set)))
+	(5am:with-fixture abstract-mvs (targets sources training-set latent-variable)
+	  (5am:with-fixture dataset-fixture
+	      ("/home/bastiaan/projects/idyom/apps/fixtures/test-dataset-test.lisp")
+	    (let* ((composition (second compositions))
+		   (latent-state '(16 8 4))
+					;(mvs::*debug* t)
+		   (targets (viewpoints:get-basic-viewpoints '(onset) training-set))
+		   (mvs (make-mvs targets sources
+				  (resampling:get-long-term-models
+				   (mapcar #'viewpoints:training-viewpoint sources)
+				   training-set nil nil nil nil nil nil nil)))
+		   (training-sequences (viewpoints:viewpoint-sequences
+					(training-viewpoint (first sources))
+					training-set))
+		   (reference-training-set 
+		    (utils:read-object-from-file
+		     "/home/bastiaan/projects/idyom/apps/fixtures/4-4-training-set"))
+		   (interpretations
+		    (utils:read-object-from-file
+		     "/home/bastiaan/projects/idyom/apps/fixtures/interpretations-1"))
+		   (interpretation-predictions
+		    (utils:read-object-from-file
+		     "/home/bastiaan/projects/idyom/apps/fixtures/interpretation-predictions-1")))
+	      ;(print (mapcar (lambda (s) (mapcar #'reverse s)) training-set))
+	      (5am:is (set-equal (mapcar (lambda (s) (mapcar #'reverse s)) training-sequences)
+				 reference-training-set :test #'equal))
+	      ;(print (set-difference training-set reference-training-set :test #'equal))
+	      (lv:with-latent-variable-state (latent-state latent-variable)
+		(let ((ltm (aref (mvs::mvs-ltm abstract-mvs) 0)))
+		  (with-open-file (s "/home/bastiaan/new-model"
+				     :direction :output :if-exists :overwrite
+				     :if-does-not-exist :create)
+		    (format s "~S~%" (sort (utils:hash-table->alist (ppm::ppm-leaves ltm)) #'> :key #'car))
+		    (format s "~S~%" (sort (utils:hash-table->alist (ppm::ppm-branches ltm)) #'> :key #'car))))
+		(let* ((normal-mvs-predictions (model-sequence mvs (coerce composition 'list)
+							       :construct? nil :predict? t))
+		       (predictions (model-sequence abstract-mvs
+						    (coerce composition 'list)
+						    :construct? nil :predict? t)))
+		  ;;(operate-on-models abstract-mvs #'increment-sequence-front)
+		  (flet ((event-probabilities (prediction-set)
+			   (let* ((event-predictions (event-predictions prediction-set)))
+			     (mapcar #'cadr event-predictions))))
+		    (let* ((abstract-mvs-likelihoods (event-probabilities (first predictions)))
+			   (normal-mvs-likelihoods (event-probabilities (first normal-mvs-predictions)))
+			   (reference-likelihoods (cdr (assoc latent-state
+							      interpretation-predictions
+							      :key (lambda (s) (legacy-metre-string->latent-state s latent-variable)
+							      :test #'equal))))
+			   (reference-interpretation (cadr (assoc latent-state
+								  interpretations
+								  :key (lambda (s) (legacy-metre-string->latent-state s latent-variable))
+								  :test #'equal))))
+		      (5am:is (equal reference-interpretation (mapcar #'reverse (viewpoints:viewpoint-sequence (first sources) composition))))
+		      ;;(print reference-likelihoods)
+		      (print normal-mvs-likelihoods)
+		      (print (mapcar #'- normal-mvs-likelihoods abstract-mvs-likelihoods))
+		      ;;(print (mapcar #'- reference-likelihoods abstract-mvs-likelihoods))
+		      (5am:is (numbers-approximately-equal abstract-mvs-likelihoods
+							   normal-mvs-likelihoods :tolerance 1.e-5))
+		      (5am:is (numbers-approximately-equal reference-likelihoods
+							   normal-mvs-likelihoods :tolerance 1.e-5))
+		      (5am:is (numbers-approximately-equal abstract-mvs-likelihoods
+							   reference-likelihoods :tolerance 1.e-5)))))))))))))
+
+
+(5am:test (abstract-mvs-against-fixture :depends-on (and . (fail
+							    partition-dataset 
+							    get-long-term-generative-models)))
+  (5am:with-fixture comparison-environment ()
+    (5am:with-fixture dataset-fixture
+	("/home/bastiaan/projects/idyom/apps/fixtures/test-dataset-training.lisp")
+      (let* ((training-set compositions)
+	     (latent-variable (lv:get-latent-variable 'metre))
+	     (sources (viewpoints:get-viewpoints '((abs-posinbar bardist-legacy))))
+	     (targets (viewpoints:get-basic-viewpoints '(onset) training-set)))
+	(5am:with-fixture abstract-mvs (targets sources training-set latent-variable)
+	  (5am:with-fixture dataset-fixture
+	      ("/home/bastiaan/projects/idyom/apps/fixtures/test-dataset-test.lisp")
+	    (let ((test-set compositions))
 	      (dotimes (composition-index (min (length test-set) 2))
 		(5am:with-fixture results-fixture
 		    ((format nil
@@ -252,17 +341,16 @@
 				(5am:is (numbers-approximately-equal abstract-mvs-likelihoods
 								     fixture-likelihoods :tolerance 1.e-5))))))))))))))))))
 
-(5am:test (generative-mvs-against-fixture :depends-on (and . (partition-dataset 
+(5am:test (generative-mvs-against-fixture :depends-on (and . (fail
+							      partition-dataset 
 							      get-long-term-generative-models)))
   (5am:with-fixture dataset-fixture
       ("/home/bastiaan/projects/idyom/apps/fixtures/test-dataset-training.lisp")
     (let* ((training-set compositions)
 	   (latent-variable (lv:get-latent-variable 'metre))
 	   (sources (viewpoints:get-viewpoints '((abs-posinbar bardist-legacy))))
-	   (targets (viewpoints:get-basic-viewpoints '(onset) training-set))
-	   (viewpoint-latent-variables (list latent-variable)))
-      (5am:with-fixture abstract-mvs (targets sources training-set viewpoint-latent-variables
-					      latent-variable)
+	   (targets (viewpoints:get-basic-viewpoints '(onset) training-set)))
+      (5am:with-fixture abstract-mvs (targets sources training-set latent-variable)
 	(let ((generative-mvs (make-instance 'mvs::generative-mvs :mvs abstract-mvs)))
 	  (5am:with-fixture dataset-fixture
 	      ("/home/bastiaan/projects/idyom/apps/fixtures/test-dataset-test.lisp")

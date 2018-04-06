@@ -40,6 +40,7 @@
 (cl:in-package #:mvs)
 
 (defvar *debug* nil)
+(defparameter *normalisation-hack* nil "If True, basic distributions obtained from derived distributions are not normalized such that if the basic->derived mapping is many to one, the basic distribution sums to more than one. This is a hacky way of predicting a derived type rather than a basic type.")
 
 ;;;========================================================================
 ;;; Data Structures
@@ -594,17 +595,20 @@ given a sequence of events <sequence>."
                    (basic-elements (nth 1 map))
                    (probability (nth 1 (assoc derived-element derived-distribution
                                               :test #'equal)))
-		   (basic-probability (/ probability (length basic-elements))))
-	      	   ;;(basic-probability probability))
+		   (basic-probability (if *normalisation-hack*
+					  probability
+					  (/ probability (length basic-elements)))))
 	      (dolist (be basic-elements)
                 (if (gethash be basic-distribution)
                     (incf (gethash be basic-distribution) basic-probability)
                     (setf (gethash be basic-distribution) basic-probability)))))))
-    (let ((viewpoint-element (viewpoint-element basic-viewpoint events))
-          (distribution 
-           (normalise-distribution 
-            (remove nil (mapcar #'(lambda (a) (list a (gethash a basic-distribution)))
-                                basic-alphabet) :key #'cadr))))
+    (let* ((viewpoint-element (viewpoint-element basic-viewpoint events))
+	   (distribution
+	    (remove nil (mapcar #'(lambda (a) (list a (gethash a basic-distribution)))
+				basic-alphabet) :key #'cadr))
+	   (distribution (if *normalisation-hack*
+			     distribution
+			     (normalise-distribution distribution))))
       (when *debug* 
         (format t "~&~A (~A) = ~&~A~%" (viewpoint-name basic-viewpoint)
                 viewpoint-element distribution))

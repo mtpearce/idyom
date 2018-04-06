@@ -70,6 +70,7 @@
                 (output-path nil)
                 (overwrite nil)
 		(separator " ")
+		(output-csv nil)
                 ;; Caching
                 (use-resampling-set-cache? t)
                 (use-ltms-cache? t))
@@ -119,6 +120,7 @@
                                              :k k :resampling-indices resampling-indices
                                              :models models :ltmo ltmo :stmo stmo
                                              :voices voices :texture texture
+					     :output-csv output-csv
                                              :use-resampling-set-cache? use-resampling-set-cache?
                                              :use-ltms-cache? use-ltms-cache?)))
             (when output-path

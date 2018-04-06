@@ -95,6 +95,8 @@ Linked latent variables are represented by their own class, on which methods may
 A linked latent variable consists of a number of constituent links, which are simply the latent-variables that it links together.
 A linked latent variable derives its category, interpretation, and latent-state parameters from its constituent links by concatenating their parameters and sorting them alphabetically.
 
+* Custom prior distributions for linked latent variables is not supported yet.
+
 The prior distribution of a linked latent variable is calculated by calculating the joint distribution of its constituent links.
 By default, independence is assumed among these prior distribution, hence the paramaters of the joint distribution are derived from the cartesian product of the parameters of the constituent prior distributions.
 

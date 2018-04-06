@@ -37,6 +37,7 @@
                          (stmo mvs::*stm-params*)
                          (voices nil)
                          (texture :melody)
+			 (output-csv nil)
                          (use-resampling-set-cache? t)
                          (use-ltms-cache? t))
   "IDyOM top level: returns the mean information content for
@@ -62,6 +63,7 @@
          (mvs::*stm-mixtures* (getf stmo :mixtures))
          (mvs::*stm-update-exclusion* (getf stmo :update-exclusion))
          (mvs::*stm-escape* (getf stmo :escape))
+	 (mvs::*output-csv* output-csv)
          ;; data
          (dataset (md:get-music-objects (if (listp dataset-id) dataset-id (list dataset-id))
                                         nil :voices voices :texture texture))
@@ -112,7 +114,7 @@
 						 ltms generative-ltms)))
 	    ;(mvs::print-mvs mvs)
 	    (let ((predictions
-		   (mvs:model-dataset mvs test-set :construct? t :predict? t)))
+		   (mvs:model-dataset mvs test-set :construct? nil :predict? t)))
 	      (push predictions sequence-predictions))))
 	(incf resampling-id)))))
 
@@ -372,7 +374,7 @@ is a list of composition prediction sets, ordered by composition ID."
 partition the training set using the categories of LATENT VARIABLE.
 Call make-abstract-viewpoint-model for each viewpoint to construct a set
 of long-term models using the partitioned dataset. 
-Furthermore, initialize the prior distribution of the LATENT VARIABLE using
+Furthermore, initialise the prior distribution of the LATENT VARIABLE using
 the partitioned training set."
   (let ((category-training-sets (lv::partition-dataset training-set latent-variable)))
     (lv:initialise-prior-distribution category-training-sets latent-variable)
