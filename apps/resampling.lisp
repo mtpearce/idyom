@@ -166,7 +166,6 @@
   "Takes as input a list of viewpoints, <viewpoint-list>, and iterates
 over this list. Whenever a continuous viewpoint is found, viewpoint 
 quantiles are calculated for it."
-  (assert (not (null sequences)))
   (assert (listp sequences))
   (assert (every #'(lambda (v) (typep v 'viewpoints:viewpoint)) viewpoints))
   (viewpoints:reset-viewpoint-quantiles)
