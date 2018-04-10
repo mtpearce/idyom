@@ -15,5 +15,5 @@
            #:attribute-equal #:viewpoint #:abstract #:viewpoint-equal #:basic-p 
            #:in-typeset-p #:alphabet->events #:viewpoint-element-equal
 	   #:composition-viewpoint #:dataset-viewpoint #:latent-variable
-	   #:latent-parameters #:training-viewpoint #:abstract?)
+	   #:latent-attributes #:training-viewpoint #:abstract?)
   (:documentation "Multiple viewpoint framework for music representation."))

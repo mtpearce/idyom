@@ -738,16 +738,16 @@ sequence to results calculated with normal MVS instances for each category."
 (defun model-interpretation-with-mvs (mvs sequence latent-state latent-variable)
   ;; Adjust the sequence to be correctly interpreted by posinbar.
     (dolist (e sequence)
-      (dolist (parameter (lv::latent-state-parameters latent-variable))
-	(let ((symbol (intern (symbol-name parameter) (find-package :md))))
+      (dolist (attribute (lv::latent-state-attributes latent-variable))
+	(let ((symbol (intern (symbol-name attribute) (find-package :md))))
 	  (unless (not (member symbol md:*md-music-slots*))
-	    (lv:get-latent-state-parameter latent-state parameter latent-variable)
+	    (lv:get-latent-state-attribute latent-state attribute latent-variable)
 	    (setf (slot-value e symbol)
-		  (lv:get-latent-state-parameter latent-state parameter latent-variable))))))
+		  (lv:get-latent-state-attribute latent-state attribute latent-variable))))))
     ;; Further adjust the sequence to be interpreted in the correct phase
     ;; by posinbar.
-    (with-adjusted-phase (sequence (lv::get-latent-state-parameter latent-state :barlength
+    (with-adjusted-phase (sequence (lv::get-latent-state-attribute latent-state :barlength
 								   latent-variable)
-				   (lv:get-latent-state-parameter  latent-state :phase
+				   (lv:get-latent-state-attribute  latent-state :phase
 								   latent-variable))
       (model-sequence mvs sequence :predict? t :construct? t)))

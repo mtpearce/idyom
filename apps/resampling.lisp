@@ -30,7 +30,7 @@
     
 (defun idyom-resample (dataset-id target-viewpoints source-viewpoints
                        &key
-			 generative-systems
+			 generative-model
 			 pretraining-ids (k 10)
                          resampling-indices (models :both+)
                          (ltmo mvs::*ltm-params*)
@@ -64,9 +64,15 @@
          (mvs::*stm-update-exclusion* (getf stmo :update-exclusion))
          (mvs::*stm-escape* (getf stmo :escape))
 	 (mvs::*output-csv* output-csv)
+	 (latent-variable (when (not (null generative-model))
+			    (lv:get-latent-variable (car generative-model))))
+	 (generative-sources (when (not (null generative-model))
+			       (get-viewpoints (cdr generative-model))))
          ;; data
          (dataset (md:get-music-objects (if (listp dataset-id) dataset-id (list dataset-id))
-                                        nil :voices voices :texture texture))
+                                        nil :voices voices :texture texture
+					:partitioning-attributes (lv:category-attributes
+								  latent-variable)))
          (pretraining-set (md:get-music-objects pretraining-ids nil :voices voices :texture texture))
          ;; viewpoints
          (sources (get-viewpoints source-viewpoints))
@@ -74,15 +80,18 @@
           (viewpoints:get-basic-viewpoints target-viewpoints (append dataset pretraining-set)))
 	 ;; resampling sets
 	 (k (if (eq k :full) (length dataset) k))
-	 (resampling-sets (get-resampling-sets dataset-id :k k
-					       :use-cache? use-resampling-set-cache?))
+	 (resampling-sets (if (or (null generative-model)
+				  (null (lv:category-attributes latent-variable)))
+			      (get-resampling-sets dataset-id :k k
+						   :use-cache? use-resampling-set-cache?)
+			      (get-stratified-resampling-sets dataset-id latent-variable
+							      :k k :voices voices :texture texture
+							      :use-cache? use-resampling-set-cache?)))
 	 (resampling-id 0)
 	 ;; If no resampling sets specified, then use all sets
 	 (resampling-indices (if (null resampling-indices)
 				 (utils:generate-integers 0 (1- k))
 				 resampling-indices))
-	 (latent-variables (mapcar (lambda (spec) (lv:get-latent-variable (car spec))) generative-systems))
-	 (generative-sources (mapcar (lambda (spec) (get-viewpoints (cdr spec))) generative-systems))
 	 ;; the result
 	 (sequence-predictions))
     (dolist (resampling-set resampling-sets sequence-predictions)
@@ -92,16 +101,13 @@
 	(let* ((training-set (get-training-set dataset resampling-set))
 	       (training-set (monodies-to-lists (append pretraining-set training-set)))
 	       (test-set (monodies-to-lists (get-test-set dataset resampling-set))))
-	  (let* ((generative-ltms (mapcar #'(lambda (latent-variable sources)
-					      (get-long-term-generative-models
-					       sources
-					       latent-variable
-					       training-set
-					       pretraining-ids dataset-id
-					       resampling-id k
-					       voices texture
-					       use-ltms-cache?))
-					  latent-variables generative-sources))
+	  (let* ((generative-ltms (get-long-term-generative-models generative-sources
+								   latent-variable
+								   training-set
+								   pretraining-ids dataset-id
+								   resampling-id k
+								   voices texture
+								   use-ltms-cache?))
 		 (ltms (get-long-term-models sources
 					     training-set
 					     pretraining-ids dataset-id
@@ -109,10 +115,10 @@
 					     voices texture
 					     use-ltms-cache?))
 		 (mvs (mvs:get-predictive-system targets sources
-						 generative-sources
-						 latent-variables
-						 ltms generative-ltms)))
-	    ;(mvs::print-mvs mvs)
+						 (list generative-sources)
+						 (list latent-variable)
+						 ltms (list generative-ltms))))
+					;(mvs::print-mvs mvs)
 	    (let ((predictions
 		   (mvs:model-dataset mvs test-set :construct? nil :predict? t)))
 	      (push predictions sequence-predictions))))
@@ -376,7 +382,7 @@ Call make-abstract-viewpoint-model for each viewpoint to construct a set
 of long-term models using the partitioned dataset. 
 Furthermore, initialise the prior distribution of the LATENT VARIABLE using
 the partitioned training set."
-  (let ((category-training-sets (lv::partition-dataset training-set latent-variable)))
+  (let ((category-training-sets (lv:get-category-subsets training-set latent-variable)))
     (lv:initialise-prior-distribution category-training-sets latent-variable)
     (loop for category-training-set in category-training-sets collect
 	 (let ((category (car category-training-set))
@@ -490,35 +496,66 @@ for <viewpoint> in <dataset-id>."
                             resampling-sets filename))
           resampling-sets))))
 
+(defun get-stratified-resampling-sets (dataset-id latent-variable &key (k 10) (use-cache? t)
+								    voices (texture :melody))
+  (let* ((dataset-ids (if (consp dataset-id) dataset-id (list dataset-id)))
+         (filename (get-resampling-sets-filename dataset-ids k :stratified? t
+						 :category-attributes
+						 (lv:category-attributes latent-variable))))
+    (if (and use-cache? (file-exists filename))
+        ;; Retrieve the previously cached resampling-set.
+        (read-object-from-file filename :resampling)
+	(flet ((identify (object)
+		 (let ((id (get-identifier object)))
+		   (list (get-dataset-index id) (get-composition-index id) (md::get-partition-index id)))))
+	  (let* ((music-objects (get-music-objects dataset-ids nil :voices voices :texture texture
+						   :partitioning-attributes
+						   (lv:category-attributes latent-variable)))
+		 ;; Create a mapping from partition identifiers to sequential indices
+		 (mapping (loop for partition in music-objects
+			     for index in (loop for i below (length music-objects) collect i) collect
+			       (cons (identify partition) index)))
+		 (category-subsets (lv:get-category-subsets music-objects latent-variable)))
+	    (flet ((get-index (music-object)
+		     (cdr (assoc (identify music-object) mapping :test #'equal))))
+	      (let ((category-subset-indices (mapcar (lambda (cs)
+						       (mapcar #'get-index (cdr cs)))
+						     category-subsets)))
+		(create-stratified-resampling-sets-from-indices category-subset-indices k))))))))
+
 (defun write-resampling-sets-to-file (resampling-sets filename)
   "Writes <resampling-sets> to <file>." 
   (write-object-to-file resampling-sets filename :resampling)
   (format t "~%Written resampling set to ~A." filename))
 
-(defun get-resampling-sets-filename (dataset-ids k)
+(defun get-resampling-sets-filename (dataset-ids k &key stratified? category-attributes)
   "Returns the filename in *resampling-sets-directory* containing the
    resampling-sets for <dataset-id>." 
   (string-append (namestring *resampling-dir*)
                  (format nil "~{~S-~}~S" (sort dataset-ids #'<) k)
+		 (if stratified? "-stratified" "")
+		 (if stratified? (format nil "-~{~A~^_~}" (mapcar #'symbol-name
+								  category-attributes))
+			     "")
                  ".resample"))
   
-
 ;;;===========================================================================
 ;;; Constructing random partitions of each dataset 
 ;;;===========================================================================
 
-(defun create-resampling-sets (count k)
+(defun create-stratified-resampling-sets-from-indices (class-indices k)
   "Returns a list of length <k> whose elements are lists representing a
    complete partition of the integers from 0 to (- count 1) where the
    elements of the individual sets are randomly selected without
    replacement."
-  (let* ((test-sets (make-array k :initial-element nil))
-	 (indices (loop for i from 0 to (1- count) collect i))
-	 (shuffled-indices (utils:shuffle indices))
-	 (current-test-set 0))
-    (dolist (i shuffled-indices)
-      (push i (svref test-sets current-test-set))
-      (setf current-test-set (mod (1+ current-test-set) k)))
+  (let ((test-sets (make-array k :initial-element nil))
+	(indices (apply #'append class-indices))
+	(current-test-set 0))
+    (loop for indices in class-indices do
+	 (let ((shuffled-indices (utils:shuffle indices)))
+	   (dolist (i shuffled-indices)
+	     (push i (svref test-sets current-test-set))
+	     (setf current-test-set (mod (1+ current-test-set) k)))))
     (loop for i from 0 to (1- k)
        collect (let* ((test-set (sort (svref test-sets i) #'<))
 		      (train-set (sort (remove-if #'(lambda (x) (member x test-set))
@@ -526,6 +563,10 @@ for <viewpoint> in <dataset-id>."
 				       #'<)))
 		 (list (list 'test test-set)
 		       (list 'train train-set))))))
+
+(defun create-resampling-sets (count k)
+  (let ((indices (loop for i from 0 to (1- count) collect i)))
+    (create-stratified-resampling-sets-from-indices (list indices) k)))
 
 ;;;===========================================================================
 ;;; Defining a dataframe class

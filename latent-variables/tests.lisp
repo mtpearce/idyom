@@ -9,7 +9,7 @@
 ;; The latent states of a category (a metre) correspond to the different
 ;; possible phases of that category.
 (defmethod get-latent-states (category (v latent1))
-  (let ((barlength (get-category-parameter category :barlength v)))
+  (let ((barlength (get-category-attribute category :barlength v)))
     (loop for phase below barlength collect
 	 (create-latent-state v category :phase phase))))
 
@@ -78,52 +78,52 @@
 	 (5am:is (typep latent-variable 'latent-variable)))))
 
 ;; For each latent variable, a specialised method should be defined
-;; which returns an alphabetically sorted list of the category parameters
+;; which returns an alphabetically sorted list of the category attributes
 ;; provided to the define-latent-variable macro.
 ;; A method specialized on linked latent variables should return an alphabetically
-;; sorted list containing the category parameters of the constituent latent variables.
-(5am:test category-parameters 
+;; sorted list containing the category attributes of the constituent latent variables.
+(5am:test category-attributes 
   (let* ((latent1 (make-instance 'latent1))
 	 (latent2 (make-instance 'latent2))
 	 (latent3 (make-instance 'latent3))
 	 (linked (make-instance 'linked :links (list latent1 latent2 latent3))))
-    (5am:is (utils:set-equal (category-parameters latent1) '(:barlength :pulses)))
-    (5am:is (utils:set-equal (category-parameters latent2) nil))
-    (5am:is (utils:set-equal (category-parameters latent3) '(:style)))
-    (5am:is (utils:set-equal (category-parameters linked) '(:barlength :pulses :style)))))
+    (5am:is (utils:set-equal (category-attributes latent1) '(:barlength :pulses)))
+    (5am:is (utils:set-equal (category-attributes latent2) nil))
+    (5am:is (utils:set-equal (category-attributes latent3) '(:style)))
+    (5am:is (utils:set-equal (category-attributes linked) '(:barlength :pulses :style)))))
 
 ;; For each latent variable, a specialised method should be defined
-;; which returns an alphabetically sorted list of the interpretation parameters
+;; which returns an alphabetically sorted list of the interpretation attributes
 ;; provided to the define-latent-variable macro.
 ;; A method specialized on linked latent variables should return an alphabetically
-;; sorted list containing the interpretation parameters of the constituent latent
+;; sorted list containing the interpretation attributes of the constituent latent
 ;; variables.
-(5am:test interpretation-parameters 
+(5am:test interpretation-attributes 
   (let* ((latent1 (make-instance 'latent1))
 	 (latent2 (make-instance 'latent2))
 	 (latent3 (make-instance 'latent3))
 	 (linked (make-instance 'linked :links (list latent1 latent2 latent3))))
-    (5am:is (utils:set-equal (interpretation-parameters latent1) '(:barlength :phase)))
-    (5am:is (utils:set-equal (interpretation-parameters latent2) '(:keysig)))
-    (5am:is (utils:set-equal (interpretation-parameters latent3) nil))
-    (5am:is (utils:set-equal (interpretation-parameters linked)
+    (5am:is (utils:set-equal (interpretation-attributes latent1) '(:barlength :phase)))
+    (5am:is (utils:set-equal (interpretation-attributes latent2) '(:keysig)))
+    (5am:is (utils:set-equal (interpretation-attributes latent3) nil))
+    (5am:is (utils:set-equal (interpretation-attributes linked)
 			     '(:barlength :keysig :phase)))))
 
-;; The latent-state-parameters method should return the an alphabetically
-;; sorted list of the union between the category parameter set and the
-;; interpretation parameter set. 
-(5am:test latent-state-parameters
+;; The latent-state-attributes method should return the an alphabetically
+;; sorted list of the union between the category attribute set and the
+;; interpretation attribute set. 
+(5am:test latent-state-attributes
   (let* ((latent1 (make-instance 'latent1))
 	 (latent2 (make-instance 'latent2))
 	 (latent3 (make-instance 'latent3))
 	 (linked (make-instance 'linked :links (list latent1 latent2 latent3))))
-    (5am:is (utils:set-equal (latent-state-parameters latent1)
+    (5am:is (utils:set-equal (latent-state-attributes latent1)
 			     '(:barlength :phase :pulses)))
-    (5am:is (utils:set-equal (latent-state-parameters latent2)
+    (5am:is (utils:set-equal (latent-state-attributes latent2)
 			     '(:keysig)))
-    (5am:is (utils:set-equal (latent-state-parameters latent3)
+    (5am:is (utils:set-equal (latent-state-attributes latent3)
 			     '(:style)))
-    (5am:is (utils:set-equal (latent-state-parameters linked)
+    (5am:is (utils:set-equal (latent-state-attributes linked)
 			     '(:barlength :keysig :phase :pulses :style)))))
 
 ;; Get latent variable should return an instance of the latent variable
@@ -153,9 +153,9 @@
     (5am:is (equal (get-latent-category latent1) '(4 2)))
     (5am:is (equal (get-latent-category latent2) nil))
     (5am:is (equal (get-latent-category latent3) '(salsa)))
-    (let ((parameters (category-parameters linked)))
+    (let ((attributes (category-attributes linked)))
       (5am:is (equal (get-latent-category linked)
-		  (mapcar (lambda (p) (getf *latent-state* p)) parameters))))))
+		  (mapcar (lambda (p) (getf *latent-state* p)) attributes))))))
 
 (5am:test (get-latent-interpretation :depends-on get-latent-variable)
   (let ((latent1 (get-latent-variable 'latent1))
@@ -167,9 +167,9 @@
     (5am:is (equal (get-latent-interpretation latent1) '(4 3)))
     (5am:is (equal (get-latent-interpretation latent2) '(7)))
     (5am:is (equal (get-latent-interpretation latent3) nil))
-    (let ((parameters (interpretation-parameters linked)))
+    (let ((attributes (interpretation-attributes linked)))
       (5am:is (equal (get-latent-interpretation linked)
-		     (mapcar (lambda (p) (getf *latent-state* p)) parameters))))))
+		     (mapcar (lambda (p) (getf *latent-state* p)) attributes))))))
 
 (5am:test with-latent-state
   (let* ((initial-state '(:foo a :bar b))
@@ -217,13 +217,13 @@
 	(5am:is (equal (get-latent-category latent2) latent-category-2))))))
 
 ;;; Three different latent-variable behaviors can be achieved depending on the
-;;; category and interpretation parameter lists:
+;;; category and interpretation attribute lists:
 ;;;
-;;; * A non-empty *category-parameters* and *interpretation* parameters list means
+;;; * A non-empty *category-attributes* and *interpretation* attributes list means
 ;;;   that various models are used for multiple interpretations per model
-;;; * An empty *category-parameters* list indicates that the same model is used
+;;; * An empty *category-attributes* list indicates that the same model is used
 ;;;   for all interpretations.
-;;; * An empty *interpretation-parameters* list indicates that different models are
+;;; * An empty *interpretation-attributes* list indicates that different models are
 ;;;   (probably but not necessarily) used and no interpretation takes place
 ;;;
 ;;; Methods whose behaviour is affected by these different model types are
@@ -231,8 +231,8 @@
 ;;; tested with linked variables whose links are different combinations of those
 ;;; types.
 
-(5am:def-fixture event (&rest parameters)
-  (let ((default-parameters '(:id identifier
+(5am:def-fixture event (&rest attributes)
+  (let ((default-attributes '(:id identifier
 			      :voice 0 :vertint12 0 :articulation nil
 			      :comma nil :ornament nil :dyn nil
 			      :accidental 0 :mpitch 40 :cpitch 80
@@ -242,10 +242,10 @@
 			      :pulses nil :barlength nil
 			      :tempo nil :phrase nil)))
     (progn
-      (dotimes (pair-index (/ (length parameters) 2))      
-	(setf (getf default-parameters (elt parameters (* pair-index 2)))
-	      (elt parameters (+ (* pair-index 2) 1))))
-      (let ((event (apply #'make-instance (cons 'md:music-event parameters))))
+      (dotimes (pair-index (/ (length attributes) 2))      
+	(setf (getf default-attributes (elt attributes (* pair-index 2)))
+	      (elt attributes (+ (* pair-index 2) 1))))
+      (let ((event (apply #'make-instance (cons 'md:music-event attributes))))
 	(&body)))))
 
 (5am:test create-category
@@ -417,7 +417,7 @@ prior distribution based on a set of training items and labels."
 	 (counts (mapcar #'length latent1-training))
 	 (normalisation (apply #'+ (mapcar (lambda (cat count)
 					     (* (/ count (apply #'+ counts))
-						(get-category-parameter
+						(get-category-attribute
 						 cat :barlength latent1)))
 					   latent1-categories counts)))
 	 (latent3-prior (get-prior-distribution latent3-training latent3-categories latent3))
@@ -444,16 +444,16 @@ prior distribution based on a set of training items and labels."
 				    linked-1-3-latent-states) do
 	 ;; Things shall sum to one.
 	   (5am:is (equal (apply #'+ (mapcar #'cdr prior)) 1))
-	 ;; The number of parameters shall equal the number of latent states.
+	 ;; The number of attributes shall equal the number of latent states.
 	   (5am:is (equal (length prior) (length latent-states)))))
-    ;; For the linked latent variable, the number of parameters equals the n
+    ;; For the linked latent variable, the number of attributes equals the n
     ;; the product of the number of latent states of each of its links.
     (5am:is (equal (length (prior-distribution linked-1-3))
 		   (* (length latent1-latent-states)
 		      (length latent3-latent-states))))
     ;; Default method for prior calculation spreads out probability mass equally
     ;; over different interpretations
-    ;; Below a few random parameters are checked against hand-calculated
+    ;; Below a few random attributes are checked against hand-calculated
     ;; gold standards.
     (5am:is (equal (cdr (assoc '(2 0 1) latent1-prior :test #'equal))
 		   (/ (/ 4 10) normalisation)))
@@ -477,9 +477,9 @@ prior distribution based on a set of training items and labels."
 		   (/ 3 10)))
     (5am:is (equal (cdr (assoc '(2 1 1) latent1-empirical-prior :test #'equal))
 		   (/ 1 10)))
-    ;; For linked variables, the prior probability of a parameter should match the
-    ;; product of prior probabilities of the link parameters associated with the
-    ;; parameter.
+    ;; For linked variables, the prior probability of an attribute should match the
+    ;; product of prior probabilities of the link attributes associated with the
+    ;; attribute.
     (5am:is (equal (cdr (assoc '(3 0 1 disco) (prior-distribution linked-1-3) :test #'equal))
 		   (* (cdr (assoc '(3 0 1) latent1-prior :test #'equal))
 		      (cdr (assoc '(disco) latent3-prior :test #'equal)))))
@@ -499,3 +499,31 @@ prior distribution based on a set of training items and labels."
     
 
 
+(5am:test get-category-subsets
+  (flet ((make-event (id barlength pulses)
+	   (make-instance 'md:music-event
+			  :barlength barlength
+			  :pulses pulses
+			  :id (md:make-event-id 1 2 id))))
+    (let ((events-1 (mapcar #'make-event
+			    '(0 1 2 3 4 5 6)
+			    '(3 3 3 2 2 2 2)
+			    '(3 3 1 2 2 2 2)))
+	  (events-2 (mapcar #'make-event
+			    '(0 1 2 3 4 5 6)
+			    '(3 3 3 2 2 2 2)
+			    '(3 3 3 2 2 2 2)))
+	  (melodic-sequence-1 (make-instance 'md:melodic-sequence :onset 0 :duration 0
+					   :timebase 0 :midc 0 :description ""
+					   :id (md:make-composition-id 1 1)))
+	  (melodic-sequence-2 (make-instance 'md:melodic-sequence :onset 0 :duration 0
+					   :timebase 0 :midc 0 :description ""
+					   :id (md:make-composition-id 1 2)))
+	  (latent1 (get-latent-variable 'latent1)))
+      (sequence:adjust-sequence melodic-sequence-1 (length events-1) :initial-contents events-1)
+      (sequence:adjust-sequence melodic-sequence-2 (length events-2) :initial-contents events-2)
+      (let* ((partitions (md::partition-music-sequences (list melodic-sequence-1 melodic-sequence-2)
+							(print (category-attributes latent1))))
+	     (category-subsets (get-category-subsets partitions latent1)))
+	(print partitions)
+	(print category-subsets)))))

@@ -276,10 +276,10 @@ A sequence-prediction is returned."
 
 (defun output-distribution (did cid eid latent-variable latent-states distribution)
   (let ((latent-variable-name (lv:latent-variable-name latent-variable)))
-    (loop for parameter in latent-states
+    (loop for attribute in latent-states
        for p in distribution do
 	 (format t "~A, ~A, ~A, lvar-dist, ~A, ~{~A, ~}~F~%"
-		 did cid eid latent-variable-name parameter p))))
+		 did cid eid latent-variable-name attribute p))))
 
 
 (defun infer-posterior-distribution (evidence prior-distribution likelihoods)

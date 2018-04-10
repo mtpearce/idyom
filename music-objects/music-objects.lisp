@@ -47,10 +47,17 @@
 
 (defclass music-sequence (list-slot-sequence music-temporal-object) ()) ; a sequence of music objects ordered in time 
 (defclass music-composition (music-sequence) ())                        ; a composition is an unconstrained sequence of music objects
+
 (defclass melodic-sequence (music-sequence) ())                         ; a sequence of non-overlapping notes
 (defclass harmonic-sequence (music-sequence) ())                        ; a sequence of harmonic slices
-(defclass grid-sequence (music-sequence)                                ; a sequence of grid events
-  ((resolution :initarg :resolution :accessor resolution)))
+
+(defclass partioned-sequence ()
+  ((partitioning-attributes :initarg :partitioning-attributes
+			   :accessor partitioning-attributes)))
+
+(defclass partioned-melodic-sequence (partioned-sequence melodic-sequence) ())
+
+(defclass partioned-harmonic-sequence (partioned-sequence melodic-sequence) ())
 
 (defclass key-signature ()
   ((keysig :initarg :keysig :accessor key-signature)
@@ -85,17 +92,7 @@
    (comma :initarg :comma :accessor comma)
    (articulation :initarg :articulation :accessor articulation)
    (vertint12 :initarg :vertint12 :accessor vertint12)
-   (voice :initarg :voice :accessor voice)))
-
-(defclass grid-object ()
-  ((resolution :initarg :resolution :accessor resolution)
-   (is-onset :initarg :is-onset :accessor is-onset)
-   (pos :initarg :pos :accessor pos))) ; pos(ition) is the time of the event expressed in grid-units (which are determined by the resolution)
-
-(defclass grid-event (music-event grid-object) ())
-
-(defclass grid-slice (music-slice grid-object) ())
-  
+   (voice :initarg :voice :accessor voice)))  
 
 ;;; Identifiers 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -106,7 +103,10 @@
 (defclass composition-identifier (dataset-identifier)
   ((composition-id :initarg :composition-index :accessor get-composition-index :type (integer 0 *))))
 
-(defclass event-identifier (composition-identifier)
+(defclass partition-identifier (composition-identifier)
+  ((partition-id :initarg :partition-index :accessor get-partition-index :type (integer 0 *))))
+
+(defclass event-identifier (partition-identifier)
   ((event-id :initarg :event-index :accessor get-event-index :type (integer 0 *))))
 
 ;; Make identifiers
@@ -118,10 +118,17 @@
                  :dataset-index dataset-index
 		 :composition-index composition-index))
 
-(defun make-event-id (dataset-index composition-index event-index)
+(defun make-partition-id (dataset-index composition-index partition-index)
+  (make-instance 'partition-identifier
+                 :dataset-index dataset-index
+		 :composition-index composition-index
+		 :partition-index partition-index))
+
+(defun make-event-id (dataset-index composition-index event-index &optional partition-index)
   (make-instance 'event-identifier
 		 :dataset-index dataset-index
 		 :composition-index composition-index
+		 :partition-index partition-index
 		 :event-index event-index))
 
 ;; Copy identifiers
@@ -210,7 +217,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun get-music-objects (dataset-indices composition-indices
-                          &key voices (texture :melody) (time-representation :event))
+                          &key voices (texture :melody)
+			    partitioning-attributes)
   "Return music objects from the database corresponding to
   DATASET-INDICES, COMPOSITION-INDICES which may be single numeric IDs
   or lists of IDs. COMPOSITION-INDICES is only considered if
@@ -227,13 +235,65 @@
           (setf result (get-harmonic-objects dataset-indices composition-indices :voices voices)))
          (t 
           (print "Unrecognised texture for the music object. Current options are :melody or :harmony.")))
-    (if (eq time-representation :grid)
-        (if (atom result)
-            (composition->grid result :voices voices :resolution grid-resolution :hide-meter hide-meter)
-            (mapcar #'(lambda (x)
-                        (composition->grid x :voices voices :resolution grid-resolution :hide-meter hide-meter))
-                    result))
-        result)))
+    (if (null partitioning-attributes)
+	result
+	(partition-music-sequences result partitioning-attributes))))
+
+(defun partition-music-sequences (music-sequences partitioning-attributes)
+  (let ((partitions))
+    (dolist (music-sequence music-sequences)
+      (dolist (partition (partition-music-sequence music-sequence partitioning-attributes))
+	(push partition partitions)))
+    (reverse partitions)))
+
+(defmethod partition-music-sequence ((ms music-sequence) partitioning-attributes)
+  "Partition a melodic sequence into the largest possible partitions such that the
+ value of the partitioning attributes is the same for all events in the partition."
+  (let ((partition-index 0)
+	(partition-values nil)
+	(partitions) (partition) (events))
+    (flet ((make-partition-id ()
+	     (let ((id (get-identifier ms)))
+	       (make-partition-id (get-dataset-index id)
+				  (get-composition-index id)
+				  partition-index)))
+	   (make-event-id (event)
+	     (let ((id (get-identifier event)))
+	       (make-event-id (get-dataset-index id)
+			      (get-composition-index id)
+			      (get-event-index id)
+			      partition-index))))
+      (sequence:dosequence (event ms)
+	(let* ((event-values (mapcar (lambda (attrib)
+				       (get-attribute event (find-symbol (symbol-name attrib) 'md)))
+				     partitioning-attributes)))
+	  (when (or (null partition)
+		    (not (equal event-values partition-values)))
+	    (progn
+	      (unless (null events)
+		(sequence:adjust-sequence partition (length events)
+					  :initial-contents (reverse events))
+		(push partition partitions)
+		(incf partition-index)
+		(setf events nil))
+	      (setf partition-values (copy-list event-values))
+	      (setf partition (make-instance (find-symbol (format nil "PARTIONED-~A"
+									 (symbol-name (type-of ms)))
+								 'md)
+					     :onset (onset ms)
+					     :duration (duration ms)
+					     :midc (midc ms)
+					     :id (make-partition-id)
+					     :description (description ms)
+					     :timebase (timebase ms)))))
+	  (let ((event (copy-event event)))
+	    (setf (slot-value event 'identifier)
+		  (make-event-id event))
+	    (push event events)))))
+    (sequence:adjust-sequence partition (length events)
+			      :initial-contents (reverse events))
+    (push partition partitions)
+    (reverse partitions)))
 
 ;; harmonic sequences
 
@@ -412,109 +472,6 @@ the highest pitch sounding at that onset position."
         ;; (print (list top (chromatic-pitch top) (length slice)))
         (setf previous-event top)
         (push top result)))))
-
-
-;; grid sequences
-
-;; Needs to be monody as well?
-(defun get-grid-sequence (dataset-index composition-index &key voices resolution (hide-meter nil))
-  (composition->grid
-    (get-composition (lookup-composition dataset-index composition-index))
-    :voices voices :resolution resolution :hide-meter hide-meter))
-
-(defun get-grid-sequences (dataset-ids &key voices resolution (hide-meter nil))
-  (let ((compositions '()))
-    (dolist (dataset-id dataset-ids (nreverse compositions))
-      (let ((d (get-dataset (lookup-dataset dataset-id))))
-	(sequence:dosequence (c d)
-	  (push (composition->grid c :voices voices :resolution resolution :hide-meter hide-meter) compositions))))))
-
-(defun composition->grid (composition &key voices resolution (hide-meter nil))
-  "Extract a grid from a composition using the resolution specified by
-the resolution argument."
-    (let* ((timebase (timebase composition))
-	   (grid-sequence (make-instance 'grid-sequence
-                              :onset 0
-                              :duration (duration composition)
-                              :midc (midc composition)
-                              :id (copy-identifier (get-identifier composition))
-                              :description (description composition)
-                              :timebase timebase
-			      :resolution resolution))
-           (sorted-composition (sort composition #'< :key #'md:onset))
-           (event-list (coerce sorted-composition 'list))
-           (event-list (if (null voices)
-                           event-list
-                           (remove-if #'(lambda (x) (not (member x voices))) event-list :key #'md:voice)))
-           (data (remove-duplicates event-list))
-           ;; Create grid events
-	   (grid-slices
-	    (let ((position 0))
-	      (loop for event in data collecting
-		   (let ((event-position (rescale (onset event) resolution timebase))
-			 (duration (rescale (duration event) resolution timebase))
-                         (bioi (rescale (bioi event) resolution timebase))
-                         (deltast (rescale (deltast event) resolution timebase))
-			 (last-position position))
-		     (setf position (+ event-position duration))
-		     (when (or (fractional? event-position) (fractional? duration))
-		       (return-from composition->grid grid-sequence))
-		     (loop for p from last-position below position collecting
-			  (let ((is-onset (eql p event-position)))
-                            (case (type-of event)
-                              (music-event (music-event->grid-event event p is-onset resolution duration bioi deltast hide-meter))
-                              (music-slice (music-slice->grid-slice event p is-onset resolution duration bioi deltast hide-meter)))))))))
-           (grid-events (apply #'append grid-slices)))
-      (sequence:adjust-sequence grid-sequence
-                                (length grid-events)
-                                :initial-contents grid-events)))
-
-(defun music-event->grid-event (event pos is-onset resolution duration bioi deltast hide-meter)
-  (let* ((grid-event (make-instance 'grid-event
-                                    :pos pos
-                                    :is-onset is-onset
-                                    :resolution resolution))
-         (grid-event (utils:initialise-unbound-slots grid-event)))
-    (when is-onset
-      (setf grid-event (utils:copy-slot-values event grid-event))
-      (setf (duration grid-event) duration
-            (bioi grid-event) bioi
-            (deltast grid-event) deltast)
-      (when hide-meter
-        (setf (barlength grid-event) nil
-              (pulses grid-event) nil)))
-    (setf (get-identifier grid-event) (copy-identifier (get-identifier event)))
-    grid-event))
-
-(defun music-slice->grid-slice (slice pos is-onset resolution duration bioi deltast hide-meter)
-  (let* ((onset (onset slice))
-         (barlength (barlength slice))
-         (pulses (pulses slice))
-         (grid-slice (make-instance 'grid-slice
-                                    :pos pos
-                                    :is-onset is-onset
-                                    :resolution resolution))
-         (grid-slice (utils:initialise-unbound-slots grid-slice)))
-    (when is-onset
-      (setf grid-slice (utils:copy-slot-values slice grid-slice))
-      ;; todo: set bioi and deltast as well as duration
-      (setf (duration grid-slice) duration
-            (bioi grid-slice) bioi
-            (deltast grid-slice) deltast)
-      (when hide-meter
-        (setf (barlength grid-slice) nil
-              (pulses grid-slice) nil))
-      (sequence:adjust-sequence 
-       slice (length slice)
-       :initial-contents (coerce slice 'list))
-      (sequence:dosequence (v slice)
-        (setf (onset v) onset
-              (duration v) duration
-              ;; todo: set bioi and deltast as well as duration
-              (barlength v) (unless hide-meter barlength)
-              (pulses v) (unless hide-meter pulses))))
-    (setf (get-identifier grid-slice) (copy-identifier (get-identifier slice)))
-    grid-slice))
 
 (defun fractional? (n)
   (not (equalp (mod n 1) 0)))

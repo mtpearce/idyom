@@ -3,7 +3,7 @@
 (define-latent-variable metre (:barlength :pulses) (:phase))
 
 (defmethod get-latent-states (category (v metre))
-  (let ((barlength (get-category-parameter category :barlength v)))
+  (let ((barlength (get-category-attribute category :barlength v)))
     (loop for phase below barlength collecting
        (create-latent-state v category :phase phase))))
 

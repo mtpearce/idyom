@@ -27,14 +27,14 @@
                     (declare (ignorable events element))
                     ,f*)))))))
 
-(defmacro define-abstract-viewpoint ((name typeset event-attribute-parameters
-					   additional-parameters training-viewpoint) 
+(defmacro define-abstract-viewpoint ((name typeset event-attributes
+					   additional-attributes training-viewpoint) 
                             ((events class) element)
 				     &key function function*)
   (let ((abstract-args `(loop for p in
-			    (list ,@event-attribute-parameters ,@additional-parameters)
+			    (list ,@event-attributes ,@additional-attributes)
 			  collect (lv:get-latent-state-value p)))
-	(training-args `(loop for p in (list ,@event-attribute-parameters) collect
+	(training-args `(loop for p in (list ,@event-attributes) collect
 			      (apply (intern (symbol-name p) (find-package :viewpoints))
 				     (list events)))))
     (let ((function `(apply #',function ,abstract-args))
@@ -51,8 +51,8 @@
 	     ((,events ,class) ,element)
 	   :function ,training-function :function* ,training-function*)
 	 (defmethod training-viewpoint ((v ,name)) (get-viewpoint ',training-viewpoint))
-	 (defmethod latent-parameters ((v ,name)) '(,@event-attribute-parameters
-						    ,@additional-parameters))))))
+	 (defmethod latent-attributes ((v ,name)) '(,@event-attributes
+						    ,@additional-attributes))))))
 
 (defmacro define-basic-viewpoint (name ((events class)) function)
   `(progn 

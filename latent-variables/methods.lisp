@@ -10,21 +10,30 @@ latent variable V."
 links of linked latent variable L."
   (mapcar #'latent-variable-attribute (latent-variable-links l)))
 
-(defmethod category-parameters ((l linked))
-  "Return the category parameters of linked latent variable L.
-These are derived from the category parameters of the constituent links of L
+(defmethod category-attributes ((l linked))
+  "Return the category attributes of linked latent variable L.
+These are derived from the category attributes of the constituent links of L
 by concatenating them into a list and sorting that list alphabetically."
-  (let ((parameters (apply #'append
-			   (mapcar #'category-parameters
+  (let ((attributes (apply #'append
+			   (mapcar #'category-attributes
 				   (latent-variable-links l)))))
-    (utils:sort-symbols (copy-list parameters))))
+    (utils:sort-symbols (copy-list attributes))))
 
-(defmethod latent-state-parameters ((v latent-variable))
-  "Return the latent-state parameters of linked latent variable L.
-These are derived from the latent-state parameters of the constituent links of L
+(defmethod interpretation-attributes ((l linked))
+  "Return the interpretation attributes of linked latent variable L.
+These are derived from the interpretation attributes of the constituent links of L
 by concatenating them into a list and sorting that list alphabetically."
-  (utils:sort-symbols (copy-list (remove-duplicates (append (category-parameters v)
-							    (interpretation-parameters v))))))
+  (let ((attributes (apply #'append 
+			   (mapcar #'interpretation-attributes
+				   (latent-variable-links l)))))
+    (utils:sort-symbols (copy-list attributes))))
+
+(defmethod latent-state-attributes ((v latent-variable))
+  "Return the latent-state attributes of linked latent variable L.
+These are derived from the latent-state attributes of the constituent links of L
+by concatenating them into a list and sorting that list alphabetically."
+  (utils:sort-symbols (copy-list (remove-duplicates (append (category-attributes v)
+							    (interpretation-attributes v))))))
 
 (defmethod latent-variable-name ((l latent-variable))
   "Return a string representation of the latent-variable attribute of 
@@ -36,26 +45,26 @@ latent variable L."
 constituent links of L by concatenating them in a string separated by dashes."
   (format nil "~{~A~^-~}" (latent-variable-attribute l)))
 
-(defmethod get-category-parameter (category parameter (v latent-variable))
-    "Return the value of category parameter PARAMETER as encoded in CATEGORY,
+(defmethod get-category-attribute (category attribute (v latent-variable))
+    "Return the value of category attribute ATTRIBUTE as encoded in CATEGORY,
 which is a category of latent variable V."
-  (let ((param-category (utils:make-plist (category-parameters v) category)))
-    (getf param-category parameter)))
+  (let ((param-category (utils:make-plist (category-attributes v) category)))
+    (getf param-category attribute)))
 
-(defmethod get-latent-state-parameter (latent-state parameter (v latent-variable))
-  "Return the value of PARAMETER, which is a latent-state parameter of V, in latent 
+(defmethod get-latent-state-attribute (latent-state attribute (v latent-variable))
+  "Return the value of ATTRIBUTE, which is a latent-state attribute of V, in latent 
 state LATENT-STATE, which is a latent-state of V."
-  (let ((param-interpretation (utils:make-plist (latent-state-parameters v)
+  (let ((param-interpretation (utils:make-plist (latent-state-attributes v)
 						latent-state)))
-    (getf param-interpretation parameter)))
+    (getf param-interpretation attribute)))
 
 (defmethod get-category (latent-state (v latent-variable))
-  "Return only the values of the category parameters encoded in LATENT-STATE,
+  "Return only the values of the category attributes encoded in LATENT-STATE,
 which is a latent state of latent variable V."
-  (let ((latent-state-plist (utils:make-plist (latent-state-parameters v)
+  (let ((latent-state-plist (utils:make-plist (latent-state-attributes v)
 					      latent-state)))
   (mapcar #'(lambda (param) (getf latent-state-plist param))
-	  (category-parameters v))))
+	  (category-attributes v))))
 
 (defmethod get-link-category ((l latent-variable) category (link latent-variable))
   category)
@@ -63,36 +72,55 @@ which is a latent state of latent variable V."
 (defmethod get-link-category ((l linked) category (link latent-variable))
   "Return the category of LINK, which is a constituent link of linked latent variable L, 
 as encoded in CATEGORY, which is a category of L."
-  (let ((annotated-latent-state (utils:make-plist (category-parameters l)
+  (let ((annotated-latent-state (utils:make-plist (category-attributes l)
 						  category)))
     (mapcar #'(lambda (p) (getf annotated-latent-state p))
-	    (category-parameters link))))
+	    (category-attributes link))))
 
 (defmethod get-event-category (event (v latent-variable))
-  "Return the category of latent variable V for EVENT.
+  "Return the category of latent variable V for MUSIC-OBJECT.
 By default the category is determined by retrieving the values of the event attributes 
-corresponding to the category parameters of V.
+corresponding to the category attributes of V.
 Specialisers of this method can be written to define more complex behaviors for certain
 types of latent variables."
   (let ((attribute-names (mapcar #'(lambda (attrib)
-				      (symbol-name attrib))
-				  (category-parameters v))))
+				     (symbol-name attrib))
+				 (category-attributes v))))
     (loop for name in attribute-names collect
 	 (apply (find-symbol name (find-package :md)) (list event)))))
 
-(defmethod create-category ((v latent-variable) &rest parameters)
-  "Create a category of V based on parameters provided as a set of keyword arguments
+(defmethod create-category ((v latent-variable) &rest attributes)
+  "Create a category of V based on attributes provided as a set of keyword arguments
 to this function."
-  (mapcar (lambda (parameter) (getf parameters parameter))
-	  (category-parameters v)))
+  (mapcar (lambda (attrib) (getf attributes attrib))
+	  (category-attributes v)))
 
-(defmethod create-latent-state ((v latent-variable) category &rest interpretation-parameters)
+(defmethod create-latent-state ((v latent-variable) category &rest interpretation-attributes)
   "Create a latent state for latent variable V based on a category of V and 
-some interpretation parameters provided as keyword arguments to this function."
-  (let ((parameters (append (utils:make-plist (category-parameters v) category)
-			    interpretation-parameters)))
-    (mapcar (lambda (param) (getf parameters param))
-	    (latent-state-parameters v))))
+some interpretation attributes provided as keyword arguments to this function."
+  (let ((attributes (append (utils:make-plist (category-attributes v) category)
+			    interpretation-attributes)))
+    (mapcar (lambda (attrib) (getf attributes attrib))
+	    (latent-state-attributes v))))
+
+(defmethod %combine-link-attributes ((l linked) attribute-sets
+				    &key (attribute-name-fn #'category-attributes))
+    (let* ((attribute-names (apply #'append (mapcar attribute-name-fn
+						  (latent-variable-links l))))
+	 (annotated-attributes (utils:make-plist attribute-names
+						 (apply #'append attribute-sets))))
+    (loop for attribute in (apply attribute-name-fn (list l)) collect
+	 (getf annotated-attributes attribute))))
+
+(defmethod combine-link-categories ((l linked) categories)
+  "Given a combination of categories corresponding to the constituent links of
+L, generate a tuple representing the category of L."
+  (%combine-link-attributes l categories :attribute-name-fn #'category-attributes))
+
+(defmethod combine-link-latent-states ((l linked) latent-states)
+  "Given a combination of latent states corresponding to the constituent links of
+L, generate a tuple representing the latent state of L."
+  (%combine-link-attributes l latent-states :attribute-name-fn #'latent-state-attributes))
 
 (defmethod initialise-prior-distribution (category-training-sets (v latent-variable))
   "Calculate the prior distribution of V with GET-PRIOR-DISTRIBUTION based on
@@ -158,8 +186,8 @@ certain classes of latent variables."
   (let ((categories (categories v))
 	(prior (prior-distribution v)))
     (format t "Category: (~{~A~^, ~}). Interpretation: ~{~A~^, ~}~%"
-	    (category-parameters v)
-	    (interpretation-parameters v))
+	    (category-attributes v)
+	    (interpretation-attributes v))
     (loop for c in categories do
 	 (let ((latent-states (get-latent-states c v)))
 	   (format t "P(~A) = ~A~%" c (apply #'+ (mapcar (lambda (l)

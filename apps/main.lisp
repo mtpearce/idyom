@@ -48,7 +48,7 @@
 ;;;
 (defun idyom (dataset-id target-viewpoints source-viewpoints
               &key
-		generative-systems
+		generative-model
                 ;; Dataset IDs for LTM pretraining
                 pretraining-ids
                 ;; Resampling
@@ -115,7 +115,7 @@
           ;; Derive target viewpoint IC profile from source viewpoints
           (let* ((predictions 
                   (resampling:idyom-resample dataset-id target-viewpoints source-viewpoints
-					     :generative-systems generative-systems
+					     :generative-model generative-model
                                              :pretraining-ids pretraining-ids
                                              :k k :resampling-indices resampling-indices
                                              :models models :ltmo ltmo :stmo stmo
