@@ -518,10 +518,14 @@ for <viewpoint> in <dataset-id>."
 		 (category-subsets (lv:get-category-subsets music-objects latent-variable)))
 	    (flet ((get-index (music-object)
 		     (cdr (assoc (identify music-object) mapping :test #'equal))))
-	      (let ((category-subset-indices (mapcar (lambda (cs)
+	      (let* ((category-subset-indices (mapcar (lambda (cs)
 						       (mapcar #'get-index (cdr cs)))
-						     category-subsets)))
-		(create-stratified-resampling-sets-from-indices category-subset-indices k))))))))
+						     category-subsets))
+		     (resampling-sets (create-stratified-resampling-sets-from-indices
+				       category-subset-indices k)))
+		(when use-cache? (write-resampling-sets-to-file
+				  resampling-sets filename))
+		resampling-sets)))))))
 
 (defun write-resampling-sets-to-file (resampling-sets filename)
   "Writes <resampling-sets> to <file>." 

@@ -261,14 +261,13 @@ A sequence-prediction is returned."
 					       (elt (prediction-set sequence-prediction)
 						    index))
 					     (elt prediction-sets basic-index))))
-	      (when 
 	      (push (combine-distributions event-predictions
 					   *mvs-combination*
 					   *mvs-bias*
 					   :mvs)
 		    combined-basic-predictions)))
 	  (push combined-basic-predictions combined-predictions)))
-      (sequence-prediction-sets m events (reverse combined-predictions))))))
+      (sequence-prediction-sets m events (reverse combined-predictions)))))
 
 ;;;========================================================================
 ;;; Inference utility functions
