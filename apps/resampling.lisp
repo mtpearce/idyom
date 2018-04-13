@@ -121,8 +121,8 @@
 					;(mvs::print-mvs mvs)
 	    (let ((predictions
 		   (mvs:model-dataset mvs test-set :construct? nil :predict? t)))
-	      (push predictions sequence-predictions))))
-	(incf resampling-id)))))
+	      (push predictions sequence-predictions)))))
+      (incf resampling-id))))
 
 (defun check-model-defaults (defaults &key
 			      (order-bound (getf defaults :order-bound))
