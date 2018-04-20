@@ -149,13 +149,14 @@
 	 (event-identifier (md:get-identifier (prediction-event prediction-set)))
 	 (dataset-id (md:get-dataset-index event-identifier))
 	 (composition-id (md:get-composition-index event-identifier))
+	 (partition-id (md::get-partition-index event-identifier))
 	 (event-id (md:get-event-index event-identifier))
 	 (element (prediction-element prediction-set)))
     (loop for pair in distribution do
 	 (let ((parameter (car pair))
 	       (p (cadr pair)))
-	   (format t "~A, ~A, ~A, event-prediction, ~A, ~A, ~A, ~F~%"
-		   dataset-id composition-id event-id
+	   (format t "~A, ~A, ~A, ~A, event-prediction, ~A, ~A, ~A, ~F~%"
+		   dataset-id composition-id partition-id event-id
 		   basic-viewpoint-name element parameter p)))))
 
 ;;;========================================================================

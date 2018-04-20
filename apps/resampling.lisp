@@ -64,15 +64,17 @@
          (mvs::*stm-update-exclusion* (getf stmo :update-exclusion))
          (mvs::*stm-escape* (getf stmo :escape))
 	 (mvs::*output-csv* output-csv)
-	 (latent-variable (when (not (null generative-model))
+	 (inference (not (null generative-model)))
+	 (latent-variable (when inference
 			    (lv:get-latent-variable (car generative-model))))
-	 (generative-sources (when (not (null generative-model))
+	 (generative-sources (when inference
 			       (get-viewpoints (cdr generative-model))))
          ;; data
          (dataset (md:get-music-objects (if (listp dataset-id) dataset-id (list dataset-id))
                                         nil :voices voices :texture texture
-					:partitioning-attributes (lv:category-attributes
-								  latent-variable)))
+					:partitioning-attributes (when inference
+								   (lv:category-attributes
+								    latent-variable))))
          (pretraining-set (md:get-music-objects pretraining-ids nil :voices voices :texture texture))
          ;; viewpoints
          (sources (get-viewpoints source-viewpoints))
@@ -100,28 +102,32 @@
       (when (member resampling-id resampling-indices)
 	(let* ((training-set (get-training-set dataset resampling-set))
 	       (training-set (monodies-to-lists (append pretraining-set training-set)))
-	       (test-set (monodies-to-lists (get-test-set dataset resampling-set))))
-	  (let* ((generative-ltms (get-long-term-generative-models generative-sources
+	       (test-set (monodies-to-lists (get-test-set dataset resampling-set)))
+	       ;; Inference related objects are put in lists because GET-PREDICTIVE-SYSTEMS
+	       ;; supports combining multiple independent predictive systems, but this is
+	       ;; not supported by IDYOM-RESAMPLE yet.
+	       (generative-ltms (when inference
+				  (list (get-long-term-generative-models generative-sources
 								   latent-variable
 								   training-set
 								   pretraining-ids dataset-id
 								   resampling-id k
 								   voices texture
-								   use-ltms-cache?))
-		 (ltms (get-long-term-models sources
-					     training-set
-					     pretraining-ids dataset-id
-					     resampling-id k 
-					     voices texture
-					     use-ltms-cache?))
-		 (mvs (mvs:get-predictive-system targets sources
-						 (list generative-sources)
-						 (list latent-variable)
-						 ltms (list generative-ltms))))
-					;(mvs::print-mvs mvs)
-	    (let ((predictions
-		   (mvs:model-dataset mvs test-set :construct? nil :predict? t)))
-	      (push predictions sequence-predictions)))))
+								   use-ltms-cache?))))
+	       (generative-sources (when inference (list generative-sources)))
+	       (latent-variable (when inference (list latent-variable)))
+	       (ltms (get-long-term-models sources
+					   training-set
+					   pretraining-ids dataset-id
+					   resampling-id k 
+					   voices texture
+					   use-ltms-cache?))
+	       (mvs (mvs:get-predictive-system targets sources
+					       generative-sources
+					       latent-variable
+					       ltms generative-ltms))
+	       (predictions (mvs:model-dataset mvs test-set :construct? nil :predict? t)))
+	  (push predictions sequence-predictions)))
       (incf resampling-id))))
 
 (defun check-model-defaults (defaults &key

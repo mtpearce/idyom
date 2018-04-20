@@ -51,13 +51,13 @@
 (defclass melodic-sequence (music-sequence) ())                         ; a sequence of non-overlapping notes
 (defclass harmonic-sequence (music-sequence) ())                        ; a sequence of harmonic slices
 
-(defclass partioned-sequence ()
+(defclass partitioned-sequence ()
   ((partitioning-attributes :initarg :partitioning-attributes
 			   :accessor partitioning-attributes)))
 
-(defclass partioned-melodic-sequence (partioned-sequence melodic-sequence) ())
+(defclass partitioned-melodic-sequence (partitioned-sequence melodic-sequence) ())
 
-(defclass partioned-harmonic-sequence (partioned-sequence melodic-sequence) ())
+(defclass partitioned-harmonic-sequence (partitioned-sequence melodic-sequence) ())
 
 (defclass key-signature ()
   ((keysig :initarg :keysig :accessor key-signature)
@@ -234,7 +234,7 @@
          ((eq texture :harmony)
           (setf result (get-harmonic-objects dataset-indices composition-indices :voices voices)))
          (t 
-          (print "Unrecognised texture for the music object. Current options are :melody or :harmony.")))
+          (warn "Unrecognised texture for the music object. Current options are :melody or :harmony.")))
     (if (null partitioning-attributes)
 	result
 	(partition-music-sequences result partitioning-attributes))))
@@ -277,7 +277,7 @@
 		(incf partition-index)
 		(setf events nil))
 	      (setf partition-values (copy-list event-values))
-	      (setf partition (make-instance (find-symbol (format nil "PARTIONED-~A"
+	      (setf partition (make-instance (find-symbol (format nil "PARTITIONED-~A"
 									 (symbol-name (type-of ms)))
 								 'md)
 					     :onset (onset ms)

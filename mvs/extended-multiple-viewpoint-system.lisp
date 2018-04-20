@@ -195,9 +195,10 @@ A sequence-prediction is returned."
 	 (event-identifier (md:get-identifier (car events)))
 	 (dataset-id (md:get-dataset-index event-identifier))
 	 (composition-id (md:get-composition-index event-identifier))
+	 (partition-id (md::get-partition-index event-identifier))
 	 (sequence-predictions))
     (when *output-csv*
-      (output-distribution dataset-id composition-id -1 latent-variable latent-states (car posteriors)))
+      (output-distribution dataset-id composition-id partition-id -1 latent-variable latent-states (car posteriors)))
     ;; Transform each list of interpretations (where each such list consists of
     ;; event predictions in the corresponding interpretation) into a list, each
     ;; element of which is a list of event predictions for one event 
@@ -224,7 +225,7 @@ A sequence-prediction is returned."
 						 likelihoods)
 		   posteriors)
 	     (when *output-csv*
-	       (output-distribution dataset-id composition-id event-id
+	       (output-distribution dataset-id composition-id partition-id event-id
 				    latent-variable latent-states (car posteriors))
 	       (mapcar #'prediction-sets::output-prediction marginal-event-predictions)))))
 ;    (let* ((posterior (car posteriors))
@@ -273,12 +274,12 @@ A sequence-prediction is returned."
 ;;; Inference utility functions
 ;;;========================================================================
 
-(defun output-distribution (did cid eid latent-variable latent-states distribution)
+(defun output-distribution (did cid pid eid latent-variable latent-states distribution)
   (let ((latent-variable-name (lv:latent-variable-name latent-variable)))
     (loop for attribute in latent-states
        for p in distribution do
-	 (format t "~A, ~A, ~A, lvar-dist, ~A, ~{~A, ~}~F~%"
-		 did cid eid latent-variable-name attribute p))))
+	 (format t "~A, ~A, ~A, ~A, lvar-dist, ~A, ~{~A, ~}~F~%"
+		 did cid pid eid latent-variable-name attribute p))))
 
 
 (defun infer-posterior-distribution (evidence prior-distribution likelihoods)
