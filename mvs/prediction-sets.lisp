@@ -159,6 +159,21 @@
 		   dataset-id composition-id partition-id event-id
 		   basic-viewpoint-name element parameter p)))))
 
+(defmethod output-prediction ((prediction-set event-prediction))
+  (let* ((basic-viewpoint-name (viewpoint-name (basic-viewpoint prediction-set)))
+	 (distribution (prediction-set prediction-set))
+	 (event-identifier (md:get-identifier (prediction-event prediction-set)))
+	 (dataset-id (md:get-dataset-index event-identifier))
+	 (composition-id (md:get-composition-index event-identifier))
+	 (event-id (md:get-event-index event-identifier))
+	 (element (prediction-element prediction-set)))
+    (loop for pair in distribution do
+	 (let ((parameter (car pair))
+	       (p (cadr pair)))
+	   (format t "~A, ~A, ~A, ~A, event-prediction, ~A, ~A, ~A, ~F~%"
+		   dataset-id composition-id NIl event-id
+		   basic-viewpoint-name element parameter p)))))
+
 ;;;========================================================================
 ;;; Functions for distributions 
 ;;;========================================================================

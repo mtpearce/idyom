@@ -379,7 +379,9 @@ appropriate sequence index before this method is called."
             (let ((combined 
                    (combine-predictions m ltm-prediction-sets 
                                         stm-prediction-sets events)))
-              (unless (null combined) 
+              (unless (null combined)
+		(when *output-csv*
+		  (mapcar #'prediction-sets::output-prediction combined))
                 (push combined prediction-sets)))))))
     (when construct?
       (operate-on-models m #'model-sentinel-event :models 'ltm
