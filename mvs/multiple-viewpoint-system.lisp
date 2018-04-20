@@ -334,6 +334,12 @@ multiple-viewpoint system <m>."
                  (let ((prediction-set (model-sequence m (coerce (car dataset) 'list)
                                                        :construct? construct?
                                                        :predict? predict?)))
+		   (when *output-csv*
+		     (mapcar
+		      (lambda (sp)
+			(mapcar #'prediction-sets::output-prediction
+				(prediction-sets:prediction-set sp)))
+		      prediction-set))
                    (unless (= sequence-index 1)
                      (operate-on-models m #'increment-sequence-front))
                    (operate-on-models m #'reinitialise-ppm :models 'stm)
@@ -380,8 +386,6 @@ appropriate sequence index before this method is called."
                    (combine-predictions m ltm-prediction-sets 
                                         stm-prediction-sets events)))
               (unless (null combined)
-		(when *output-csv*
-		  (mapcar #'prediction-sets::output-prediction combined))
                 (push combined prediction-sets)))))))
     (when construct?
       (operate-on-models m #'model-sentinel-event :models 'ltm

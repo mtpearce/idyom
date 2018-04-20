@@ -226,13 +226,7 @@ A sequence-prediction is returned."
 		   posteriors)
 	     (when *output-csv*
 	       (output-distribution dataset-id composition-id partition-id event-id
-				    latent-variable latent-states (car posteriors))
-	       (mapcar #'prediction-sets::output-prediction marginal-event-predictions)))))
-;    (let* ((posterior (car posteriors))
-;	   (ordering (sort (utils:generate-integers 0 (1- (length posterior))) #'> :key (lambda (i) (nth i posterior)))))
-      ;(format t "Predicted: ~A~%Actual   : ~A~%"
-;	      (nth (first ordering) latent-states)
-;	      (viewpoints:viewpoint-element (viewpoints:get-viewpoint '(keysig mode)) events)))
+				    latent-variable latent-states (car posteriors))))))
     (sequence-prediction-sets (abstract-mvs m)
 			      events (reverse sequence-predictions))))
 
