@@ -53,7 +53,7 @@ based on the relative frequency of phases in the training data."))
 
 (defmethod get-latent-states (category (v key-mode-models))
   (let ((latent-states))
-    (dotimes (key 15)
+    (dotimes (key 12)
       (push (create-latent-state v category :keysig (- key 7))
 	    latent-states))
     latent-states))
