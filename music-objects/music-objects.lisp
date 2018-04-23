@@ -628,13 +628,17 @@ scale. Show a warning when the resulting time is not a whole number."
           (setf (slot-value music-event (car slts)) (convert-time-slot (car db-atts) timebase))
           (setf (slot-value music-event (car slts)) (car db-atts))))))
 
+(defun warn-fractions (v)
+  (when (not (eq (mod v 1) 0)) (warn "Fractional time slot detected: ~S." v))
+  v)
+
 (defun convert-time-slot (value timebase)
   "Convert native representation of time into a representation where
     a crotchet has a value of *md-timebase*."
   (if (or (null value) (null timebase))
       nil
-      (let ((multiplier (/ *md-timebase* timebase)))
-	(* value multiplier))))
+      (warn-fractions (let ((multiplier (/ *md-timebase* timebase)))
+			(* value multiplier)))))
 
 
 

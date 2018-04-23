@@ -44,7 +44,7 @@ based on the relative frequency of phases in the training data."))
 (defmethod get-latent-states (category (v key))
   (let ((latent-states))
     (loop for mode in '(0 9) do
-	 (dotimes (key 15)
+	 (dotimes (key 12)
 	   (push (create-latent-state v category :keysig (- key 7) :mode mode)
 		 latent-states)))
     latent-states))
