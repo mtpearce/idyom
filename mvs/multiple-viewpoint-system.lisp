@@ -328,24 +328,23 @@ the supplied parameters."
 (defmethod model-dataset ((m mvs) dataset &key construct? predict?)
   "Models a dataset <dataset> (a vector of sequence vectors) given the
 multiple-viewpoint system <m>."
-  (labels ((model-d (dataset sequence-index prediction-sets)
+  (labels ((model-d (dataset sequence-index)
              (when *debug* (format t "~&Composition ~A~%" sequence-index))
-             (if (null dataset) (reverse prediction-sets)
-                 (let ((prediction-set (model-sequence m (coerce (car dataset) 'list)
-                                                       :construct? construct?
-                                                       :predict? predict?)))
-		   (when *output-csv*
-		     (mapcar
-		      (lambda (sp)
-			(mapcar #'prediction-sets::output-prediction
-				(prediction-sets:prediction-set sp)))
-		      prediction-set))
-                   (unless (= sequence-index 1)
-                     (operate-on-models m #'increment-sequence-front))
-                   (operate-on-models m #'reinitialise-ppm :models 'stm)
-                     (model-d (cdr dataset) (1- sequence-index)
-                              (cons prediction-set prediction-sets))))))
-    (dataset-prediction-sets m (model-d dataset (length dataset) '()))))
+             (unless (null dataset)
+	       (let ((prediction-set (model-sequence m (coerce (car dataset) 'list)
+						     :construct? construct?
+						     :predict? predict?)))
+		 (when *output-csv*
+		   (mapcar
+		    (lambda (sp)
+		      (mapcar #'prediction-sets::output-prediction
+			      (prediction-sets:prediction-set sp)))
+		    prediction-set))
+		 (unless (= sequence-index 1)
+		   (operate-on-models m #'increment-sequence-front))
+		 (operate-on-models m #'reinitialise-ppm :models 'stm)
+		 (model-d (cdr dataset) (1- sequence-index))))))
+    (dataset-prediction-sets m (model-d dataset (length dataset)))))
 
 (defmethod model-sequence ((m mvs) sequence &key construct? predict? 
                            (construct-from 0) (predict-from 0))
