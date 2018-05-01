@@ -330,6 +330,9 @@ the supplied parameters."
 multiple-viewpoint system <m>."
   (labels ((model-d (dataset sequence-index)
              (when *debug* (format t "~&Composition ~A~%" sequence-index))
+	     ;; Run garbage collection to clean up any left-over garbage from
+	     ;; modelling the previous sequence.
+	     (sb-ext:gc :full t)
              (unless (null dataset)
 	       (let ((prediction-set (model-sequence m (coerce (car dataset) 'list)
 						     :construct? construct?
