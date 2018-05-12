@@ -155,7 +155,7 @@
     (loop for pair in distribution do
 	 (let ((parameter (car pair))
 	       (p (cadr pair)))
-	   (format t "~A, ~A, ~A, ~A, event-prediction, ~A, ~A, ~A, ~F~%"
+	   (format t "~A,~A,~A,~A,event-prediction,~A,~A,~A,~F~%"
 		   dataset-id composition-id partition-id event-id
 		   basic-viewpoint-name element parameter p)))))
 
@@ -170,7 +170,7 @@
     (loop for pair in distribution do
 	 (let ((parameter (car pair))
 	       (p (cadr pair)))
-	   (format t "~A, ~A, ~A, ~A, event-prediction, ~A, ~A, ~A, ~F~%"
+	   (format t "~A,~A,~A,~A,event-prediction,~A,~A,~A,~F~%"
 		   dataset-id composition-id NIl event-id
 		   basic-viewpoint-name element parameter p)))))
 
@@ -379,8 +379,8 @@
            (weights (weights relative-entropies bias))
            (weighted-distributions
             (weight-distributions distributions weights)))
-      (values (normalise-distribution
-               (combine-distributions weighted-distributions))
+      (values (if mvs::*normalisation-hack* (combine-distributions weighted-distributions)
+		  (normalise-distribution (combine-distributions weighted-distributions)))
               weights))))
 
 (defun bayesian-combination (distributions &optional bias)
