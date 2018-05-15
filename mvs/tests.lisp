@@ -99,23 +99,23 @@
 
 (5am:test make-mvs-normal
   (let* ((dataset (random-event-sequences :barlength 3 :pulses 1))
-	 (targets (viewpoints:get-basic-viewpoints '(onset) dataset))
+	 (targets (viewpoints:get-target-viewpoints '(onset) dataset))
 	 (sources (viewpoints:get-viewpoints '(ioi posinbar)))
 	 (ltms (mapcar (lambda (viewpoint) (mvs-model dataset viewpoint))
 		       sources))
 	 (mvs (make-mvs targets sources ltms)))
-    (5am:is (equal (map 'list #'viewpoints:viewpoint-name (mvs-basic mvs))
+    (5am:is (equal (map 'list #'viewpoints:viewpoint-name (mvs-target mvs))
 		   (mapcar #'viewpoints:viewpoint-name targets)))
     (5am:is (equal (map 'list #'viewpoints:viewpoint-name (mvs-viewpoints mvs))
 		   (mapcar #'viewpoints:viewpoint-name sources)))
     (5am:is (typep (slot-value mvs 'ltm) 'vector))
     (5am:is (typep (slot-value mvs 'stm) 'vector))
-    (5am:is (typep (mvs-basic mvs) 'list))
+    (5am:is (typep (mvs-target mvs) 'list))
     (5am:is (typep (mvs-viewpoints mvs) 'vector))
-    ;; Using basic features not predicted by any of the viewpoints raises a warning.
+    ;; Using target features not predicted by any of the viewpoints raises a warning.
     (let* ((sources (viewpoints:get-viewpoints '(cpint))))
       (5am:signals warning (make-mvs targets sources nil)))
-    ;; Using a viewpoint that does not predict any basic features raises a warning.
+    ;; Using a viewpoint that does not predict any target features raises a warning.
     (let* ((sources (viewpoints:get-viewpoints '(ioi cpint))))
       (5am:signals warning (make-mvs targets sources nil)))))
 
@@ -127,7 +127,7 @@ latent variable, namely meter.
 Test whether MAKE-MVS initialises the slot values of ABSTRACT-MVS correctly."
   (let* ((2-rhythms (random-event-sequences :barlength 2 :pulses 2 :amount 8))
 	 (3-rhythms (random-event-sequences :barlength 3 :pulses 1 :amount 6))
-	 (targets (viewpoints:get-basic-viewpoints '(onset)
+	 (targets (viewpoints:get-target-viewpoints '(onset)
 						   (append 2-rhythms 3-rhythms))))
     (5am:with-fixture metre-categories ()
       ;; Adding non-abstract viewpoints to an abstract mvs raises an error
@@ -152,7 +152,7 @@ Test whether MAKE-MVS initialises the slot values of ABSTRACT-MVS correctly."
 			     :viewpoint-latent-variables (list metre))))
 	  (5am:is (eq (type-of (slot-value mvs 'ltm)) 'hash-table))
 	  (5am:is (eq (type-of (slot-value mvs 'stm)) 'hash-table))
-	  (5am:is (typep (mvs-basic mvs) 'list))
+	  (5am:is (typep (mvs-target mvs) 'list))
 	  (5am:is (typep (mvs-viewpoints mvs) 'vector))
 	  (5am:is (every #'models-equal
 			 (list (gethash '(lv::metre 2 2) (slot-value mvs 'ltm))
@@ -179,7 +179,7 @@ Test whether MAKE-MVS initialises the slot values of ABSTRACT-MVS correctly."
 					    :amount 8 :description "afrocuban"))
 	 (3-rhythms (random-event-sequences :barlength 3 :pulses 1
 					    :amount 6 :description "afrocuban"))
-	 (targets (viewpoints:get-basic-viewpoints '(onset cpitch)
+	 (targets (viewpoints:get-target-viewpoints '(onset cpitch)
 						  (append 2-rt-rhythms 2-rhythms 3-rhythms))))
   (5am:with-fixture metre-style-key-categories ()
       (let* ((abs-posinbar-bardist (viewpoints:get-viewpoint '(abs-posinbar bardist)))
@@ -261,7 +261,7 @@ Test whether MAKE-MVS initialises the slot values of ABSTRACT-MVS correctly."
 					    :amount 8 :description "afrocuban"))
 	 (3-rhythms (random-event-sequences :barlength 3 :pulses 1
 					    :amount 6 :description "afrocuban"))
-	 (targets (viewpoints:get-basic-viewpoints '(onset cpitch)
+	 (targets (viewpoints:get-target-viewpoints '(onset cpitch)
 						   (append 2-rt-rhythms 2-rhythms 3-rhythms))))
     (5am:with-fixture metre-style-key-categories ()
       (let* ((metre-key (lv:get-latent-variable '(metre key)))
@@ -323,7 +323,7 @@ sequence to results calculated with normal MVS instances for each category."
     (let* ((2-rhythms (random-event-sequences :barlength 2 :pulses 2 :amount 8))
 	   (3-rhythms (random-event-sequences :barlength 3 :pulses 1 :amount 6))
 	   (event-sequence (viewpoints::iois->onset-events '(0 3 3 2 1 3 3)))
-	   (targets (viewpoints:get-basic-viewpoints '(onset) (append (list event-sequence)
+	   (targets (viewpoints:get-target-viewpoints '(onset) (append (list event-sequence)
 								      2-rhythms 3-rhythms)))
 	   (latent-variable (lv:get-latent-variable 'metre))
 	   (source (viewpoints:get-viewpoint '(bardist abs-posinbar)))
@@ -519,7 +519,7 @@ sequence to results calculated with normal MVS instances for each category."
 	 (event-sequence (viewpoints::iois->onset-events '(0 3 2 1 3 3 3)
 							 :cpitches
 							 '(80 75 75 76 75 79)))
-    	 (targets (viewpoints:get-basic-viewpoints '(onset cpitch)
+    	 (targets (viewpoints:get-target-viewpoints '(onset cpitch)
 						   (append (list event-sequence)
 							   2-rt-rhythms 2-rhythms 3-rhythms))))
     (5am:with-fixture metre-style-key-categories ()
@@ -660,12 +660,12 @@ sequence to results calculated with normal MVS instances for each category."
 (5am:test joint-interpretation-likelihoods 
     (let ((event-interpretation-predictions
 	   (list
-	    ;; Basic viewpoint 1.
+	    ;; Target viewpoint 1.
 	    (mapcar (lambda (event set) (make-instance 'event-prediction :event event
 						       :element 0 :set set))
 		    '((0 0 0) (1 0 0) (2 0 0))
 		    '(((0 0.3) (1 0.7)) ((0 0.5) (1 0.5)) ((0 0.8) (1 0.2))))
-	    ;; Basic viewpoint 2
+	    ;; Target viewpoint 2
 	    (mapcar (lambda (event set) (make-instance 'event-prediction :event event
 						       :element 0 :set set))
 		    '((0 0 0) (1 0 0) (2 0 0))
@@ -679,16 +679,16 @@ sequence to results calculated with normal MVS instances for each category."
 
 (5am:test get-event-predictions
   (let ((mvs (make-instance 'generative-mvs :mvs
-			    (make-instance 'abstract-mvs :basic '(0 1))))
+			    (make-instance 'abstract-mvs :target '(0 1))))
 	(sequence-interpretation-predictions
 	 (list
 	  ;; Interpretation 1
 	  (list
-	   ;; Basic viewpoint 1
+	   ;; Target viewpoint 1
 	   (make-instance 'sequence-prediction :set
 			  (list (make-instance 'event-prediction :event '(1 1 1))
 				(make-instance 'event-prediction :event '(1 1 2))))
-	   ;; Basic viewpoint 2
+	   ;; Target viewpoint 2
 	   (make-instance 'sequence-prediction :set
 			  (list (make-instance 'event-prediction :event '(1 2 1))
 				(make-instance 'event-prediction :event '(1 2 2)))))
@@ -712,20 +712,20 @@ sequence to results calculated with normal MVS instances for each category."
       (5am:is (eq (length (first event-interpretation-predictions)) 3))
       (let ((events (mapcar (lambda (p) (mapcar #'prediction-event p))
 			    event-interpretation-predictions)))
-	;; event: (interpretation basic-viewpoint event-index)
+	;; event: (interpretation target-viewpoint event-index)
 	(5am:is (equal events
-		       '(;; Basic viewpoint 1
+		       '(;; Target viewpoint 1
 			 ((1 1 1) (2 1 1) (3 1 1))
-			 ;; Basic viewpoint 2
+			 ;; Target viewpoint 2
 			 ((1 2 1) (2 2 1) (3 2 1)))))))
     (let* ((event-interpretation-predictions
 	    (get-event-predictions sequence-interpretation-predictions 1 mvs))
 	   (events (mapcar (lambda (p) (mapcar #'prediction-event p))
 			   event-interpretation-predictions)))
       (5am:is (equal events
-		     '(;; Basic viewpoint 1
+		     '(;; Target viewpoint 1
 		       ((1 1 2) (2 1 2) (3 1 2))
-		       ;; Basic viewpoint 2
+		       ;; Target viewpoint 2
 		       ((1 2 2) (2 2 2) (3 2 2))))))))
 
 (defun sequence-predictions->event-likelihoods (sequence-predictions)

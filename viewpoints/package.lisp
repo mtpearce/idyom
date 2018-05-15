@@ -6,7 +6,7 @@
            #:viewpoint-element #:viewpoint-sequence  #:viewpoint-sequences 
            #:viewpoint-alphabet #:viewpoint-typeset  #:viewpoint-links 
            #:set-alphabet-from-context #:set-alphabet-from-dataset
-           #:alphabet->events #:get-basic-viewpoints
+           #:alphabet->events #:get-target-viewpoints
            #:set-onset-alphabet
            #:viewpoint-name #:viewpoint-type
            #:inverse-viewpoint-function-defined-p #:basic-element

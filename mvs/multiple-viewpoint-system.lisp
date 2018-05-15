@@ -40,14 +40,13 @@
 (cl:in-package #:mvs)
 
 (defvar *debug* nil)
-(defparameter *normalisation-hack* nil "If True, basic distributions obtained from derived distributions are not normalized such that if the basic->derived mapping is many to one, the basic distribution sums to more than one. This is a hacky way of predicting a derived type rather than a basic type.")
 
 ;;;========================================================================
 ;;; Data Structures
 ;;;========================================================================
 
 (defclass mvs ()
-  ((basic :reader mvs-basic :initarg :basic :type list)
+  ((target :reader mvs-target :initarg :target :type list)
    (viewpoints :reader mvs-viewpoints :initarg :viewpoints
                :type (vector viewpoints:viewpoint))
    (ltm :reader mvs-ltm :initarg :ltm :type (vector ppm))
@@ -188,8 +187,8 @@ See also VIEWPOINTS:SET-ALPHABET-FROM-CONTEXT."
            (-1 viewpoint)
            ;; 0 = basic viewpoints in typeset of current viewpoint (and their derived viewpoints)
            (0 (mapcar #'viewpoints:get-viewpoint (viewpoints:viewpoint-typeset viewpoint)))
-           ;; 1 = basic viewpoints in MVS (and their derived viewpoints)
-           (1 (mvs-basic m)) 
+           ;; 1 = target viewpoints in MVS (and their derived viewpoints)
+           (1 (mvs-target m)) 
            ;; 2 = all basic viewpoints (and their derived viewpoints) 
            (2 (mapcar #'viewpoints:get-viewpoint (viewpoints:get-basic-types event)))
            ;; 3 = a specified list of basic viewpoints         
@@ -207,7 +206,7 @@ See also VIEWPOINTS:SET-ALPHABET-FROM-CONTEXT."
   
 (defmethod get-basic-viewpoint ((m mvs) derived-viewpoint)
   (find-if #'(lambda (b) (viewpoints:in-typeset-p b derived-viewpoint))   
-           (mvs-basic m)))
+           (mvs-target m)))
 
 (defmethod sequence-prediction-sets ((m mvs) events event-prediction-sets)
   (let ((index (md:get-composition-index (md:get-identifier (car events)))))
@@ -216,40 +215,38 @@ See also VIEWPOINTS:SET-ALPHABET-FROM-CONTEXT."
                      (make-sequence-prediction :viewpoint (car e)
                                                :index index
                                                :set (cdr e)))
-                 (cons (mvs-basic m) event-prediction-sets)))))
+                 (cons (mvs-target m) event-prediction-sets)))))
 
 (defmethod dataset-prediction-sets ((m mvs) sequence-prediction-sets)
   (apply #'mapcar
          (cons #'(lambda (&rest c)
                    (make-dataset-prediction :viewpoint (car c)
                                             :set (cdr c)))
-               (cons (mvs-basic m) sequence-prediction-sets))))
+               (cons (mvs-target m) sequence-prediction-sets))))
 
 
 ;;;========================================================================
 ;;; Model Initialisation 
 ;;;========================================================================
 
-(defun make-mvs (basic-viewpoints viewpoints ltms
+(defun make-mvs (target-viewpoints viewpoints ltms
 		 &key (class 'mvs) latent-variable)
-  "Instantiate a multiple viewpoint system with basic viewpoints BASIC-VIEWPOINTS, 
+  "Instantiate a multiple viewpoint system with target viewpoints TARGET-VIEWPOINTS, 
 basic or derived viewpoints VIEWPOINTS, and a set of long-term models LTMS, with one model 
 for each viewpoint in VIEWPOINTS. :CLASS can be used to specify subclasses of MVS."
-  (flet ((sanity-check-basic-viewpoints ()
-           (dolist (bv basic-viewpoints basic-viewpoints)
-             (unless (find (type-of bv) viewpoints 
-                           :key #'viewpoints:viewpoint-typeset
-                           :test #'(lambda (x y) (member x y)))
-               (warn "~&None of the supplied viewpoints can predict basic feature ~A.~%"
-                     (viewpoints:viewpoint-name bv)))))
+  (flet ((sanity-check-target-viewpoints ()
+           (dolist (tv target-viewpoints target-viewpoints)
+             (unless (find (viewpoint-typeset tv) viewpoints 
+                           :key #'viewpoint-typeset
+                           :test #'(lambda (x y) (subsetp x y)))
+               (warn "~&None of the supplied viewpoints can predict target feature ~A.~%"
+                     (viewpoints:viewpoint-name tv)))))
          (sanity-check-viewpoints ()
            (dolist (v viewpoints viewpoints)
-             (unless (some #'(lambda (bv) 
-                               (find (type-of bv) 
-                                     (viewpoints:viewpoint-typeset v)
-                                     :test #'eql))
-                           basic-viewpoints)
-               (warn "~&Viewpoint ~A cannot predict any of the supplied basic features.~%"
+             (unless (some #'(lambda (tv)
+			       (subsetp (viewpoint-typeset tv) (viewpoint-typeset v)))
+                           target-viewpoints)
+               (warn "~&Viewpoint ~A cannot predict any of the supplied target features.~%"
                      (viewpoints:viewpoint-name v))))))
     ;;(format t "~&MAKE-MVS: basic-viewpoints = ~A~&MAKE-MVS: viewpoints = ~A"
     ;;        (sanity-check-basic-viewpoints) 
@@ -277,7 +274,7 @@ for each viewpoint in VIEWPOINTS. :CLASS can be used to specify subclasses of MV
       ;; Instantiate the class.
       (let ((mvs (apply #'make-instance
 			(append (list class
-				      :basic (sanity-check-basic-viewpoints)
+				      :target (sanity-check-target-viewpoints)
 				      :viewpoints (apply #'vector 
 							 (sanity-check-viewpoints)))
 				
@@ -486,31 +483,33 @@ multiple viewpoint system <m>."
 
 (defun combine-viewpoint-predictions (mvs prediction-sets events model)
   ;;(format t "~&Viewpoint Combination: ~A ~A~%" model prediction-sets)
-  (flet ((basic-prediction-set (prediction-sets basic-viewpoint)
-           (find-if #'(lambda (p) (viewpoints:viewpoint-equal p basic-viewpoint))
+  (flet ((basic-prediction-set (prediction-sets target-viewpoint)
+           (find-if #'(lambda (p) (viewpoints:viewpoint-equal p target-viewpoint))
                     prediction-sets :key #'prediction-viewpoint))
-         (derived-prediction-sets (prediction-sets basic-viewpoint)
+         (derived-prediction-sets (prediction-sets target-viewpoint)
            (remove-if #'(lambda (ps) 
                           (let ((v (prediction-viewpoint ps)))
                             ;;(format t "~&dps: ~A ~A" basic-viewpoint v)
                             (or (viewpoints:basic-p v) 
                                 (not 
-                                 (viewpoints:in-typeset-p basic-viewpoint v)))))
+                                 (subsetp (viewpoint-typeset target-viewpoint)
+					  (viewpoint-typeset v))))))
                       prediction-sets)))
-    (let ((basic-viewpoints (mvs-basic mvs))
+    (let ((target-viewpoints (mvs-target mvs))
           (distributions '()))
-      (dolist (basic-viewpoint basic-viewpoints)
+      (dolist (target-viewpoint target-viewpoints)
         (let* ((derived-viewpoints
                 (coerce (remove-if-not #'(lambda (v) 
-                                           (or (viewpoint-equal basic-viewpoint v)
-                                               (in-typeset-p basic-viewpoint v)))
+                                           (or (viewpoint-equal target-viewpoint v)
+					       (subsetp (viewpoint-typeset target-viewpoint)
+							(viewpoint-typeset v))))
                                        (mvs-viewpoints mvs))
                         'list))
                (derived-prediction-sets
-                (derived-prediction-sets prediction-sets basic-viewpoint))
+                (derived-prediction-sets prediction-sets target-viewpoint))
                (basic-prediction-set
-                (basic-prediction-set prediction-sets basic-viewpoint))
-               (basic-distributions (unless (null basic-prediction-set) 
+                (basic-prediction-set prediction-sets target-viewpoint))
+               (target-distributions (unless (null basic-prediction-set) 
                                       (list basic-prediction-set))))
           ;;(format t "~&~A: ~A ~A~%" basic-viewpoint 
           ;;        basic-prediction-set
@@ -525,131 +524,108 @@ multiple viewpoint system <m>."
 	      (push 
                (combine-viewpoint-distributions
                 (mapcar #'(lambda (v)
-                            (make-custom-event-prediction basic-viewpoint v events :flat))
+                            (make-custom-event-prediction target-viewpoint v events :flat))
                         derived-viewpoints)
                 model)
                distributions)
               ;; Otherwise...
               (progn 
                 (dolist (derived-prediction-set derived-prediction-sets)
-                  (let ((basic-distribution
-                         (derived->basic derived-prediction-set basic-viewpoint
-                                         events)))
+                  (let ((target-distribution
+                         (derived->target derived-prediction-set target-viewpoint
+					  events)))
                     ;;(format t "~&Derived distribution: ~A~%" (prediction-set derived-prediction-set))
                     ;;(format t "~&Basic distribution: ~A~%" (prediction-set basic-distribution))
-                    (unless (null basic-distribution)
-                      (cache-ep (prediction-set basic-distribution) model 
+                    (unless (null target-distribution)
+                      (cache-ep (prediction-set target-distribution) model 
                                 (viewpoint-type 
                                  (prediction-viewpoint derived-prediction-set))
                                 (car (last events)))
-                      (push basic-distribution basic-distributions))))
+                      (push target-distribution target-distributions))))
                 (dolist (v derived-viewpoints)
-                  (unless (find v basic-distributions :key #'prediction-viewpoint :test #'viewpoint-equal)
-                    (push (make-custom-event-prediction basic-viewpoint v events :empty) basic-distributions)))
-                (push (combine-viewpoint-distributions basic-distributions model)
+                  (unless (find v target-distributions :key #'prediction-viewpoint :test #'viewpoint-equal)
+                    (push (make-custom-event-prediction target-viewpoint v events :empty) target-distributions)))
+                (push (combine-viewpoint-distributions target-distributions model)
                       distributions)))))
       ;; (format t "~&Combined viewpoint distributions = ~A~%" (mapcar #'prediction-sets:prediction-set (reverse distributions)))
       (reverse distributions))))
 
-(defun make-custom-event-prediction (basic-viewpoint viewpoint events type)
+(defun make-custom-event-prediction (target-viewpoint viewpoint events type)
   "TYPE can be :FLAT or :EMPTY."
   (make-event-prediction
-   :basic-viewpoint basic-viewpoint
+   :target-viewpoint target-viewpoint
    :order (case type (:flat 0) (:empty "NA"))  ; (list (list (format nil "~A.~(~A~).~A" "order" model (viewpoint-name basic-viewpoint)) 0))
    :viewpoint viewpoint
    :weights nil
    :event (car (last events))
-   :element (viewpoint-element basic-viewpoint events)
+   :element (viewpoint-element target-viewpoint events)
    :set (case type
-          (:flat (prediction-sets:flat-distribution (viewpoints:viewpoint-alphabet basic-viewpoint)))
+          (:flat (prediction-sets:flat-distribution (viewpoints:viewpoint-alphabet target-viewpoint)))
           (:empty nil))))
-          
 
-(defun derived->basic (derived-prediction-set basic-viewpoint events)
-  "Given a prediction set <derived-prediction-set> for a derived
-viewpoint returns a probability distribution over the alphabet of
-<basic-viewpoint> (which is in the typeset of the derived viewpoint)
-given a sequence of events <sequence>."
-  (let* ((derived-viewpoint (prediction-viewpoint derived-prediction-set))
-         (derived-distribution (prediction-set derived-prediction-set))
-         (basic-alphabet (viewpoint-alphabet basic-viewpoint))
-         (basic-distribution (make-hash-table :test #'equal)))
-    (when *debug* 
-      (format t "~&derived->basic: ~A (~A) = ~&~A~%" (viewpoint-name derived-viewpoint) 
-              (prediction-element derived-prediction-set) derived-distribution)
-      (format t "~&Basic viewpoint: ~A: ~A~%" basic-viewpoint basic-alphabet))
-    (if (viewpoints:inverse-viewpoint-function-defined-p derived-viewpoint)
-        ;; There is an inverse viewpoint function defined, use it
-        (dolist (ep derived-distribution) 
-          (let* ((e (nth 0 ep))
-                 (p (nth 1 ep))
-                 (basic-elements 
-                  (viewpoints:basic-element derived-viewpoint basic-viewpoint 
-                                            e events))
-                 (p (unless (or (null basic-elements) (undefined-p e)) 
-                      (/ p (length basic-elements)))))
-            ;;(when *debug*
-            ;;  (format t "~&e = ~A; old-p = ~A; l = ~A; p = ~A~%" 
-            ;;          e (nth 1 ep) (length basic-elements) p))
-            (dolist (be basic-elements) 
-              (if (gethash be basic-distribution)
-                  (incf (gethash be basic-distribution) p)
-                  (setf (gethash be basic-distribution) p)))))
-        ;; no inverse viewpoint function defined so compute mapping
-        (let ((mapping (mapping derived-viewpoint basic-viewpoint events)))
-          (when *debug* (format t "~&mapping = ~A~%" mapping))
-          (dolist (map mapping)
-            (let* ((derived-element (car map))
-                   (basic-elements (nth 1 map))
-                   (probability (nth 1 (assoc derived-element derived-distribution
-                                              :test #'equal)))
-		   (basic-probability (if *normalisation-hack*
-					  probability
-					  (/ probability (length basic-elements)))))
-	      (dolist (be basic-elements)
-                (if (gethash be basic-distribution)
-                    (incf (gethash be basic-distribution) basic-probability)
-                    (setf (gethash be basic-distribution) basic-probability)))))))
-    (let* ((viewpoint-element (viewpoint-element basic-viewpoint events))
-	   (distribution
-	    (remove nil (mapcar #'(lambda (a) (list a (gethash a basic-distribution)))
-				basic-alphabet) :key #'cadr))
-	   (distribution (if *normalisation-hack*
-			     distribution
-			     (normalise-distribution distribution))))
-      (when *debug* 
-        (format t "~&~A (~A) = ~&~A~%" (viewpoint-name basic-viewpoint)
-                viewpoint-element distribution))
-      (make-event-prediction
-       :basic-viewpoint basic-viewpoint
-       :viewpoint derived-viewpoint
-       :order (prediction-sets:prediction-order derived-prediction-set)
-       :weights (prediction-sets:prediction-weights derived-prediction-set)
-       :event (car (last events))
-       :element viewpoint-element
-       :set distribution))))
-
-(defun mapping (derived-viewpoint basic-viewpoint events)
-  "Returns an alist whose keys are the elements of the alphabet of
-<derived-viewpoint> and whose values are lists containing those
-elements of the alphabet of <basic-viewpoint> which map to the
-relevent derived alphabet given a list of events <sequence> and a set
-of single event continuations over the basic alphabet."
-  (let* ((derived-alphabet (viewpoint-alphabet derived-viewpoint))
-         (continuations (viewpoints:alphabet->events basic-viewpoint events))
-         (mappings '()))
-    (dolist (derived-element derived-alphabet mappings)
-      (let ((mapping '()))
-        (dolist (continuation continuations)
-          (let* ((temp-comp (append (butlast events) (list continuation)))
-                 (viewpoint-element
-                  (viewpoint-element derived-viewpoint temp-comp))
-                 (basic-element (viewpoint-element basic-viewpoint temp-comp)))
-            (when (viewpoints:viewpoint-element-equal basic-viewpoint
-                                           derived-viewpoint
-                                           viewpoint-element
-                                           derived-element)
-              (push basic-element mapping))))
-        (unless (null mapping)
-          (push (list derived-element mapping) mappings))))))
+(defun derived->target (source-prediction-set target-viewpoint events)
+  (unless (viewpoints:basic-p target-viewpoint)
+    (set-alphabet-from-context target-viewpoint events
+			       (get-viewpoints (viewpoint-typeset target-viewpoint))))
+  (let* ((source-viewpoint (prediction-viewpoint source-prediction-set))
+	 (source-distribution (prediction-set source-prediction-set))
+	 (target-alphabet (viewpoint-alphabet target-viewpoint))
+	 (source-alphabet (viewpoint-alphabet source-viewpoint))
+	 (basic-viewpoint (get-viewpoint (viewpoint-typeset source-viewpoint)))
+	 (continuations (alphabet->events basic-viewpoint events))
+	 (target-basic-mapping (make-hash-table :test #'equal))
+	 (source-basic-mapping (make-hash-table :test #'equal))
+	 (basic-distribution (make-hash-table :test #'equal))
+	 (target-distribution))
+    (assert (subsetp (viewpoint-typeset target-viewpoint)
+		     (viewpoint-typeset source-viewpoint)))
+ ;   (format t "Target alphabet: ~A~%" (viewpoint-alphabet target-viewpoint))
+					;
+ ;   (format t "Source alphabet: ~A~%" (viewpoint-alphabet source-viewpoint))
+ ;   (format t "Source distribution: ~A~%" source-distribution)
+    ;; Create source to basic and target to basic mappings
+    ;; TODO: use inverse viewpoint function if defined
+    (loop for continuation in continuations do
+	 (let* ((temp-comp (append (butlast events) (list continuation)))
+		(target-element (viewpoint-element target-viewpoint temp-comp))
+		(source-element (viewpoint-element source-viewpoint temp-comp))
+		(basic-element (viewpoint-element basic-viewpoint temp-comp))
+		(basic-elements-for-target (gethash target-element target-basic-mapping ()))
+		(basic-elements-for-source (gethash source-element source-basic-mapping ())))
+	   (setf (gethash target-element target-basic-mapping)
+		 (cons basic-element basic-elements-for-target))
+	   (setf (gethash source-element source-basic-mapping)
+		 (cons basic-element basic-elements-for-source))))
+ ;   (format t "Source-basic mapping:~%~{~A~}" (loop for e in source-alphabet collect
+;						   (format nil "~A: ~{~A~^, ~}~%" e
+;							   (gethash e source-basic-mapping))))
+;    (format t "Target-basic mapping:~%~{~A~}" (loop for e in target-alphabet collect
+;						   (format nil "~A: ~{~A~^, ~}~%" e
+;							   (gethash e target-basic-mapping))))
+    ;; Construct the basic distribution
+    (loop for source-element in source-alphabet do
+	 (let* ((basic-elements (gethash source-element source-basic-mapping))
+		(source-probability (nth 1 (assoc source-element source-distribution
+						  :test #'equal)))
+		(basic-probability (/ source-probability (length basic-elements))))
+	   (dolist (be basic-elements)
+	     (incf (gethash be basic-distribution 0) basic-probability))))
+    ;; TODO: if target viewpoint == basic viewpoint skip the next step
+    ;; Construct the target distribution from the basic distribution
+    (loop for target-element in target-alphabet do
+	 (let* ((basic-elements (gethash target-element target-basic-mapping))
+		(basic-probabilities (mapcar (lambda (be)
+					       (gethash be basic-distribution 0))
+					     basic-elements))
+		(target-probability (apply #'+ basic-probabilities)))
+	   (push (list target-element target-probability) target-distribution)))
+;    (format t "Target distribution: ~A~%" target-distribution)
+    (make-event-prediction
+     :target-viewpoint target-viewpoint
+     :viewpoint source-viewpoint
+     :order (prediction-sets:prediction-order source-prediction-set)
+     :weights (prediction-sets:prediction-weights source-prediction-set)
+     :event (car (last events))
+     :element (viewpoint-element target-viewpoint events)
+     :set target-distribution)))
    

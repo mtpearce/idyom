@@ -32,7 +32,7 @@
 ;; DATASET GENERATION 
 ;; ========================================================================
 
-(defun dataset-generation (dataset-id basic-attributes attributes base-id
+(defun dataset-generation (dataset-id target-attributes attributes base-id
                            &key
                              (models :both+)
                              (method :metropolis)
@@ -49,7 +49,7 @@
   (let* ((dataset (md:get-event-sequences (list dataset-id)))
          (pretraining-set (get-pretraining-set pretraining-ids))
          (viewpoints (get-viewpoints attributes))
-         (basic-viewpoints (get-basic-viewpoints basic-attributes 
+         (target-viewpoints (get-target-viewpoints target-attributes 
                                                  (append dataset pretraining-set)))
          (resampling-set (generate-resampling-set dataset base-id))
          (training-set (get-training-set dataset resampling-set))
@@ -58,7 +58,7 @@
          (ltms (get-long-term-models viewpoints training-set pretraining-ids
                                      dataset-id (format nil "~Agen" base-id)
                                      nil nil nil use-ltms-cache?))
-         (mvs (make-mvs basic-viewpoints viewpoints ltms))
+         (mvs (make-mvs target-viewpoints viewpoints ltms))
          (context-length (if (and (null context-length) (eql method :random))
                              (get-context-length (car test-set))
                              context-length))

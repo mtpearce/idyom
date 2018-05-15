@@ -79,7 +79,7 @@
          ;; viewpoints
          (sources (get-viewpoints source-viewpoints))
 	 (targets
-          (viewpoints:get-basic-viewpoints target-viewpoints (append dataset pretraining-set)))
+          (viewpoints:get-target-viewpoints target-viewpoints (append dataset pretraining-set)))
 	 ;; resampling sets
 	 (k (if (eq k :full) (length dataset) k))
 	 (resampling-sets (if (or (null generative-model)
@@ -129,6 +129,7 @@
 	       (predictions (mvs:model-dataset mvs test-set :construct? nil :predict? t)))
 	  (push predictions sequence-predictions)))
       (incf resampling-id))))
+
 
 (defun check-model-defaults (defaults &key
 			      (order-bound (getf defaults :order-bound))

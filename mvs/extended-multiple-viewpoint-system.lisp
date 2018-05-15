@@ -34,26 +34,26 @@ latent states, and apply the method to the abstract-mvs."))
 ;;; Model Initialisation 
 ;;;========================================================================
 
-(defun get-predictive-system (basic-viewpoints viewpoints
+(defun get-predictive-system (target-viewpoints viewpoints
 			      generative-viewpoints latent-variables
 			      ltms generative-ltms)
-  (let* ((targets (remove-if (lambda (b)
-			       (not (find (type-of b) viewpoints
-					  :key #'viewpoints:viewpoint-typeset
-					  :test #'(lambda (x y) (member x y)))))
-			     basic-viewpoints))
-	 (generative-models (get-generative-mvs-models basic-viewpoints
+  (let* ((targets (remove-if (lambda (tv)
+			       (not (find (viewpoint-typeset tv) viewpoints
+					  :key #'viewpoint-typeset
+					  :test #'(lambda (x y) (subsetp x y)))))
+			     target-viewpoints))
+	 (generative-models (get-generative-mvs-models target-viewpoints
 						       generative-viewpoints
 						       latent-variables generative-ltms)))
     (cond ((and (null targets)
 		(null viewpoints)) ; is the case when only using generative systems
-	   (make-instance 'combined-mvs :basic basic-viewpoints
+	   (make-instance 'combined-mvs :target target-viewpoints
 			  :mvs-models generative-models))
 	  ((null generative-models) ; is the case when only using sequential prediction
 	   (make-mvs targets viewpoints
 		     ltms))
 	  (t (make-instance 'combined-mvs
-			    :basic basic-viewpoints
+			    :target target-viewpoints
 			    :mvs-models
 			    (cons (make-mvs targets
 					    viewpoints ltms)
@@ -65,10 +65,10 @@ latent states, and apply the method to the abstract-mvs."))
      for sources in generative-viewpoints
      for latent-variable in latent-variables
      for ltms in generative-ltms collect
-       (let ((targets (remove-if (lambda (target)
-				   (not (find (type-of target) sources
-					      :key #'viewpoints:viewpoint-typeset
-					      :test #'(lambda (x y) (member x y)))))
+       (let ((targets (remove-if (lambda (tv)
+				   (not (find (viewpoint-typeset tv) sources
+					      :key #'viewpoint-typeset
+					      :test #'(lambda (x y) (subsetp x y)))))
 				 targets)))
 	 (when (null targets)
 	   (warn "~&No predictable targets available for generative system with latent variable
@@ -98,8 +98,8 @@ latent states, and apply the method to the abstract-mvs."))
     (let ((category (lv:get-latent-category (latent-variable m))))
       (gethash category (slot-value m 'stm)))))
 
-(defmethod mvs-basic ((m generative-mvs))
-  (mvs-basic (abstract-mvs m)))
+(defmethod mvs-target ((m generative-mvs))
+  (mvs-target (abstract-mvs m)))
 
 (defmethod latent-variable ((m generative-mvs))
   (latent-variable (abstract-mvs m)))
@@ -162,10 +162,10 @@ for each target viewpoint) for each latent state."
 (defmethod get-event-predictions (sequence-interpretation-predictions event-index
 				  (m generative-mvs))
   (let ((event-interpretation-predictions))
-    (dotimes (bv-index (length (mvs-basic m)))
+    (dotimes (tv-index (length (mvs-target m)))
       (push (mapcar (lambda (sequence-interpretation-prediction)
 		      (elt (prediction-set
-			    (elt sequence-interpretation-prediction bv-index))
+			    (elt sequence-interpretation-prediction tv-index))
 			   event-index))
 		    sequence-interpretation-predictions)
 	    event-interpretation-predictions))
@@ -217,7 +217,7 @@ A sequence-prediction is returned."
 		(marginal-event-predictions (marginalize-event-predictions
 					     prior-distribution events
 					     event-interpretation-predictions
-					     (mvs-basic m))))
+					     (mvs-target m))))
 	   (push marginal-event-predictions sequence-predictions)
 	   (let ((evidence (marginal-likelihood likelihoods
 						prior-distribution)))
@@ -239,29 +239,29 @@ A sequence-prediction is returned."
 				      (apply #'model-sequence
 					     (append (list model events)
 						     other-args)))))
-	 (basic-viewpoints (mvs-basic m))
+	 (target-viewpoints (mvs-target m))
 	 (prediction-sets))
-    ;; Group predictions per basic viewpoint
-    (dolist (basic-viewpoint basic-viewpoints)
+    ;; Group predictions per target viewpoint
+    (dolist (target-viewpoint target-viewpoints)
       (push (remove-if (lambda (ps) (not (eq (type-of
 					      (prediction-viewpoint ps))
-					     (type-of basic-viewpoint))))
+					     (type-of target-viewpoint))))
 		       mvs-predictions)
 	    prediction-sets))
     (let ((combined-predictions))
       (dotimes (index (length events))
-	(let ((combined-basic-predictions))
-	  (dotimes (basic-index (length basic-viewpoints))
+	(let ((combined-target-predictions))
+	  (dotimes (target-index (length target-viewpoints))
 	    (let ((event-predictions (mapcar (lambda (sequence-prediction)
 					       (elt (prediction-set sequence-prediction)
 						    index))
-					     (elt prediction-sets basic-index))))
+					     (elt prediction-sets target-index))))
 	      (push (combine-distributions event-predictions
 					   *mvs-combination*
 					   *mvs-bias*
 					   :mvs)
-		    combined-basic-predictions)))
-	  (push combined-basic-predictions combined-predictions)))
+		    combined-target-predictions)))
+	  (push combined-target-predictions combined-predictions)))
       (sequence-prediction-sets m events (reverse combined-predictions)))))
 
 ;;;========================================================================
@@ -288,10 +288,10 @@ A sequence-prediction is returned."
 		 prior-distribution likelihoods)))
 
 (defun marginalize-event-predictions (prior-distribution events event-predictions
-				      basic-viewpoints)
-  (mapcar #'(lambda (ep bv) (make-marginal-event-prediction prior-distribution
-							    events ep bv))
-	  event-predictions basic-viewpoints))
+				      target-viewpoints)
+  (mapcar #'(lambda (ep tv) (make-marginal-event-prediction prior-distribution
+							    events ep tv))
+	  event-predictions target-viewpoints))
 
 (defun transpose-lists (lists)
   (apply #'mapcar #'list lists))
@@ -299,10 +299,10 @@ A sequence-prediction is returned."
 (defun joint-interpretation-likelihoods (event-interpretation-predictions)
   "<event-interpretation-predictions> is a list whose elements are lists of
 event predictions, one for each interpretation. Each list of event predictions 
-corresponds to a basic viewpoint. Convert this structure to a list where each
-item is the product of the event likelihoods for different basic viewpoints of that
+corresponds to a target viewpoint. Convert this structure to a list where each
+item is the product of the event likelihoods for different target viewpoints of that
 event (obtained from the EVENT-PREDICTION-SET object using EVENT-PREDICTION) for 
-each basic viewpoint and a single interpretation."
+each target viewpoint and a single interpretation."
   (mapcar (lambda (interpretation-predictions)
 	    (apply #'* (mapcar #'cadr (mapcar #'event-prediction interpretation-predictions))))
 	  (transpose-lists event-interpretation-predictions)))
@@ -322,9 +322,9 @@ each basic viewpoint and a single interpretation."
   (format t "Generative MVS (~A): (~{~A~^, ~}) --> (~{~A~^, ~})~%"
 	  (lv:latent-variable-name (latent-variable m))
 	  (map 'list #'viewpoints:viewpoint-name (mvs-viewpoints m))
-	  (map 'list #'viewpoints:viewpoint-name (mvs-basic m)))
+	  (map 'list #'viewpoints:viewpoint-name (mvs-target m)))
   (lv::print-latent-variable (latent-variable m)))
 (defmethod print-mvs ((m mvs))
     (format t "MVS: (~{~A~^, ~}) --> (~{~A~^, ~})~%"
 	  (map 'list #'viewpoints:viewpoint-name (mvs-viewpoints m))
-	  (map 'list #'viewpoints:viewpoint-name (mvs-basic m))))
+	  (map 'list #'viewpoints:viewpoint-name (mvs-target m))))

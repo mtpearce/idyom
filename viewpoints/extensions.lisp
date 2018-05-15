@@ -11,7 +11,7 @@
 (defgeneric set-alphabet-from-context (viewpoint events unconstrained))
 (defgeneric alphabet->events (viewpoint events))
 
-(defun get-basic-viewpoints (attributes dataset)
+(defun get-target-viewpoints (attributes dataset)
   (initialise-basic-viewpoints dataset)
   (set-onset-alphabet nil)
   (get-viewpoints attributes))

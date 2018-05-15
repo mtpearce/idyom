@@ -32,9 +32,13 @@
     ((events md:melodic-sequence) element) 
   :function (lambda (keysig mode)
 	      (let* ((pitch (cpitch events))
-		     (interval (get-tonint pitch (octave (list (car events)))
-					   keysig mode)))
-		(mod interval *octave*))))
+		     (interval (get-tonint pitch 0 keysig mode)))
+		(mod interval *octave*)))
+  :function* (lambda (keysig mode)
+		 (remove-if #'(lambda (e) (not (eq (mod (get-tonint e 0 keysig mode) *octave*)
+						   element)))
+			    (viewpoint-alphabet (get-viewpoint 'cpitch)))))
+
 
 (define-viewpoint (sdeg-west-3 derived (cpitch))
     ((events md:melodic-sequence) element) 

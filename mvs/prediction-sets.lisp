@@ -20,20 +20,20 @@
 ;;;========================================================================
 
 (defclass dataset-prediction ()
-  ((basic-viewpoint :accessor basic-viewpoint :initarg :basic-viewpoint :type (or null viewpoint))
+  ((target-viewpoint :accessor target-viewpoint :initarg :target-viewpoint :type (or null viewpoint))
    (viewpoint :accessor prediction-viewpoint :initarg :viewpoint
               :type (or null viewpoints:viewpoint))
    (set       :accessor prediction-set :initarg :set :type list)))
 
 (defclass sequence-prediction ()
-  ((basic-viewpoint :accessor basic-viewpoint :initarg :basic-viewpoint :type (or null viewpoint))
+  ((target-viewpoint :accessor target-viewpoint :initarg :target-viewpoint :type (or null viewpoint))
    (viewpoint :accessor prediction-viewpoint :initarg :viewpoint
               :type (or null viewpoint))
    (index     :accessor prediction-index :initarg :index :type (integer 0 *))
    (set       :accessor prediction-set :initarg :set :type list)))
 
 (defclass event-prediction ()
-  ((basic-viewpoint :accessor basic-viewpoint :initarg :basic-viewpoint :type (or null viewpoint))
+  ((target-viewpoint :accessor target-viewpoint :initarg :target-viewpoint :type (or null viewpoint))
    (viewpoint :accessor prediction-viewpoint :initarg :viewpoint
               :type (or null viewpoint))
    (order     :accessor prediction-order :initarg :order)
@@ -47,29 +47,31 @@
    (latent-states :accessor prediction-latent-states :initarg :latent-states)
    (latent-variable :accessor prediction-latent-variable :initarg :latent-variable)))
 
-(defun make-dataset-prediction (&key viewpoint set basic-viewpoint)
+(defun make-dataset-prediction (&key viewpoint set target-viewpoint)
   (make-instance 'dataset-prediction :viewpoint viewpoint :set set 
-                 :basic-viewpoint basic-viewpoint))
+                 :target-viewpoint target-viewpoint))
 
-(defun make-sequence-prediction (&key viewpoint index set basic-viewpoint)
+(defun make-sequence-prediction (&key viewpoint index set target-viewpoint)
   (make-instance 'sequence-prediction :viewpoint viewpoint :index index
-                 :set set :basic-viewpoint basic-viewpoint))
+                 :set set :target-viewpoint target-viewpoint))
 
-(defun make-event-prediction (&key viewpoint element set event weights basic-viewpoint order)
+(defun make-event-prediction (&key viewpoint element set event weights target-viewpoint order)
   ;; (format t "~&make-event-prediction: ~A ~A ~A ~A ~A ~A ~A" viewpoint element event weights basic-viewpoint order set  )
   (make-instance 'event-prediction :viewpoint viewpoint :element element
                  :set set :event event :weights weights 
-                 :order order :basic-viewpoint basic-viewpoint))
+                 :order order :target-viewpoint target-viewpoint))
 
 (defun marginal-likelihood (prior-distribution likelihood-distribution)
   (apply #'+
 	 (mapcar (lambda (prior likelihood) (* prior likelihood))
 		 prior-distribution likelihood-distribution)))
 
-(defun make-marginal-event-prediction (prior events event-predictions basic-viewpoint)
-  (when (string-equal (viewpoint-name basic-viewpoint) "onset")
+(defun make-marginal-event-prediction (prior events event-predictions target-viewpoint)
+  "Given a prior distribution, the sequence of events, a set of event predictions and 
+a target viewpoint, calculate the marginal probability the target viewpoint element."
+  (when (string-equal (viewpoint-name target-viewpoint) "onset")
     (viewpoints:set-onset-alphabet (butlast events)))
-  (let ((distribution-symbols (viewpoint-alphabet basic-viewpoint))
+  (let ((distribution-symbols (viewpoint-alphabet target-viewpoint))
 	(distribution))
     (loop for symbol in distribution-symbols collect
 	 (let ((likelihood 
@@ -80,12 +82,12 @@
 	   (push (list symbol likelihood) distribution)))
     (make-instance 'marginal-event-prediction
 		   :prior prior
-		   :basic-viewpoint basic-viewpoint
+		   :target-viewpoint target-viewpoint
 		   :viewpoint (prediction-viewpoint (car event-predictions))
 		   :event (car (last events))
 		   :weights (mapcar #'prediction-weights event-predictions)
 		   :order (mapcar #'prediction-order event-predictions)
-		   :element (viewpoint-element basic-viewpoint events)
+		   :element (viewpoint-element target-viewpoint events)
 		   :set distribution)))
   
 ;;;========================================================================
@@ -144,7 +146,7 @@
   (cadr (event-prediction prediction-set)))
 
 (defmethod output-prediction ((prediction-set marginal-event-prediction))
-  (let* ((basic-viewpoint-name (viewpoint-name (basic-viewpoint prediction-set)))
+  (let* ((target-viewpoint-name (viewpoint-name (target-viewpoint prediction-set)))
 	 (distribution (prediction-set prediction-set))
 	 (event-identifier (md:get-identifier (prediction-event prediction-set)))
 	 (dataset-id (md:get-dataset-index event-identifier))
@@ -157,10 +159,10 @@
 	       (p (cadr pair)))
 	   (format t "~A,~A,~A,~A,event-prediction,~A,~A,~A,~F~%"
 		   dataset-id composition-id partition-id event-id
-		   basic-viewpoint-name element parameter p)))))
+		   target-viewpoint-name element parameter p)))))
 
 (defmethod output-prediction ((prediction-set event-prediction))
-  (let* ((basic-viewpoint-name (viewpoint-name (basic-viewpoint prediction-set)))
+  (let* ((target-viewpoint-name (viewpoint-name (target-viewpoint prediction-set)))
 	 (distribution (prediction-set prediction-set))
 	 (event-identifier (md:get-identifier (prediction-event prediction-set)))
 	 (dataset-id (md:get-dataset-index event-identifier))
@@ -172,7 +174,7 @@
 	       (p (cadr pair)))
 	   (format t "~A,~A,~A,~A,event-prediction,~A,~A,~A,~F~%"
 		   dataset-id composition-id NIl event-id
-		   basic-viewpoint-name element parameter p)))))
+		   target-viewpoint-name element parameter p)))))
 
 ;;;========================================================================
 ;;; Functions for distributions 
@@ -301,7 +303,7 @@
           (setf weights (append weights (property-identifiers "weight" type empty-prediction-sets (make-list (length empty-prediction-sets) :initial-element "NA")))))
         ;; (print (list type "orders" orders "old-weights" old-weights "weights" weights))
         (make-event-prediction
-         :basic-viewpoint (basic-viewpoint (car event-predictions))
+         :target-viewpoint (target-viewpoint (car event-predictions))
          :viewpoint viewpoint ; (if (eq type :ltm-stm) viewpoint (mapcar #'prediction-viewpoint event-predictions))
          :element   element 
          :event     (prediction-event (car event-predictions))
@@ -379,8 +381,7 @@
            (weights (weights relative-entropies bias))
            (weighted-distributions
             (weight-distributions distributions weights)))
-      (values (if mvs::*normalisation-hack* (combine-distributions weighted-distributions)
-		  (normalise-distribution (combine-distributions weighted-distributions)))
+      (values (normalise-distribution (combine-distributions weighted-distributions))
               weights))))
 
 (defun bayesian-combination (distributions &optional bias)
