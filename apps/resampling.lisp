@@ -68,7 +68,7 @@
 	 (latent-variable (when inference
 			    (lv:get-latent-variable (car generative-model))))
 	 (generative-sources (when inference
-			       (get-viewpoints (cdr generative-model))))
+			       (get-viewpoints (cadr generative-model))))
          ;; data
          (dataset (md:get-music-objects (if (listp dataset-id) dataset-id (list dataset-id))
                                         nil :voices voices :texture texture
