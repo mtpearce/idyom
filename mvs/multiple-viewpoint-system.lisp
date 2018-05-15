@@ -552,6 +552,9 @@ multiple viewpoint system <m>."
 
 (defun make-custom-event-prediction (target-viewpoint viewpoint events type)
   "TYPE can be :FLAT or :EMPTY."
+  (unless (or (viewpoints:basic-p target-viewpoint) (eq type :empty))
+    (set-alphabet-from-context target-viewpoint events
+			       (get-viewpoints (viewpoint-typeset target-viewpoint))))
   (make-event-prediction
    :target-viewpoint target-viewpoint
    :order (case type (:flat 0) (:empty "NA"))  ; (list (list (format nil "~A.~(~A~).~A" "order" model (viewpoint-name basic-viewpoint)) 0))
@@ -566,7 +569,7 @@ multiple viewpoint system <m>."
 (defun derived->target (source-prediction-set target-viewpoint events)
   (unless (viewpoints:basic-p target-viewpoint)
     (set-alphabet-from-context target-viewpoint events
-			       (get-viewpoints (viewpoint-typeset target-viewpoint))))
+			       (get-viewpoints (viewpoint-typeset target-viewpoint))))p
   (let* ((source-viewpoint (prediction-viewpoint source-prediction-set))
 	 (source-distribution (prediction-set source-prediction-set))
 	 (target-alphabet (viewpoint-alphabet target-viewpoint))
