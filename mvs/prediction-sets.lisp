@@ -67,10 +67,15 @@
 		 prior-distribution likelihood-distribution)))
 
 (defun make-marginal-event-prediction (prior events event-predictions target-viewpoint)
-  "Given a prior distribution, the sequence of events, a set of event predictions and 
+  "Given a prior distribution, the sequence of events, a set of event predictions, which
+is a list of event-predictions in which each item corresponds to an event prediction for
+the corresponding  and 
 a target viewpoint, calculate the marginal probability the target viewpoint element."
   (when (string-equal (viewpoint-name target-viewpoint) "onset")
     (viewpoints:set-onset-alphabet (butlast events)))
+    (unless (viewpoints:basic-p target-viewpoint)
+    (set-alphabet-from-context target-viewpoint events
+			       (get-viewpoints (viewpoint-typeset target-viewpoint))))
   (let ((distribution-symbols (viewpoint-alphabet target-viewpoint))
 	(distribution))
     (loop for symbol in distribution-symbols collect

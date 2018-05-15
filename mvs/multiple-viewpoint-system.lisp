@@ -569,7 +569,7 @@ multiple viewpoint system <m>."
 (defun derived->target (source-prediction-set target-viewpoint events)
   (unless (viewpoints:basic-p target-viewpoint)
     (set-alphabet-from-context target-viewpoint events
-			       (get-viewpoints (viewpoint-typeset target-viewpoint))))p
+			       (get-viewpoints (viewpoint-typeset target-viewpoint))))
   (let* ((source-viewpoint (prediction-viewpoint source-prediction-set))
 	 (source-distribution (prediction-set source-prediction-set))
 	 (target-alphabet (viewpoint-alphabet target-viewpoint))
