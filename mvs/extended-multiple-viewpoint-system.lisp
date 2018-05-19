@@ -206,28 +206,28 @@ A sequence-prediction is returned."
     ;; This corresponds to applying the transpose operation to the list of interpretations
     ;; (which can be seen as a matrix of interpretation by event position).
     (loop for event-index below (length events) do
-	 (let* ((events (subseq events 0 (1+ event-index)))
-		(event-id (md:get-event-index (md:get-identifier (elt events event-index))))
-		(event-interpretation-predictions
-		 (get-event-predictions sequence-interpretation-predictions
-					event-index m))
-		(likelihoods (joint-interpretation-likelihoods
-			      event-interpretation-predictions))
-		(prior-distribution (car posteriors))
-		(marginal-event-predictions (marginalize-event-predictions
-					     prior-distribution events
-					     event-interpretation-predictions
-					     (mvs-target m))))
+	 (let ((events (subseq events 0 (1+ event-index))))
 	   (set-target-alphabets m events t)
-	   (push marginal-event-predictions sequence-predictions)
-	   (let ((evidence (marginal-likelihood likelihoods
-						prior-distribution)))
-	     (push (infer-posterior-distribution evidence prior-distribution
-						 likelihoods)
-		   posteriors)
+	   (let* ((event-id (md:get-event-index (md:get-identifier (elt events event-index))))
+		  (event-interpretation-predictions
+		   (get-event-predictions sequence-interpretation-predictions
+					  event-index m))
+		  (likelihoods (joint-interpretation-likelihoods
+				event-interpretation-predictions))
+		  (prior-distribution (car posteriors))
+		  (marginal-event-predictions (marginalize-event-predictions
+					       prior-distribution events
+					       event-interpretation-predictions
+					       (mvs-target m))))
+	     (push marginal-event-predictions sequence-predictions)
+	     (let ((evidence (marginal-likelihood likelihoods
+						  prior-distribution)))
+	       (push (infer-posterior-distribution evidence prior-distribution
+						   likelihoods)
+		     posteriors)
 	     (when *output-csv*
 	       (output-distribution dataset-id composition-id partition-id event-id
-				    latent-variable latent-states (car posteriors))))))
+				    latent-variable latent-states (car posteriors)))))))
     (sequence-prediction-sets (abstract-mvs m)
 			      events (reverse sequence-predictions))))
 
