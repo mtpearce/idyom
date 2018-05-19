@@ -138,6 +138,14 @@ sole argument on all the long- and short-term models in mvs <m>."
         (unless (eql models 'stm) (apply operation (cons ltm ltm-args)))
         (unless (eql models 'ltm) (apply operation (cons stm stm-args)))))))
 
+(defun set-target-alphabets (mvs events &optional onset?)
+  (when onset?
+    (viewpoints:set-onset-alphabet (butlast events)))
+  (dolist (v (mvs-target mvs))
+    (unless (viewpoints:basic-p v)
+      (set-alphabet-from-context
+       v events (mapcar #'get-viewpoint (get-basic-types nil))))))
+
 ;;; needed in apps/generation.lisp (TODO rewrite that to use new
 ;;; SET-MODEL-ALPHABETS)
 (defgeneric old-set-model-alphabets (mvs event-array events unconstrained))
@@ -497,6 +505,7 @@ multiple viewpoint system <m>."
                       prediction-sets)))
     (let ((target-viewpoints (mvs-target mvs))
           (distributions '()))
+      (set-target-alphabets mvs events)
       (dolist (target-viewpoint target-viewpoints)
         (let* ((derived-viewpoints
                 (coerce (remove-if-not #'(lambda (v) 
@@ -552,9 +561,6 @@ multiple viewpoint system <m>."
 
 (defun make-custom-event-prediction (target-viewpoint viewpoint events type)
   "TYPE can be :FLAT or :EMPTY."
-  (unless (or (viewpoints:basic-p target-viewpoint) (eq type :empty))
-    (set-alphabet-from-context target-viewpoint events
-			       (get-viewpoints (viewpoint-typeset target-viewpoint))))
   (make-event-prediction
    :target-viewpoint target-viewpoint
    :order (case type (:flat 0) (:empty "NA"))  ; (list (list (format nil "~A.~(~A~).~A" "order" model (viewpoint-name basic-viewpoint)) 0))
@@ -567,9 +573,6 @@ multiple viewpoint system <m>."
           (:empty nil))))
 
 (defun derived->target (source-prediction-set target-viewpoint events)
-  (unless (viewpoints:basic-p target-viewpoint)
-    (set-alphabet-from-context target-viewpoint events
-			       (get-viewpoints (viewpoint-typeset target-viewpoint))))
   (let* ((source-viewpoint (prediction-viewpoint source-prediction-set))
 	 (source-distribution (prediction-set source-prediction-set))
 	 (target-alphabet (viewpoint-alphabet target-viewpoint))

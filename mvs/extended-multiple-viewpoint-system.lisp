@@ -218,6 +218,7 @@ A sequence-prediction is returned."
 					     prior-distribution events
 					     event-interpretation-predictions
 					     (mvs-target m))))
+	   (set-target-alphabets m events t)
 	   (push marginal-event-predictions sequence-predictions)
 	   (let ((evidence (marginal-likelihood likelihoods
 						prior-distribution)))
