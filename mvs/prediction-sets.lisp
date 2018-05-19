@@ -42,11 +42,6 @@
    (element   :accessor prediction-element :initarg :element)
    (set       :accessor prediction-set :initarg :set :type list)))
 
-(defclass marginal-event-prediction (event-prediction)
-  ((prior :accessor prediction-prior :initarg :prior)
-   (latent-states :accessor prediction-latent-states :initarg :latent-states)
-   (latent-variable :accessor prediction-latent-variable :initarg :latent-variable)))
-
 (defun make-dataset-prediction (&key viewpoint set target-viewpoint)
   (make-instance 'dataset-prediction :viewpoint viewpoint :set set 
                  :target-viewpoint target-viewpoint))
@@ -71,11 +66,6 @@
 is a list of event-predictions in which each item corresponds to an event prediction for
 the corresponding  and 
 a target viewpoint, calculate the marginal probability the target viewpoint element."
-  (when (string-equal (viewpoint-name target-viewpoint) "onset")
-    (viewpoints:set-onset-alphabet (butlast events)))
-    (unless (viewpoints:basic-p target-viewpoint)
-    (set-alphabet-from-context target-viewpoint events
-			       (get-viewpoints (viewpoint-typeset target-viewpoint))))
   (let ((distribution-symbols (viewpoint-alphabet target-viewpoint))
 	(distribution))
     (loop for symbol in distribution-symbols collect
@@ -85,8 +75,7 @@ a target viewpoint, calculate the marginal probability the target viewpoint elem
 							 :test #'equal)))
 			       event-predictions))))
 	   (push (list symbol likelihood) distribution)))
-    (make-instance 'marginal-event-prediction
-		   :prior prior
+    (make-instance 'event-prediction
 		   :target-viewpoint target-viewpoint
 		   :viewpoint (prediction-viewpoint (car event-predictions))
 		   :event (car (last events))
@@ -150,36 +139,35 @@ a target viewpoint, calculate the marginal probability the target viewpoint elem
 (defmethod prediction-set->likelihoods ((prediction-set event-prediction))
   (cadr (event-prediction prediction-set)))
 
-(defmethod output-prediction ((prediction-set marginal-event-prediction))
-  (let* ((target-viewpoint-name (viewpoint-name (target-viewpoint prediction-set)))
-	 (distribution (prediction-set prediction-set))
-	 (event-identifier (md:get-identifier (prediction-event prediction-set)))
-	 (dataset-id (md:get-dataset-index event-identifier))
-	 (composition-id (md:get-composition-index event-identifier))
-	 (partition-id (md::get-partition-index event-identifier))
-	 (event-id (md:get-event-index event-identifier))
-	 (element (prediction-element prediction-set)))
-    (loop for pair in distribution do
-	 (let ((parameter (car pair))
-	       (p (cadr pair)))
-	   (format t "~A,~A,~A,~A,event-prediction,~A,~A,~A,~F~%"
-		   dataset-id composition-id partition-id event-id
-		   target-viewpoint-name element parameter p)))))
+(defmethod get-viewpoint-attribute-names ((v viewpoint))
+  (list (viewpoint-name v)))
 
-(defmethod output-prediction ((prediction-set event-prediction))
-  (let* ((target-viewpoint-name (viewpoint-name (target-viewpoint prediction-set)))
+(defmethod get-viewpoint-attribute-names ((l viewpoints::linked))
+  (mapcar #'viewpoint-name (viewpoint-links l)))
+
+(defun event-id-string (p)
+  "Return a comma-separated string containing the event identifier."
+  (let* ((event-identifier (md:get-identifier (prediction-event p)))
+	(dataset-id (md:get-dataset-index event-identifier))
+	(composition-id (md:get-composition-index event-identifier))
+	(partition-id (md::get-partition-index event-identifier))
+	(event-id (md:get-event-index event-identifier)))
+    (format nil "~A,~A,~A,~A" dataset-id composition-id partition-id event-id)))
+    
+(defun output-prediction (prediction-set)
+  (let* ((target-name (viewpoint-name (target-viewpoint prediction-set)))
+	 (attrib-names (get-viewpoint-attribute-names (target-viewpoint prediction-set)))
+	 (columns (append (mapcar (lambda (a) (format nil "e_~A" a)) attrib-names) attrib-names))
 	 (distribution (prediction-set prediction-set))
-	 (event-identifier (md:get-identifier (prediction-event prediction-set)))
-	 (dataset-id (md:get-dataset-index event-identifier))
-	 (composition-id (md:get-composition-index event-identifier))
-	 (event-id (md:get-event-index event-identifier))
-	 (element (prediction-element prediction-set)))
+	 (element (prediction-element prediction-set))
+	 (elements (if (typep element 'list) element (list element))))
     (loop for pair in distribution do
-	 (let ((parameter (car pair))
-	       (p (cadr pair)))
-	   (format t "~A,~A,~A,~A,event-prediction,~A,~A,~A,~F~%"
-		   dataset-id composition-id NIl event-id
-		   target-viewpoint-name element parameter p)))))
+	 (let* ((parameter (car pair))
+		(parameter (if (typep parameter 'list) parameter (list parameter)))
+		(p (cadr pair)))
+	   (format t "~A,\"ep\",\"~A\",\"~{~A~^,~}\",\"~{~A~^,~},~{~A~^,~}\",~F~%"
+		   (event-id-string prediction-set)
+		   target-name columns elements parameter p)))))
 
 ;;;========================================================================
 ;;; Functions for distributions 

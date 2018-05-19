@@ -270,12 +270,13 @@ A sequence-prediction is returned."
 ;;;========================================================================
 
 (defun output-distribution (did cid pid eid latent-variable latent-states distribution)
-  (let ((latent-variable-name (lv:latent-variable-name latent-variable)))
-    (loop for attribute in latent-states
+  (let* ((name (lv:latent-variable-name latent-variable))
+	 (attributes (lv:latent-state-attributes latent-variable))
+	 (columns (mapcar #'string-downcase (mapcar #'symbol-name attributes))))
+    (loop for latent-state in latent-states
        for p in distribution do
-	 (format t "~A, ~A, ~A, ~A, lvar-dist, ~A, ~{~A, ~}~F~%"
-		 did cid pid eid latent-variable-name attribute p))))
-
+	 (format t "~A,~A,~A,~A,\"lv\",\"~A\",\"~{~A~^,~}\",\"~{~A~^,~}\",~F~%"
+		 did cid pid eid name columns latent-state p))))
 
 (defun infer-posterior-distribution (evidence prior-distribution likelihoods)
   (loop

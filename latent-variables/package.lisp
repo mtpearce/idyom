@@ -2,7 +2,8 @@
   (:use #:common-lisp)
   (:nicknames lv)
   (:export #:latent-variable #:with-latent-variable-state
-	   #:with-latent-category #:with-latent-interpretation
+	   #:latent-variable-links #:with-latent-category
+	   #:latent-state-attributes #:with-latent-interpretation
 	   #:get-latent-variable-state #:latent-variable-attribute
 	   #:get-latent-state-value #:get-latent-state-attribute
 	   #:latent-variable-name #:abstract? #:get-latent-variable

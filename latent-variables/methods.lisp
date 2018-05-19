@@ -10,6 +10,11 @@ latent variable V."
 links of linked latent variable L."
   (mapcar #'latent-variable-attribute (latent-variable-links l)))
 
+(defmethod latent-variable-links ((v latent-variable))
+  "Latent variable links of not a linked latent variable is defined
+as a list containing the variable itself."
+  (list v))
+
 (defmethod category-attributes ((l linked))
   "Return the category attributes of linked latent variable L.
 These are derived from the category attributes of the constituent links of L

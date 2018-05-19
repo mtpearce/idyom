@@ -124,7 +124,7 @@
 		 :composition-index composition-index
 		 :partition-index partition-index))
 
-(defun make-event-id (dataset-index composition-index event-index &optional partition-index)
+(defun make-event-id (dataset-index composition-index event-index &optional (partition-index 0))
   (make-instance 'event-identifier
 		 :dataset-index dataset-index
 		 :composition-index composition-index
