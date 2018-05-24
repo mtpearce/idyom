@@ -4,7 +4,7 @@
 
 (defmacro define-viewpoint ((name superclass typeset) 
                             ((events class) element)
-                            &key function function*)
+                            &key function function* alphabet)
   (let ((f* function*))
     `(progn 
       (defclass ,name (,superclass)
@@ -19,6 +19,8 @@
       (defmethod ,name ((,events list))
         (declare (ignorable ,events))
         ,function)
+      ,(when alphabet
+	     `(defmethod viewpoint-alphabet ((v , name)) ,alphabet))
       ,(when f*
              (let ((fname `,(intern (concatenate 'string (symbol-name name) "*"))))
                `(progn
@@ -42,16 +44,16 @@
 			 `(apply #',function* ,abstract-args)))
 	  (training-function `(apply #',function ,training-args))
 	  (training-function* (if (null function*) nil
-				  `(apply #',function* ,training-args))))
+				  `(apply #',function* ,training-args)))
+	  (alphabet-function (if (null alphabet) nil
+				 `(apply #',alphabet ,abstract-args))))
       `(progn
 	 (define-viewpoint (,name abstract ,typeset)
 	     ((,events ,class) ,element)
-	   :function ,function :function* ,function*)
+	   :function ,function :function* ,function* :alphabet ,alphabet-function)
 	 (define-viewpoint (,training-viewpoint derived ,typeset)
 	     ((,events ,class) ,element)
 	   :function ,training-function :function* ,training-function*)
-	 ,(when alphabet
-		`(defmethod viewpoint-alphabet ((v ,name)) (apply #',alphabet ,abstract-args)))
 	 (defmethod training-viewpoint ((v ,name)) (get-viewpoint ',training-viewpoint))
 	 (defmethod latent-attributes ((v ,name)) '(,@event-attributes
 						    ,@additional-attributes))))))

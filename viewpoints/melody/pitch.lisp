@@ -103,7 +103,8 @@
               (cond ((undefined-p cpitch) +undefined+)
                     (t (mod cpitch *octave*))))
   :function* (remove-if-not #'(lambda (e) (= (mod e *octave*) element)) 
-                            (viewpoint-alphabet (get-viewpoint 'cpitch))))
+                            (viewpoint-alphabet (get-viewpoint 'cpitch)))
+  :alphabet (utils:generate-integers 0 (1- *octave*)))
 
 ;; Equivalent to cpint modulo 12 (so both perfect unison and perfect
 ;; octave = 0), but preserving sign, so ascending and descending

@@ -48,22 +48,23 @@
 ;;; Viewpoint methods 
 
 (defmethod viewpoint-alphabet ((v viewpoint)) (%viewpoint-alphabet v))
-(defmethod viewpoint-alphabet ((v abstract))
-  (let ((category (lv:get-latent-category (latent-variable v))))
-    (cdr (assoc category (%viewpoint-alphabet v) :test #'equal))))
 (defmethod viewpoint-alphabet ((v abstract-linked))
   (apply #'utils:cartesian-product 
 	 (mapcar #'viewpoint-alphabet (viewpoint-links v))))
+(defmethod viewpoint-alphabet ((v abstract))
+  (let ((category (lv:get-latent-category (latent-variable v))))
+    (cdr (assoc category (%viewpoint-alphabet v) :test #'equal))))
 
 (defmethod (setf viewpoint-alphabet) (alphabet (v viewpoint))
   (setf (%viewpoint-alphabet v) alphabet))
-(defmethod (setf viewpoint-alphabet) (alphabet (v abstract))
-  (let* ((category (lv:get-latent-category (latent-variable v)))
-	 (alphabets (%viewpoint-alphabet v))
-	 (place (assoc category alphabets :test #'equal)))
-    (if (null place)
-	(setf (%viewpoint-alphabet v) (acons category alphabet alphabets))
-	(rplacd place alphabet))))
+;(defmethod (setf viewpoint-alphabet) (alphabet (v abstract))
+;  (let* ((category (lv:get-latent-category (latent-variable v)))
+;	 (alphabets (%viewpoint-alphabet v))
+;	 (place (assoc category alphabets :test #'equal)))
+ ;   (if (null place)
+;	(setf (%viewpoint-alphabet v) (acons category alphabet alphabets))
+					;	(rplacd place alphabet))))
+(defmethod (setf viewpoint-alphabet) (alphabet (v abstract)))
 
 (defmethod training-viewpoint ((v viewpoint)) v)
 (defmethod training-viewpoint ((a abstract-linked))
