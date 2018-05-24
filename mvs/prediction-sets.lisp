@@ -79,26 +79,34 @@
 is a list of event-predictions in which each item corresponds to an event prediction for
 the corresponding  and 
 a target viewpoint, calculate the marginal probability the target viewpoint element."
-  (let ((latent-state
-	 (if (viewpoint-equal target-viewpoint
-			      (get-viewpoint 'periodic-onset))
-	     (let* ((periods (remove-duplicates
-			      (mapcar (lambda (s)
-					(lv:get-latent-state-attribute s :barlength latent-variable))
-				      latent-states))))
-	       (list :barlength (utils:greatest-common-multiple periods)))
-	     ())))
+  (let* ((vp-list (viewpoint-links target-viewpoint))
+	 (vp-list (if (typep vp-list 'list) vp-list (list vp-list)))
+	 (periodic-onset-index
+	  (find 'viewpoints::periodic-onset (utils:generate-integers 0 (1- (length vp-list)))
+		:key (lambda (index) (viewpoint-type (nth index vp-list)))))
+	 (latent-state
+	  (if (not (null periodic-onset-index))
+	      (let* ((periods (remove-duplicates
+			       (mapcar (lambda (s)
+					 (lv:get-latent-state-attribute s :barlength latent-variable))
+				       latent-states))))
+		(list :barlength (utils:greatest-common-multiple periods)))
+	      ())))
     (lv::with-latent-state latent-state
       (let ((distribution-symbols (viewpoint-alphabet target-viewpoint))
 	    (distribution))
 	(flet ((get-latent-state-likelihood (latent-state event-prediction symbol)
-		 (let ((symbol 
-			(if (viewpoint-equal target-viewpoint
-					     (get-viewpoint 'periodic-onset))
-			    (mod symbol (lv:get-latent-state-attribute latent-state
-								       :barlength
-								       latent-variable))
-			    symbol)))
+		 (let* ((barlength (lv:get-latent-state-attribute latent-state :barlength
+								  latent-variable))
+			(symbol 
+			 (if (not (null periodic-onset-index))
+			     (if (eq (length vp-list) 1)
+				 (mod symbol barlength)
+				 (loop for index below (length vp-list) collect
+				      (if (eq index periodic-onset-index)
+					  (mod (nth index symbol) barlength)
+					  (nth index symbol))))
+			     symbol)))
 		   (cadr (assoc symbol (prediction-set event-prediction)
 				:test #'equal)))))
 	  (loop for symbol in distribution-symbols
@@ -117,7 +125,7 @@ a target viewpoint, calculate the marginal probability the target viewpoint elem
 			 :order (mapcar #'prediction-order event-predictions)
 			 :element (viewpoint-element target-viewpoint events)
 			 :set distribution))))))
-  
+
 ;;;========================================================================
 ;;; Entropies for dataset and sequence prediction sets
 ;;;========================================================================
