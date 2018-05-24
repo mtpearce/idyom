@@ -61,28 +61,62 @@
 	 (mapcar (lambda (prior likelihood) (* prior likelihood))
 		 prior-distribution likelihood-distribution)))
 
-(defun make-marginal-event-prediction (prior events event-predictions target-viewpoint)
+;	 (latent-state
+;	  (if (and (member 'viewpoints::periodic-onset (mapcar #'viewpoint-type (mvs-target m)))
+;		   (member :barlength (lv:latent-state-attributes latent-variable)))
+;	      (let* ((periods (remove-duplicates
+;			       (mapcar (lambda (s)
+;					 (lv:get-latent-state-attribute s :barlength latent-variable))
+;				       latent-states))))
+;		(list :period (utils:greatest-common-multiple periods)))
+;	      ())))
+ ;   (lv::with-latent-state latent-state
+;(let* (
+       
+(defun make-marginal-event-prediction (latent-variable latent-states
+				       prior events event-predictions target-viewpoint)
   "Given a prior distribution, the sequence of events, a set of event predictions, which
 is a list of event-predictions in which each item corresponds to an event prediction for
 the corresponding  and 
 a target viewpoint, calculate the marginal probability the target viewpoint element."
-  (let ((distribution-symbols (viewpoint-alphabet target-viewpoint))
-	(distribution))
-    (loop for symbol in distribution-symbols collect
-	 (let ((likelihood 
-		(marginal-likelihood
-		 prior (mapcar (lambda (ep) (cadr (assoc symbol (prediction-set ep)
-							 :test #'equal)))
-			       event-predictions))))
-	   (push (list symbol likelihood) distribution)))
-    (make-instance 'event-prediction
-		   :target-viewpoint target-viewpoint
-		   :viewpoint (prediction-viewpoint (car event-predictions))
-		   :event (car (last events))
-		   :weights (mapcar #'prediction-weights event-predictions)
-		   :order (mapcar #'prediction-order event-predictions)
-		   :element (viewpoint-element target-viewpoint events)
-		   :set distribution)))
+  (let ((latent-state
+	 (if (viewpoint-equal target-viewpoint
+			      (get-viewpoint 'periodic-onset))
+	     (let* ((periods (remove-duplicates
+			      (mapcar (lambda (s)
+					(lv:get-latent-state-attribute s :barlength latent-variable))
+				      latent-states))))
+	       (list :barlength (utils:greatest-common-multiple periods)))
+	     ())))
+    (lv::with-latent-state latent-state
+      (let ((distribution-symbols (viewpoint-alphabet target-viewpoint))
+	    (distribution))
+	(flet ((get-latent-state-likelihood (latent-state event-prediction symbol)
+		 (let ((symbol 
+			(if (viewpoint-equal target-viewpoint
+					     (get-viewpoint 'periodic-onset))
+			    (mod symbol (lv:get-latent-state-attribute latent-state
+								       :barlength
+								       latent-variable))
+			    symbol)))
+		   (cadr (assoc symbol (prediction-set event-prediction)
+				:test #'equal)))))
+	  (loop for symbol in distribution-symbols
+	     collect
+	       (let ((likelihood 
+		      (marginal-likelihood
+		       prior (mapcar (lambda (latent-state ep)
+				       (get-latent-state-likelihood latent-state ep symbol))
+				     latent-states event-predictions))))
+		 (push (list symbol likelihood) distribution)))
+	  (make-instance 'event-prediction
+			 :target-viewpoint target-viewpoint
+			 :viewpoint (prediction-viewpoint (car event-predictions))
+			 :event (car (last events))
+			 :weights (mapcar #'prediction-weights event-predictions)
+			 :order (mapcar #'prediction-order event-predictions)
+			 :element (viewpoint-element target-viewpoint events)
+			 :set distribution))))))
   
 ;;;========================================================================
 ;;; Entropies for dataset and sequence prediction sets
@@ -186,7 +220,9 @@ a target viewpoint, calculate the marginal probability the target viewpoint elem
   (reduce #'+ distribution
           :key #'(lambda (p)
                    (let ((p (nth 1 p)))
-                     (* p (codelength p))))))
+		     (if (equalp p 0)
+			 0
+			 (* p (codelength p)))))))
 
 (defun codelength (probability)
   "Returns the expected codelength of a symbol predicted with probability

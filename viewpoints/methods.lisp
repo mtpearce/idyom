@@ -51,6 +51,9 @@
 (defmethod viewpoint-alphabet ((v abstract))
   (let ((category (lv:get-latent-category (latent-variable v))))
     (cdr (assoc category (%viewpoint-alphabet v) :test #'equal))))
+(defmethod viewpoint-alphabet ((v abstract-linked))
+  (apply #'utils:cartesian-product 
+	 (mapcar #'viewpoint-alphabet (viewpoint-links v))))
 
 (defmethod (setf viewpoint-alphabet) (alphabet (v viewpoint))
   (setf (%viewpoint-alphabet v) alphabet))

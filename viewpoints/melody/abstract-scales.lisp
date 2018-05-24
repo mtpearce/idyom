@@ -37,7 +37,10 @@
   :function* (lambda (keysig mode)
 		 (remove-if #'(lambda (e) (not (eq (mod (get-tonint e 0 keysig mode) *octave*)
 						   element)))
-			    (viewpoint-alphabet (get-viewpoint 'cpitch)))))
+			    (viewpoint-alphabet (get-viewpoint 'cpitch))))
+  :alphabet (lambda (&rest args)
+	      (declare (ignore args))
+	      (utils:generate-integers 0 (1- *octave*))))
 
 
 (define-viewpoint (sdeg-west-3 derived (cpitch))

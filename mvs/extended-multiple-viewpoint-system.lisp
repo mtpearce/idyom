@@ -183,15 +183,17 @@ a posterior distribution over latent-variable states is inferred. A sequence of
 event predictions is obtained by marginalizing event predictions out of the joint
 distribution over events and latent variable states. 
 A sequence-prediction is returned."
-;  (assert (not (member *models* '(:both+ :ltm+)))
-;	  "LTM model cannot be updated when modelling inference.")
+;;  (assert (not (member *models* '(:both+ :ltm+)))
+  ;;	  "LTM model cannot be updated when modelling inference.")
+  ;; A somewhat ad-hoc solution to predicting onset from periodic viewpoints whose
+  ;; period depends on the latent state.
   (let* ((latent-variable (latent-variable m))
 	 (prior-distribution (lv:prior-distribution latent-variable))
 	 (latent-states (mapcar #'car prior-distribution))
-	 (posteriors (list (mapcar #'cdr prior-distribution)))
 	 (sequence-interpretation-predictions
 	  (model-sequence-interpretations m latent-states latent-variable
 					  events other-args))
+	 (posteriors (list (mapcar #'cdr prior-distribution)))
 	 (event-identifier (md:get-identifier (car events)))
 	 (dataset-id (md:get-dataset-index event-identifier))
 	 (composition-id (md:get-composition-index event-identifier))
@@ -216,7 +218,8 @@ A sequence-prediction is returned."
 				event-interpretation-predictions))
 		  (prior-distribution (car posteriors))
 		  (marginal-event-predictions (marginalize-event-predictions
-					       prior-distribution events
+					       latent-variable
+					       latent-states prior-distribution events
 					       event-interpretation-predictions
 					       (mvs-target m))))
 	     (push marginal-event-predictions sequence-predictions)
@@ -225,12 +228,12 @@ A sequence-prediction is returned."
 	       (push (infer-posterior-distribution evidence prior-distribution
 						   likelihoods)
 		     posteriors)
-	     (when *output-csv*
-	       (output-distribution dataset-id composition-id partition-id event-id
-				    latent-variable latent-states (car posteriors)))))))
+	       (when *output-csv*
+		 (output-distribution dataset-id composition-id partition-id event-id
+				      latent-variable latent-states (car posteriors)))))))
     (sequence-prediction-sets (abstract-mvs m)
 			      events (reverse sequence-predictions))))
-
+    
 (defmethod model-sequence ((m combined-mvs) events
 			   &rest other-args)
   (let* ((mvs-models (mvs-models m))
@@ -289,10 +292,14 @@ A sequence-prediction is returned."
 	 (mapcar (lambda (prior likelihood) (* prior likelihood))
 		 prior-distribution likelihoods)))
 
-(defun marginalize-event-predictions (prior-distribution events event-predictions
-				      target-viewpoints)
-  (mapcar #'(lambda (ep tv) (make-marginal-event-prediction prior-distribution
-							    events ep tv))
+(defun marginalize-event-predictions (latent-variable latent-states prior-distribution events
+				      event-predictions target-viewpoints)
+  "Create an event prediction for each target viewpoint given a prior distribution,
+the list of events, a one list of event prediction sets per target viewpoint containing 
+event prediction for each latent state."
+  (mapcar #'(lambda (ep tv)
+	      (make-marginal-event-prediction latent-variable latent-states
+					      prior-distribution events ep tv))
 	  event-predictions target-viewpoints))
 
 (defun transpose-lists (lists)

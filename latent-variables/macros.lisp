@@ -1,7 +1,8 @@
 (cl:in-package #:latent-variables)
 
 (defmacro with-latent-state (latent-state &body body)
-  "<latent-state> must be a pair-list"
+  "Shadow the value of *LATENT-STATE* with an a version containing the properties 
+defined in pair-list LATENT-STATE."
   `(let ((properties (loop for i below (length ,latent-state)
 			if (evenp i) collect (elt ,latent-state i)))
 	 ;; Create a local copy of the latent state

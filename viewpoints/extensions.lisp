@@ -45,6 +45,8 @@
                                     (t nil))))))
       (setf (viewpoint-alphabet v) sorted-alphabet))))
 
+(defmethod set-alphabet-from-context ((v abstract) events unconstrained))
+
 (defmethod set-alphabet-from-context ((v viewpoint) events unconstrained)
   "Sets the alphabet of derived viewpoint <v> based on the set of
 sequences created by concatenating the alphabet of the basic viewpoint

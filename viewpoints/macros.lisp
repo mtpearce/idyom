@@ -30,7 +30,7 @@
 (defmacro define-abstract-viewpoint ((name typeset event-attributes
 					   additional-attributes training-viewpoint) 
                             ((events class) element)
-				     &key function function*)
+				     &key function function* alphabet)
   (let ((abstract-args `(loop for p in
 			    (list ,@event-attributes ,@additional-attributes)
 			  collect (lv:get-latent-state-value p)))
@@ -50,6 +50,8 @@
 	 (define-viewpoint (,training-viewpoint derived ,typeset)
 	     ((,events ,class) ,element)
 	   :function ,training-function :function* ,training-function*)
+	 ,(when alphabet
+		`(defmethod viewpoint-alphabet ((v ,name)) (apply #',alphabet ,abstract-args)))
 	 (defmethod training-viewpoint ((v ,name)) (get-viewpoint ',training-viewpoint))
 	 (defmethod latent-attributes ((v ,name)) '(,@event-attributes
 						    ,@additional-attributes))))))

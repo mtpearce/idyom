@@ -15,12 +15,29 @@
 
 (defun phase-adjust (timepoint barlength phase)
   (+ timepoint (mod (- barlength phase)
-       barlength)))
+		    barlength)))
+
+;; Special-purpose viewpoint that can be used as a target viewpoint and triggers some
+;; exceptional rules when calculating the predictive distribution.
+;; See also: MAKE-MARGINAL-EVENT-PREDICTION in PREDICTION-SETS.
+(define-abstract-viewpoint (periodic-onset (onset) (:barlength) () periodic-onset-train)
+    ((events md:melodic-sequence) element)
+  :function (lambda (barlength)
+	      (let ((onset (onset events)))
+		(cond ((undefined-p onset barlength) +undefined+)
+		      ((zerop onset) 0)
+		      ((> onset 0) (mod onset barlength))
+		      (t +undefined+))))
+  :alphabet (lambda (barlength)
+	      (utils:generate-integers 0 (1- barlength))))
 
 (define-abstract-viewpoint (abs-posinbar (onset) (:barlength) (:phase) abs-posinbar-train)
     ((events md:melodic-sequence) element)
   :function (lambda (barlength &optional (phase 0))
-	      (get-posinbar (phase-adjust (onset events) barlength phase) barlength)))
+	      (get-posinbar (phase-adjust (onset events) barlength phase) barlength))
+  :alphabet (lambda (barlength &optional (phase 0))
+	      (declare (ignore phase))
+	      (utils:generate-integers 0 (1- barlength))))
 
 (define-abstract-viewpoint (bardist (onset) (:barlength) (:phase) bardist-train)
     ((events md:melodic-sequence) element)

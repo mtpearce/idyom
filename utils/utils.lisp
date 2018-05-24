@@ -62,6 +62,11 @@
   "Returns the no. of combinations of <n> different items taken <r> at a time."
   (/ (factorial n) (* (factorial r) (factorial (- n r)))))
 
+(defun greatest-common-multiple (numbers)
+  (let ((numbers-gcd (apply #'gcd numbers)))
+    (reduce (lambda (a b) (/ (* a b) numbers-gcd))
+	    numbers)))
+
 (defun set-equal (a b &key (test #'eql))
   "Return <a> when all unique elements in <a> appear in <b> and 
 all unique elements in <b> appear in <a>. Otherwise return nil"
