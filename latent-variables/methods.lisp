@@ -48,7 +48,7 @@ latent variable L."
 (defmethod latent-variable-name ((l linked))
   "Return a string representation of the list of latent-variable attributes of the 
 constituent links of L by concatenating them in a string separated by dashes."
-  (format nil "~{~A~^-~}" (latent-variable-attribute l)))
+  (format nil "~{~A~^-~}" (mapcar #'latent-variable-name (latent-variable-links l))))
 
 (defmethod get-category-attribute (category attribute (v latent-variable))
     "Return the value of category attribute ATTRIBUTE as encoded in CATEGORY,
