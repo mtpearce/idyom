@@ -60,18 +60,6 @@
   (apply #'+
 	 (mapcar (lambda (prior likelihood) (* prior likelihood))
 		 prior-distribution likelihood-distribution)))
-
-;	 (latent-state
-;	  (if (and (member 'viewpoints::periodic-onset (mapcar #'viewpoint-type (mvs-target m)))
-;		   (member :barlength (lv:latent-state-attributes latent-variable)))
-;	      (let* ((periods (remove-duplicates
-;			       (mapcar (lambda (s)
-;					 (lv:get-latent-state-attribute s :barlength latent-variable))
-;				       latent-states))))
-;		(list :period (utils:greatest-common-multiple periods)))
-;	      ())))
- ;   (lv::with-latent-state latent-state
-;(let* (
        
 (defun make-marginal-event-prediction (latent-variable latent-states
 				       prior events event-predictions target-viewpoint)
@@ -79,36 +67,43 @@
 is a list of event-predictions in which each item corresponds to an event prediction for
 the corresponding  and 
 a target viewpoint, calculate the marginal probability the target viewpoint element."
+  ;; Ad-hoc solution for periodic predictions from latent states with different periods
+  ;; using a special-purpose viewpoint periodic-onset.
   (let* ((vp-list (viewpoint-links target-viewpoint))
 	 (vp-list (if (typep vp-list 'list) vp-list (list vp-list)))
 	 (periodic-onset-index
 	  (find 'viewpoints::periodic-onset (utils:generate-integers 0 (1- (length vp-list)))
 		:key (lambda (index) (viewpoint-type (nth index vp-list)))))
-	 (latent-state
-	  (if (not (null periodic-onset-index))
-	      (let* ((periods (remove-duplicates
-			       (mapcar (lambda (s)
-					 (lv:get-latent-state-attribute s :barlength latent-variable))
-				       latent-states))))
-		(list :barlength (utils:greatest-common-multiple periods)))
-	      ())))
+	 (barlengths (unless (null periodic-onset-index)
+		       (mapcar (lambda (s)
+				 (lv:get-latent-state-attribute s :barlength latent-variable))
+			       latent-states)))
+	 (common-period (unless (null periodic-onset-index)
+			  (utils:greatest-common-multiple (remove-duplicates barlengths))))
+	 (latent-state (unless (null periodic-onset-index)
+			 (list :barlength common-period)))
+	 (normalisation-factor (unless (null periodic-onset-index)
+				 (apply #'+ (mapcar (lambda (weight period)
+						      (* (/ common-period period) weight))
+						    prior barlengths)))))
     (lv::with-latent-state latent-state
       (let ((distribution-symbols (viewpoint-alphabet target-viewpoint))
 	    (distribution))
 	(flet ((get-latent-state-likelihood (latent-state event-prediction symbol)
-		 (let* ((barlength (lv:get-latent-state-attribute latent-state :barlength
-								  latent-variable))
-			(symbol 
-			 (if (not (null periodic-onset-index))
-			     (if (eq (length vp-list) 1)
-				 (mod symbol barlength)
-				 (loop for index below (length vp-list) collect
-				      (if (eq index periodic-onset-index)
-					  (mod (nth index symbol) barlength)
-					  (nth index symbol))))
-			     symbol)))
-		   (cadr (assoc symbol (prediction-set event-prediction)
-				:test #'equal)))))
+		 (if (null periodic-onset-index)
+		     (cadr (assoc symbol (prediction-set event-prediction)
+				  :test #'equal))
+		     (let* ((barlength (lv:get-latent-state-attribute latent-state :barlength
+								      latent-variable))
+			    (symbol (if (eq (length vp-list) 1)
+					(mod symbol barlength)
+					(loop for index below (length vp-list) collect
+					     (if (eq index periodic-onset-index)
+						 (mod (nth index symbol) barlength)
+						 (nth index symbol))))))
+		       (/ (cadr (assoc symbol (prediction-set event-prediction)
+				   :test #'equal))
+			  normalisation-factor)))))
 	  (loop for symbol in distribution-symbols
 	     collect
 	       (let ((likelihood 
