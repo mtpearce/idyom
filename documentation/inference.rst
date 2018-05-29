@@ -1,3 +1,5 @@
+.. highlight:: commonlisp
+
 Inference
 =========
 
@@ -100,9 +102,50 @@ A linked latent variable derives its category, interpretation, and latent-state 
 The prior distribution of a linked latent variable is calculated by calculating the joint distribution of its constituent links.
 By default, independence is assumed among these prior distribution, hence the paramaters of the joint distribution are derived from the cartesian product of the parameters of the constituent prior distributions.
 
-During inference, any combination of latent variables and linked latent variables may be provided to the inference engine to be inferred from the musical surface.
+Any combination of latent variables and linked latent variables may be provided to the inference engine to be inferred from the musical surface.
 It may be the case that latent variables become probabilistically dependent through linking. 
 For example, latent variables A and B are linked and latent variables B and C are linked and both are specified to be inferred for prediction, A, B, and C will become probabilistically dependent the system will infer a joint distribution over a single linked latent variable consisting of constituents A, B, and C.
+
+EXAMPLE
+
+The following excerpt from latent-variable/latent-variables.lisp defines the latent variable metre.
+
+::
+
+    (define-latent-variable metre (:barlength :pulses) (:phase))
+
+    (defmethod get-latent-states (category (v metre))
+      (let ((barlength (get-category-attribute category :barlength v)))
+        (loop for phase below barlength collecting
+           (create-latent-state v category :phase phase))))
+
+The name of a latent variable is the lowercase name of its attribute.
+
+::
+
+    > (defparameter metre (lv:get-latent-variable 'metre))
+    METRE
+    > (lv:latent-variable-name metre) 
+    "metre"
+
+The name of a linked latent variable consists of the names of its links, alphabetically ordered and connected by dashes.
+
+::
+
+    > (defparameter linked (lv:get-latent-variable '(metre key)))
+    LINKED
+    > (lv:latent-variable-name linked) 
+    "key-metre"
+
+
+
+::
+
+    > (lv:category-attributes metre)
+    (:BARLENGTH :PULSES)
+    > (lv:interpretation-attributes metre)
+    (:PHASE)
+
 
 Abstract viewpoints
 -------------------
