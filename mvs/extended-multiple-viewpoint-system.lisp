@@ -207,8 +207,8 @@ A sequence-prediction is returned."
 	   (set-target-alphabets m events t)
 	   (let* ((event-id (md:get-event-index (md:get-identifier (elt events event-index))))
 		  (event-interpretation-predictions
-		   (print (get-event-predictions latent-state-predictions
-					  event-index m)))
+		   (get-event-predictions latent-state-predictions
+					  event-index m))
 		  (likelihoods (joint-interpretation-likelihoods
 				event-interpretation-predictions))
 		  (prior-distribution (car posteriors))

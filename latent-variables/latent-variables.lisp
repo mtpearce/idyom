@@ -1,10 +1,12 @@
 (cl:in-package #:latent-variables)
 
+(defparameter *phase-granularity* 1)
+
 (define-latent-variable metre (:barlength :pulses) (:phase))
 
 (defmethod get-latent-states (category (v metre))
   (let ((barlength (get-category-attribute category :barlength v)))
-    (loop for phase below barlength collecting
+    (loop for phase below barlength by *phase-granularity* collecting
        (create-latent-state v category :phase phase))))
 
 (defclass metre-phase (metre) ()
