@@ -355,7 +355,7 @@ multiple-viewpoint system <m>."
     (dataset-prediction-sets m (model-d dataset (length dataset)))))
 
 (defmethod model-sequence ((m mvs) sequence &key construct? predict? 
-                           (construct-from 0) (predict-from 0))
+                           (construct-from 0) (predict-from 0) (prediction-sets? t))
   "Models a sequence <sequence> consisting of a vector of
 event-vectors given the multiple-viewpoint system <m>. The indices of
 the component models into the set of sequences must be set to the
@@ -398,7 +398,14 @@ appropriate sequence index before this method is called."
       (operate-on-models m #'model-sentinel-event :models 'ltm
                          :ltm-args (list (coerce ltm-locations 'list)))
       (operate-on-models m #'initialise-virtual-nodes))
-    (sequence-prediction-sets m sequence (reverse prediction-sets))))
+    (if prediction-sets?
+	(sequence-prediction-sets m sequence (reverse prediction-sets))
+	(mapcar (lambda (event-predictions)
+		  (mapcar (lambda (viewpoint-prediction)
+			    (cons (prediction-element viewpoint-prediction)
+				  (prediction-set viewpoint-prediction)))
+			  event-predictions))
+		(reverse prediction-sets)))))
 
 (defmethod model-event ((m mvs) event-array events &key ltm-locations
 						     stm-locations construct? predict?)
@@ -608,6 +615,7 @@ multiple viewpoint system <m>."
 ;    (format t "Target-basic mapping:~%~{~A~}" (loop for e in target-alphabet collect
 ;						   (format nil "~A: ~{~A~^, ~}~%" e
 ;							   (gethash e target-basic-mapping))))
+    ;; TODO: use reverse viewpoint function if its available
     ;; Construct the basic distribution
     (loop for source-element in source-alphabet do
 	 (let* ((basic-elements (gethash source-element source-basic-mapping))

@@ -71,16 +71,16 @@ a target viewpoint, calculate the marginal probability the target viewpoint elem
     (loop for symbol in distribution-symbols collect
 	 (let ((likelihood 
 		(marginal-likelihood
-		 prior (mapcar (lambda (ep) (cadr (assoc symbol (prediction-set ep)
+		 prior (mapcar (lambda (ep) (cadr (assoc symbol (cdr ep)
 							 :test #'equal)))
 			       event-predictions))))
 	   (push (list symbol likelihood) distribution)))
     (make-instance 'event-prediction
 		   :target-viewpoint target-viewpoint
-		   :viewpoint (prediction-viewpoint (car event-predictions))
+		   :viewpoint nil
 		   :event (car (last events))
-		   :weights (mapcar #'prediction-weights event-predictions)
-		   :order (mapcar #'prediction-order event-predictions)
+		   :weights nil
+		   :order nil
 		   :element (viewpoint-element target-viewpoint events)
 		   :set distribution)))
   

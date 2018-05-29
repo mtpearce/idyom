@@ -149,7 +149,7 @@ for each target viewpoint) for each latent state."
     (let ((latent-state (car latent-states)))
       (cons (lv:with-latent-variable-state (latent-state latent-variable)
 	      (apply #'model-sequence
-		     (append (list (abstract-mvs m) events)
+		     (append (list (abstract-mvs m) events :prediction-sets? nil)
 			     other-args)))
 	    (progn 
 	      (lv:with-latent-variable-state (latent-state latent-variable)
@@ -159,17 +159,14 @@ for each target viewpoint) for each latent state."
 	      (model-sequence-interpretations m (cdr latent-states) latent-variable
 					      events other-args))))))
 
-(defmethod get-event-predictions (sequence-interpretation-predictions event-index
+(defmethod get-event-predictions (latent-state-predictions event-index
 				  (m generative-mvs))
-  (let ((event-interpretation-predictions))
-    (dotimes (tv-index (length (mvs-target m)))
-      (push (mapcar (lambda (sequence-interpretation-prediction)
-		      (elt (prediction-set
-			    (elt sequence-interpretation-prediction tv-index))
-			   event-index))
-		    sequence-interpretation-predictions)
-	    event-interpretation-predictions))
-    (reverse event-interpretation-predictions)))
+  "SEQUENCE-INTERPRETATION-PREDICTIONS consists of one list of event predictions
+per viewpoint per latent state. From this list, obtain a list of one prediction 
+per viewpoint per latent state for the event at EVENT-INDEX."
+  (mapcar (lambda (latent-state-prediction)
+	    (elt latent-state-prediction event-index))
+	  latent-state-predictions))
 
 (defmethod model-sequence ((m generative-mvs) events
 			   &rest other-args)
@@ -189,7 +186,7 @@ A sequence-prediction is returned."
 	 (prior-distribution (lv:prior-distribution latent-variable))
 	 (latent-states (mapcar #'car prior-distribution))
 	 (posteriors (list (mapcar #'cdr prior-distribution)))
-	 (sequence-interpretation-predictions
+	 (latent-state-predictions
 	  (model-sequence-interpretations m latent-states latent-variable
 					  events other-args))
 	 (event-identifier (md:get-identifier (car events)))
@@ -210,8 +207,8 @@ A sequence-prediction is returned."
 	   (set-target-alphabets m events t)
 	   (let* ((event-id (md:get-event-index (md:get-identifier (elt events event-index))))
 		  (event-interpretation-predictions
-		   (get-event-predictions sequence-interpretation-predictions
-					  event-index m))
+		   (print (get-event-predictions latent-state-predictions
+					  event-index m)))
 		  (likelihoods (joint-interpretation-likelihoods
 				event-interpretation-predictions))
 		  (prior-distribution (car posteriors))
@@ -225,11 +222,19 @@ A sequence-prediction is returned."
 	       (push (infer-posterior-distribution evidence prior-distribution
 						   likelihoods)
 		     posteriors)
-	     (when *output-csv*
-	       (output-distribution dataset-id composition-id partition-id event-id
-				    latent-variable latent-states (car posteriors)))))))
+	       (when *output-csv*
+		 (output-distribution dataset-id composition-id partition-id event-id
+				      latent-variable latent-states (car posteriors)))))))
     (sequence-prediction-sets (abstract-mvs m)
 			      events (reverse sequence-predictions))))
+
+;;(defmethod model-event ((m mvs) event events &key construct? predict?)
+;;  (flet ((model-event (latent-state)
+;;	   (lv:with-latent-variable-state (latent-state latent-variable)
+;;	     (model-event m event events :predict? predict :construct? construct?
+;;			  stm-locations ltm-locations))))
+;;  (let ((X	
+  
 
 (defmethod model-sequence ((m combined-mvs) events
 			   &rest other-args)
@@ -257,10 +262,12 @@ A sequence-prediction is returned."
 					       (elt (prediction-set sequence-prediction)
 						    index))
 					     (elt prediction-sets target-index))))
-	      (push (combine-distributions event-predictions
-					   *mvs-combination*
-					   *mvs-bias*
-					   :mvs)
+	      (push (if (> (length event-predictions) 1)
+			(combine-distributions event-predictions
+					       *mvs-combination*
+					       *mvs-bias*
+					       :mvs)
+			(first event-predictions))
 		    combined-target-predictions)))
 	  (push combined-target-predictions combined-predictions)))
       (sequence-prediction-sets m events (reverse combined-predictions)))))
@@ -291,12 +298,16 @@ A sequence-prediction is returned."
 
 (defun marginalize-event-predictions (prior-distribution events event-predictions
 				      target-viewpoints)
-  (mapcar #'(lambda (ep tv) (make-marginal-event-prediction prior-distribution
-							    events ep tv))
-	  event-predictions target-viewpoints))
-
-(defun transpose-lists (lists)
-  (apply #'mapcar #'list lists))
+  (let ((marginal-predictions))
+    (dotimes (target-index (length target-viewpoints))
+      (let ((target-viewpoint (elt target-viewpoints target-index))
+	    (viewpoint-predictions (mapcar (lambda (predictions)
+					     (elt predictions target-index))
+					   event-predictions)))
+	(push (make-marginal-event-prediction prior-distribution events
+					      viewpoint-predictions target-viewpoint)
+	      marginal-predictions)))
+    (reverse marginal-predictions)))
 
 (defun joint-interpretation-likelihoods (event-interpretation-predictions)
   "<event-interpretation-predictions> is a list whose elements are lists of
@@ -306,8 +317,10 @@ item is the product of the event likelihoods for different target viewpoints of 
 event (obtained from the EVENT-PREDICTION-SET object using EVENT-PREDICTION) for 
 each target viewpoint and a single interpretation."
   (mapcar (lambda (interpretation-predictions)
-	    (apply #'* (mapcar #'cadr (mapcar #'event-prediction interpretation-predictions))))
-	  (transpose-lists event-interpretation-predictions)))
+	    (apply #'* (mapcar (lambda (ep)
+				 (cadr (assoc (car ep) (cdr ep) :test #'equal)))
+			       interpretation-predictions)))
+	  event-interpretation-predictions))
 
 ;;;========================================================================
 ;;; Model inspection
