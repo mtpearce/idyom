@@ -195,7 +195,7 @@ See also VIEWPOINTS:SET-ALPHABET-FROM-CONTEXT."
            (t unconstrained))))
     (unless (or (viewpoints:basic-p viewpoint) (undefined-p event)) 
       (viewpoints:set-alphabet-from-context viewpoint events unconstrained))
-    (viewpoints::set-onset-alphabet (butlast events))
+    (viewpoints::set-onset-alphabet events)
     ;(format t "~&Viewpoint: ~A; Event: ~A; Alphabet length: ~A~%" 
     ;        (viewpoint-type viewpoint) event 
     ;        (length (viewpoint-alphabet viewpoint)))

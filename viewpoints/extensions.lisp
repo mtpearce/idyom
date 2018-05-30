@@ -13,7 +13,6 @@
 
 (defun get-basic-viewpoints (attributes dataset)
   (initialise-basic-viewpoints dataset)
-  (set-onset-alphabet nil)
   (get-viewpoints attributes))
 
 (defun initialise-basic-viewpoints (dataset)
@@ -24,8 +23,8 @@
         (set-alphabet-from-dataset (get-viewpoint attribute) dataset)
       (error nil nil)))) 
 
-(defun set-onset-alphabet (context)
-  (setf (viewpoint-alphabet (get-viewpoint 'onset)) (onset-alphabet context)))
+(defun set-onset-alphabet (events)
+  (setf (viewpoint-alphabet (get-viewpoint 'onset)) (onset-alphabet events)))
 
 (defmethod set-alphabet-from-dataset ((v viewpoint) dataset)
   "Initialises the alphabet of viewpoint <v> in <dataset>."
@@ -53,14 +52,14 @@ from which <v> is derived onto a sequence of events
 predicted which assume their full alphabets, otherwise the basic
 alphabets are determined on the basis of the values of the final event
 in <events>."
-  (flet ((get-alphabets (attributes context)
+  (flet ((get-alphabets (attributes events)
            (let ((alphabets '()))
              (when (consp unconstrained)
                (setq unconstrained (mapcar #'viewpoint-type unconstrained)))
              (dolist (a attributes (reverse alphabets))
                (if (or (null unconstrained) (member a unconstrained))
                    (if (eql a 'onset)
-                       (push (onset-alphabet context) alphabets)
+                       (push (onset-alphabet events) alphabets)
                        (push (viewpoint-alphabet (get-viewpoint a)) 
                              alphabets))
                    (push (list (md:get-attribute (car (last events)) a))
@@ -71,7 +70,7 @@ in <events>."
            (context (butlast events))
            (basic-alphabet 
             (apply #'utils:cartesian-product 
-                   (get-alphabets attributes context))))
+                   (get-alphabets attributes events))))
       (dolist (d basic-alphabet)
         (mapc #'(lambda (element attribute) 
                   (md:set-attribute e attribute element))
@@ -99,28 +98,25 @@ in <events>."
 
 (defmethod alphabet->events ((o onset) events)
   (let* ((event (car (last events)))
-         (previous-events (butlast events))
-         (onset-alphabet (onset-alphabet previous-events)))
+         (onset-alphabet (onset-alphabet events)))
     (mapcar #'(lambda (viewpoint-element)
                 (let ((e (md:copy-event event)))
                   (md:set-attribute e 'onset viewpoint-element)
                   e))
             onset-alphabet)))
  
-(defun onset-alphabet (previous-events)
-  ;; Based on DELTAST alphabet
-  ;;   (let ((deltast-alphabet (viewpoint-alphabet (get-viewpoint 'deltast))))
-  ;;     (if (null previous-events) deltast-alphabet
-  ;;         (let* ((last-event (car (reverse previous-events)))
-  ;;                (onset (+ (md:get-attribute last-event :onset)
-  ;;                          (md:get-attribute last-event :dur))))
-  ;;           (mapcar #'(lambda (a) (+ onset a)) deltast-alphabet)))))
-  ;; Based on BIOI alphabet 
-  (let ((bioi-alphabet (remove nil (viewpoint-alphabet (get-viewpoint 'bioi)))))
-    (if (null previous-events) bioi-alphabet
-        (let* ((last-event (car (reverse previous-events)))
+(defun onset-alphabet (events)
+  (if (eq (length events) 1)
+      ;; The first event should have a probability of one as far as onset is concerned.
+      ;; This is achieved here indirectly by setting the onset alphabet to only the actual
+      ;; onset of the event.
+      (viewpoint-sequence (get-viewpoint 'onset) events)
+      (let ((bioi-alphabet (remove nil (viewpoint-alphabet (get-viewpoint 'bioi)))))
+	;; For subsequent events, the onset alphabet assumes the last onset plus all
+	;; values in the BIOI alphabet, except zero.
+	(let* ((last-event (car (reverse (butlast events))))
                (onset (md:get-attribute last-event 'onset)))
-          (mapcar #'(lambda (a) (+ onset a)) bioi-alphabet)))))
+	  (loop for bioi in bioi-alphabet if (not (eq bioi 0)) collect (+ onset bioi))))))
 
 (defmethod alphabet->events ((d derived) events)
   ;;TODO: make this work for all elements in typeset 
@@ -128,10 +124,9 @@ in <events>."
     (alphabet->events typeset events)))
                     
 (defmethod alphabet->events ((l linked) events)
-  (let ((event (car (last events)))
-        (previous-events (butlast events)))
+  (let ((event (car (last events))))
     (labels ((get-alphabet (attribute)
-               (if (eql attribute 'onset) (onset-alphabet previous-events)
+               (if (eql attribute 'onset) (onset-alphabet events)
                    (viewpoint-alphabet (get-viewpoint attribute))))
              (get-alphabets (attributes)
                (mapcar #'(lambda (a) (get-alphabet a)) attributes))
