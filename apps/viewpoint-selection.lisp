@@ -2,7 +2,7 @@
 ;;;; File:       viewpoint-selection.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-10-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2018-06-22 10:37:13 marcusp>                           
+;;;; Time-stamp: <2018-06-22 13:32:44 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoint-selection)
@@ -11,14 +11,17 @@
 ;;; Top-level functions
 ;;;========================================================================
 
-(defun dataset-viewpoint-selection (dataset-id basic-attributes attributes
+(defun dataset-viewpoint-selection (dataset-id target-viewpoints viewpoint-list
                                     &key pretraining-ids (k 10) resampling-indices (models :both+) 
                                       (ltmo mvs::*ltm-params*) (stmo mvs::*stm-params*)
                                       (texture :melody) voices
                                       (max-links 2)
                                       (dp nil) ; decimal-places of interest
-                                      (method :hill-climber)) ; search method: best-first or hill-climber
-  (let ((cache-filename (apps:dataset-modelling-filename dataset-id basic-attributes
+                                      (method :hill-climber) ; search method: best-first or hill-climber
+                                      (output-path nil)
+                                      (separator " ")
+                                      (overwrite nil))
+  (let ((cache-filename (apps:dataset-modelling-filename dataset-id target-viewpoints
                                                          nil ; we don't mind which derived viewpoints are used
                                                          :extension ".cache"
                                                          :pretraining-ids pretraining-ids
@@ -29,30 +32,42 @@
     (viewpoint-selection:initialise-vs-cache)
     (viewpoint-selection:load-vs-cache cache-filename :cl-user)
     (let* ((eval-function 
-            #'(lambda (derived-attributes)
+            #'(lambda (source-viewpoints)
                 (prog1
-                    (when (verify-viewpoint-system basic-attributes derived-attributes)
-		      ;;(format t "~&Evaluating ~a ..." derived-attributes)
-                      (let* ((ic (resampling:output-information-content  
-				  (resampling:idyom-resample dataset-id basic-attributes derived-attributes
-                                                             :pretraining-ids pretraining-ids
-                                                             :resampling-indices resampling-indices
-                                                             :k k
-                                                             :models models
-                                                             :ltmo ltmo :stmo stmo)
-				  1)))
-			(progn (format t "~&Mean information content for ~a~&is ~a" derived-attributes ic)
-			       ic)))
+                    (when (verify-viewpoint-system target-viewpoints source-viewpoints)
+		      ;;(format t "~&Evaluating ~a ..." source-viewpoints)
+                      (let* ((output (resampling:idyom-resample dataset-id target-viewpoints source-viewpoints
+                                                                :pretraining-ids pretraining-ids
+                                                                :resampling-indices resampling-indices
+                                                                :k k
+                                                                :models models
+                                                                :ltmo ltmo :stmo stmo))
+                             (filename (when output-path
+                                         (apps:dataset-modelling-filename dataset-id target-viewpoints source-viewpoints
+                                                                          :extension ".dat"
+                                                                          :detail 3
+                                                                          :pretraining-ids pretraining-ids
+                                                                          :k k :resampling-indices resampling-indices
+                                                                          :texture texture :voices voices
+                                                                          :models models :ltmo ltmo :stmo stmo)))
+                             (filepath (when output-path (ensure-directories-exist
+                                                          (merge-pathnames filename (utils:ensure-directory output-path)))))
+                             (ic (resampling:output-information-content output 1)))
+                        (print filepath)
+                        (format t "~&Mean information content for ~a~&is ~a" source-viewpoints ic)
+                        (when (and filepath (not (and (probe-file filepath) (not overwrite))))
+                          (resampling:format-information-content output filepath dataset-id 3 :separator separator))
+                        ic))
                   (viewpoint-selection:store-vs-cache cache-filename :cl-user))))
-           (start-state (if (and (< max-links 2) (> (length basic-attributes) 1))
-                            basic-attributes
+           (start-state (if (and (< max-links 2) (> (length target-viewpoints) 1))
+                            target-viewpoints
                             nil))
            (selected-state
             (case method
               (:hill-climber
-               (viewpoint-selection:run-hill-climber attributes start-state eval-function :desc dp))
+               (viewpoint-selection:run-hill-climber viewpoint-list start-state eval-function :desc dp))
               (:best-first
-               (viewpoint-selection:run-best-first attributes start-state eval-function :desc dp))
+               (viewpoint-selection:run-best-first viewpoint-list start-state eval-function :desc dp))
               (t 
                (format t "~&Unknown search method supplied to dataset-viewpoint-selection. Use :hill-climber or :best-first.~%")))))
       (viewpoint-selection:store-vs-cache cache-filename :cl-user)

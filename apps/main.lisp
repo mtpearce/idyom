@@ -2,7 +2,7 @@
 ;;;; File:       main.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2010-11-01 15:19:57 marcusp>
-;;;; Time-stamp: <2018-06-22 11:07:50 marcusp>
+;;;; Time-stamp: <2018-06-22 12:27:27 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:idyom)
@@ -61,6 +61,7 @@
                 (dp nil) (max-links 2) (min-links 2)
                 (vp-white '(:any))
                 (vp-black nil)
+                (viewpoint-selection-output nil)
                 ;; Number of voices and texture (e.g., :melody :harmony)
                 (voices nil)
                 (texture :melody)
@@ -95,7 +96,9 @@
                         :max-links max-links :dp dp :pretraining-ids pretraining-ids
                         :k k :resampling-indices resampling-indices
                         :texture texture :voices voices
-                        :models models :ltmo ltmo :stmo stmo)))
+                        :models models :ltmo ltmo :stmo stmo
+                        :separator separator :overwrite overwrite
+                        :output-path (when viewpoint-selection-output output-path))))
         (setf source-viewpoints selected)))
     ;;; Create and check the filepath specified
     (let* ((filename (apps:dataset-modelling-filename dataset-id target-viewpoints source-viewpoints
