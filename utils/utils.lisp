@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2017-05-09 18:40:44 peter>
+;;;; Time-stamp: <2018-06-22 10:15:01 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -135,6 +135,18 @@ Borrowed from https://www.pvk.ca/Blog/Lisp/trivial_uniform_shuffling.html"
 ;;;===========================================================================
 ;;; Lists
 ;;;===========================================================================
+
+(defun random-select (list n)
+  "Given a <list> and a number <n> returns two values: the first is a
+   list containing <n> elements drawn at random from
+   from <list> without replacement; and the second  is <list> with
+   those elements removed."
+  (labels ((rs (list n result new-list)
+             (cond ((= n 0) (values (reverse result) (reverse (append list new-list))))
+                   ((< (random 1.0 (make-random-state t)) (/ n (length list)))
+                    (rs (cdr list) (- n 1) (cons (car list) result) new-list))
+                   (t (rs (cdr list) n result (cons (car list) new-list))))))
+    (rs list n nil nil)))
 
 (defun insertion-sort (list predicate)
   "Non-destructively sorts <list> according to <predicate>."
