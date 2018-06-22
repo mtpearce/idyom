@@ -2,7 +2,7 @@
 ;;;; File:       viewpoint-selection.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-10-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2015-10-12 04:35:48 marcusp>                           
+;;;; Time-stamp: <2018-06-22 10:35:58 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoint-selection)
@@ -15,6 +15,7 @@
                                     &key pretraining-ids (k 10) resampling-indices (models :both+) 
                                       (ltmo mvs::*ltm-params*) (stmo mvs::*stm-params*)
                                       (texture :melody) voices
+                                      (max-links 2)
                                       (dp nil) ; decimal-places of interest
                                       (method :hill-climber)) ; search method: best-first or hill-climber
   (let ((cache-filename (apps:dataset-modelling-filename dataset-id basic-attributes
@@ -43,12 +44,15 @@
 			(progn (format t "~&Mean information content for ~a~&is ~a" derived-attributes ic)
 			       ic)))
                   (viewpoint-selection:store-vs-cache cache-filename :cl-user))))
+           (start-state (if (and (< max-links 2) (> (length basic-attributes) 1))
+                            basic-attributes
+                            nil))
            (selected-state
             (case method
               (:hill-climber
-               (viewpoint-selection:run-hill-climber attributes nil eval-function :desc dp))
+               (viewpoint-selection:run-hill-climber attributes start-state eval-function :desc dp))
               (:best-first
-               (viewpoint-selection:run-best-first attributes nil eval-function :desc dp))
+               (viewpoint-selection:run-best-first attributes start-state eval-function :desc dp))
               (t 
                (format t "~&Unknown search method supplied to dataset-viewpoint-selection. Use :hill-climber or :best-first.~%")))))
       (viewpoint-selection:store-vs-cache cache-filename :cl-user)

@@ -2,7 +2,7 @@
 ;;;; File:       main.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2010-11-01 15:19:57 marcusp>
-;;;; Time-stamp: <2018-06-22 10:28:39 marcusp>
+;;;; Time-stamp: <2018-06-22 10:34:09 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:idyom)
@@ -92,7 +92,7 @@
              ;; Select viewpoint system
              (selected (viewpoint-selection:dataset-viewpoint-selection
                         dataset-id target-viewpoints viewpoint-systems
-                        :dp dp :pretraining-ids pretraining-ids
+                        :max-links max-links :dp dp :pretraining-ids pretraining-ids
                         :k k :resampling-indices resampling-indices
                         :texture texture :voices voices
                         :models models :ltmo ltmo :stmo stmo)))
