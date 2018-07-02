@@ -4,11 +4,12 @@
 ;;
 ;; PROTOCOL:
 ;; * tests are added for each package individually with the file-naming convention: package-tests.lisp
+;; * add the new files to idyom.asd
 ;; * 5am suites are added with the package name and included in the testing::idyom-tests suite
 ;; * subsuites may be created for each package
-;; * all suites are listed below
+;; * list the added suites here below
 ;;
-;; Packages with tests:
+;; Packages with test suites:
 ;;
 ;; * resampling
 ;; --> create-resampling-sets
