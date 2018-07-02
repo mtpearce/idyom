@@ -2,7 +2,7 @@
 ;;;; File:       IDyOM.asd
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-05-04 21:29:04 marcusp>
-;;;; Time-stamp: <2018-07-02 13:46:46 marcusp>
+;;;; Time-stamp: <2018-07-02 13:38:57 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -25,6 +25,7 @@
             :components 
             ((:file "package")
              (:file "utils")
+             (:file "promises")
              (:file "python")))
    ;; Database for storage and retrieval of music
    (:module database

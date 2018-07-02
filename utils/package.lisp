@@ -2,7 +2,7 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                           
-;;;; Time-stamp: <2018-07-02 13:47:52 marcusp>                           
+;;;; Time-stamp: <2018-06-22 10:14:22 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -30,6 +30,12 @@
   (:use #:cl)
   (:export "ALIST->DICT" "PLIST->DICT" "LIST->LIST")
   (:documentation "Utility functions for exporting python code."))
+
+(defpackage #:promises
+  (:use #:cl)
+  (:export "MAKE-PROMISE" "PROMISE" "RETRIEVE" "GET-IDENTIFIER")
+  (:documentation "Objects for postponing calling resource intensive functions until
+their result is required because of cache misses."))
 
 
 
