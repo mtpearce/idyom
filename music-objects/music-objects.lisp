@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2018-07-02 14:32:16 marcusp>
+;;;; Time-stamp: <2018-07-02 14:48:02 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -396,20 +396,6 @@ the highest pitch sounding at that onset position."
         (setf previous-event top)
         (push top result)))))
 
-(defun fractional? (n)
-  (not (equalp (mod n 1) 0)))
-
-(defun rescale (time resolution timebase)
-  "Convert time from units on timebase scale to units on resolution
-scale. Show a warning when the resulting time is not a whole number."
-  (let* ((rescaled-time (* time (/ resolution timebase)))
-	 (fractional (fractional? rescaled-time)))
-    (when fractional
-      (warn (format nil "WARNING: converting ~F (timebase ~D) to resolution ~D resulted in a fractional number (~F) ~%"
-                    time timebase resolution rescaled-time)))
-    rescaled-time))
-
-
 ;; low-level database access functions
 
 (defgeneric get-dataset (dataset-identifier))
@@ -546,18 +532,29 @@ scale. Show a warning when the resulting time is not a whole number."
           (db-atts (nthcdr 3 db-event) (cdr db-atts)))
          ((null slts) music-event)
       (if (member (car slts) *md-time-slots* :test #'eql)
-          (setf (slot-value music-event (car slts)) (convert-time-slot (car db-atts) timebase))
+          (setf (slot-value music-event (car slts)) (convert-time-value (car db-atts) timebase))
           (setf (slot-value music-event (car slts)) (car db-atts))))))
 
-(defun convert-time-slot (value timebase)
-  "Convert native representation of time into a representation where
-    a crotchet has a value of *md-timebase*."
-  (if (or (null value) (null timebase))
+
+;; converting time resolutions
+
+(defun convert-time-value (time-value old-timebase &optional (new-timebase *md-timebase*) (fraction-warning nil))
+  "Convert <time-value> from <old-timebase> to <new-timebase> where
+    the latter defaults to the value of *MD-TIMEBASE*. For example,
+    convert a time value from a native representation of time into a
+    representation where a bar has a value of *md-timebase*."
+  (if (or (null time-value) (null old-timebase))
       nil
-      (let ((multiplier (/ *md-timebase* timebase)))
-	(* value multiplier)))) 
+      (let* ((multiplier (/ new-timebase old-timebase))
+             (new-time-value (* value multiplier))
+             (fractional (fractional? new-time-value)))
+        (when (and fractional fraction-warning)
+          (warn (format nil "WARNING: converting ~F from timebase ~D to timebase ~D resulted in a fractional value (~F) ~%"
+                        time-value old-timebase new-timebase new-time-value)))
+        new-time-value)))
 
-
+(defun fractional? (n)
+  (not (equalp (mod n 1) 0)))
 
 
 ;; Detritus

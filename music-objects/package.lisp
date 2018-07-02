@@ -23,7 +23,6 @@
    "GET-ATTRIBUTE" "SET-ATTRIBUTE" "COUNT-COMPOSITIONS" "GET-DESCRIPTION"
    "COPY-EVENT" "MUSIC-SYMBOL" "*MD-MUSIC-SLOTS*" "*MD-TIME-SLOTS*"
    ;; Representation
-   "*MD-TIMEBASE*"
-   "RESCALE")
+   "*MD-TIMEBASE*")
   (:documentation "Musical data."))
 
