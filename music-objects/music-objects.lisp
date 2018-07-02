@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2018-07-02 14:57:51 marcusp>
+;;;; Time-stamp: <2018-07-02 15:42:17 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -546,7 +546,7 @@ the highest pitch sounding at that onset position."
   (if (or (null time-value) (null old-timebase))
       nil
       (let* ((multiplier (/ new-timebase old-timebase))
-             (new-time-value (* value multiplier))
+             (new-time-value (* time-value multiplier))
              (fractional (fractional? new-time-value)))
         (when (and fractional fraction-warning)
           (warn (format nil "WARNING: converting ~F from timebase ~D to timebase ~D resulted in a fractional value (~F) ~%"
