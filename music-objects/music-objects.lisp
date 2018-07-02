@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2018-07-02 14:48:02 marcusp>
+;;;; Time-stamp: <2016-05-27 14:41:28 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -50,6 +50,8 @@
 (defclass music-composition (music-sequence) ())                        ; a composition is an unconstrained sequence of music objects
 (defclass melodic-sequence (music-sequence) ())                         ; a sequence of non-overlapping notes
 (defclass harmonic-sequence (music-sequence) ())                        ; a sequence of harmonic slices
+(defclass grid-sequence (music-sequence)                                ; a sequence of grid events
+  ((resolution :initarg :resolution :accessor resolution)))
 
 (defclass key-signature ()
   ((keysig :initarg :keysig :accessor key-signature)
@@ -85,6 +87,15 @@
    (articulation :initarg :articulation :accessor articulation)
    (vertint12 :initarg :vertint12 :accessor vertint12)
    (voice :initarg :voice :accessor voice)))
+
+(defclass grid-object ()
+  ((resolution :initarg :resolution :accessor resolution)
+   (is-onset :initarg :is-onset :accessor is-onset)
+   (pos :initarg :pos :accessor pos))) ; pos(ition) is the time of the event expressed in grid-units (which are determined by the resolution)
+
+(defclass grid-event (music-event grid-object) ())
+
+(defclass grid-slice (music-slice grid-object) ())
   
 
 ;;; Identifiers 
@@ -199,7 +210,9 @@
 ;;; Getting music objects from the database
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun get-music-objects (dataset-indices composition-indices &key voices (texture :melody))
+(defun get-music-objects (dataset-indices composition-indices
+                          &key voices (texture :melody) (time-representation :event)
+                            (grid-resolution 16) (hide-meter nil))
   "Return music objects from the database corresponding to
   DATASET-INDICES, COMPOSITION-INDICES which may be single numeric IDs
   or lists of IDs. COMPOSITION-INDICES is only considered if
@@ -216,7 +229,13 @@
           (setf result (get-harmonic-objects dataset-indices composition-indices :voices voices)))
          (t 
           (print "Unrecognised texture for the music object. Current options are :melody or :harmony.")))
-    result))
+    (if (eq time-representation :grid)
+        (if (atom result)
+            (composition->grid result :voices voices :resolution grid-resolution :hide-meter hide-meter)
+            (mapcar #'(lambda (x)
+                        (composition->grid x :voices voices :resolution grid-resolution :hide-meter hide-meter))
+                    result))
+        result)))
 
 ;; harmonic sequences
 
@@ -396,6 +415,123 @@ the highest pitch sounding at that onset position."
         (setf previous-event top)
         (push top result)))))
 
+
+;; grid sequences
+
+;; Needs to be monody as well?
+(defun get-grid-sequence (dataset-index composition-index &key voices resolution (hide-meter nil))
+  (composition->grid
+    (get-composition (lookup-composition dataset-index composition-index))
+    :voices voices :resolution resolution :hide-meter hide-meter))
+
+(defun get-grid-sequences (dataset-ids &key voices resolution (hide-meter nil))
+  (let ((compositions '()))
+    (dolist (dataset-id dataset-ids (nreverse compositions))
+      (let ((d (get-dataset (lookup-dataset dataset-id))))
+	(sequence:dosequence (c d)
+	  (push (composition->grid c :voices voices :resolution resolution :hide-meter hide-meter) compositions))))))
+
+(defun composition->grid (composition &key voices resolution (hide-meter nil))
+  "Extract a grid from a composition using the resolution specified by
+the resolution argument."
+    (let* ((timebase (timebase composition))
+	   (grid-sequence (make-instance 'grid-sequence
+                              :onset 0
+                              :duration (duration composition)
+                              :midc (midc composition)
+                              :id (copy-identifier (get-identifier composition))
+                              :description (description composition)
+                              :timebase timebase
+			      :resolution resolution))
+           (sorted-composition (sort composition #'< :key #'md:onset))
+           (event-list (coerce sorted-composition 'list))
+           (event-list (if (null voices)
+                           event-list
+                           (remove-if #'(lambda (x) (not (member x voices))) event-list :key #'md:voice)))
+           (data (remove-duplicates event-list))
+           ;; Create grid events
+	   (grid-slices
+	    (let ((position 0))
+	      (loop for event in data collecting
+		   (let ((event-position (rescale (onset event) resolution timebase))
+			 (duration (rescale (duration event) resolution timebase))
+                         (bioi (rescale (bioi event) resolution timebase))
+                         (deltast (rescale (deltast event) resolution timebase))
+			 (last-position position))
+		     (setf position (+ event-position duration))
+		     (when (or (fractional? event-position) (fractional? duration))
+		       (return-from composition->grid grid-sequence))
+		     (loop for p from last-position below position collecting
+			  (let ((is-onset (eql p event-position)))
+                            (case (type-of event)
+                              (music-event (music-event->grid-event event p is-onset resolution duration bioi deltast hide-meter))
+                              (music-slice (music-slice->grid-slice event p is-onset resolution duration bioi deltast hide-meter)))))))))
+           (grid-events (apply #'append grid-slices)))
+      (sequence:adjust-sequence grid-sequence
+                                (length grid-events)
+                                :initial-contents grid-events)))
+
+(defun music-event->grid-event (event pos is-onset resolution duration bioi deltast hide-meter)
+  (let* ((grid-event (make-instance 'grid-event
+                                    :pos pos
+                                    :is-onset is-onset
+                                    :resolution resolution))
+         (grid-event (utils:initialise-unbound-slots grid-event)))
+    (when is-onset
+      (setf grid-event (utils:copy-slot-values event grid-event))
+      (setf (duration grid-event) duration
+            (bioi grid-event) bioi
+            (deltast grid-event) deltast)
+      (when hide-meter
+        (setf (barlength grid-event) nil
+              (pulses grid-event) nil)))
+    (setf (get-identifier grid-event) (copy-identifier (get-identifier event)))
+    grid-event))
+
+(defun music-slice->grid-slice (slice pos is-onset resolution duration bioi deltast hide-meter)
+  (let* ((onset (onset slice))
+         (barlength (barlength slice))
+         (pulses (pulses slice))
+         (grid-slice (make-instance 'grid-slice
+                                    :pos pos
+                                    :is-onset is-onset
+                                    :resolution resolution))
+         (grid-slice (utils:initialise-unbound-slots grid-slice)))
+    (when is-onset
+      (setf grid-slice (utils:copy-slot-values slice grid-slice))
+      ;; todo: set bioi and deltast as well as duration
+      (setf (duration grid-slice) duration
+            (bioi grid-slice) bioi
+            (deltast grid-slice) deltast)
+      (when hide-meter
+        (setf (barlength grid-slice) nil
+              (pulses grid-slice) nil))
+      (sequence:adjust-sequence 
+       slice (length slice)
+       :initial-contents (coerce slice 'list))
+      (sequence:dosequence (v slice)
+        (setf (onset v) onset
+              (duration v) duration
+              ;; todo: set bioi and deltast as well as duration
+              (barlength v) (unless hide-meter barlength)
+              (pulses v) (unless hide-meter pulses))))
+    (setf (get-identifier grid-slice) (copy-identifier (get-identifier slice)))
+    grid-slice))
+
+(defun fractional? (n)
+  (not (equalp (mod n 1) 0)))
+
+(defun rescale (time resolution timebase)
+  "Convert time from units on timebase scale to units on resolution
+scale. Show a warning when the resulting time is not a whole number."
+  (let* ((rescaled-time (* time (/ resolution timebase)))
+	 (fractional (fractional? rescaled-time)))
+    (when fractional
+      (warn (format nil "WARNING: converting ~F (timebase ~D) to resolution ~D resulted in a fractional number (~F) ~%"
+                    time timebase resolution rescaled-time)))
+    rescaled-time))
+
+
 ;; low-level database access functions
 
 (defgeneric get-dataset (dataset-identifier))
@@ -532,29 +668,18 @@ the highest pitch sounding at that onset position."
           (db-atts (nthcdr 3 db-event) (cdr db-atts)))
          ((null slts) music-event)
       (if (member (car slts) *md-time-slots* :test #'eql)
-          (setf (slot-value music-event (car slts)) (convert-time-value (car db-atts) timebase))
+          (setf (slot-value music-event (car slts)) (convert-time-slot (car db-atts) timebase))
           (setf (slot-value music-event (car slts)) (car db-atts))))))
 
-
-;; converting time resolutions
-
-(defun convert-time-value (time-value old-timebase &optional (new-timebase *md-timebase*) (fraction-warning nil))
-  "Convert <time-value> from <old-timebase> to <new-timebase> where
-    the latter defaults to the value of *MD-TIMEBASE*. For example,
-    convert a time value from a native representation of time into a
-    representation where a bar has a value of *md-timebase*."
-  (if (or (null time-value) (null old-timebase))
+(defun convert-time-slot (value timebase)
+  "Convert native representation of time into a representation where
+    a crotchet has a value of *md-timebase*."
+  (if (or (null value) (null timebase))
       nil
-      (let* ((multiplier (/ new-timebase old-timebase))
-             (new-time-value (* value multiplier))
-             (fractional (fractional? new-time-value)))
-        (when (and fractional fraction-warning)
-          (warn (format nil "WARNING: converting ~F from timebase ~D to timebase ~D resulted in a fractional value (~F) ~%"
-                        time-value old-timebase new-timebase new-time-value)))
-        new-time-value)))
+      (let ((multiplier (/ *md-timebase* timebase)))
+	(* value multiplier)))) 
 
-(defun fractional? (n)
-  (not (equalp (mod n 1) 0)))
+
 
 
 ;; Detritus
