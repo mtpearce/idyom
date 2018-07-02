@@ -1,0 +1,3 @@
+idyom/idyom.asd
+digram/digram.asd
+metering/metering.asd
