@@ -1,7 +1,7 @@
 IDyOM: Information Dynamics of Music
-Version 1.4
+Version 1.5
 
-Copyright 2001-2016, Marcus Pearce (marcus.pearce@qmul.ac.uk)
+Copyright 2001-2018, Marcus Pearce (marcus.pearce@qmul.ac.uk)
 
 This program is distributed under the terms of the GNU General Public
 License.  See COPYING for details.
@@ -29,6 +29,22 @@ Sqlite     http://www.sqlite.org/
 See the wiki for further details on installation.
 
 ==News==
+
+2018-07-02
+v1.5
+* New top-level option to specify the separator to use in output files (thanks to Peter M. C. Harrison)
+* new output formatting code for greater efficiency and accuracy, fixing misidentified columns when predicting onset (thanks to Peter M. C. Harrison)
+* fixed uneven splits in the creation of resampling sets (thanks to Peter M. C. Harrison)
+* New top-level option to specify whether output files are written during viewpoint selection
+* Fix bug preventing viewpoint selection (reported by Niels Chr. Hansen and Ben Gold)
+* Viewpoint selection works for max-links = 1 and more than one target viewpoint (reported by Ben Gold)
+* fix compilation issue with recent versions of SBCL (tested on SBCL 1.4.8)
+* added timebase parameter in the music-objects code to allow for different timebases to be specified (thanks to Bastiaan van der Weij)
+* new macro DEFINE-THREADED-VIEWPOINTS for flexibly creating threaded viewpoints
+* new utility functions: CUMSUM, RANGE, MD5-SUM-OF-LISTS, COPY-SLOT-VALUES, INITIALISE-UNBOUND-SLOTS, SHUFFLE, ANY-DUPLICATED, RANDOM-SELECT
+* midi track numbers are indexed from 1 rather than 0 (for consistency with Kern import)
+* avoid negative deltast in midi import when successive notes overlap in a melody
+* add random-subset argument to IDYOM-DB:COPY-DATASETS to allow copying random subsets of a specified size
 
 2016-05-03
 v1.4
