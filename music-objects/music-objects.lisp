@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2018-07-02 14:48:02 marcusp>
+;;;; Time-stamp: <2018-07-02 14:57:51 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -555,49 +555,3 @@ the highest pitch sounding at that onset position."
 
 (defun fractional? (n)
   (not (equalp (mod n 1) 0)))
-
-
-;; Detritus
-
-;; (defmethod crotchet ((mo music-object))
-;;   (/ (timebase mo) 4))
-
-;; (defmethod timebase ((id composition-identifier))
-;;   (timebase (get-composition id)))
-
-;; (defgeneric get-alphabet (attribute dataset))
-
-
-;; #.(clsql:locally-enable-sql-reader-syntax)
-;; (defmethod crotchet ((event music-event))
-;;   (let ((timebase 
-;;          (car (clsql:select [timebase] :from [mtp-composition]
-;;                             :where [and [= [dataset-id] (get-dataset-index (ident event))] [= [composition-id] (get-composition-index (ident event))]]
-;;                             :flatp t 
-;;                             :field-names nil))))
-;;     (/ timebase 4)))
-;; #.(clsql:restore-sql-reader-syntax-state)
-
-;; #.(clsql:locally-enable-sql-reader-syntax)
-;; (defun get-mtp-alphabet (attribute &rest dataset-ids)
-;;   (clsql:select attribute :from 'mtp-event
-;;                 :where [in [slot-value 'mtp-event 'dataset-id] dataset-ids]
-;;                 :order-by attribute
-;;                 :flatp t 
-;;                 :field-names nil 
-;;                 :distinct t))
-;; #.(clsql:restore-sql-reader-syntax-state)
-
-
-;;(defun get-db-event-sequence (dataset-id composition-id)
-;;  (composition->monody
-;;   (get-composition 
-;;    (make-composition-id dataset-id composition-id))))
-
-;; (defun get-db-event-sequences (&rest dataset-ids)
-;;   (let ((compositions '()))
-;;     (dolist (dataset-id dataset-ids (nreverse compositions))
-;;       (let ((d (md:get-dataset 
-;;                 (make-dataset-id dataset-id))))
-;;         (sequence:dosequence (c d)
-;;           (push (md:composition->monody c) compositions))))))
