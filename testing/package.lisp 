@@ -1,5 +1,0 @@
-(cl:in-package #:cl-user)
-
-(defpackage #:testing
-  (:use #:common-lisp)  
-  (:export #:run-tests))     
