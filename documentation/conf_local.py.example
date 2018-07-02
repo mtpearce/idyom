@@ -1,4 +1,0 @@
-from os.path import expandvars
-
-cl_quicklisp = expandvars('/path/to/quicklisp/')
-cl_lisps = "lisp-implementations-to-use"
