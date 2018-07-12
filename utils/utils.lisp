@@ -164,10 +164,11 @@ Borrowed from https://www.pvk.ca/Blog/Lisp/trivial_uniform_shuffling.html"
 (defun cartesian-product (list &rest lists)
   "Computes the cartesian product of <lists>."
   (if (null lists) (mapcar #'list list)
-      (mapcan #'(lambda (x)
-                  (mapcar #'(lambda (y) (cons x y))
-                          (apply #'cartesian-product lists)))
-              list)))
+      (let ((cartesian-product-of-lists (apply #'cartesian-product lists)))
+	(mapcan #'(lambda (x)
+		    (mapcar #'(lambda (y) (cons x y))
+			    cartesian-product-of-lists))
+		list))))
 
 (defun flatten (list)
   "Flatten nested lists."
