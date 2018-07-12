@@ -2,7 +2,7 @@
 ;;;; File:       main.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2010-11-01 15:19:57 marcusp>
-;;;; Time-stamp: <2016-05-04 15:24:51 marcusp>
+;;;; Time-stamp: <2018-06-22 12:27:27 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:idyom)
@@ -61,6 +61,7 @@
                 (dp nil) (max-links 2) (min-links 2)
                 (vp-white '(:any))
                 (vp-black nil)
+                (viewpoint-selection-output nil)
                 ;; Number of voices and texture (e.g., :melody :harmony)
                 (voices nil)
                 (texture :melody)
@@ -68,6 +69,7 @@
                 (detail 3)
                 (output-path nil)
                 (overwrite nil)
+		(separator " ")
                 ;; Caching
                 (use-resampling-set-cache? t)
                 (use-ltms-cache? t))
@@ -79,37 +81,39 @@
    dataset using k-fold cross validation (AKA resampling).  The
    parameters <use-resampling-set-cache?> and <use-ltms-cache?> enable
    or disable respectively the caching of resampling-sets and LTMs."
-  (let* ((ltmo (apply #'resampling::check-model-defaults (cons mvs::*ltm-params* ltmo)))
-         (stmo (apply #'resampling::check-model-defaults (cons mvs::*stm-params* stmo)))
-         (filename (apps:dataset-modelling-filename dataset-id target-viewpoints source-viewpoints
-                                                    :extension ".dat"
-                                                    :detail detail
-                                                    :pretraining-ids pretraining-ids
-                                                    :k k :resampling-indices resampling-indices
-                                                    :texture texture :voices voices
-                                                    :models models :ltmo ltmo :stmo stmo))
-         (filepath (when output-path (ensure-directories-exist
-                                      (merge-pathnames filename (utils:ensure-directory output-path))))))
-    (if (and filepath (probe-file filepath) (not overwrite))
-        ;; Don't overwrite existing file if requested 
-        (format t "~&Preserving existing output file: ~A~%" filepath)
-        (progn
-          ;; Optionally select source viewpoints if requested
-          (when (eq source-viewpoints :select)
-            (format t "~&Selecting viewpoints for the ~A model on dataset ~A predicting viewpoints ~A.~%" 
-                    models dataset-id target-viewpoints)
-            (let* (;; Generate candidate viewpoint systems
-                   (sel-basis (find-selection-basis target-viewpoints basis))
-                   (viewpoint-systems (generate-viewpoint-systems sel-basis max-links min-links vp-white vp-black))
-                   ;; Select viewpoint system
-                   (selected (viewpoint-selection:dataset-viewpoint-selection
-                              dataset-id target-viewpoints viewpoint-systems
-                              :dp dp :pretraining-ids pretraining-ids
-                              :k k :resampling-indices resampling-indices
-                              :texture texture :voices voices
-                              :models models :ltmo ltmo :stmo stmo)))
-              (setf source-viewpoints selected)))
-          ;; Derive target viewpoint IC profile from source viewpoints
+  (let ((ltmo (apply #'resampling::check-model-defaults (cons mvs::*ltm-params* ltmo)))
+        (stmo (apply #'resampling::check-model-defaults (cons mvs::*stm-params* stmo))))
+    ;;; Optionally select source viewpoints if requested
+    (when (eq source-viewpoints :select)
+      (format t "~&Selecting viewpoints for the ~A model on dataset ~A predicting viewpoints ~A.~%" 
+              models dataset-id target-viewpoints)
+      (let* (;; Generate candidate viewpoint systems
+             (sel-basis (find-selection-basis target-viewpoints basis))
+             (viewpoint-systems (generate-viewpoint-systems sel-basis max-links min-links vp-white vp-black))
+             ;; Select viewpoint system
+             (selected (viewpoint-selection:dataset-viewpoint-selection
+                        dataset-id target-viewpoints viewpoint-systems
+                        :max-links max-links :dp dp :pretraining-ids pretraining-ids
+                        :k k :resampling-indices resampling-indices
+                        :texture texture :voices voices
+                        :models models :ltmo ltmo :stmo stmo
+                        :separator separator :overwrite overwrite
+                        :output-path (when viewpoint-selection-output output-path))))
+        (setf source-viewpoints selected)))
+    ;;; Create and check the filepath specified
+    (let* ((filename (apps:dataset-modelling-filename dataset-id target-viewpoints source-viewpoints
+                                                      :extension ".dat"
+                                                      :detail detail
+                                                      :pretraining-ids pretraining-ids
+                                                      :k k :resampling-indices resampling-indices
+                                                      :texture texture :voices voices
+                                                      :models models :ltmo ltmo :stmo stmo))
+           (filepath (when output-path (ensure-directories-exist
+                                        (merge-pathnames filename (utils:ensure-directory output-path))))))
+      (if (and filepath (probe-file filepath) (not overwrite))
+          ;; Don't overwrite existing file if requested 
+          (format t "~&Preserving existing output file: ~A~%" filepath)
+                  ;;; Run IDyOM
           (let* ((predictions 
                   (resampling:idyom-resample dataset-id target-viewpoints source-viewpoints
                                              :pretraining-ids pretraining-ids
@@ -119,9 +123,8 @@
                                              :use-resampling-set-cache? use-resampling-set-cache?
                                              :use-ltms-cache? use-ltms-cache?)))
             (when output-path
-              (resampling:format-information-content predictions filepath dataset-id detail))
+              (resampling:format-information-content predictions filepath dataset-id detail :separator separator))
             (resampling:output-information-content predictions detail))))))
-
 
 (defun find-selection-basis (targets basis)
   "Determine which viewpoints are to be used in selection process"
