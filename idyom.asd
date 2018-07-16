@@ -2,7 +2,7 @@
 ;;;; File:       IDyOM.asd
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-05-04 21:29:04 marcusp>
-;;;; Time-stamp: <2018-07-02 15:33:29 marcusp>
+;;;; Time-stamp: <2018-07-16 13:00:26 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -12,7 +12,7 @@
 
 (defsystem idyom
   :name "IDyOM"
-  :version "1.4"
+  :version "1.5"
   :author "Marcus Pearce"
   :licence "GPL (see COPYING file for details)"
   :description "Information Dynamics of Music (see README for details)"
