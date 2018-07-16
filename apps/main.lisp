@@ -2,7 +2,7 @@
 ;;;; File:       main.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2010-11-01 15:19:57 marcusp>
-;;;; Time-stamp: <2018-06-22 12:27:27 marcusp>
+;;;; Time-stamp: <2018-07-16 12:58:32 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:idyom)
@@ -152,7 +152,7 @@
 ;; => (:CPITCH :CPINT (:CPITCH :CPINT :BIOI-RATIO) (:CPITCH :CPINT :BIOI))
 ;;
 (defun generate-viewpoint-systems (basis-vps max-links min-links white black)
-      (format t "Generating candidate viewpoints from: ~A~%Max. links ~A, whitelist ~A, blacklist ~A~%" basis-vps max-links white black)
+      (format t "Generating candidate viewpoints from: ~A~%Max. links ~A, Min. links ~A, whitelist ~A, blacklist ~A~%" basis-vps max-links min-links white black)
       (let* ((links (remove-if #'(lambda (x) (or (null x) (< (length x) 2) 
 						 (> (length x) max-links)
                                                  (< (length x) min-links)))
