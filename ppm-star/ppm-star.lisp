@@ -2,7 +2,7 @@
 ;;;; File:       ppm-star.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2018-08-03 14:15:12 marcusp>                           
+;;;; Time-stamp: <2018-08-03 14:53:04 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -828,19 +828,9 @@
 
 
 ;;;===========================================================================
-;;; Probability estimation 
+;;; State selection
 ;;;===========================================================================
 
-(defmethod get-distribution ((m ppm) location)
-  "Selects a location on the chain of excited locations from <location>
-   and estimates the distribution governing the emission of the current
-   symbol from that location."
-  (multiple-value-bind (selected-location selected?)
-      (select-state m location)
-    ;; (format t "~S~%" (get-order m selected-location))
-    (values (probability-distribution m selected-location selected?)
-            (get-order m selected-location))))
-    
 (defmethod select-state ((m ppm) location)
   "Returns the shortest deterministic state on the chain of suffix links
    from <location> or else <location> itself when (ppm-order-bound <m>)
@@ -869,6 +859,21 @@
             (values location nil)
             (values (order-bounded-state location) t)))))
 
+
+;;;===========================================================================
+;;; Probability estimation 
+;;;===========================================================================
+
+(defmethod get-distribution ((m ppm) location)
+  "Selects a location on the chain of excited locations from <location>
+   and estimates the distribution governing the emission of the current
+   symbol from that location."
+  (multiple-value-bind (selected-location selected?)
+      (select-state m location)
+    ;; (format t "~S~%" (get-order m selected-location))
+    (values (probability-distribution m selected-location selected?)
+            (get-order m selected-location))))
+
 (defmethod probability-distribution ((m ppm) location selected?)
   "Returns the probability of <symbol> by computing a mixture of the 
    probabilities assigned to <symbol> by all the states in a chain of
@@ -893,29 +898,29 @@
         ;;        (when excluded (utils:hash-table->alist excluded)) escape)
         om1d)
       (let* ((transition-counts (transition-counts m location up-ex))
-             (child-count (child-count m transition-counts)) 
-             (node-count (node-count m transition-counts excluded))
-             (weight (weight m node-count child-count))
+             (type-count (type-count m transition-counts)) 
+             (state-count (state-count m transition-counts excluded))
+             (weight (weight m state-count type-count))
              (next-distribution
               (next-distribution m distribution transition-counts
-                                 node-count excluded weight escape))
+                                 state-count excluded weight escape))
              (next-location (get-next-location m location))
              (next-excluded transition-counts)
              (next-escape (* escape (- 1.0 weight))))
-        ;; (format t "~%child-count ~A~%node-count ~A~%weight ~A~%distribution: ~A~%excluded ~A~%escape ~A~&"
-        ;;        child-count node-count weight next-distribution (when excluded (utils:hash-table->alist excluded)) escape)
+        ;; (format t "~%type-count ~A~%state-count ~A~%weight ~A~%distribution: ~A~%excluded ~A~%escape ~A~&"
+        ;;        type-count state-count weight next-distribution (when excluded (utils:hash-table->alist excluded)) escape)
         (compute-mixture m next-distribution next-location next-excluded
                          :escape next-escape))))
 
-(defmethod next-distribution ((m ppm) distribution transition-counts node-count
+(defmethod next-distribution ((m ppm) distribution transition-counts state-count
                               excluded weight escape)
-  "Updates <distribution> an alist of <symbol probability> pairs."
+  "Updates <distribution>, an alist of <symbol probability> pairs."
   (mapcar #'(lambda (d)
-              (next-probability m d transition-counts node-count excluded
+              (next-probability m d transition-counts state-count excluded
                                 weight escape))
           distribution))
 
-(defmethod next-probability ((m ppm) pair transition-counts node-count excluded
+(defmethod next-probability ((m ppm) pair transition-counts state-count excluded
                              weight escape)
   "Updates the probability for <pair> a list containing a symbol and a
 probability."
@@ -923,31 +928,32 @@ probability."
          (old-probability (nth 1 pair))
          (trans-count 
           (transition-count m symbol transition-counts))
-         (probability (if (zerop node-count) 0.0
-                          (* weight (float (/ trans-count node-count) 0.0)))))
+         (probability (if (zerop state-count) 0.0
+                          (* weight (float (/ trans-count state-count) 0.0)))))
     (if (null (ppm-mixtures m))
         (cond ((excluded? symbol excluded) pair)
-              ((and (> trans-count 0) (> node-count 0))
+              ((and (> trans-count 0) (> state-count 0))
                (list symbol (* escape probability)))
               (t pair))
         (list symbol (+ old-probability (* escape probability))))))
   
 (defun excluded? (symbol excluded-list)
-  "Returns true if <symbol> appears as a key in alist <excluded-list>."
+  "Returns true if <symbol> appears as a key in hash-table<excluded-list>."
   (when excluded-list
     (gethash symbol excluded-list)))
 
-(defmethod weight ((m ppm) node-count child-count)
-  "Returns the weighting to give to a node s where count node-count (s)
-   = <node-count> and child-count(s) = <child-count>."
-  (let ((denominator (+ node-count (if (eql (ppm-escape m) :a) 1
-                                       (/ child-count (ppm-d m))))))
+(defmethod weight ((m ppm) state-count type-count)
+  "Returns the weighting to give to a state s given the state-count and 
+   type count."
+  (let ((denominator (+ state-count (if (eql (ppm-escape m) :a) 1
+                                       (/ type-count (ppm-d m))))))
     (if (zerop denominator) 0.0 
-        (float (/ node-count denominator) 0.0))))
+        (float (/ state-count denominator) 0.0))))
 
 (defmethod transition-counts ((m ppm) location up-ex)
-  "Returns a list of the form (symbol frequency-count) for the transitions
-   appearing at location <location> in the suffix tree of model <m>."
+  "Returns a hash-table of the form (symbol frequency-count) for the
+   transitions appearing at location <location> in the suffix tree of
+   model <m>."
   (declare (optimize (speed 3) (safety 1) (space 0) (debug 0) (compilation-speed 0)))
   (let ((tc (make-hash-table :test #'equal)))
     (if (branch-p location)
@@ -963,8 +969,17 @@ probability."
             (setf (gethash sym tc) (get-virtual-node-count m location up-ex)))))
     tc))
 
-(defmethod child-count ((m ppm) transition-counts)
-  "Returns the token count given <child-count-list>, an alist of the
+(defmethod transition-count ((m ppm) symbol transition-counts)
+  "Returns the frequency count associated with <symbol> in
+   <transition-counts> an hash-table of the form (symbol
+   frequency-count)."
+  (declare (optimize (speed 3) (safety 1) (space 0) (debug 0) (compilation-speed 0)))
+  (let ((count (gethash symbol transition-counts))
+        (k (ppm-k m)))
+    (if (null count) 0 (+ count k))))
+
+(defmethod type-count ((m ppm) transition-counts)
+  "Returns the type count given <transition-counts>, a hash-table of the
 form (symbol frequency count), i.e., the total number of symbols that
 have occurred with non-zero frequency. If the escape method is X only
 those symbols that have occurred exactly once are counted."
@@ -977,18 +992,11 @@ those symbols that have occurred exactly once are counted."
           count))
     (otherwise (hash-table-count transition-counts))))
 
-(defmethod transition-count ((m ppm) symbol transition-counts)
-  "Returns the frequency count associated with <symbol> in <child-list>
-   an alist of the form (symbol frequency-count)."
-  (declare (optimize (speed 3) (safety 1) (space 0) (debug 0) (compilation-speed 0)))
-  (let ((count (gethash symbol transition-counts))
-        (k (ppm-k m)))
-    (if (null count) 0 (+ count k))))
-
-(defmethod node-count ((m ppm) transition-counts excluded-list)
-  "Returns the total token count for symbols appearing in <child-list>
-   , an alist of the form (symbol frequency-count), excluding the
-   counts for those symbols that appear in <excluded-list>."
+(defmethod state-count ((m ppm) transition-counts excluded-list)
+  "Returns the total token count for symbols appearing in
+   <transition-counts>, a hash-table of the form (symbol
+   frequency-count), excluding the counts for those symbols that
+   appear in <excluded-list>."
   (let ((ppmk (ppm-k m))
         (count 0))
     (maphash #'(lambda (k v)
