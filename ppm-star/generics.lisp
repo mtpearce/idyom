@@ -2,7 +2,7 @@
 ;;;; File:       generics.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2008-11-03 14:07:53 marcusp>
-;;;; Time-stamp: <2014-06-04 16:04:55 marcusp>
+;;;; Time-stamp: <2018-08-03 15:58:30 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:ppm)
@@ -34,7 +34,7 @@
 (defgeneric set-label (ppm branch-or-leaf label))
 (defgeneric get-brother (ppm branch-or-leaf))
 (defgeneric get-record (ppm branch-or-leaf))
-(defgeneric get-count (ppm branch-or-leaf &optional excluded))
+(defgeneric get-count (ppm branch-or-leaf excluded))
 (defgeneric get-node-index (ppm branch-or-leaf))
 (defgeneric instantiate-label (ppm label))
 (defgeneric get-length (ppm label))
@@ -60,24 +60,24 @@
 (defgeneric insert-leaf (ppm branch))
 (defgeneric split-location (ppm location))
 (defgeneric increment-counts (ppm location novel?))
-(defgeneric get-virtual-node-count (ppm location &optional excluded))
+(defgeneric get-virtual-node-count (ppm location excluded))
 (defgeneric get-distribution (ppm location))
 (defgeneric select-state (ppm location))
 (defgeneric probability-distribution (ppm location selected?))
 (defgeneric compute-mixture (ppm distribution location excluded 
-                             &key up-ex escape))
+                             &key update-exclusion escape))
 (defgeneric next-distribution (ppm distribution transition-counts node-count
                                excluded weight escape))
 (defgeneric next-probability (ppm pair transition-counts node-count excluded
                               weight escape))
 (defgeneric weight (ppm node-count child-count))
-(defgeneric transition-counts (ppm location up-ex))
+(defgeneric transition-counts (ppm location update-exclusion))
 (defgeneric child-count (ppm transition-counts))
 (defgeneric transition-count (ppm symbol transition-counts))
 (defgeneric node-count (ppm transition-counts excluded-list))
 (defgeneric order-minus1-distribution (ppm distribution excluded escape
-                                      up-ex))
-(defgeneric order-minus1-probability (ppm up-ex))
+                                      update-exclusion))
+(defgeneric order-minus1-probability (ppm update-exclusion))
 (defgeneric write-model-to-file (ppm filename))
 (defgeneric dataset->alist (ppm))
 (defgeneric write-model-to-postscript (ppm filename))

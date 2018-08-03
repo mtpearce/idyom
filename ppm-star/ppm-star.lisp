@@ -2,7 +2,7 @@
 ;;;; File:       ppm-star.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2018-08-03 15:00:57 marcusp>                           
+;;;; Time-stamp: <2018-08-03 15:57:27 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -239,13 +239,15 @@
       (setf (branch-record-brother record) brother)))
 
 (declaim (inline increment-node-record-count))
-(defun increment-node-record-count (node-record excluded)
-  "Increments the count of <node-record> by one. If <excluded> is non-nil
+(defun increment-node-record-count (node-record update-excluded)
+  "Increments the count of <node-record> by one. If <update-excluded> is non-nil
    the update-excluded count is incremented."
   (case (type-of node-record)
-    (leaf-record (if excluded (incf (leaf-record-count1 node-record))
+    (leaf-record (if update-excluded
+                     (incf (leaf-record-count1 node-record))
                      (incf (leaf-record-count0 node-record))))
-    (branch-record (if excluded (incf (branch-record-count1 node-record))
+    (branch-record (if update-excluded
+                       (incf (branch-record-count1 node-record))
                        (incf (branch-record-count0 node-record))))))
 
 (declaim (inline root-p))
@@ -322,9 +324,9 @@
       (gethash (branch-index branch-or-leaf) (ppm-branches m))
       (gethash (leaf-index branch-or-leaf) (ppm-leaves m))))
 
-(defmethod get-count ((m ppm) branch-or-leaf &optional (excluded nil))
+(defmethod get-count ((m ppm) branch-or-leaf update-excluded)
   "Returns the count associated with <branch-or-leaf>."
-  (if excluded
+  (if update-excluded
       (if (branch-p branch-or-leaf)
           (branch-record-count1 (get-record m branch-or-leaf))
           (leaf-record-count1 (get-record m branch-or-leaf)))
@@ -706,10 +708,10 @@
          (node-index (get-node-index m node))
          (new-node (make-branch :index (ppm-branch-index m)))
          (node-label-left (label-left (get-label m node)))
-         (new-node-count0 (get-count m node))
+         (new-node-count0 (get-count m node nil))
          (new-node-count1 (get-count m node t))
          (new-node-depth (+ parent-depth match-length))
-         (new-child-count0 (get-virtual-node-count m location))
+         (new-child-count0 (get-virtual-node-count m location nil))
          (new-child-count1 (get-virtual-node-count m location t))
          (matching-brother (get-matching-brother m parent-child node))
          (new-node-label (make-label :left (make-index
@@ -768,15 +770,15 @@
    transitions existing in the chain. If <novel?> is non-null then the
    current symbol is novel at an excited suffix child of <location> and
    the update excluded count is incremented for <location>."
-  (labels ((increment-count (location up-ex)
+  (labels ((increment-count (location update-excluded)
              (if (branch-p location)
                  (let ((branch-record (get-record m location)))
                    (unless (gethash location (ppm-virtual-nodes m))
-                     (increment-node-record-count branch-record up-ex)))
+                     (increment-node-record-count branch-record update-excluded)))
                  (let ((child-record (get-record m (location-child location)))
                        (match (location-match location)))
                    (when (= (label-length match) 1)
-                     (increment-node-record-count child-record up-ex)))))
+                     (increment-node-record-count child-record update-excluded)))))
            (allocate-virtual-node (location vn)
              (let* ((child (location-child location))
                     (vnode (gethash child (ppm-virtual-nodes m))))
@@ -787,7 +789,7 @@
                           :count1 (virtual-node-count1 vnode)))
                    (setf (gethash child vn)
                          (make-virtual-node
-                          :count0 (get-count m child)
+                          :count0 (get-count m child nil)
                           :count1 (get-count m child t)))))
              vn)
            (increment-suffix-count (location vn)
@@ -805,13 +807,14 @@
       ;; (increment-count location t)
       (setf (ppm-virtual-nodes m) vn))))
             
-(defmethod get-virtual-node-count ((m ppm) location &optional (excluded nil))
+(defmethod get-virtual-node-count ((m ppm) location update-excluded)
   "Returns the count of the virtual-node associated with <location>." 
   (let* ((child (location-child location))
          (vnode (gethash child (ppm-virtual-nodes m))))
     (if (null vnode)
-        (if excluded (get-count m child t) (get-count m child))
-        (if excluded (virtual-node-count1 vnode)
+        (get-count m child update-excluded)
+        (if update-excluded
+            (virtual-node-count1 vnode)
             (virtual-node-count0 vnode)))))
 
 (declaim (inline make-virtual-node))
@@ -876,24 +879,26 @@
     ;; (format t "~S~%" (get-order m selected-location))
     ;; 2. Estimate distribution
     (let* ((initial-distribution (mapcar #'(lambda (a) (list a 0.0)) (ppm-alphabet m)))
-           (up-ex (if (null selected?) (ppm-update-exclusion m)))
-           (mixture (compute-mixture m initial-distribution selected-location '() :up-ex up-ex))
+           (update-exclusion (if (null selected?) (ppm-update-exclusion m)))
+           (mixture (compute-mixture m initial-distribution selected-location nil
+                                     :update-exclusion update-exclusion))
            (mixture (normalise-distribution mixture)))
       (values mixture (get-order m selected-location)))))
 
 (defmethod compute-mixture ((m ppm) distribution location excluded
-                            &key (up-ex (ppm-update-exclusion m))
-                            (escape 1.0))
-  "Returns the estimated probability of <symbol> appearing at <location>
-   in the suffix tree of model <m>. <excluded> is a list of symbols that
-   have been predicted at higher orders and are thus excluded from the
-   smoothing computation."
+                            &key (update-exclusion (ppm-update-exclusion m))
+                              (escape 1.0))
+  "Returns the estimated probability of <symbol> appearing at
+   <location> in the suffix tree of model <m>. <excluded> is a
+   hash-table of symbols that have been predicted at higher orders and
+   are thus excluded from the smoothing computation."
   (if (earth-p location)
-      (let ((om1d (order-minus1-distribution m distribution excluded escape up-ex)))
+      (let ((om1d (order-minus1-distribution m distribution excluded escape
+                                             update-exclusion)))
         ;; (format t "~&distribution: ~A~%excluded ~A~%escape ~A~%~%" om1d
         ;;        (when excluded (utils:hash-table->alist excluded)) escape)
         om1d)
-      (let* ((transition-counts (transition-counts m location up-ex))
+      (let* ((transition-counts (transition-counts m location update-exclusion))
              (type-count (type-count m transition-counts)) 
              (state-count (state-count m transition-counts excluded))
              (weight (weight m state-count type-count))
@@ -933,10 +938,10 @@ probability."
               (t pair))
         (list symbol (+ old-probability (* escape probability))))))
   
-(defun excluded? (symbol excluded-list)
-  "Returns true if <symbol> appears as a key in hash-table<excluded-list>."
-  (when excluded-list
-    (gethash symbol excluded-list)))
+(defun excluded? (symbol excluded)
+  "Returns true if <symbol> appears as a key in hash-table <excluded>."
+  (when excluded
+    (gethash symbol excluded)))
 
 (defmethod weight ((m ppm) state-count type-count)
   "Returns the weighting to give to a state s given the state-count and 
@@ -946,7 +951,7 @@ probability."
     (if (zerop denominator) 0.0 
         (float (/ state-count denominator) 0.0))))
 
-(defmethod transition-counts ((m ppm) location up-ex)
+(defmethod transition-counts ((m ppm) location update-exclusion)
   "Returns a hash-table of the form (symbol frequency-count) for the
    transitions appearing at location <location> in the suffix tree of
    model <m>."
@@ -958,11 +963,11 @@ probability."
             (let ((sym (get-symbol m (label-left (get-label m child)))))
               ;;(print (list child sym))
               (when (member sym alphabet :test #'eequal)
-                (setf (gethash sym tc) (get-count m child up-ex))))))
+                (setf (gethash sym tc) (get-count m child update-exclusion))))))
         (let ((sym (get-symbol m (label-left (location-rest location)))))
           ;; we dynamically set derived alphabets on a per-event basis 
           (when (member sym (ppm-alphabet m) :test #'eequal)
-            (setf (gethash sym tc) (get-virtual-node-count m location up-ex)))))
+            (setf (gethash sym tc) (get-virtual-node-count m location update-exclusion)))))
     tc))
 
 (defmethod transition-count ((m ppm) symbol transition-counts)
@@ -988,23 +993,23 @@ those symbols that have occurred exactly once are counted."
           count))
     (otherwise (hash-table-count transition-counts))))
 
-(defmethod state-count ((m ppm) transition-counts excluded-list)
+(defmethod state-count ((m ppm) transition-counts excluded)
   "Returns the total token count for symbols appearing in
    <transition-counts>, a hash-table of the form (symbol
    frequency-count), excluding the counts for those symbols that
-   appear in <excluded-list>."
+   appear in <excluded>."
   (let ((ppmk (ppm-k m))
         (count 0))
     (maphash #'(lambda (k v)
-                 (unless (excluded? k excluded-list)
+                 (unless (excluded? k excluded)
                    (incf count (+ v ppmk))))
              transition-counts)
     count))
 
 (defmethod order-minus1-distribution ((m ppm) distribution excluded escape
-                                      up-ex)
+                                      update-exclusion)
   "Returns the order -1 distribution."
-  (let ((order-minus1-p (order-minus1-probability m up-ex)))
+  (let ((order-minus1-p (order-minus1-probability m update-exclusion)))
     (mapcar #'(lambda (pair)
                 (let ((symbol (nth 0 pair))
                       (p (nth 1 pair)))
@@ -1017,13 +1022,12 @@ those symbols that have occurred exactly once are counted."
                                   order-minus1-p))))))
             distribution)))
 
-(defmethod order-minus1-probability ((m ppm) up-ex)
+(defmethod order-minus1-probability ((m ppm) update-exclusion)
   "Returns the order -1 probability corresponding to a uniform distribution
    over the alphabet."
   ;; (format t "~%order -1 p: 1 / ~A + 1 - ~A~&" (alphabet-size m) 
-  ;;        (hash-table-count (transition-counts m (get-root) up-ex)))
+  ;;        (hash-table-count (transition-counts m (get-root) update-exclusion)))
   (/ 1.0 ;(float (alphabet-size m) 0.0)))
      (float (- (+ 1.0 (alphabet-size m))
-               (hash-table-count (transition-counts m (get-root) up-ex)))
+               (hash-table-count (transition-counts m (get-root) update-exclusion)))
             0.0)))
-           
