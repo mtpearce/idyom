@@ -2,7 +2,7 @@
 ;;;; File:       ppm-star.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2016-05-03 13:51:53 marcusp>                           
+;;;; Time-stamp: <2018-08-03 14:15:12 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -559,6 +559,7 @@
    is returned for <location>.  The model's index into the sequence
    vector must be set to the appropriate event index before this method
    is called."
+  ;; (format t "~%SYMBOL = ~A~&" symbol)
   (add-event-to-model-dataset m symbol)
   (let* ((gd (when predict? (multiple-value-list (get-distribution m location))))
          (distribution (car gd))
@@ -799,7 +800,9 @@
                    (increment-suffix-count next-location vn)))))
     (let* ((vn (make-hash-table :test #'equalp))
            (vn (increment-suffix-count location vn)))
+      ;; (format t "~%increment counts: ~A ~A~&" location novel?)
       (when novel? (increment-count location t))
+      ;; (increment-count location t)
       (setf (ppm-virtual-nodes m) vn))))
             
 (defmethod get-virtual-node-count ((m ppm) location &optional (excluded nil))
@@ -854,8 +857,8 @@
                    (if (branch-p location)
                        (shortest-deterministic-state slink selected)
                        (shortest-deterministic-state slink location))))))
-    ;(format t "~&Order bound: ~A; location order: ~A~&" 
-    ;        (ppm-order-bound m) (get-order m location))
+    ;;(format t "~&Order bound: ~A; location order: ~A~&" 
+    ;;        (ppm-order-bound m) (get-order m location))
     (if (null (ppm-order-bound m))
         (let ((sds (shortest-deterministic-state location '())))
           ;;(print (list "location" (get-order m location) "sds" (when sds (get-order m sds))))
@@ -885,7 +888,10 @@
    have been predicted at higher orders and are thus excluded from the
    smoothing computation."
   (if (earth-p location)
-      (order-minus1-distribution m distribution excluded escape up-ex)
+      (let ((om1d (order-minus1-distribution m distribution excluded escape up-ex)))
+        ;; (format t "~&distribution: ~A~%excluded ~A~%escape ~A~%~%" om1d
+        ;;        (when excluded (utils:hash-table->alist excluded)) escape)
+        om1d)
       (let* ((transition-counts (transition-counts m location up-ex))
              (child-count (child-count m transition-counts)) 
              (node-count (node-count m transition-counts excluded))
@@ -896,6 +902,8 @@
              (next-location (get-next-location m location))
              (next-excluded transition-counts)
              (next-escape (* escape (- 1.0 weight))))
+        ;; (format t "~%child-count ~A~%node-count ~A~%weight ~A~%distribution: ~A~%excluded ~A~%escape ~A~&"
+        ;;        child-count node-count weight next-distribution (when excluded (utils:hash-table->alist excluded)) escape)
         (compute-mixture m next-distribution next-location next-excluded
                          :escape next-escape))))
 
@@ -973,8 +981,9 @@ those symbols that have occurred exactly once are counted."
   "Returns the frequency count associated with <symbol> in <child-list>
    an alist of the form (symbol frequency-count)."
   (declare (optimize (speed 3) (safety 1) (space 0) (debug 0) (compilation-speed 0)))
-  (let ((count (gethash symbol transition-counts)))
-    (if (null count) 0 (+ count (ppm-k m)))))
+  (let ((count (gethash symbol transition-counts))
+        (k (ppm-k m)))
+    (if (null count) 0 (+ count k))))
 
 (defmethod node-count ((m ppm) transition-counts excluded-list)
   "Returns the total token count for symbols appearing in <child-list>
@@ -1007,9 +1016,8 @@ those symbols that have occurred exactly once are counted."
 (defmethod order-minus1-probability ((m ppm) up-ex)
   "Returns the order -1 probability corresponding to a uniform distribution
    over the alphabet."
-  ;; (print (list (alphabet-size m) (transition-counts m (get-root) up-ex) 
-  ;;               (length (transition-counts m (get-root) up-ex)) 
-  ;;               (get-root)))
+  ;; (format t "~%order -1 p: 1 / ~A + 1 - ~A~&" (alphabet-size m) 
+  ;;        (hash-table-count (transition-counts m (get-root) up-ex)))
   (/ 1.0 ;(float (alphabet-size m) 0.0)))
      (float (- (+ 1.0 (alphabet-size m))
                (hash-table-count (transition-counts m (get-root) up-ex)))
