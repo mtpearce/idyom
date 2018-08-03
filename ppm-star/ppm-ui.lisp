@@ -2,7 +2,7 @@
 ;;;; File:       ppm-ui.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2016-04-20 16:52:03 marcusp>                           
+;;;; Time-stamp: <2018-08-03 16:36:37 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 
@@ -101,7 +101,7 @@
 (defun root-node () (ppm:get-root))
 (defun label (model node) 
   (ppm::instantiate-label model (ppm::get-label model node)))
-(defun frequency (model node) (ppm::get-count model node))
+(defun frequency (model node) (ppm::get-count model node nil))
 
 ;; (defun print-model (model filename)
 ;;   (ppm::write-model-to-postscript model :filename filename))
