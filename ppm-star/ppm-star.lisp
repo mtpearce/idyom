@@ -2,7 +2,7 @@
 ;;;; File:       ppm-star.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2018-08-03 14:53:04 marcusp>                           
+;;;; Time-stamp: <2018-08-03 15:00:57 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -865,25 +865,21 @@
 ;;;===========================================================================
 
 (defmethod get-distribution ((m ppm) location)
-  "Selects a location on the chain of excited locations from <location>
-   and estimates the distribution governing the emission of the current
-   symbol from that location."
+  "Selects a location on the chain of excited states from <location>
+   and estimates the distribution governing the emission of the
+   current symbol from that location by computing a mixture of the
+   probabilities assigned to each symbol at all states in the chain of
+   suffix links from the selected location."
+  ;; 1. Select state
   (multiple-value-bind (selected-location selected?)
       (select-state m location)
     ;; (format t "~S~%" (get-order m selected-location))
-    (values (probability-distribution m selected-location selected?)
-            (get-order m selected-location))))
-
-(defmethod probability-distribution ((m ppm) location selected?)
-  "Returns the probability of <symbol> by computing a mixture of the 
-   probabilities assigned to <symbol> by all the states in a chain of
-   suffix links from <location>."
-  (let* ((initial-distribution 
-          (mapcar #'(lambda (a) (list a 0.0)) (ppm-alphabet m)))
-         (up-ex (if (null selected?) (ppm-update-exclusion m)))
-         (mixture 
-          (compute-mixture m initial-distribution location '() :up-ex up-ex)))
-    (normalise-distribution mixture)))
+    ;; 2. Estimate distribution
+    (let* ((initial-distribution (mapcar #'(lambda (a) (list a 0.0)) (ppm-alphabet m)))
+           (up-ex (if (null selected?) (ppm-update-exclusion m)))
+           (mixture (compute-mixture m initial-distribution selected-location '() :up-ex up-ex))
+           (mixture (normalise-distribution mixture)))
+      (values mixture (get-order m selected-location)))))
 
 (defmethod compute-mixture ((m ppm) distribution location excluded
                             &key (up-ex (ppm-update-exclusion m))
