@@ -14,6 +14,13 @@
 ;; * resampling
 ;; --> create-resampling-sets
 ;; --> output-formatting
+;; * ppm
+;; --> ppm*-blending
+;; --> ppm-blending-order-bound
+;; --> ppm-blending-update-exclusion
+;; --> ppm*-mixtures
+;; --> ppm-mixtures-order-bound
+;; --> ppm-mixtures-update-exclusion
 
 (cl:in-package #:testing)
 
