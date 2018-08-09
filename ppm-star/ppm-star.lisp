@@ -2,7 +2,7 @@
 ;;;; File:       ppm-star.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2018-08-03 15:57:27 marcusp>                           
+;;;; Time-stamp: <2018-08-09 09:26:35 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -550,6 +550,7 @@
       (when construct? (initialise-virtual-nodes m)))))
 
 (defmethod model-sentinel-event ((m ppm) location)
+  ;; (format t "~%MODEL-SENTINEL-EVENT~&")
   (add-event-to-model-dataset m *sentinel*) 
   (ukkstep m nil location *sentinel* t)
   (increment-event-front m))
@@ -561,7 +562,7 @@
    is returned for <location>.  The model's index into the sequence
    vector must be set to the appropriate event index before this method
    is called."
-  ;; (format t "~%SYMBOL = ~A~&" symbol)
+  ;; (format t "~%~%SYMBOL = ~A~&" symbol)
   (add-event-to-model-dataset m symbol)
   (let* ((gd (when predict? (multiple-value-list (get-distribution m location))))
          (distribution (car gd))
@@ -580,6 +581,7 @@
   "Updates the suffix link of node and inserts the relevant suffixes of
    the current prefix of the current sequence in the dataset into <m>."
   ;;(when (sentinel-p symbol) (print (list m node location symbol construct?)))
+  ;; (format t "~%UKKSTEP~&")
   (cond ((occurs? m location symbol)
          (when construct? (update-slink m node location :occurs? t))
          (canonise m location (make-label :left (ppm-front m) :length 1)))
@@ -698,31 +700,45 @@
   "Splits <location> in model <m> into two nodes with labels
    corresponding to the matched and remaining portions of the label of
    the transition which it represents and returns the former."
-  (let* ((parent-record (get-record m (location-node location)))
+  (let* (;; the parent record corresponding to the location
+         (parent-record (get-record m (location-node location)))
          (parent-depth (branch-record-depth parent-record))
          (parent-child (branch-record-child parent-record))
          (match-length (label-length (location-match location)))
          (rest-length (label-length (location-rest location)))
+         ;; the child of the parent
          (node (location-child location))
          (node-record (get-record m node))
          (node-index (get-node-index m node))
+         ;; a new node for the matched portion of the parent's label
          (new-node (make-branch :index (ppm-branch-index m)))
          (node-label-left (label-left (get-label m node)))
          (new-node-count0 (get-count m node nil))
          (new-node-count1 (get-count m node t))
          (new-node-depth (+ parent-depth match-length))
-         (new-child-count0 (get-virtual-node-count m location nil))
-         (new-child-count1 (get-virtual-node-count m location t))
-         (matching-brother (get-matching-brother m parent-child node))
          (new-node-label (make-label :left (make-index
                                             :s (index-s node-label-left)
                                             :e (index-e node-label-left))
                                      :length match-length))
+         (new-node-child (if (leaf-p node) (make-leaf :index node-index)
+                             (make-branch :index node-index)))
+         (new-node-brother (if (leaf-p node) (leaf-record-brother node-record)
+                               (branch-record-brother node-record)))
+         (new-node-record
+          (make-branch-record :label new-node-label 
+                              :child new-node-child
+                              :brother new-node-brother
+                              :depth new-node-depth 
+                              :count0 new-node-count0
+                              :count1 new-node-count1))
+         ;; a new node for the unmatched portion of the parent's label
+         (new-child-count0 (get-virtual-node-count m location nil))
+         (new-child-count1 (get-virtual-node-count m location t))
          (new-child-label
           (make-label :left (make-index
                              :s (index-s node-label-left)
                              :e (+ (index-e node-label-left) match-length))
-                      :length (label-length (location-rest location))))
+                      :length rest-length))
          (new-child-record
           (if (leaf-p node)
               (make-leaf-record :label new-child-label
@@ -733,21 +749,7 @@
                                   :slink (branch-record-slink node-record)
                                   :depth (+ rest-length new-node-depth)
                                   :count0 new-child-count0
-                                  :count1 new-child-count1)))
-         (new-node-record
-          (if (leaf-p node)
-              (make-branch-record :label new-node-label 
-                                  :child (make-leaf :index node-index)
-                                  :brother (leaf-record-brother node-record)
-                                  :depth new-node-depth 
-                                  :count0 new-node-count0
-                                  :count1 new-node-count1)
-              (make-branch-record :label new-node-label
-                                  :child (make-branch :index node-index)
-                                  :brother (branch-record-brother node-record)
-                                  :depth new-node-depth 
-                                  :count0 new-node-count0
-                                  :count1 new-node-count1))))
+                                  :count1 new-child-count1))))
     (if (leaf-p node)
         (set-leaf-record m node-index new-child-record)
         (set-branch-record m node-index new-child-record))
@@ -755,8 +757,17 @@
     (increment-branch-index m)
     (if (or (null parent-child) (equal parent-child node))
         (set-branch-record-child parent-record new-node)
-        (unless (null matching-brother)
-          (set-record-brother (get-record m matching-brother) new-node)))
+        (let ((matching-brother (get-matching-brother m parent-child node)))
+          (unless (null matching-brother)
+            (set-record-brother (get-record m matching-brother) new-node))))
+    ;; (format t "~%SPLIT-LOCATION")
+    ;; (format t "~%Parent: ~A depth = ~A match = ~A rest = ~A" (instantiate-label m (get-label m (location-node location)))
+    ;;         parent-depth match-length rest-length)
+    ;; (format t "~&Node: ~A ~A" (if (leaf-p node) "leaf" "branch") (instantiate-label m (get-label m node)))
+    ;; (format t "~&New node: branch ~A depth = ~A count0 = ~A count1 = ~A" 
+    ;;         (instantiate-label m new-node-label) new-node-depth new-node-count0 new-node-count1)
+    ;; (format t "~&New child: ~A ~A depth = ~A count0 = ~A count1 = ~A~&" (if (leaf-p node) "leaf" "branch") 
+    ;;        (instantiate-label m new-child-label) (if (branch-p node) (+ rest-length new-node-depth)) new-child-count0 new-child-count1)
     new-node))
 
 
@@ -770,47 +781,77 @@
    transitions existing in the chain. If <novel?> is non-null then the
    current symbol is novel at an excited suffix child of <location> and
    the update excluded count is incremented for <location>."
+  ;; (format t "~%INCREMENT-COUNTS~&")
   (labels ((increment-count (location update-excluded)
+             ;; (format t "~%INCREMENT-COUNT ~A" update-excluded)
              (if (branch-p location)
                  (let ((branch-record (get-record m location)))
                    (unless (gethash location (ppm-virtual-nodes m))
+                     ;; (format t "~%Branch ~A: ~A ~A~&" (instantiate-label m (get-label m location))
+                     ;;        (get-count m location nil) (get-count m location t))
                      (increment-node-record-count branch-record update-excluded)))
-                 (let ((child-record (get-record m (location-child location)))
-                       (match (location-match location)))
+                 (let* ((child (location-child location))
+                        (child-record (get-record m child))
+                        (match (location-match location)))
                    (when (= (label-length match) 1)
+                     ;; (format t "~%Leaf ~A: ~A ~A~&" (instantiate-label m (get-label m child))
+                     ;;        (get-count m child nil) (get-count m child t))
                      (increment-node-record-count child-record update-excluded)))))
            (allocate-virtual-node (location vn)
-             (let* ((child (location-child location))
-                    (vnode (gethash child (ppm-virtual-nodes m))))
-               (if vnode
-                   (setf (gethash child vn)
-                         (make-virtual-node
-                          :count0 (virtual-node-count0 vnode)
-                          :count1 (virtual-node-count1 vnode)))
-                   (setf (gethash child vn)
-                         (make-virtual-node
-                          :count0 (get-count m child nil)
-                          :count1 (get-count m child t)))))
-             vn)
+             ;; (format t "~%ALLOCATE-VIRTUAL-NODE ~A" (if (branch-p location) (instantiate-label m (get-label m location))
+             ;;                                           (instantiate-label m (get-label m (location-child location)))))
+             (if (branch-p location)
+                 (progn 
+                   (let* ((child (branch-record-child (get-record m location)))
+                          (vnode (gethash child (ppm-virtual-nodes m)))
+                          (vnode (if vnode (make-virtual-node
+                                            :count0 (virtual-node-count0 vnode)
+                                            :count1 (virtual-node-count1 vnode))
+                                     (make-virtual-node
+                                      :count0 (get-count m child nil)
+                                      :count1 (get-count m child t)))))
+                     (setf (gethash child vn) vnode)
+                     ;; (format t "~%Virtual branch: ~A ~A ~A~&"
+                     ;;         (instantiate-label m (get-label m (branch-record-child (get-record m location))))
+                     ;;         (get-count m child nil) (get-count m child t))
+                     vn))
+                 (let* ((child 
+                         (location-child location))
+                        (vnode (gethash child (ppm-virtual-nodes m)))
+                        (vnode (if vnode
+                                   (make-virtual-node
+                                    :count0 (virtual-node-count0 vnode)
+                                    :count1 (virtual-node-count1 vnode))
+                                   (make-virtual-node
+                                    :count0 (get-count m child nil)
+                                    :count1 (get-count m child t)))))
+                   (setf (gethash child vn) vnode)
+                   ;; (format t "~%Virtual leaf: ~A~&" vnode)
+                   vn)))
            (increment-suffix-count (location vn)
              (if (root-p location)
-                 (progn (increment-count location nil) vn)
-                 (let ((next-location (get-next-location m location))
-                       (vn (if (branch-p location) vn
-                               (allocate-virtual-node location vn))))
+                 ;; (progn (print "ROOT") (increment-count location nil) vn)
+                 (let ((vn (allocate-virtual-node location vn))
+                       (next-location (get-next-location m location)))
                    (increment-count location nil)
                    (increment-suffix-count next-location vn)))))
     (let* ((vn (make-hash-table :test #'equalp))
            (vn (increment-suffix-count location vn)))
-      ;; (format t "~%increment counts: ~A ~A~&" location novel?)
       (when novel? (increment-count location t))
       ;; (increment-count location t)
+      ;; (format t "~%increment counts: ~A ~A~&" location novel?)
+      ;; (print (list "virtual nodes" (utils:hash-table->alist vn)))
       (setf (ppm-virtual-nodes m) vn))))
             
 (defmethod get-virtual-node-count ((m ppm) location update-excluded)
   "Returns the count of the virtual-node associated with <location>." 
   (let* ((child (location-child location))
          (vnode (gethash child (ppm-virtual-nodes m))))
+    ;; (format t "~%GET-VIRTUAL-NODE-COUNT ~A" update-excluded)
+    ;; (format t "~%~A = ~A ~A ~A~&" (if (leaf-p child) "leaf" "branch") (instantiate-label m (get-label m child))
+    ;;        vnode (if (null vnode) (get-count m child update-excluded)
+    ;;                  (if update-excluded (virtual-node-count1 vnode)
+    ;;                      (virtual-node-count0 vnode))))
     (if (null vnode)
         (get-count m child update-excluded)
         (if update-excluded
@@ -876,7 +917,8 @@
   ;; 1. Select state
   (multiple-value-bind (selected-location selected?)
       (select-state m location)
-    ;; (format t "~S~%" (get-order m selected-location))
+    ;; (when (and selected? (not (= (get-count m (location-child location) nil) (get-count m (location-child location) t))))
+    ;;  (format t "~%~S ~A ~A~&" (get-order m selected-location) (get-count m (location-child location) nil) (get-count m (location-child location) t)))
     ;; 2. Estimate distribution
     (let* ((initial-distribution (mapcar #'(lambda (a) (list a 0.0)) (ppm-alphabet m)))
            (update-exclusion (if (null selected?) (ppm-update-exclusion m)))
@@ -908,6 +950,7 @@
              (next-location (get-next-location m location))
              (next-excluded transition-counts)
              (next-escape (* escape (- 1.0 weight))))
+        ;; (format t "~%COMPUTE-MIXTURE")
         ;; (format t "~%type-count ~A~%state-count ~A~%weight ~A~%distribution: ~A~%excluded ~A~%escape ~A~&"
         ;;        type-count state-count weight next-distribution (when excluded (utils:hash-table->alist excluded)) escape)
         (compute-mixture m next-distribution next-location next-excluded
