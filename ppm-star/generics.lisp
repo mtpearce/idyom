@@ -2,7 +2,7 @@
 ;;;; File:       generics.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2008-11-03 14:07:53 marcusp>
-;;;; Time-stamp: <2018-08-03 15:58:30 marcusp>
+;;;; Time-stamp: <2018-08-09 09:45:55 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:ppm)
@@ -36,7 +36,7 @@
 (defgeneric get-record (ppm branch-or-leaf))
 (defgeneric get-count (ppm branch-or-leaf excluded))
 (defgeneric get-node-index (ppm branch-or-leaf))
-(defgeneric instantiate-label (ppm label))
+(defgeneric instantiate-label (ppm label &key full))
 (defgeneric get-length (ppm label))
 (defgeneric get-order (ppm location))
 (defgeneric get-matching-child (ppm node symbol))
