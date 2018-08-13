@@ -2,7 +2,7 @@
 ;;;; File:       ppm-io.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2018-08-03 16:35:58 marcusp>
+;;;; Time-stamp: <2018-08-10 09:49:57 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package :ppm)
@@ -21,17 +21,9 @@
              ;               (<= (branch-record-depth (get-record m node)) 
              ;                   depth)))
                (list-children m node));)
-
-           (list->string (list)
-             (reduce #'(lambda (&optional s1 s2) (utils:string-append s1 s2))
-                     (mapcar #'(lambda (symbol)
-                                 (format nil "~A " (if (symbolp symbol)
-                                                       (symbol-name symbol)
-                                                       symbol)))
-                             list)))
            (label->string (node)
              (let ((label (instantiate-label m (get-label m node))))
-               (cons (list->string label) (get-node-count node)))))
+               (cons (utils:list->string label) (get-node-count node)))))
     (let ((psgraph:*fontsize* 14)
           (psgraph:*second-fontsize* 12)
           (psgraph:*boxradius* 10) 
