@@ -2,7 +2,7 @@
 ;;;; File:       ppm-star.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2018-08-13 22:43:35 marcusp>                           
+;;;; Time-stamp: <2018-08-13 22:46:20 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -812,8 +812,8 @@ tree, otherwise it is just the label of the corresponding node."
                    (increment-suffix-counts (get-next-location m location) vn)))))
     (let* ((vn (make-hash-table :test #'equalp))
            (vn (increment-suffix-counts location vn)))
-      (when novel? (increment-count location t))
-      ;; (increment-count location t)
+      ;; (when novel? (increment-count location t))
+      (increment-count location t)
       ;; (print (list "virtual nodes" (utils:hash-table->alist vn)))
       (setf (ppm-virtual-nodes m) vn))))
 
