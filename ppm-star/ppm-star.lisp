@@ -2,7 +2,7 @@
 ;;;; File:       ppm-star.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2018-08-14 00:04:14 marcusp>                           
+;;;; Time-stamp: <2018-08-14 15:17:28 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -116,6 +116,7 @@
                   :type hash-table)
    ;;parameters used in prediction 
    (alphabet :accessor ppm-alphabet :initarg :alphabet :type list)
+   (exclusion :accessor ppm-exclusion :initarg :exclusion :type (or null symbol))
    (update-exclusion :accessor ppm-update-exclusion :initarg :update-exclusion
                      :type (or null symbol))
    (mixtures :accessor ppm-mixtures :initarg :mixtures :type (or null symbol))
@@ -431,9 +432,9 @@ tree, otherwise it is just the label of the corresponding node."
 ;;; Initialisation 
 ;;;===========================================================================
 
-(defun make-ppm (alphabet &key (mixtures t) (escape :c) (order-bound nil)
-                          (update-exclusion nil) (dataset nil) (leaves nil)
-                          (branches nil))
+(defun make-ppm (alphabet &key (exclusion nil) (mixtures t) (escape :c) 
+                            (order-bound nil) (update-exclusion nil)
+                            (dataset nil) (leaves nil) (branches nil))
   "Returns a PPM* model initialised with the supplied parameters."
   (multiple-value-bind (k d)
       (case escape
@@ -458,6 +459,7 @@ tree, otherwise it is just the label of the corresponding node."
                                  :branch-index branch-index
                                  :virtual-nodes virtual-nodes
                                  :alphabet alphabet
+                                 :exclusion exclusion
                                  :update-exclusion update-exclusion
                                  :mixtures mixtures
                                  :order-bound order-bound
@@ -491,7 +493,7 @@ tree, otherwise it is just the label of the corresponding node."
   "Initialises the <virtual-nodes> slot of ppm model <m>."
   (setf (ppm-virtual-nodes m) (make-hash-table :test #'equalp)))
 
-(defmethod set-ppm-parameters ((m ppm) &key (mixtures t) (escape :c)
+(defmethod set-ppm-parameters ((m ppm) &key (exclusion nil) (mixtures t) (escape :c)
                                  (order-bound nil) (update-exclusion nil))
   (multiple-value-bind (k d)
       (case escape
@@ -500,7 +502,8 @@ tree, otherwise it is just the label of the corresponding node."
         ((or :c :x) (values 0 1))
         (:d (values -1/2 2))
         (otherwise (values 0 1)))
-    (setf (ppm-mixtures m) mixtures
+    (setf (ppm-exclusion m) exclusion
+          (ppm-mixtures m) mixtures
           (ppm-order-bound m) order-bound
           (ppm-update-exclusion m) update-exclusion
           (ppm-escape m) escape
@@ -862,7 +865,7 @@ tree, otherwise it is just the label of the corresponding node."
 ;;                    :count1 (if vnode (virtual-node-count1 vnode) (get-count m state t)))))
 ;;       (setf vn (insert-virtual-node vnode state match vn))))
 ;;   vn)
-
+;; 
 ;; (defun insert-virtual-node (vnode state offset virtual-nodes)
 ;;   "Inserts the virtual node <vnode> into the hash-table
 ;; <virtual-nodes> using <state> and <offset> as keys."
@@ -870,7 +873,7 @@ tree, otherwise it is just the label of the corresponding node."
 ;;     (setf (gethash state virtual-nodes) (make-hash-table :test #'eql)))
 ;;   (setf (gethash offset (gethash state virtual-nodes)) vnode)
 ;;   virtual-nodes)
-
+;; 
 ;; (defgeneric retrieve-virtual-node (m location))
 ;; (defmethod retrieve-virtual-node ((m ppm) location)
 ;;   "Returns the virtual node assocatiated with <location>."
@@ -878,7 +881,7 @@ tree, otherwise it is just the label of the corresponding node."
 ;;     (let ((vnodes (gethash (location-child location) (ppm-virtual-nodes m))))
 ;;       (when (hash-table-p vnodes)
 ;;         (gethash (label-length (location-match location)) vnodes)))))
-
+;; 
 ;; (defgeneric replace-virtual-node (m location new-parent new-node offset))
 ;; (defmethod replace-virtual-node ((m ppm) location new-parent new-node offset)
 ;;   (let ((vnode (retrieve-virtual-node m location)))
@@ -979,7 +982,8 @@ Returns the virtual node assocatiated with <location>."
   (multiple-value-bind (selected-location selected?)
       (select-state m location)
     ;; (when (and selected? (not (= (get-count m (location-child location) nil) (get-count m (location-child location) t))))
-    ;;  (format t "~%~S ~A ~A~&" (get-order m selected-location) (get-count m (location-child location) nil) (get-count m (location-child location) t)))
+    ;;  (format t "~%~S ~A ~A~&" (get-order m selected-location) (get-count m (location-child location) nil)
+    ;;          (get-count m (location-child location) t)))
     ;; 2. Estimate distribution
     (let* ((initial-distribution (mapcar #'(lambda (a) (list a 0.0)) (ppm-alphabet m)))
            (update-exclusion (if (null selected?) (ppm-update-exclusion m)))
@@ -1042,11 +1046,11 @@ probability."
                (list symbol (* escape probability)))
               (t pair))
         (list symbol (+ old-probability (* escape probability))))))
-  
+
 (defun excluded? (symbol excluded)
-  "Returns true if <symbol> appears as a key in hash-table <excluded>."
-  (when excluded
-    (gethash symbol excluded)))
+  "When exclusions are enabled for model <m>, returns true if <symbol>
+appears as a key in hash-table <excluded>."
+  (when excluded (gethash symbol excluded)))
 
 (defmethod weight ((m ppm) state-count type-count)
   "Returns the weighting to give to a state s given the state-count and 
@@ -1106,7 +1110,7 @@ those symbols that have occurred exactly once are counted."
   (let ((ppmk (ppm-k m))
         (count 0))
     (maphash #'(lambda (k v)
-                 (unless (excluded? k excluded)
+                 (unless (and (ppm-exclusion m) (excluded? k excluded))
                    (incf count (+ v ppmk))))
              transition-counts)
     count))
@@ -1134,5 +1138,7 @@ those symbols that have occurred exactly once are counted."
   ;;        (hash-table-count (transition-counts m (get-root) update-exclusion)))
   (/ 1.0 ;(float (alphabet-size m) 0.0)))
      (float (- (+ 1.0 (alphabet-size m))
-               (hash-table-count (transition-counts m (get-root) update-exclusion)))
+               (if (ppm-exclusion m)
+                   (hash-table-count (transition-counts m (get-root) update-exclusion))
+                   1.0))
             0.0)))
