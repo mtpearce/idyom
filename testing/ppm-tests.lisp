@@ -3,9 +3,9 @@
 (5am:def-suite ppm :in testing::idyom-tests)
 (5am:in-suite ppm)
 
-(defun test-ppm (sequence &key (escape :c) (mixtures t) (update-exclusion nil) (order-bound nil) ps write)
+(defun test-ppm (sequence &key (exclusion t) (escape :c) (mixtures t) (update-exclusion nil) (order-bound nil) ps write)
   (let* ((alphabet (sort (remove-duplicates sequence) #'string<=))
-         (model (ppm:make-ppm alphabet :escape escape :mixtures mixtures
+         (model (ppm:make-ppm alphabet :exclusion exclusion :escape escape :mixtures mixtures
                               :update-exclusion update-exclusion :order-bound order-bound))
          (result (ppm:model-dataset model (list sequence) :construct? t :predict? t)))
     (prog1 result
@@ -50,6 +50,27 @@
                     (A ((A 0.33333334) (B 0.33333334) (C 0.33333334)))
                     (B ((A 0.2857143) (B 0.5714286) (C 0.14285715)))
                     (C ((A 0.5714286) (B 0.2857143) (C 0.14285715))))))))
+
+
+;; PPM* without exclusion
+;; ===========================================================================
+
+(5am:def-suite ppm*-exclusion :in ppm)
+(5am:in-suite ppm*-exclusion)
+
+(5am:test abracadabra-ppmc*-without-exclusion
+  (5am:is (equal (test-ppm '(a b r a c a d a b r a) :exclusion nil :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
+                 '((0 (A ((A 0.2) (B 0.2) (C 0.2) (D 0.2) (R 0.2)))
+                    (B ((A 0.5555555) (B 0.111111104) (C 0.111111104) (D 0.111111104) (R 0.111111104)))
+                    (R ((A 0.31249997) (B 0.31249997) (C 0.12499999) (D 0.12499999) (R 0.12499999)))
+                    (A ((A 0.23809522) (B 0.23809522) (C 0.14285713) (D 0.14285713) (R 0.23809522)))
+                    (C ((A 0.17857143) (B 0.625) (C 0.053571425) (D 0.053571425) (R 0.08928572)))
+                    (A ((A 0.3448276) (B 0.1724138) (C 0.1724138) (D 0.13793102) (R 0.1724138)))
+                    (D ((A 0.20270272) (B 0.33783785) (C 0.33783785) (D 0.054054055) (R 0.06756757)))
+                    (A ((A 0.42857143) (B 0.14285715) (C 0.14285715) (D 0.14285715) (R 0.14285715)))
+                    (B ((A 0.22222221) (B 0.24074072) (C 0.24074072) (D 0.24074072) (R 0.055555552)))
+                    (R ((A 0.18181819) (B 0.09090909) (C 0.045454547) (D 0.045454547) (R 0.6363636)))
+                    (A ((A 0.7142857) (B 0.0952381) (C 0.04761905) (D 0.04761905) (R 0.0952381))))))))
 
 
 ;; PPM* with Blending
