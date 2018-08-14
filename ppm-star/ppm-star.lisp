@@ -2,7 +2,7 @@
 ;;;; File:       ppm-star.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2018-08-13 22:46:20 marcusp>                           
+;;;; Time-stamp: <2018-08-14 00:04:14 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -956,7 +956,7 @@ Returns the virtual node assocatiated with <location>."
     (if (null (ppm-order-bound m))
         (let ((sds (shortest-deterministic-state location '())))
           ;;(print (list "location" (get-order m location) "sds" (when sds (get-order m sds))))
-          (if (null sds)
+          (if (or (null sds) (equalp sds location))
               (values location nil)
               (values sds t)))
         (if (<= (get-order m location) (ppm-order-bound m))
@@ -974,6 +974,7 @@ Returns the virtual node assocatiated with <location>."
    current symbol from that location by computing a mixture of the
    probabilities assigned to each symbol at all states in the chain of
    suffix links from the selected location."
+  ;; (format t "~&GET-DISTRIBUTION ~A" (location->string location))
   ;; 1. Select state
   (multiple-value-bind (selected-location selected?)
       (select-state m location)
@@ -985,6 +986,7 @@ Returns the virtual node assocatiated with <location>."
            (mixture (compute-mixture m initial-distribution selected-location nil
                                      :update-exclusion update-exclusion))
            (mixture (normalise-distribution mixture)))
+      ;; (print (list "get-distribution" selected? update-exclusion))
       (values mixture (get-order m selected-location)))))
 
 (defmethod compute-mixture ((m ppm) distribution location excluded
@@ -1010,7 +1012,7 @@ Returns the virtual node assocatiated with <location>."
              (next-location (get-next-location m location))
              (next-excluded transition-counts)
              (next-escape (* escape (- 1.0 weight))))
-        ;; (format t "~%COMPUTE-MIXTURE")
+        ;; (format t "~%COMPUTE-MIXTURE ~A" update-exclusion)
         ;; (format t "~%type-count ~A~%state-count ~A~%weight ~A~%distribution: ~A~%excluded ~A~%escape ~A~&"
         ;;        type-count state-count weight next-distribution (when excluded (utils:hash-table->alist excluded)) escape)
         (compute-mixture m next-distribution next-location next-excluded
