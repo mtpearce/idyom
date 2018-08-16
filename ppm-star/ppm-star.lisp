@@ -2,7 +2,7 @@
 ;;;; File:       ppm-star.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2018-08-14 15:17:28 marcusp>                           
+;;;; Time-stamp: <2018-08-16 09:17:47 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -116,6 +116,7 @@
                   :type hash-table)
    ;;parameters used in prediction 
    (alphabet :accessor ppm-alphabet :initarg :alphabet :type list)
+   (normalise :accessor ppm-normalise :initarg :normalise :type (or null symbol))
    (exclusion :accessor ppm-exclusion :initarg :exclusion :type (or null symbol))
    (update-exclusion :accessor ppm-update-exclusion :initarg :update-exclusion
                      :type (or null symbol))
@@ -432,8 +433,9 @@ tree, otherwise it is just the label of the corresponding node."
 ;;; Initialisation 
 ;;;===========================================================================
 
-(defun make-ppm (alphabet &key (exclusion nil) (mixtures t) (escape :c) 
+(defun make-ppm (alphabet &key (exclusion t) (mixtures t) (escape :c) 
                             (order-bound nil) (update-exclusion nil)
+                            (normalise t)
                             (dataset nil) (leaves nil) (branches nil))
   "Returns a PPM* model initialised with the supplied parameters."
   (multiple-value-bind (k d)
@@ -459,6 +461,7 @@ tree, otherwise it is just the label of the corresponding node."
                                  :branch-index branch-index
                                  :virtual-nodes virtual-nodes
                                  :alphabet alphabet
+                                 :normalise normalise
                                  :exclusion exclusion
                                  :update-exclusion update-exclusion
                                  :mixtures mixtures
@@ -493,7 +496,7 @@ tree, otherwise it is just the label of the corresponding node."
   "Initialises the <virtual-nodes> slot of ppm model <m>."
   (setf (ppm-virtual-nodes m) (make-hash-table :test #'equalp)))
 
-(defmethod set-ppm-parameters ((m ppm) &key (exclusion nil) (mixtures t) (escape :c)
+(defmethod set-ppm-parameters ((m ppm) &key (normalise t) (exclusion t) (mixtures t) (escape :c)
                                  (order-bound nil) (update-exclusion nil))
   (multiple-value-bind (k d)
       (case escape
@@ -502,7 +505,8 @@ tree, otherwise it is just the label of the corresponding node."
         ((or :c :x) (values 0 1))
         (:d (values -1/2 2))
         (otherwise (values 0 1)))
-    (setf (ppm-exclusion m) exclusion
+    (setf (ppm-normalise m) normalise
+          (ppm-exclusion m) exclusion
           (ppm-mixtures m) mixtures
           (ppm-order-bound m) order-bound
           (ppm-update-exclusion m) update-exclusion
@@ -988,8 +992,9 @@ Returns the virtual node assocatiated with <location>."
     (let* ((initial-distribution (mapcar #'(lambda (a) (list a 0.0)) (ppm-alphabet m)))
            (update-exclusion (if (null selected?) (ppm-update-exclusion m)))
            (mixture (compute-mixture m initial-distribution selected-location nil
-                                     :update-exclusion update-exclusion))
-           (mixture (normalise-distribution mixture)))
+                                     :update-exclusion update-exclusion)))
+      (when (ppm-normalise m)
+        (setf mixture (normalise-distribution mixture)))
       ;; (print (list "get-distribution" selected? update-exclusion))
       (values mixture (get-order m selected-location)))))
 
