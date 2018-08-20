@@ -2,11 +2,12 @@
 ;;;; File:       generics.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2008-11-03 14:07:53 marcusp>
-;;;; Time-stamp: <2018-08-09 09:45:55 marcusp>
+;;;; Time-stamp: <2018-08-14 14:55:36 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:ppm)
 
+;; top-level functions
 (defgeneric model-dataset (model dataset &key construct? predict? 
                            &allow-other-keys))
 (defgeneric model-sequence (model sequence &key construct? predict?
@@ -15,6 +16,7 @@
                                &allow-other-keys))
 (defgeneric model-sentinel-event (model location))
 
+;; Utility functions 
 (defgeneric dataset-length (ppm))
 (defgeneric dataset-sequence-length (ppm sequence-index))
 (defgeneric set-model-front (ppm sequence-index event-index))
@@ -45,12 +47,14 @@
 (defgeneric get-symbol (ppm index))
 (defgeneric add-event-to-model-dataset (ppm symbol))
 
+;; initialisation
 (defgeneric reinitialise-ppm (ppm))
 (defgeneric initialise-nodes (ppm))
 (defgeneric initialise-virtual-nodes (ppm))
 (defgeneric set-ppm-parameters (ppm &key mixtures escape order-bound 
                                 update-exclusion))
 
+;; Suffix tree construction
 (defgeneric ukkstep (ppm node location symbol construct?))
 (defgeneric update-slink (ppm node location &key occurs? slink))
 (defgeneric occurs? (ppm location symbol))
@@ -59,11 +63,16 @@
 (defgeneric insert-relevant-suffix (ppm location))
 (defgeneric insert-leaf (ppm branch))
 (defgeneric split-location (ppm location))
+
+;; Maintaining counts
 (defgeneric increment-counts (ppm location novel?))
 (defgeneric get-virtual-node-count (ppm location excluded))
-(defgeneric get-distribution (ppm location))
+
+;; State selection
 (defgeneric select-state (ppm location))
-(defgeneric probability-distribution (ppm location selected?))
+
+;; Probability estimation
+(defgeneric get-distribution (ppm location))
 (defgeneric compute-mixture (ppm distribution location excluded 
                              &key update-exclusion escape))
 (defgeneric next-distribution (ppm distribution transition-counts node-count
@@ -78,6 +87,8 @@
 (defgeneric order-minus1-distribution (ppm distribution excluded escape
                                       update-exclusion))
 (defgeneric order-minus1-probability (ppm update-exclusion))
+
+;; Model i/o 
 (defgeneric write-model-to-file (ppm filename))
 (defgeneric dataset->alist (ppm))
 (defgeneric write-model-to-postscript (ppm filename))
