@@ -2,7 +2,7 @@
 ;;;; File:       ppm-star.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2018-08-16 09:17:47 marcusp>                           
+;;;; Time-stamp: <2018-08-20 14:23:16 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -15,43 +15,13 @@
 ;;;;   Printing model trees to postscript is supported via the 
 ;;;;   PSGRAPH package. 
 ;;;;
-;;;; EXAMPLES 
-;;;;
-;;;;   (defun test-model (sequences alphabet &key (ps t))
-;;;;     (let ((model (ppm:make-ppm alphabet :escape :c :mixtures t
-;;;;                                :update-exclusion nil :order-bound nil)))
-;;;;       (prog1 (ppm:model-dataset model sequences :construct? t :predict? t)
-;;;;         (when ps (ppm:write-model-to-postscript model)))))
-;;;; 
-;;;;   (test-model '((a b r a c a d a b r a)) '(a b c d r))
-;;;;   (test-model '((l e t l e t t e r t e l e)) '(e l t r))
-;;;;   (test-model '((a s s a n i s s i m a s s a)) '(a i m n s))
-;;;;   (test-model '((m i s s i s s i p p i)) '(i m p s))
-;;;;   (test-model '((w o o l o o b o o l o o)) '(b l o w))
-;;;;   (test-model '((k k k k k k k k k)) '(k))
-;;;;   (test-model '((a a a a a a a a b)) '(a b))
-;;;;   (test-model '((a g c g a c g a g)) '(a c g))
-;;;;   (test-model '((a b a b c)) '(a b c))
-;;;;
-;;;;   (test-model '((a b r a c a d a b r a $)
-;;;;   	             (l e t l e t t e r t e l e $)
-;;;;   	             (a s s a n i s s i m a s s a $)
-;;;;   	             (m i s s i s s i p p i $)
-;;;;   	             (w o o l o o b o o l o o $))
-;;;;               '(a b c d e i l m n o p r s t w $))
-;;;; 
-;;;;   (test-model '((a b r a c a d a b r a $) (a b r a c a d a b r a $))
-;;;;               '(a b c d r $))
-;;;; 
 ;;;; TODO 
 ;;;;
 ;;;;   - Bunton improvements: state-selection;
-;;;;   - Other smoothing techniques (Katz, Kneser-Ney); 
+;;;;   - Other smoothing techniques (Kneser-Ney, Katz); 
 ;;;;   - Other modelling techniques (PST, LZ, BW, DMC). 
 ;;;;
 ;;;; ======================================================================
-
-
 
 (cl:in-package #:ppm)
 
