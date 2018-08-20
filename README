@@ -1,12 +1,13 @@
-IDyOM: Information Dynamics of Music
+# IDyOM: Information Dynamics of Music
+
 Version 1.5
 
-Copyright 2001-2018, Marcus Pearce (marcus.pearce@qmul.ac.uk)
+Copyright 2001-2018, the IDyOM development team (see CREDITS).
 
 This program is distributed under the terms of the GNU General Public
-License.  See COPYING for details.
+License.  See COPYING for details. 
 
-==Documentation==
+## Documentation
 
 Documentation on how to install and use the system can be found on the
 IDyOM wiki at Sound Software:
@@ -19,16 +20,16 @@ Statistical Models of Melodic Structure in Music Perception and
 Composition" (2005) included here as 'thesis.pdf'. Please cite this 
 thesis in any publications using this software.
 
-==Requirements==
+## Requirements
 
-SBCL       http://www.sbcl.org/
-Emacs      http://www.gnu.org/software/emacs/
-Quicklisp  http://www.quicklisp.org/
-Sqlite     http://www.sqlite.org/
+* SBCL       http://www.sbcl.org/
+* Emacs      http://www.gnu.org/software/emacs/
+* Quicklisp  http://www.quicklisp.org/
+* Sqlite     http://www.sqlite.org/
 
 See the wiki for further details on installation.
 
-==News==
+## News
 
 2018-07-12
 v1.5
