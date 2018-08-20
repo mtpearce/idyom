@@ -47,6 +47,7 @@ See the wiki for further details on installation.
 * midi track numbers are indexed from 1 rather than 0 (for consistency with Kern import)
 * avoid negative deltast in midi import when successive notes overlap in a melody
 * add random-subset argument to IDYOM-DB:COPY-DATASETS to allow copying random subsets of a specified size
+* extended documentation on running IDyOM, especially with respect to viewpoint selection (thanks to Ben Gold)
 
 ### 2016-05-03: v1.4 
 
@@ -95,6 +96,6 @@ See the wiki for further details on installation.
 
 ### 2014-06-04: v1.0
 
-first public release, I am grateful to Jeremy Gow and 
-David Lewis for their contributions to this release, and also to 
-Niels Chr. Hansen and Roger Dean for user feedback.
+First public release. I am grateful to Jeremy Gow and David Lewis for
+their contributions to this release, and also to Niels Chr. Hansen and
+Roger Dean for user feedback.
