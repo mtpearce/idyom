@@ -48,7 +48,7 @@ See the wiki for further details on installation.
 * avoid negative deltast in midi import when successive notes overlap in a melody
 * add random-subset argument to IDYOM-DB:COPY-DATASETS to allow copying random subsets of a specified size
 
-### 2016-05-03, v1.4: 
+### 2016-05-03: v1.4 
 
 * new feature: new function IDYOM-DB:COPY-DATASETS for copying and merging datasets
 * new feature: new function UTILS:REMOVE-BY-POSITION in utilities
@@ -65,7 +65,7 @@ See the wiki for further details on installation.
 * optimization: generate transition counts more efficiently in the PPM module
 * bug-fix: greater elegance in the viewpoint generation macros
 
-### 2015-03-25: v1.3:
+### 2015-03-25: v1.3
 
 * package mtp-admin renamed to idyom-db
 * clearer printing of information during viewpoint selection
@@ -75,13 +75,13 @@ See the wiki for further details on installation.
 * fix last-element and penultimate-element for empty sequences
 * add utility functions for permutations and rotation
 
-### 2014-12-31, v1.2: 
+### 2014-12-31: v1.2
 
 * remove verbose output during data import
 * linked viewpoint creation is now agnostic to order of constituent viewpoints
 * user may omit trailing forward slash when specifying directories
 
-### 2014-09-27, v1.1:
+### 2014-09-27: v1.1
 
 * an extended and improved representation of music objects
 * a time protocol for music objects
@@ -93,7 +93,7 @@ See the wiki for further details on installation.
 * some fixes to Lilypond export (thanks to J Forth)
 * installation directories are created if need be (thanks to J Forth)
 
-2014-06-04, v1.0:
+### 2014-06-04: v1.0
 
 first public release, I am grateful to Jeremy Gow and 
 David Lewis for their contributions to this release, and also to 
