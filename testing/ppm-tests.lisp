@@ -4,7 +4,7 @@
 (5am:in-suite ppm)
 
 (defun test-ppm (sequence &key (exclusion t) (escape :c) (mixtures t) (update-exclusion nil) (order-bound nil) ps write)
-  (let* ((alphabet (sort (remove-duplicates sequence) #'string<=))
+  (let* ((alphabet (sort (remove-duplicates sequence) #'(lambda (x y) (if (numberp x) (<= x y) (string<= x y)))))
          (model (ppm:make-ppm alphabet :exclusion exclusion :escape escape :mixtures mixtures
                               :update-exclusion update-exclusion :order-bound order-bound))
          (result (ppm:model-dataset model (list sequence) :construct? t :predict? t)))
