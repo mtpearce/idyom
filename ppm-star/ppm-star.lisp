@@ -2,7 +2,7 @@
 ;;;; File:       ppm-star.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2018-08-20 14:23:16 marcusp>                           
+;;;; Time-stamp: <2018-08-26 20:24:49 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -751,7 +751,8 @@ tree, otherwise it is just the label of the corresponding node."
         (let ((matching-brother (get-matching-brother m parent-child node)))
           (unless (null matching-brother)
             (set-record-brother (get-record m matching-brother) new-node))))
-    (replace-virtual-node m location new-node new-node-child rest-length)
+    ;; (replace-virtual-node m location new-node new-node-child rest-length)
+    ;; (print (mapcar #'(lambda (x) (list (car x) (utils:hash-table->alist (cadr x)))) (utils:hash-table->alist (ppm-virtual-nodes m))))
     new-node))
 
 
@@ -769,7 +770,7 @@ tree, otherwise it is just the label of the corresponding node."
   (labels ((increment-count (location update-excluded)
              ;; (format t "~%INCREMENT-COUNT ~A ~A" (location->string location) update-excluded)
              (if (branch-p location)
-                 (unless (get-virtual-node m location)
+                 (unless (retrieve-virtual-node m location)
                    ;; (format t "~%Branch ~A: ~A ~A~&" (instantiate-label m (get-label m location))
                    ;;        (get-count m location nil) (get-count m location t))
                    (increment-node-record-count (get-record m location) update-excluded))
@@ -791,16 +792,21 @@ tree, otherwise it is just the label of the corresponding node."
            (vn (increment-suffix-counts location vn)))
       ;; (when novel? (increment-count location t))
       (increment-count location t)
-      ;; (print (list "virtual nodes" (utils:hash-table->alist vn)))
+      ;; (print (list "vn" vn "ppm-virtual-nodes" (ppm-virtual-nodes m)))
+      ;; (print (list "virtual nodes before" (utils:hash-table->alist (ppm-virtual-nodes m))))
+      ;; (print (list "virtual nodes after" (utils:hash-table->alist vn)))
       (setf (ppm-virtual-nodes m) vn))))
-
+      
 (defgeneric location->string (m location))
 (defmethod location->string ((m ppm) location)
-  (utils:list->string
-   (if (branch-p location)
-       (instantiate-label m (get-label m location) :full t)
-       (append (instantiate-label m (get-label m (location-node location)) :full t)
-               (instantiate-label m (location-match location))))))
+  (utils:list->string (location->list m location)))
+
+(defgeneric location->list (m location))
+(defmethod location->list ((m ppm) location)
+  (if (branch-p location)
+      (instantiate-label m (get-label m location) :full t)
+      (append (instantiate-label m (get-label m (location-node location)) :full t)
+              (instantiate-label m (location-match location)))))
 
 (defstruct virtual-node
   (parent nil :type (or null branch))
@@ -825,6 +831,37 @@ tree, otherwise it is just the label of the corresponding node."
             (virtual-node-count1 vnode)
             (virtual-node-count0 vnode)))))
 
+(defmethod allocate-virtual-node ((m ppm) location vn)
+  (when (location-p location)
+    (let* ((s (location->list m location))
+           (state (location-child location))
+           (s-1 (when s (subseq s 0 (1- (length s)))))
+           (vnode (gethash s-1 (ppm-virtual-nodes m)))
+           (vnode (if (and vnode ;(equalp (virtual-node-parent vnode) (location-node location))
+                           (eq (virtual-node-child vnode) state))
+                      vnode))
+           (new-vnode (make-virtual-node
+                       :parent (location-node location)
+                       :child  state
+                       :offset (label-length (location-match location))
+                       :count0 (if vnode (virtual-node-count0 vnode) (get-count m state nil))
+                       :count1 (if vnode (virtual-node-count1 vnode) (get-count m state t)))))
+      ;; (format t "~&allocate virtual node: ~A ~A ~A~%" (location->string m location)
+      ;;         (not (null vnode)) (unless (and vnode
+      ;;                                         (equalp (virtual-node-parent vnode) (virtual-node-parent new-vnode))
+      ;;                                        (equalp (virtual-node-child vnode) (virtual-node-child new-vnode)))
+      ;;                             (list vnode new-vnode)))
+      (setf (gethash s vn) new-vnode)
+      (remhash s-1 vn)))
+  vn)
+
+(defmethod retrieve-virtual-node ((m ppm) location)
+  ;; (format t "~&retrieve virtual node: ~A" (location->string m location))
+  (when (location-p location)
+    (let ((vnode (gethash (location->list m location) (ppm-virtual-nodes m))))
+      ;; (format t " ~A ~A~%" (virtual-node-count0 vnode) (virtual-node-count1 vnode))
+      vnode)))
+          
 ;; (defmethod allocate-virtual-node ((m ppm) location vn)
 ;;   (unless (branch-p location)
 ;;     (let* ((state (location-child location))
@@ -839,7 +876,7 @@ tree, otherwise it is just the label of the corresponding node."
 ;;                    :count1 (if vnode (virtual-node-count1 vnode) (get-count m state t)))))
 ;;       (setf vn (insert-virtual-node vnode state match vn))))
 ;;   vn)
-;; 
+
 ;; (defun insert-virtual-node (vnode state offset virtual-nodes)
 ;;   "Inserts the virtual node <vnode> into the hash-table
 ;; <virtual-nodes> using <state> and <offset> as keys."
@@ -847,7 +884,7 @@ tree, otherwise it is just the label of the corresponding node."
 ;;     (setf (gethash state virtual-nodes) (make-hash-table :test #'eql)))
 ;;   (setf (gethash offset (gethash state virtual-nodes)) vnode)
 ;;   virtual-nodes)
-;; 
+
 ;; (defgeneric retrieve-virtual-node (m location))
 ;; (defmethod retrieve-virtual-node ((m ppm) location)
 ;;   "Returns the virtual node assocatiated with <location>."
@@ -855,7 +892,7 @@ tree, otherwise it is just the label of the corresponding node."
 ;;     (let ((vnodes (gethash (location-child location) (ppm-virtual-nodes m))))
 ;;       (when (hash-table-p vnodes)
 ;;         (gethash (label-length (location-match location)) vnodes)))))
-;; 
+
 ;; (defgeneric replace-virtual-node (m location new-parent new-node offset))
 ;; (defmethod replace-virtual-node ((m ppm) location new-parent new-node offset)
 ;;   (let ((vnode (retrieve-virtual-node m location)))
@@ -869,44 +906,48 @@ tree, otherwise it is just the label of the corresponding node."
 ;;         (setf (ppm-virtual-nodes m)
 ;;               (insert-virtual-node new-vnode new-node offset (ppm-virtual-nodes m)))))))
 
-(defgeneric allocate-virtual-node (m location vn))
-(defmethod allocate-virtual-node ((m ppm) location vn)
-  "Old version."
-  (unless (branch-p location)
-    (let* ((state (location-child location))
-           (vnode (gethash state (ppm-virtual-nodes m)))
-           (vnode (make-virtual-node
-                   :parent (location-node location)
-                   :child  state
-                   :offset (label-length (location-match location))
-                   :count0 (if vnode (virtual-node-count0 vnode) (get-count m state nil))
-                   :count1 (if vnode (virtual-node-count1 vnode) (get-count m state t)))))
-      (setf vn (insert-virtual-node vnode state vn))))
-  vn)
+;; (defgeneric retrieve-virtual-node (m location))
+;; (defmethod retrieve-virtual-node ((m ppm) location)
+;;   "Old version"
+;;   (when (location-p location)
+;;     (gethash (location-child location) (ppm-virtual-nodes m))))
 
-(defun insert-virtual-node (vnode state virtual-nodes)
-  "Old version. 
+;; (defgeneric allocate-virtual-node (m location vn))
+;; (defmethod allocate-virtual-node ((m ppm) location vn)
+;;   "Old version."
+;;   (unless (branch-p location)
+;;     (let* ((state (location-child location))
+;;            (vnode (gethash state (ppm-virtual-nodes m)))
+;;            (vnode (make-virtual-node
+;;                    :parent (location-node location)
+;;                    :child  state
+;;                    :offset (label-length (location-match location))
+;;                    :count0 (if vnode (virtual-node-count0 vnode) (get-count m state nil))
+;;                    :count1 (if vnode (virtual-node-count1 vnode) (get-count m state t)))))
+;;       (setf vn (insert-virtual-node vnode state vn))))
+;;   vn)
 
-Inserts the virtual node <vnode> into the hash-table
-<virtual-nodes> using <state> and <offset> as keys."
-  (setf (gethash state virtual-nodes) vnode)
-  virtual-nodes)
+;; (defun insert-virtual-node (vnode state virtual-nodes)
+;;   "Old version. 
+;;
+;; Inserts the virtual node <vnode> into the hash-table
+;; <virtual-nodes> using <state> and <offset> as keys."
+;;   (setf (gethash state virtual-nodes) vnode)
+;;   virtual-nodes)
 
-(defgeneric retrieve-virtual-node (m location))
-(defmethod retrieve-virtual-node ((m ppm) location)
-  "Old version. 
+;; (defgeneric retrieve-virtual-node (m location))
+;; (defmethod retrieve-virtual-node ((m ppm) location)
+;;   "Old version. 
+;;
+;; Returns the virtual node assocatiated with <location>."
+;;   (when (location-p location)
+;;     (let ((vnode (gethash (location-child location) (ppm-virtual-nodes m))))
+;;       vnode)))
 
-Returns the virtual node assocatiated with <location>."
-  (when (location-p location)
-    (let ((vnode (gethash (location-child location) (ppm-virtual-nodes m))))
-      vnode)))
-
-(defgeneric replace-virtual-node (m location new-parent new-node offset))
-(defmethod replace-virtual-node ((m ppm) location new-parent new-node offset)
-  "Old version."
-  )
-
-
+;; (defgeneric replace-virtual-node (m location new-parent new-node offset))
+;; (defmethod replace-virtual-node ((m ppm) location new-parent new-node offset)
+;;    "Old version."
+;;    )
 
 ;;;===========================================================================
 ;;; State selection
@@ -951,7 +992,7 @@ Returns the virtual node assocatiated with <location>."
    current symbol from that location by computing a mixture of the
    probabilities assigned to each symbol at all states in the chain of
    suffix links from the selected location."
-  ;; (format t "~&GET-DISTRIBUTION ~A" (location->string location))
+  ;; (format t "~&GET-DISTRIBUTION ~A" (location->string m location))
   ;; 1. Select state
   (multiple-value-bind (selected-location selected?)
       (select-state m location)
