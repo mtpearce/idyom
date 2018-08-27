@@ -2,7 +2,7 @@
 ;;;; File:       generics.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2008-11-03 14:07:53 marcusp>
-;;;; Time-stamp: <2018-08-14 14:55:36 marcusp>
+;;;; Time-stamp: <2018-08-27 14:49:58 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:ppm)
@@ -41,6 +41,8 @@
 (defgeneric instantiate-label (ppm label &key full))
 (defgeneric get-length (ppm label))
 (defgeneric get-order (ppm location))
+(defgeneric location->string (m location))
+(defgeneric location->list (m location))
 (defgeneric get-matching-child (ppm node symbol))
 (defgeneric get-matching-brother (ppm first-child match))
 (defgeneric list-children (ppm node))
@@ -52,7 +54,7 @@
 (defgeneric initialise-nodes (ppm))
 (defgeneric initialise-virtual-nodes (ppm))
 (defgeneric set-ppm-parameters (ppm &key mixtures escape order-bound 
-                                update-exclusion))
+                                      update-exclusion))
 
 ;; Suffix tree construction
 (defgeneric ukkstep (ppm node location symbol construct?))
@@ -67,7 +69,9 @@
 ;; Maintaining counts
 (defgeneric increment-counts (ppm location novel?))
 (defgeneric get-virtual-node-count (ppm location excluded))
-
+(defgeneric retrieve-virtual-node (ppm location))
+(defgeneric allocate-virtual-node (ppm location vn))
+    
 ;; State selection
 (defgeneric select-state (ppm location))
 
