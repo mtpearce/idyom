@@ -2,7 +2,7 @@
 ;;;; File:       ppm-star.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2018-08-26 20:24:49 marcusp>                           
+;;;; Time-stamp: <2018-08-27 10:43:55 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -421,7 +421,7 @@ tree, otherwise it is just the label of the corresponding node."
            (initial-branches (if (null branches) (make-hash-table) branches))
            (leaf-index (hash-table-count initial-leaves))
            (branch-index (hash-table-count initial-branches))
-           (virtual-nodes (make-hash-table :test #'equalp))
+           (virtual-nodes (make-hash-table :test #'equal))
            (model (make-instance 'ppm 
                                  :leaves initial-leaves
                                  :branches initial-branches
@@ -464,7 +464,7 @@ tree, otherwise it is just the label of the corresponding node."
 
 (defmethod initialise-virtual-nodes ((m ppm))
   "Initialises the <virtual-nodes> slot of ppm model <m>."
-  (setf (ppm-virtual-nodes m) (make-hash-table :test #'equalp)))
+  (setf (ppm-virtual-nodes m) (make-hash-table :test #'equal)))
 
 (defmethod set-ppm-parameters ((m ppm) &key (normalise t) (exclusion t) (mixtures t) (escape :c)
                                  (order-bound nil) (update-exclusion nil))
@@ -788,7 +788,7 @@ tree, otherwise it is just the label of the corresponding node."
                  (let ((vn (allocate-virtual-node m location vn)))
                    (increment-count location nil)
                    (increment-suffix-counts (get-next-location m location) vn)))))
-    (let* ((vn (make-hash-table :test #'equalp))
+    (let* ((vn (make-hash-table :test #'equal))
            (vn (increment-suffix-counts location vn)))
       ;; (when novel? (increment-count location t))
       (increment-count location t)
