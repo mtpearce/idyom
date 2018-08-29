@@ -2,7 +2,7 @@
 ;;;; File:       ppm-star.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2018-08-20 14:23:16 marcusp>                           
+;;;; Time-stamp: <2018-08-29 13:04:57 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -769,7 +769,7 @@ tree, otherwise it is just the label of the corresponding node."
   (labels ((increment-count (location update-excluded)
              ;; (format t "~%INCREMENT-COUNT ~A ~A" (location->string location) update-excluded)
              (if (branch-p location)
-                 (unless (get-virtual-node m location)
+                 (unless (retrieve-virtual-node m location)
                    ;; (format t "~%Branch ~A: ~A ~A~&" (instantiate-label m (get-label m location))
                    ;;        (get-count m location nil) (get-count m location t))
                    (increment-node-record-count (get-record m location) update-excluded))
