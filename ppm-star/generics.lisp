@@ -2,7 +2,7 @@
 ;;;; File:       generics.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2008-11-03 14:07:53 marcusp>
-;;;; Time-stamp: <2018-08-27 14:49:58 marcusp>
+;;;; Time-stamp: <2018-08-29 09:41:13 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:ppm)
@@ -48,6 +48,7 @@
 (defgeneric list-children (ppm node))
 (defgeneric get-symbol (ppm index))
 (defgeneric add-event-to-model-dataset (ppm symbol))
+(defgeneric print-dataset (ppm))
 
 ;; initialisation
 (defgeneric reinitialise-ppm (ppm))

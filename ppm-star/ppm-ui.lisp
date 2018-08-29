@@ -2,7 +2,7 @@
 ;;;; File:       ppm-ui.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2018-08-03 16:36:37 marcusp>                           
+;;;; Time-stamp: <2018-08-28 09:51:57 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 
@@ -87,7 +87,7 @@
                    (let ((new-prefix (append prefix (label model node))))
                      (mapc #'(lambda (c) (g-n-f c new-prefix))
                            (list-children model node)))))))
-      (g-n-f (root-node) nil))
+      (g-n-f (ppm:get-root) nil))
     (remove-if #'(lambda (x) 
                    (find ppm-star::*sentinel* (car x)))
                results)))
@@ -98,7 +98,6 @@
     (dotimes (i (length label) (nreverse results))
       (push (append prefix (subseq label 0 (1+ i))) results))))
 
-(defun root-node () (ppm:get-root))
 (defun label (model node) 
   (ppm::instantiate-label model (ppm::get-label model node)))
 (defun frequency (model node) (ppm::get-count model node nil))
