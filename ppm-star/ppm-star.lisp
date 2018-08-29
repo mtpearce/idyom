@@ -2,7 +2,7 @@
 ;;;; File:       ppm-star.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2018-08-29 12:38:24 marcusp>                           
+;;;; Time-stamp: <2018-08-29 20:07:19 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -398,7 +398,7 @@ of the location, the label is instantiated from the root of the tree."
   (gethash (index-e index) (gethash (index-s index) (ppm-dataset m))))
 
 (defmethod add-event-to-model-dataset ((m ppm) symbol)
-  "Adds <symbol> to the end of the vector holding the current sequence."
+  "Adds <symbol> to the current sequence in ppm-dataset."
   (let ((seq-hash (gethash (index-s (ppm-front m)) (ppm-dataset m))))
     (unless (hash-table-p seq-hash) 
       (setf (gethash (index-s (ppm-front m)) (ppm-dataset m))
@@ -547,7 +547,7 @@ of the location, the label is instantiated from the root of the tree."
       (when construct? (initialise-virtual-nodes m)))))
 
 (defmethod model-sentinel-event ((m ppm) location)
-  (add-event-to-model-dataset m *sentinel*) 
+  (add-event-to-model-dataset m *sentinel*)
   (ukkstep m nil location *sentinel* t)
   (increment-event-front m))
 
@@ -778,12 +778,16 @@ of the location, the label is instantiated from the root of the tree."
    the update excluded count is incremented for <location>."
   (labels ((increment-count (location update-excluded)
              (if (branch-p location)
-                 (increment-node-record-count (get-record m location) update-excluded)
-                 (let* ((child (location-child location))
-                        (child-record (get-record m child))
-                        (match (location-match location)))
-                   (when (= (label-length match) 1)
-                     (increment-node-record-count child-record update-excluded)))))
+                 (let* ((key (location->list m location))
+                        (key (unless (root-p location) (subseq key 0 (1- (length key)))))
+                        (vnode (when key (gethash key (ppm-virtual-nodes m)))))
+                   (if (or (root-p location) (not vnode))
+                     (increment-node-record-count (get-record m location) update-excluded)))
+               (let* ((child (location-child location))
+                      (child-record (get-record m child))
+                      (match (location-match location)))
+                 (when (= (label-length match) 1)
+                   (increment-node-record-count child-record update-excluded)))))
            (increment-suffix-counts (location vn)
              (if (root-p location)
                  (progn (increment-count location nil) vn)
