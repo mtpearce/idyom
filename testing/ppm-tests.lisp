@@ -3,22 +3,61 @@
 (5am:def-suite ppm :in testing::idyom-tests)
 (5am:in-suite ppm)
 
-(defun test-ppm (sequence &key (exclusion t) (escape :c) (mixtures t) (update-exclusion nil) (order-bound nil) ps write)
-  (let* ((alphabet (sort (remove-duplicates sequence) #'(lambda (x y) (if (numberp x) (<= x y) (string<= x y)))))
+;;; Test routines
+
+(defun test-ppm (sequences &key (exclusion t) (escape :c) (mixtures t) (update-exclusion nil) (order-bound nil) ps write (detail 4))
+  (let* ((alphabet (get-alphabet sequences))
          (model (ppm:make-ppm alphabet :exclusion exclusion :escape escape :mixtures mixtures
                               :update-exclusion update-exclusion :order-bound order-bound))
-         (result (ppm:model-dataset model (list sequence) :construct? t :predict? t)))
-    (prog1 result
-      (when write (write result :right-margin 200))
-      (when ps (ppm:write-model-to-postscript model ps)))))
-
-(defun test-ppm-dataset (sequences alphabet &key (exclusion t) (escape :c) (mixtures t) (update-exclusion nil) (order-bound nil) ps write)
-  (let* ((model (ppm:make-ppm alphabet :exclusion exclusion :escape escape :mixtures mixtures
-                              :update-exclusion update-exclusion :order-bound order-bound))
          (result (ppm:model-dataset model sequences :construct? t :predict? t)))
-    (prog1 result
+    (prog1 (get-result result detail)
       (when write (write result :right-margin 110))
       (when ps (ppm:write-model-to-postscript model ps)))))
+
+(defun get-alphabet (sequences)
+  (flet ((sp (x y)
+           (cond ((and (numberp x) (numberp y))
+                  (<= x y))
+                 ((and (symbolp x) (symbolp y))
+                  (string<= x y))
+                 ((and (stringp x) (stringp y))
+                  (string<= x y))
+                 ((and (characterp x) (characterp y))
+                  (char<= x y)))))
+    (sort (remove-duplicates
+           (reduce #'append (mapcar #'(lambda (x) (remove-duplicates x)) sequences)))
+          #'sp)))
+
+(defun get-result (data detail)
+  (if (= detail 4)
+      data
+      (let ((data-3
+             (mapcar #'(lambda (x)
+                         (mapcar #'(lambda (y)
+                                     (codelength (get-probability (car y) (cadr y))))
+                                 (cdr x)))
+                     data)))
+        (if (= detail 3)
+            data-3
+            (let ((data-2 (mapcar #'(lambda (x) (apply #'utils:average x)) data-3)))
+              (if (= detail 2)
+                  data-2
+                  (apply #'utils:average data-2)))))))
+
+;; Input tests
+;; ===========================================================================
+
+(5am:def-suite ppm*-input :in ppm)
+(5am:in-suite ppm*-input)
+
+(5am:test ppm*-input1
+  (5am:is (equal (ppm::test-ppm '((a b r a c a d a b r a c))  :escape :c :mixtures t :update-exclusion nil :order-bound nil)
+                 (ppm::test-ppm '((1 2 3 1 4 1 5 1 2 3 1 4))  :escape :c :mixtures t :update-exclusion nil :order-bound nil))))
+
+(5am:test ppm*-input2
+  (5am:is (equal (ppm::test-ppm '((a b r a c a d a b r a c))  :escape :c :mixtures t :update-exclusion nil :order-bound nil)
+                 (ppm::test-ppm '((#\a #\b #\r #\a #\c #\a #\d #\a #\b #\r #\a #\c)) :escape :c :mixtures t :update-exclusion nil :order-bound nil))))
+                 
 
 ;; dataset tests
 ;; ===========================================================================
@@ -27,9 +66,8 @@
 (5am:in-suite ppm*-dataset)
 
 (5am:test ppm*-dataset1
-  (5am:is (equal (test-ppm-dataset '((a b r a c a d a b r a)
-                                     (a b r a c a d a b r a))
-                                   '(a b c d r))
+  (5am:is (equal (test-ppm '((a b r a c a d a b r a)
+                             (a b r a c a d a b r a)))
                  '((0 (A ((A 0.19999999) (B 0.19999999) (C 0.19999999) (D 0.19999999) (R 0.19999999)))
                     (B ((A 0.59999996) (B 0.09999999) (C 0.09999999) (D 0.09999999) (R 0.09999999)))
                     (R ((A 0.33333334) (B 0.33333334) (C 0.11111111) (D 0.11111111) (R 0.11111111)))
@@ -54,10 +92,9 @@
                     (A ((A 0.6701031) (B 0.09278351) (C 0.072164945) (D 0.072164945) (R 0.09278351))))))))
 
 (5am:test ppm*-dataset2
-  (5am:is (equal (test-ppm-dataset '((a b r a c a d a b r a)
-                                     (a b r a c a d a b r a)
-                                     (a b r a c a d a b r a))
-                                   '(a b c d r))
+  (5am:is (equal (test-ppm '((a b r a c a d a b r a)
+                             (a b r a c a d a b r a)
+                             (a b r a c a d a b r a)))
                  '((0 (A ((A 0.19999999) (B 0.19999999) (C 0.19999999) (D 0.19999999) (R 0.19999999)))
                     (B ((A 0.59999996) (B 0.09999999) (C 0.09999999) (D 0.09999999) (R 0.09999999)))
                     (R ((A 0.33333334) (B 0.33333334) (C 0.11111111) (D 0.11111111) (R 0.11111111)))
@@ -93,12 +130,11 @@
                     (A ((A 0.7790698) (B 0.0639535) (C 0.046511635) (D 0.046511635) (R 0.0639535))))))))
           
 (5am:test ppm*-dataset3
-  (5am:is (equal (test-ppm-dataset '((a b r a c a d a b r a)
-                                     (l e t l e t t e r t e l e)
-                                     (a s s a n i s s i m a s s a)
-                                     (m i s s i s s i p p i)
-                                     (w o o l o o b o o l o o))
-                                   '(a b c d e i l m n o p r s t w))
+  (5am:is (equal (test-ppm '((a b r a c a d a b r a)
+                             (l e t l e t t e r t e l e)
+                             (a s s a n i s s i m a s s a)
+                             (m i s s i s s i p p i)
+                             (w o o l o o b o o l o o)))
                  '((0
                     (A
                      ((A 0.06666667) (B 0.06666667) (C 0.06666667) (D 0.06666667) (E 0.06666667) (I 0.06666667) (L 0.06666667)
@@ -358,7 +394,7 @@
 (5am:in-suite ppm*-simple)
 
 (5am:test kkkkkkkkk-ppmc*
-  (5am:is (equal (test-ppm '(k k k k k k k k k) :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
+  (5am:is (equal (test-ppm '((k k k k k k k k k)) :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
                  '((0 (K ((K 1.0)))
                     (K ((K 1.0)))
                     (K ((K 1.0)))
@@ -370,7 +406,7 @@
                     (K ((K 1.0))))))))
 
 (5am:test ababc-ppmc*
-  (5am:is (equal (test-ppm '(a b a b c) :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
+  (5am:is (equal (test-ppm '((a b a b c)) :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
                  '((0 (A ((A 0.33333334) (B 0.33333334) (C 0.33333334)))
                     (B ((A 0.59999996) (B 0.19999999) (C 0.19999999)))
                     (A ((A 0.33333334) (B 0.33333334) (C 0.33333334)))
@@ -378,7 +414,7 @@
                     (C ((A 0.5714286) (B 0.2857143) (C 0.14285715))))))))
 
 (5am:test aaaaaaaabb-ppmc*
-  (5am:is (equal (test-ppm '(a a a a a a a a b b) :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
+  (5am:is (equal (test-ppm '((a a a a a a a a b b)) :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
                  '((0
                     (A ((A 0.5) (B 0.5)))
                     (A ((A 0.6666667) (B 0.33333334)))
@@ -392,7 +428,7 @@
                     (B ((A 0.88888884) (B 0.111111104))))))))
                  
 (5am:test abrabrab-ppmc*
-  (5am:is (equal (ppm::test-ppm '(a b r a b r a b) :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
+  (5am:is (equal (ppm::test-ppm '((a b r a b r a b)) :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
                  '((0
                     (A ((A 0.33333334) (B 0.33333334) (R 0.33333334)))
                     (B ((A 0.59999996) (B 0.19999999) (R 0.19999999)))
@@ -411,7 +447,7 @@
 (5am:in-suite ppm*-exclusion)
 
 (5am:test abracadabra-ppmc*-without-exclusion
-  (5am:is (equal (test-ppm '(a b r a c a d a b r a) :exclusion nil :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
+  (5am:is (equal (test-ppm '((a b r a c a d a b r a)) :exclusion nil :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
                  '((0 (A ((A 0.2) (B 0.2) (C 0.2) (D 0.2) (R 0.2)))
                     (B ((A 0.5555555) (B 0.111111104) (C 0.111111104) (D 0.111111104) (R 0.111111104)))
                     (R ((A 0.31249997) (B 0.31249997) (C 0.12499999) (D 0.12499999) (R 0.12499999)))
@@ -433,7 +469,7 @@
 
 ;; abracadabra (Cleary & Teahan, 1997; Bunton, 1996)
 (5am:test abracadabra-ppmc*
-  (5am:is (equal (test-ppm '(a b r a c a d a b r a c) :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
+  (5am:is (equal (test-ppm '((a b r a c a d a b r a c)) :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
                  '((0 (A ((A 0.19999999) (B 0.19999999) (C 0.19999999) (D 0.19999999) (R 0.19999999)))
                     (B ((A 0.5555555) (B 0.111111104) (C 0.111111104) (D 0.111111104) (R 0.111111104)))
                     (R ((A 0.2857143) (B 0.2857143) (C 0.14285715) (D 0.14285715) (R 0.14285715)))
@@ -449,7 +485,7 @@
 
 ;; letlettertele (Larsson, 1999)
 (5am:test letlettertele-ppmc*
-  (5am:is (equal (test-ppm '(l e t l e t t e r t e l e) :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
+  (5am:is (equal (test-ppm '((l e t l e t t e r t e l e)) :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
                  '((0 (L ((E 0.25) (L 0.25) (R 0.25) (T 0.25)))
                     (E ((E 0.14285715) (L 0.5714286) (R 0.14285715) (T 0.14285715)))
                     (T ((E 0.29999998) (L 0.29999998) (R 0.19999999) (T 0.19999999)))
@@ -466,7 +502,7 @@
                  
 ;; assanissimassa (Blelloch, 2001)
 (5am:test assanissimassa-ppmc*
-  (5am:is (equal (test-ppm '(a s s a n i s s i m a s s a) :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
+  (5am:is (equal (test-ppm '((a s s a n i s s i m a s s a)) :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
                  '((0 (A ((A 0.19999999) (I 0.19999999) (M 0.19999999) (N 0.19999999) (S 0.19999999)))
                     (S ((A 0.5555555) (I 0.111111104) (M 0.111111104) (N 0.111111104) (S 0.111111104)))
                     (S ((A 0.2857143) (I 0.14285715) (M 0.14285715) (N 0.14285715) (S 0.2857143)))
@@ -484,7 +520,7 @@
 
 ;; mississippi (Witten et al., 1999)
 (5am:test mississippi-ppmc*
-  (5am:is (equal (test-ppm '(m i s s i s s i p p i) :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
+  (5am:is (equal (test-ppm '((m i s s i s s i p p i)) :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
                  '((0 (M ((I 0.25) (M 0.25) (P 0.25) (S 0.25)))
                     (I ((I 0.14285715) (M 0.5714286) (P 0.14285715) (S 0.14285715)))
                     (S ((I 0.29999998) (M 0.29999998) (P 0.19999999) (S 0.19999999)))
@@ -499,7 +535,7 @@
                  
 ;; woolloomooloo (Williams, 1991)
 (5am:test woolloomooloo-ppmc*
-  (5am:is (equal (test-ppm '(w o o l l o o m o o l o o) :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
+  (5am:is (equal (test-ppm '((w o o l l o o m o o l o o)) :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
                  '((0 (W ((L 0.25) (M 0.25) (O 0.25) (W 0.25)))
                     (O ((L 0.14285715) (M 0.14285715) (O 0.14285715) (W 0.5714286)))
                     (O ((L 0.19999999) (M 0.19999999) (O 0.29999998) (W 0.29999998)))
@@ -516,7 +552,7 @@
                  
 ;; agcgacgag (Giegerich & Kurtz, 1994, 1995)
 (5am:test agcgacgag-ppmc*
-  (5am:is (equal (test-ppm '(a g c g a c g a g) :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
+  (5am:is (equal (test-ppm '((a g c g a c g a g)) :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
                  '((0 (A ((A 0.33333334) (C 0.33333334) (G 0.33333334)))
                     (G ((A 0.59999996) (C 0.19999999) (G 0.19999999)))
                     (C ((A 0.33333334) (C 0.33333334) (G 0.33333334)))
@@ -536,7 +572,7 @@
 
 ;; abracadabra (Cleary & Teahan, 1997; Bunton, 1996)
 (5am:test abracadabra-ppmc*u
-  (5am:is (equal (test-ppm '(a b r a c a d a b r a c) :escape :c :mixtures nil :update-exclusion t :order-bound nil)
+  (5am:is (equal (test-ppm '((a b r a c a d a b r a c)) :escape :c :mixtures nil :update-exclusion t :order-bound nil)
                  '((0 (A ((A 0.19999999) (B 0.19999999) (C 0.19999999) (D 0.19999999) (R 0.19999999)))
                     (B ((A 0.5555555) (B 0.111111104) (C 0.111111104) (D 0.111111104) (R 0.111111104)))
                     (R ((A 0.2857143) (B 0.2857143) (C 0.14285715) (D 0.14285715) (R 0.14285715)))
@@ -559,15 +595,15 @@
 
 ;; Abracadabra
 (5am:test abracadabra-ppmc2
-  (5am:is (and (equal (test-ppm '(a b r a c a d a b r a c) :escape :c :mixtures nil :update-exclusion nil :order-bound 2)
-                      (test-ppm '(a b r a c a d a b r a c) :escape :c :mixtures nil :update-exclusion nil :order-bound nil))
+  (5am:is (and (equal (test-ppm '((a b r a c a d a b r a c)) :escape :c :mixtures nil :update-exclusion nil :order-bound 2)
+                      (test-ppm '((a b r a c a d a b r a c)) :escape :c :mixtures nil :update-exclusion nil :order-bound nil))
                (not (equal
-                     (test-ppm '(a b r a c a d a b r a c) :escape :c :mixtures nil :update-exclusion nil :order-bound 1)
-                     (test-ppm '(a b r a c a d a b r a c) :escape :c :mixtures nil :update-exclusion nil :order-bound nil))))))
+                     (test-ppm '((a b r a c a d a b r a c)) :escape :c :mixtures nil :update-exclusion nil :order-bound 1)
+                     (test-ppm '((a b r a c a d a b r a c)) :escape :c :mixtures nil :update-exclusion nil :order-bound nil))))))
           
 
 (5am:test abracadabra-ppmc1
-  (5am:is (equal (test-ppm '(a b r a c a d a b r a c) :escape :c :mixtures nil :update-exclusion nil :order-bound 1)
+  (5am:is (equal (test-ppm '((a b r a c a d a b r a c)) :escape :c :mixtures nil :update-exclusion nil :order-bound 1)
                  '((0 (A ((A 0.19999999) (B 0.19999999) (C 0.19999999) (D 0.19999999) (R 0.19999999)))
                     (B ((A 0.5555555) (B 0.111111104) (C 0.111111104) (D 0.111111104) (R 0.111111104)))
                     (R ((A 0.2857143) (B 0.2857143) (C 0.14285715) (D 0.14285715) (R 0.14285715)))
@@ -582,7 +618,7 @@
                     (C ((A 0.2173913) (B 0.34782612) (C 0.17391306) (D 0.17391306) (R 0.08695652))))))))
 
 (5am:test abracadabra-ppmc0
-  (5am:is (equal (test-ppm '(a b r a c a d a b r a c) :escape :c :mixtures nil :update-exclusion nil :order-bound 0)
+  (5am:is (equal (test-ppm '((a b r a c a d a b r a c)) :escape :c :mixtures nil :update-exclusion nil :order-bound 0)
                  '((0 (A ((A 0.19999999) (B 0.19999999) (C 0.19999999) (D 0.19999999) (R 0.19999999)))
                     (B ((A 0.5555555) (B 0.111111104) (C 0.111111104) (D 0.111111104) (R 0.111111104)))
                     (R ((A 0.2857143) (B 0.2857143) (C 0.14285715) (D 0.14285715) (R 0.14285715)))
@@ -598,54 +634,54 @@
 
 ;; letlettertele
 (5am:test letlettertele-ppmc2
-  (5am:is (equal (test-ppm '(l e t l e t t e r t e l e) :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
-                 (test-ppm '(l e t l e t t e r t e l e) :escape :c :mixtures nil :update-exclusion nil :order-bound 2))))
+  (5am:is (equal (test-ppm '((l e t l e t t e r t e l e)) :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
+                 (test-ppm '((l e t l e t t e r t e l e)) :escape :c :mixtures nil :update-exclusion nil :order-bound 2))))
 
 (5am:test letlettertele-ppmc1
   (5am:is (not (equal
-                (test-ppm '(l e t l e t t e r t e l e) :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
-                (test-ppm '(l e t l e t t e r t e l e) :escape :c :mixtures nil :update-exclusion nil :order-bound 1)))))
+                (test-ppm '((l e t l e t t e r t e l e)) :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
+                (test-ppm '((l e t l e t t e r t e l e)) :escape :c :mixtures nil :update-exclusion nil :order-bound 1)))))
 
 ;; assanissimassa
 (5am:test assanissimassa-ppmc3
-  (5am:is (equal (test-ppm '(a s s a n i s s i m a s s a) :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
-                 (test-ppm '(a s s a n i s s i m a s s a) :escape :c :mixtures nil :update-exclusion nil :order-bound 3))))
+  (5am:is (equal (test-ppm '((a s s a n i s s i m a s s a)) :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
+                 (test-ppm '((a s s a n i s s i m a s s a)) :escape :c :mixtures nil :update-exclusion nil :order-bound 3))))
 
 (5am:test assanissimassa-ppmc2
   (5am:is (not (equal
-                (test-ppm '(a s s a n i s s i m a s s a) :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
-                (test-ppm '(a s s a n i s s i m a s s a) :escape :c :mixtures nil :update-exclusion nil :order-bound 2)))))
+                (test-ppm '((a s s a n i s s i m a s s a)) :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
+                (test-ppm '((a s s a n i s s i m a s s a)) :escape :c :mixtures nil :update-exclusion nil :order-bound 2)))))
 
 ;; missisippi
 ;; 
 ;; PPM* predicts the first p at order 1 (the lowest-order deterministic state) while all other predictions are order 2
 
 (5am:test mississippi-ppmc2
-  (5am:is (not (equal (test-ppm '(m i s s i s s i p p i) :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
-                      (test-ppm '(m i s s i s s i p p i) :escape :c :mixtures nil :update-exclusion nil :order-bound 2)))))
+  (5am:is (not (equal (test-ppm '((m i s s i s s i p p i)) :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
+                      (test-ppm '((m i s s i s s i p p i)) :escape :c :mixtures nil :update-exclusion nil :order-bound 2)))))
 
 (5am:test mississippi-ppmc1
   (5am:is (not (equal
-                (test-ppm '(m i s s i s s i p p i) :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
-                (test-ppm '(m i s s i s s i p p i) :escape :c :mixtures nil :update-exclusion nil :order-bound 1)))))
+                (test-ppm '((m i s s i s s i p p i)) :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
+                (test-ppm '((m i s s i s s i p p i)) :escape :c :mixtures nil :update-exclusion nil :order-bound 1)))))
 
 ;; woolloomooloo
 (5am:test woolloomooloo-ppmc2
-  (5am:is (equal (test-ppm '(w o o l l o o m o o l o o) :escape :c :mixtures nil :update-exclusion nil :order-bound nil) 
-                 (test-ppm '(w o o l l o o m o o l o o) :escape :c :mixtures nil :update-exclusion nil :order-bound 2))))
+  (5am:is (equal (test-ppm '((w o o l l o o m o o l o o)) :escape :c :mixtures nil :update-exclusion nil :order-bound nil) 
+                 (test-ppm '((w o o l l o o m o o l o o)) :escape :c :mixtures nil :update-exclusion nil :order-bound 2))))
 
 (5am:test woolloomooloo-ppmc1
-  (5am:is (not (equal (test-ppm '(w o o l l o o m o o l o o) :escape :c :mixtures nil :update-exclusion nil :order-bound nil) 
-                      (test-ppm '(w o o l l o o m o o l o o) :escape :c :mixtures nil :update-exclusion nil :order-bound 1)))))
+  (5am:is (not (equal (test-ppm '((w o o l l o o m o o l o o)) :escape :c :mixtures nil :update-exclusion nil :order-bound nil) 
+                      (test-ppm '((w o o l l o o m o o l o o)) :escape :c :mixtures nil :update-exclusion nil :order-bound 1)))))
 
 ;; agcgacgag
 (5am:test agcgacgag-ppmc2
-  (5am:is (equal (test-ppm '(a g c g a c g a g) :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
-                 (test-ppm '(a g c g a c g a g) :escape :c :mixtures nil :update-exclusion nil :order-bound 2))))
+  (5am:is (equal (test-ppm '((a g c g a c g a g)) :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
+                 (test-ppm '((a g c g a c g a g)) :escape :c :mixtures nil :update-exclusion nil :order-bound 2))))
 
 (5am:test agcgacgag-ppmc1
-  (5am:is (not (equal (test-ppm '(a g c g a c g a g) :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
-                      (test-ppm '(a g c g a c g a g) :escape :c :mixtures nil :update-exclusion nil :order-bound 1)))))
+  (5am:is (not (equal (test-ppm '((a g c g a c g a g)) :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
+                      (test-ppm '((a g c g a c g a g)) :escape :c :mixtures nil :update-exclusion nil :order-bound 1)))))
           
                  
 ;; PPM* with Mixtures
@@ -656,7 +692,7 @@
 
 ;; abracadabrac (Cleary & Teahan, 1997; Bunton, 1996)
 (5am:test abracadabra-ppmc*i
-  (5am:is (equal (test-ppm '(a b r a c a d a b r a c) :escape :c :mixtures t :update-exclusion nil :order-bound nil)
+  (5am:is (equal (test-ppm '((a b r a c a d a b r a c)) :escape :c :mixtures t :update-exclusion nil :order-bound nil)
                  '((0 (A ((A 0.19999999) (B 0.19999999) (C 0.19999999) (D 0.19999999) (R 0.19999999)))
                     (B ((A 0.59999996) (B 0.09999999) (C 0.09999999) (D 0.09999999) (R 0.09999999)))
                     (R ((A 0.33333334) (B 0.33333334) (C 0.11111111) (D 0.11111111) (R 0.11111111)))
@@ -672,7 +708,7 @@
 
 ;; letlettertele (Larsson, 1999)
 (5am:test letlettertele-ppmc*i
-  (5am:is (equal (test-ppm '(l e t l e t t e r t e l e) :escape :c :mixtures t :update-exclusion nil :order-bound nil)
+  (5am:is (equal (test-ppm '((l e t l e t t e r t e l e)) :escape :c :mixtures t :update-exclusion nil :order-bound nil)
                  '((0 (L ((E 0.25) (L 0.25) (R 0.25) (T 0.25)))
                     (E ((E 0.125) (L 0.625) (R 0.125) (T 0.125)))
                     (T ((E 0.35714287) (L 0.35714287) (R 0.14285715) (T 0.14285715)))
@@ -689,7 +725,7 @@
                  
 ;; assanissimassa (Blelloch, 2001)
 (5am:test assanissimassa-ppmc*i
-  (5am:is (equal (test-ppm '(a s s a n i s s i m a s s a) :escape :c :mixtures t :update-exclusion nil :order-bound nil)
+  (5am:is (equal (test-ppm '((a s s a n i s s i m a s s a)) :escape :c :mixtures t :update-exclusion nil :order-bound nil)
                  '((0 (A ((A 0.19999999) (I 0.19999999) (M 0.19999999) (N 0.19999999) (S 0.19999999)))
                     (S ((A 0.59999996) (I 0.09999999) (M 0.09999999) (N 0.09999999) (S 0.09999999)))
                     (S ((A 0.33333334) (I 0.11111111) (M 0.11111111) (N 0.11111111) (S 0.33333334)))
@@ -707,7 +743,7 @@
 
 ;; mississippi (Witten et al., 1999)
 (5am:test mississippi-ppmc*i
-  (5am:is (equal (test-ppm '(m i s s i s s i p p i) :escape :c :mixtures t :update-exclusion nil :order-bound nil)
+  (5am:is (equal (test-ppm '((m i s s i s s i p p i)) :escape :c :mixtures t :update-exclusion nil :order-bound nil)
                  '((0
                     (M ((I 0.25) (M 0.25) (P 0.25) (S 0.25)))
                     (I ((I 0.125) (M 0.625) (P 0.125) (S 0.125)))
@@ -723,7 +759,7 @@
                  
 ;; woolloomooloo (Williams, 1991)
 (5am:test woolloomooloo-ppmc*i
-  (5am:is (equal (test-ppm '(w o o l l o o m o o l o o) :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
+  (5am:is (equal (test-ppm '((w o o l l o o m o o l o o)) :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
                  '((0 (W ((L 0.25) (M 0.25) (O 0.25) (W 0.25)))
                     (O ((L 0.14285715) (M 0.14285715) (O 0.14285715) (W 0.5714286)))
                     (O ((L 0.19999999) (M 0.19999999) (O 0.29999998) (W 0.29999998)))
@@ -740,7 +776,7 @@
                  
 ;; agcgacgag (Giegerich & Kurtz, 1994, 1995)
 (5am:test agcgacgag-ppmc*i
-  (5am:is (equal (test-ppm '(a g c g a c g a g) :escape :c :mixtures t :update-exclusion nil :order-bound nil)
+  (5am:is (equal (test-ppm '((a g c g a c g a g)) :escape :c :mixtures t :update-exclusion nil :order-bound nil)
                  '((0 (A ((A 0.33333334) (C 0.33333334) (G 0.33333334)))
                     (G ((A 0.6666667) (C 0.16666667) (G 0.16666667)))
                     (C ((A 0.4) (C 0.2) (G 0.4)))
@@ -760,7 +796,7 @@
 
 ;; abracadabra (Cleary & Teahan, 1997; Bunton, 1996)
 (5am:test abracadabra-ppmc*ui
-  (5am:is (equal (test-ppm '(a b r a c a d a b r a c) :escape :c :mixtures t :update-exclusion t :order-bound nil)
+  (5am:is (equal (test-ppm '((a b r a c a d a b r a c)) :escape :c :mixtures t :update-exclusion t :order-bound nil)
                  '((0 (A ((A 0.19999999) (B 0.19999999) (C 0.19999999) (D 0.19999999) (R 0.19999999)))
                     (B ((A 0.59999996) (B 0.09999999) (C 0.09999999) (D 0.09999999) (R 0.09999999)))
                     (R ((A 0.33333334) (B 0.33333334) (C 0.11111111) (D 0.11111111) (R 0.11111111)))
@@ -782,13 +818,13 @@
 (5am:in-suite ppm-mixtures-order-bound)
 
 (5am:test abracadabra-ppmc2i
-  (5am:is (and (equal (test-ppm '(a b r a c a d a b r a c) :escape :c :mixtures t :update-exclusion nil :order-bound 2)
-                      (test-ppm '(a b r a c a d a b r a c) :escape :c :mixtures t :update-exclusion nil :order-bound nil))
-               (not (equal (test-ppm '(a b r a c a d a b r a c) :escape :c :mixtures t :update-exclusion nil :order-bound 1)
-                           (test-ppm '(a b r a c a d a b r a c) :escape :c :mixtures t :update-exclusion nil :order-bound nil))))))
+  (5am:is (and (equal (test-ppm '((a b r a c a d a b r a c)) :escape :c :mixtures t :update-exclusion nil :order-bound 2)
+                      (test-ppm '((a b r a c a d a b r a c)) :escape :c :mixtures t :update-exclusion nil :order-bound nil))
+               (not (equal (test-ppm '((a b r a c a d a b r a c)) :escape :c :mixtures t :update-exclusion nil :order-bound 1)
+                           (test-ppm '((a b r a c a d a b r a c)) :escape :c :mixtures t :update-exclusion nil :order-bound nil))))))
 
 (5am:test abracadabra-ppmc1i
-  (5am:is (equal (test-ppm '(a b r a c a d a b r a c) :escape :c :mixtures t :update-exclusion nil :order-bound 1)
+  (5am:is (equal (test-ppm '((a b r a c a d a b r a c)) :escape :c :mixtures t :update-exclusion nil :order-bound 1)
                  '((0 (A ((A 0.19999999) (B 0.19999999) (C 0.19999999) (D 0.19999999) (R 0.19999999)))
                     (B ((A 0.59999996) (B 0.09999999) (C 0.09999999) (D 0.09999999) (R 0.09999999)))
                     (R ((A 0.33333334) (B 0.33333334) (C 0.11111111) (D 0.11111111) (R 0.11111111)))
@@ -803,7 +839,7 @@
                     (C ((A 0.19230768) (B 0.2884615) (C 0.19230768) (D 0.19230768) (R 0.13461538))))))))
                  
 (5am:test abracadabra-ppmc0i
-  (5am:is (equal (test-ppm '(a b r a c a d a b r a c) :escape :c :mixtures t :update-exclusion nil :order-bound 0)
+  (5am:is (equal (test-ppm '((a b r a c a d a b r a c)) :escape :c :mixtures t :update-exclusion nil :order-bound 0)
                  '((0 (A ((A 0.19999999) (B 0.19999999) (C 0.19999999) (D 0.19999999) (R 0.19999999)))
                     (B ((A 0.59999996) (B 0.09999999) (C 0.09999999) (D 0.09999999) (R 0.09999999)))
                     (R ((A 0.33333334) (B 0.33333334) (C 0.11111111) (D 0.11111111) (R 0.11111111)))
@@ -819,51 +855,51 @@
                  
 ;; letlettertele
 (5am:test letlettertele-ppmc2i
-  (5am:is (equal (test-ppm '(l e t l e t t e r t e l e) :escape :c :mixtures t :update-exclusion nil :order-bound nil)
-                 (test-ppm '(l e t l e t t e r t e l e) :escape :c :mixtures t :update-exclusion nil :order-bound 2))))
+  (5am:is (equal (test-ppm '((l e t l e t t e r t e l e)) :escape :c :mixtures t :update-exclusion nil :order-bound nil)
+                 (test-ppm '((l e t l e t t e r t e l e)) :escape :c :mixtures t :update-exclusion nil :order-bound 2))))
 
 (5am:test letlettertele-ppmc1i
-  (5am:is (not (equal (test-ppm '(l e t l e t t e r t e l e) :escape :c :mixtures t :update-exclusion nil :order-bound nil)
-                      (test-ppm '(l e t l e t t e r t e l e) :escape :c :mixtures t :update-exclusion nil :order-bound 1)))))
+  (5am:is (not (equal (test-ppm '((l e t l e t t e r t e l e)) :escape :c :mixtures t :update-exclusion nil :order-bound nil)
+                      (test-ppm '((l e t l e t t e r t e l e)) :escape :c :mixtures t :update-exclusion nil :order-bound 1)))))
 
 ;; assanissimassa
 (5am:test assanissimassa-ppmc3i
-  (5am:is (equal (test-ppm '(a s s a n i s s i m a s s a) :escape :c :mixtures t :update-exclusion nil :order-bound nil)
-                 (test-ppm '(a s s a n i s s i m a s s a) :escape :c :mixtures t :update-exclusion nil :order-bound 3))))
+  (5am:is (equal (test-ppm '((a s s a n i s s i m a s s a)) :escape :c :mixtures t :update-exclusion nil :order-bound nil)
+                 (test-ppm '((a s s a n i s s i m a s s a)) :escape :c :mixtures t :update-exclusion nil :order-bound 3))))
 
 (5am:test assanissimassa-ppmc2i
-  (5am:is (not (equal (test-ppm '(a s s a n i s s i m a s s a) :escape :c :mixtures t :update-exclusion nil :order-bound nil)
-                      (test-ppm '(a s s a n i s s i m a s s a) :escape :c :mixtures t :update-exclusion nil :order-bound 2)))))
+  (5am:is (not (equal (test-ppm '((a s s a n i s s i m a s s a)) :escape :c :mixtures t :update-exclusion nil :order-bound nil)
+                      (test-ppm '((a s s a n i s s i m a s s a)) :escape :c :mixtures t :update-exclusion nil :order-bound 2)))))
 
 ;; missisippi
 ;;
 ;; PPM* predicts the first p at order 1 (the lowest-order deterministic state), while all other predictions are order 2
 
 (5am:test mississippi-ppmc2i
-  (5am:is (not (equal (test-ppm '(m i s s i s s i p p i) :escape :c :mixtures t :update-exclusion nil :order-bound nil)
-                      (test-ppm '(m i s s i s s i p p i) :escape :c :mixtures t :update-exclusion nil :order-bound 2)))))
+  (5am:is (not (equal (test-ppm '((m i s s i s s i p p i)) :escape :c :mixtures t :update-exclusion nil :order-bound nil)
+                      (test-ppm '((m i s s i s s i p p i)) :escape :c :mixtures t :update-exclusion nil :order-bound 2)))))
 
 (5am:test mississippi-ppmc1i
-  (5am:is (not (equal (test-ppm '(m i s s i s s i p p i) :escape :c :mixtures t :update-exclusion nil :order-bound nil)
-                      (test-ppm '(m i s s i s s i p p i) :escape :c :mixtures t :update-exclusion nil :order-bound 1)))))
+  (5am:is (not (equal (test-ppm '((m i s s i s s i p p i)) :escape :c :mixtures t :update-exclusion nil :order-bound nil)
+                      (test-ppm '((m i s s i s s i p p i)) :escape :c :mixtures t :update-exclusion nil :order-bound 1)))))
 
 ;; woolloomooloo
 (5am:test woolloomooloo-ppmc2i
-  (5am:is (equal (test-ppm '(w o o l l o o m o o l o o) :escape :c :mixtures t :update-exclusion nil :order-bound nil) 
-                 (test-ppm '(w o o l l o o m o o l o o) :escape :c :mixtures t :update-exclusion nil :order-bound 2))))
+  (5am:is (equal (test-ppm '((w o o l l o o m o o l o o)) :escape :c :mixtures t :update-exclusion nil :order-bound nil) 
+                 (test-ppm '((w o o l l o o m o o l o o)) :escape :c :mixtures t :update-exclusion nil :order-bound 2))))
 
 (5am:test woolloomooloo-ppmc1i
-  (5am:is (not (equal (test-ppm '(w o o l l o o m o o l o o) :escape :c :mixtures t :update-exclusion nil :order-bound nil) 
-                      (test-ppm '(w o o l l o o m o o l o o) :escape :c :mixtures t :update-exclusion nil :order-bound 1)))))
+  (5am:is (not (equal (test-ppm '((w o o l l o o m o o l o o)) :escape :c :mixtures t :update-exclusion nil :order-bound nil) 
+                      (test-ppm '((w o o l l o o m o o l o o)) :escape :c :mixtures t :update-exclusion nil :order-bound 1)))))
 
 ;; agcgacgag
 (5am:test agcgacgag-ppmc2i
-  (5am:is (equal (test-ppm '(a g c g a c g a g) :escape :c :mixtures t :update-exclusion nil :order-bound nil)
-                 (test-ppm '(a g c g a c g a g) :escape :c :mixtures t :update-exclusion nil :order-bound 2))))
+  (5am:is (equal (test-ppm '((a g c g a c g a g)) :escape :c :mixtures t :update-exclusion nil :order-bound nil)
+                 (test-ppm '((a g c g a c g a g)) :escape :c :mixtures t :update-exclusion nil :order-bound 2))))
 
 (5am:test agcgacgag-ppmc1i
-  (5am:is (not (equal (test-ppm '(a g c g a c g a g) :escape :c :mixtures t :update-exclusion nil :order-bound nil)
-                      (test-ppm '(a g c g a c g a g) :escape :c :mixtures t :update-exclusion nil :order-bound 1)))))
+  (5am:is (not (equal (test-ppm '((a g c g a c g a g)) :escape :c :mixtures t :update-exclusion nil :order-bound nil)
+                      (test-ppm '((a g c g a c g a g)) :escape :c :mixtures t :update-exclusion nil :order-bound 1)))))
 
 
 ;;; Tests with musical pieces
@@ -877,7 +913,7 @@
     69 69 67))
 
 (5am:test chorale-ppmc*
-  (5am:is (equal (test-ppm *chorale* :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
+  (5am:is (equal (test-ppm (list *chorale*) :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
                  '((0 (71 ((66 0.14285715) (67 0.14285715) (69 0.14285715) (71 0.14285715) (72 0.14285715) (74 0.14285715) (76 0.14285715)))
                     (71 ((66 0.07692307) (67 0.07692307) (69 0.07692307) (71 0.5384615) (72 0.07692307) (74 0.07692307) (76 0.07692307)))
                     (71 ((66 0.07692307) (67 0.07692307) (69 0.07692307) (71 0.5384615) (72 0.07692307) (74 0.07692307) (76 0.07692307)))
@@ -917,7 +953,7 @@
 (5am:test poulenc-ppmc*
   (5am:is
    (equal
-    (test-ppm *poulenc* :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
+    (test-ppm (list *poulenc*) :escape :c :mixtures nil :update-exclusion nil :order-bound nil)
     '((0
        (60
         ((60 0.047619034) (62 0.047619034) (63 0.047619034) (65 0.047619034) (66 0.047619034) (67 0.047619034) (68 0.047619034) (70 0.047619034) (72 0.047619034)
@@ -1184,6 +1220,14 @@
     64 65 69 47 48 50 52 53 50 50 52 60 64 69 52 60 60 59 69 69 68 68 68 45 52 57
     61 64 69 45 52 57 62 61 64 69))
 
+(5am:test couperin-ppmc*
+  (5am:is (equal (test-ppm (list *couperin*) :escape :c :mixtures nil :update-exclusion nil :order-bound nil :detail 1)
+                 4.307855)))
+
+(5am:test couperin-ppmc*i
+  (5am:is (equal (test-ppm (list *couperin*) :escape :c :mixtures t :update-exclusion nil :order-bound nil :detail 1)
+                 4.195832)))
+
 (defvar *hindemith*
   ;; Paul Hindemith: Acht Stücke Für Flöte Allein: VI. Lied, Leicht Bewegt
   '(84 83 85 86 81 82 81 80 80 80 79 77 79 76 83 73 72 71 72 77 76 75 77 79 80 82
@@ -1191,6 +1235,14 @@
     68 70 62 73 74 63 78 79 92 90 89 88 88 91 87 86 85 84 83 85 86 81 82 81 80 80
     80 79 77 79 76 83 73 71 73 74 74 74 73 71 73 70 77 67 68 69 70 70 68 69 70 70
     68 69 70 63 63 68 66 63 62 70 63 68 66 63 62 70 63 68 66 63 62))
+
+(5am:test hindemith-ppmc*
+  (5am:is (equal (test-ppm (list *hindemith*) :escape :c :mixtures nil :update-exclusion nil :order-bound nil :detail 1)
+                 4.1466417)))
+
+(5am:test hindemith-ppmc*i
+  (5am:is (equal (test-ppm (list *hindemith*) :escape :c :mixtures t :update-exclusion nil :order-bound nil :detail 1)
+                 4.210231)))
 
 (defvar *wtc1-1*
   ;; Bach: right hand of the Well-tempered Clavier, book 1, prelude 1 in C Major
@@ -1216,6 +1268,14 @@
     59 65 36 48 55 58 64 55 58 64 36 48 55 58 64 55 58 64 36 48 53 57 60 65 60 57
     60 57 53 57 53 50 53 50 36 47 67 71 74 77 74 71 74 71 67 71 62 65 64 62 60))
 
+(5am:test wtc1-1-ppmc*
+  (5am:is (equal (test-ppm (list *wtc1-1*) :escape :c :mixtures nil :update-exclusion nil :order-bound nil :detail 1)
+                 2.6960666)))
+
+(5am:test wtc1-1-ppmc*i
+  (5am:is (equal (test-ppm (list *wtc1-1*) :escape :c :mixtures t :update-exclusion nil :order-bound nil :detail 1)
+                 2.6136842)))
+
 (defvar *syrinx*
   ;; Debussy: Syrinx 
   '(82 81 83 80 79 81 78 77 76 73 82 84 83 82 82 81 83 80 79 81 78 77 76 73 70 66
@@ -1229,6 +1289,14 @@
     78 77 76 73 70 69 71 68 67 69 66 65 64 61 70 69 71 68 67 69 66 65 64 61 61 65
     64 61 69 67 61 71 69 67 65 63 61))
 
+(5am:test syrinx-ppmc*
+  (5am:is (equal (test-ppm (list *syrinx*) :escape :c :mixtures nil :update-exclusion nil :order-bound nil :detail 1)
+                 3.6204462)))
+
+(5am:test syrinx-ppmc*i
+  (5am:is (equal (test-ppm (list *syrinx*) :escape :c :mixtures t :update-exclusion nil :order-bound nil :detail 1)
+                 3.5496502)))
+
 (defvar *varese*
   ;; Edgar Varese: Density 21.5 
   '(65 64 66 61 66 61 67 65 64 66 67 61 67 66 67 66 64 61 67 61 67 69 70 67 70 67
@@ -1241,6 +1309,14 @@
     62 68 69 76 82 85 98 95 98 95 98 98 95 98 95 95 98 95 98 95 98 98 68 68 68 69
     67 84 78 77 84 78 77 84 78 77 84 64 62 61 64 61 64 66 67 64 67 81 70 64 70 60
     64 74 64 60 74 60 64 70 74 78 85 87 89 95))
+
+(5am:test syrinx-ppmc*
+  (5am:is (equal (test-ppm (list *varese*) :escape :c :mixtures nil :update-exclusion nil :order-bound nil :detail 1)
+                 4.428695)))
+
+(5am:test syrinx-ppmc*i
+  (5am:is (equal (test-ppm (list *varese*) :escape :c :mixtures t :update-exclusion nil :order-bound nil :detail 1)
+                 4.2964673)))
 
 (defvar *partita-2*
   ;; J. S. Bach: Solo Partitas for Flute, A-minor: 2nd Movement “Corrente”
@@ -1271,6 +1347,14 @@
     77 76 77 74 70 69 68 77 76 74 69 76 74 72 74 71 68 66 64 66 68 69 71 72 74 71
     72 69 72 76 81 83 84 81 76 81 83 80 81 76 77 74 72 81 71 80 69))
 
+(5am:test partita2-ppmc*
+  (5am:is (equal (test-ppm (list *partita-2*) :escape :c :mixtures nil :update-exclusion nil :order-bound nil :detail 1)
+                 3.7355547)))
+
+(5am:test partita2-ppmc*i
+  (5am:is (equal (test-ppm (list *partita-2*) :escape :c :mixtures t :update-exclusion nil :order-bound nil :detail 1)
+                 3.5950103)))
+
 (defvar *partita-3*
   ;; J. S. Bach: Solo Partitas for Flute, A-minor: 3rd Movement “Sarabande”
   '(69 71 72 76 68 69 65 64 66 68 69 71 74 77 76 74 71 72 69 71 69 71 72 76 68 69
@@ -1286,6 +1370,14 @@
     71 69 72 66 68 69 71 72 74 76 77 76 74 77 76 74 72 76 74 72 71 74 80 81 83 81
     80 78 76 86 84 86 83 84 83 81 80 81 76 74 72 71 69 69))
 
+(5am:test partita3-ppmc*
+  (5am:is (equal (test-ppm (list *partita-3*) :escape :c :mixtures nil :update-exclusion nil :order-bound nil :detail 1)
+                 3.340012)))
+
+(5am:test partita3-ppmc*i
+  (5am:is (equal (test-ppm (list *partita-3*) :escape :c :mixtures t :update-exclusion nil :order-bound nil :detail 1)
+                 3.214093)))
+
 (defvar *tristan*
   ;; Wagner: Cor Anglais solo from Tristan Act 3
   '(65 72 75 73 68 73 67 72 65 70 72 70 68 67 65 65 70 67 63 62 61 68 65 61 60 59
@@ -1297,5 +1389,11 @@
     73 65 64 60 72 64 60 72 67 60 72 67 60 72 66 65 64 72 68 65 58 61 60 65 60 61
     56 58 60 56 55 53 53))
 
+(5am:test tristan-ppmc*
+  (5am:is (equal (test-ppm (list *tristan*) :escape :c :mixtures nil :update-exclusion nil :order-bound nil :detail 1)
+                 2.9937272)))
 
+(5am:test tristan-ppmc*i
+  (5am:is (equal (test-ppm (list *tristan*) :escape :c :mixtures t :update-exclusion nil :order-bound nil :detail 1)
+                 2.9435916)))
   

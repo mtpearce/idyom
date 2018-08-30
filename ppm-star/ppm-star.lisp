@@ -2,7 +2,7 @@
 ;;;; File:       ppm-star.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2018-08-29 20:07:19 marcusp>                           
+;;;; Time-stamp: <2018-08-29 21:03:15 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -67,6 +67,12 @@
 (defun sums-to-one-p (distribution)
   "Returns true if <distribution> sums to one otherwise nil."
   (< 0.999 (sum-distribution distribution) 1.0))
+
+(defun get-probability (element distribution)
+  (cadr (assoc element distribution))) 
+
+(defun codelength (probability)
+  (- (log probability 2)))
         
 ;;;===========================================================================
 ;;; Data Structures
