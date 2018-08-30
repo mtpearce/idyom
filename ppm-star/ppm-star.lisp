@@ -2,7 +2,7 @@
 ;;;; File:       ppm-star.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2018-08-29 21:03:15 marcusp>                           
+;;;; Time-stamp: <2018-08-30 13:27:31 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -564,7 +564,7 @@ of the location, the label is instantiated from the root of the tree."
    is returned for <location>.  The model's index into the sequence
    vector must be set to the appropriate event index before this method
    is called."
-  ;; (format t "~%~%SYMBOL = ~A~&" symbol)
+  (format t "~%~%SYMBOL = ~A~&" symbol)
   (add-event-to-model-dataset m symbol)
   (let* ((gd (when predict? (multiple-value-list (get-distribution m location))))
          (distribution (car gd))
@@ -787,12 +787,14 @@ of the location, the label is instantiated from the root of the tree."
                  (let* ((key (location->list m location))
                         (key (unless (root-p location) (subseq key 0 (1- (length key)))))
                         (vnode (when key (gethash key (ppm-virtual-nodes m)))))
-                   (if (or (root-p location) (not vnode))
+                   (when (or (root-p location) (not vnode))
+                     (if update-excluded (print "branch"))
                      (increment-node-record-count (get-record m location) update-excluded)))
                (let* ((child (location-child location))
                       (child-record (get-record m child))
                       (match (location-match location)))
                  (when (= (label-length match) 1)
+                   (if update-excluded (print "leaf"))
                    (increment-node-record-count child-record update-excluded)))))
            (increment-suffix-counts (location vn)
              (if (root-p location)
@@ -801,6 +803,9 @@ of the location, the label is instantiated from the root of the tree."
                    (increment-count location nil)
                    (increment-suffix-counts (get-next-location m location) vn)))))
     (let ((vn (increment-suffix-counts location (make-hash-table :test #'equal))))
+      (format t "~&Increment UX count: ~A" (location->string m location))
+      (print (list novel? (index-e (ppm-front m)) (get-order m location)))
+      (print-dataset m)
       (increment-count location t)
       (setf (ppm-virtual-nodes m) vn))))
 
