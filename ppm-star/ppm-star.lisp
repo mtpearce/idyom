@@ -2,7 +2,7 @@
 ;;;; File:       ppm-star.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2018-08-30 13:27:31 marcusp>                           
+;;;; Time-stamp: <2018-09-03 14:28:38 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -69,7 +69,7 @@
   (< 0.999 (sum-distribution distribution) 1.0))
 
 (defun get-probability (element distribution)
-  (cadr (assoc element distribution))) 
+  (cadr (assoc element distribution :test #'eequal)))
 
 (defun codelength (probability)
   (- (log probability 2)))
@@ -238,6 +238,13 @@
   "A branch <branch> is the earth if its index is 0."
   (when (branch-p branch) (= (branch-index branch) 0)))
 
+(defun node-equal (node1 node2)
+  "Equality predicate for branches and leaves."
+  (or (and (branch-p node1) (branch-p node2)
+           (= (branch-index node1) (branch-index node2)))
+      (and (leaf-p node1) (leaf-p node2)
+           (= (leaf-index node1) (leaf-index node2)))))
+
 (declaim (inline get-root))
 (defun get-root () (make-branch :index 1))
 
@@ -383,7 +390,8 @@ of the location, the label is instantiated from the root of the tree."
   "Returns the brother of <first-child> whose brother matches <match>."
   (labels ((get-next-brother (child brother)
              (cond ((null child) nil)
-                   ((equal brother match) child)
+                   ((and (null brother) (null match)) child)
+                   ((node-equal brother match) child)
                    (t (get-next-brother brother (get-brother m child))))))
     (let ((brother (if (null first-child) nil (get-brother m first-child))))
       (get-next-brother first-child brother))))
@@ -564,7 +572,7 @@ of the location, the label is instantiated from the root of the tree."
    is returned for <location>.  The model's index into the sequence
    vector must be set to the appropriate event index before this method
    is called."
-  (format t "~%~%SYMBOL = ~A~&" symbol)
+  ;; (format t "~%~%SYMBOL = ~A~&" symbol)
   (add-event-to-model-dataset m symbol)
   (let* ((gd (when predict? (multiple-value-list (get-distribution m location))))
          (distribution (car gd))
@@ -764,7 +772,7 @@ of the location, the label is instantiated from the root of the tree."
         (set-branch-record m node-index new-child-record))
     (set-branch-record m (ppm-branch-index m) new-node-record)
     (increment-branch-index m)
-    (if (or (null parent-child) (equal parent-child node))
+    (if (or (null parent-child) (node-equal parent-child node))
         (set-branch-record-child parent-record new-node)
         (let ((matching-brother (get-matching-brother m parent-child node)))
           (unless (null matching-brother)
@@ -788,13 +796,13 @@ of the location, the label is instantiated from the root of the tree."
                         (key (unless (root-p location) (subseq key 0 (1- (length key)))))
                         (vnode (when key (gethash key (ppm-virtual-nodes m)))))
                    (when (or (root-p location) (not vnode))
-                     (if update-excluded (print "branch"))
+                     ;; (if update-excluded (print "branch"))
                      (increment-node-record-count (get-record m location) update-excluded)))
                (let* ((child (location-child location))
                       (child-record (get-record m child))
                       (match (location-match location)))
                  (when (= (label-length match) 1)
-                   (if update-excluded (print "leaf"))
+                   ;; (if update-excluded (print "leaf"))
                    (increment-node-record-count child-record update-excluded)))))
            (increment-suffix-counts (location vn)
              (if (root-p location)
@@ -803,9 +811,9 @@ of the location, the label is instantiated from the root of the tree."
                    (increment-count location nil)
                    (increment-suffix-counts (get-next-location m location) vn)))))
     (let ((vn (increment-suffix-counts location (make-hash-table :test #'equal))))
-      (format t "~&Increment UX count: ~A" (location->string m location))
-      (print (list novel? (index-e (ppm-front m)) (get-order m location)))
-      (print-dataset m)
+      ;; (format t "~&Increment UX count: ~A" (location->string m location))
+      ;; (print (list novel? (index-e (ppm-front m)) (get-order m location)))
+      ;; (print-dataset m)
       (increment-count location t)
       (setf (ppm-virtual-nodes m) vn))))
 
@@ -921,7 +929,7 @@ the location <location> and returns <vn>."
                                              update-exclusion)))
         ;; (format t "~%COMPUTE-MIXTURE ~A ~A" nil update-exclusion)
         ;; (format t "~&distribution: ~A~%excluded ~A~%escape ~A~%~%" om1d
-        ;;        (when excluded (utils:hash-table->alist excluded)) escape)
+        ;;         (when excluded (utils:hash-table->alist excluded)) escape)
         om1d)
       (let* ((transition-counts (transition-counts m location update-exclusion))
              (type-count (type-count m transition-counts)) 
@@ -933,10 +941,10 @@ the location <location> and returns <vn>."
              (next-location (get-next-location m location))
              (next-excluded transition-counts)
              (next-escape (* escape (- 1.0 weight))))
-        ;; (format t "~%COMPUTE-MIXTURE ~A ~A" (location->string m next-location) update-exclusion)
+        ;; (format t "~%COMPUTE-MIXTURE ~A ~A"  (location->string m location) update-exclusion)
         ;; (format t "~&type-count ~A~%state-count ~A~%weight ~A~%distribution: ~A~%excluded ~A~%escape ~A~%"
-        ;;        type-count state-count weight next-distribution
-        ;;        (when excluded (utils:hash-table->alist excluded)) escape)
+        ;;         type-count state-count weight next-distribution
+        ;;       (when excluded (utils:hash-table->alist excluded)) escape)
         (compute-mixture m next-distribution next-location next-excluded
                          :escape next-escape))))
 
@@ -973,7 +981,7 @@ appears as a key in hash-table <excluded>."
 (defmethod weight ((m ppm) state-count type-count)
   "Returns the weighting to give to a state s given the state-count and 
    type count."
-  (let ((denominator (+ state-count (if (eql (ppm-escape m) :a) 1
+  (let ((denominator (+ state-count (if (eq (ppm-escape m) :a) 1
                                        (/ type-count (ppm-d m))))))
     (if (zerop denominator) 0.0 
         (float (/ state-count denominator) 0.0))))
@@ -1052,7 +1060,7 @@ those symbols that have occurred exactly once are counted."
   "Returns the order -1 probability corresponding to a uniform distribution
    over the alphabet."
   ;; (format t "~&ORDER-MINUS1-PROBABILITY~&order -1 p: 1 / ~A + 1 - ~A~%" (alphabet-size m) 
-  ;;        (hash-table-count (transition-counts m (get-root) update-exclusion)))
+  ;;       (hash-table-count (transition-counts m (get-root) update-exclusion)))
   (/ 1.0 
      (float (- (+ 1.0 (alphabet-size m))
                (if (ppm-exclusion m)
