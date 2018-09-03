@@ -5,8 +5,8 @@
 
 ;;; Test routines
 
-(defun test-ppm (sequences &key (exclusion t) (escape :c) (mixtures t) (update-exclusion nil) (order-bound nil) ps write (detail 4))
-  (let* ((alphabet (get-alphabet sequences))
+(defun test-ppm (sequences &key (alphabet nil) (exclusion t) (escape :c) (mixtures t) (update-exclusion nil) (order-bound nil) ps write (detail 4))
+  (let* ((alphabet (if alphabet alphabet (get-alphabet sequences)))
          (model (ppm:make-ppm alphabet :exclusion exclusion :escape escape :mixtures mixtures
                               :update-exclusion update-exclusion :order-bound order-bound))
          (result (ppm:model-dataset model sequences :construct? t :predict? t)))
@@ -25,7 +25,8 @@
                  ((and (characterp x) (characterp y))
                   (char<= x y)))))
     (sort (remove-duplicates
-           (reduce #'append (mapcar #'(lambda (x) (remove-duplicates x)) sequences)))
+           (reduce #'append (mapcar #'(lambda (x) (remove-duplicates x :test #'equal)) sequences))
+           :test #'equal)
           #'sp)))
 
 (defun get-result (data detail)
@@ -51,13 +52,23 @@
 (5am:in-suite ppm*-input)
 
 (5am:test ppm*-input1
-  (5am:is (equal (ppm::test-ppm '((a b r a c a d a b r a c))  :escape :c :mixtures t :update-exclusion nil :order-bound nil)
-                 (ppm::test-ppm '((1 2 3 1 4 1 5 1 2 3 1 4))  :escape :c :mixtures t :update-exclusion nil :order-bound nil))))
+  (5am:is (equal (ppm::test-ppm '((a b r a c a d a b r a c))  :escape :c :mixtures t :update-exclusion nil :order-bound nil :detail 3)
+                 (ppm::test-ppm '(("a" "b" "r" "a" "c" "a" "d" "a" "b" "r" "a" "c"))  :escape :c :mixtures t :update-exclusion nil :order-bound nil :detail 3))))
+
 
 (5am:test ppm*-input2
-  (5am:is (equal (ppm::test-ppm '((a b r a c a d a b r a c))  :escape :c :mixtures t :update-exclusion nil :order-bound nil)
-                 (ppm::test-ppm '((#\a #\b #\r #\a #\c #\a #\d #\a #\b #\r #\a #\c)) :escape :c :mixtures t :update-exclusion nil :order-bound nil))))
-                 
+  (5am:is (equal (ppm::test-ppm '((a b r a c a d a b r a c))  :escape :c :mixtures t :update-exclusion nil :order-bound nil :detail 3)
+                 (ppm::test-ppm '((#\a #\b #\r #\a #\c #\a #\d #\a #\b #\r #\a #\c)) :escape :c :mixtures t :update-exclusion nil :order-bound nil :detail 3))))
+
+;; NB: ordering the alphabet differently will produce slightly
+;; different probabilities due to different sums in normalisation
+;; because floating point addition is not necessarily precisely
+;; associative. Here the alphabe is specified in an order
+;; corresponding to '(a b c d r).
+(5am:test ppm*-input3
+  (5am:is (equal (ppm::test-ppm '((a b r a c a d a b r a c)) :escape :c :mixtures t :update-exclusion nil :order-bound nil :detail 3)
+                 (ppm::test-ppm '((1 2 3 1 4 1 5 1 2 3 1 4)) :alphabet '(1 2 4 5 3) :escape :c :mixtures t :update-exclusion nil :order-bound nil :detail 3))))
+
 
 ;; dataset tests
 ;; ===========================================================================
