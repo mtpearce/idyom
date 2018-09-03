@@ -2,7 +2,7 @@
 ;;;; File:       ppm-star.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2016-05-03 13:51:53 marcusp>                           
+;;;; Time-stamp: <2018-09-03 10:29:32 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -799,6 +799,8 @@
                    (increment-suffix-count next-location vn)))))
     (let* ((vn (make-hash-table :test #'equalp))
            (vn (increment-suffix-count location vn)))
+      ;; CHANGE 1: always increment update-excluded count at longest matching state
+      ;; (increment-count location t)
       (when novel? (increment-count location t))
       (setf (ppm-virtual-nodes m) vn))))
             
@@ -854,11 +856,10 @@
                    (if (branch-p location)
                        (shortest-deterministic-state slink selected)
                        (shortest-deterministic-state slink location))))))
-    ;(format t "~&Order bound: ~A; location order: ~A~&" 
-    ;        (ppm-order-bound m) (get-order m location))
     (if (null (ppm-order-bound m))
         (let ((sds (shortest-deterministic-state location '())))
-          ;;(print (list "location" (get-order m location) "sds" (when sds (get-order m sds))))
+          ;; CHANGE 2: selected? = nil if SDS == location
+          ;; (if (or (null sds) (eq sds location))
           (if (null sds)
               (values location nil)
               (values sds t)))
@@ -1010,7 +1011,9 @@ those symbols that have occurred exactly once are counted."
   ;; (print (list (alphabet-size m) (transition-counts m (get-root) up-ex) 
   ;;               (length (transition-counts m (get-root) up-ex)) 
   ;;               (get-root)))
-  (/ 1.0 ;(float (alphabet-size m) 0.0)))
+  (/ 1.0
+     ;; CHANGE 0: don't use exclusion for order-1 probability
+     ;; (float (alphabet-size m) 0.0)))
      (float (- (+ 1.0 (alphabet-size m))
                (hash-table-count (transition-counts m (get-root) up-ex)))
             0.0)))
