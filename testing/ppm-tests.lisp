@@ -4,8 +4,11 @@
 (5am:in-suite ppm)
 
 ;;; Test routines
+;; ===========================================================================
 
-(defun test-ppm (sequences &key (alphabet nil) (exclusion t) (escape :c) (mixtures t) (update-exclusion nil) (order-bound nil) ps write (detail 4))
+(defun test-ppm (sequences &key (alphabet nil)
+                             (exclusion t) (escape :c) (mixtures t) (update-exclusion nil) (order-bound nil)
+                             ps write (detail 4))
   (let* ((alphabet (if alphabet alphabet (get-alphabet sequences)))
          (model (ppm:make-ppm alphabet :exclusion exclusion :escape escape :mixtures mixtures
                               :update-exclusion update-exclusion :order-bound order-bound))
@@ -396,6 +399,75 @@
                       (L 0.114285715) (M 0.032380953) (N 0.030476192) (O 0.38476193) (P 0.032380953) (R 0.034285717)
                       (S 0.04761905) (T 0.036190476) (W 0.030476192))))))))
           
+;; Dataset tests with Update exclusion
+;; ===========================================================================
+
+(5am:def-suite ppm*-dataset-ux :in ppm)
+(5am:in-suite ppm*-dataset-ux)
+
+(5am:test abracadabra-x2
+  (5am:is (equal (ppm::test-ppm '((a b r a c a d a b r a)
+                                  (a b r a c a d a b r a))
+                                :mixtures t :update-exclusion t
+                                :detail 2)
+                 '(2.4509745 1.176743))))
+
+(5am:test abracadabra-x3
+  (5am:is (equal (ppm::test-ppm '((a b r a c a d a b r a)
+                                  (a b r a c a d a b r a)
+                                  (a b r a c a d a b r a))
+                                :mixtures t :update-exclusion t
+                                :detail 2)
+                 '(2.4509745 1.176743 0.9622145))))
+
+(5am:test abracadabra-bracadabra
+  (5am:is (equal (ppm::test-ppm '((a b r a c a d a b r a)
+                                  (b r a c a d a b r a))
+                                :mixtures t :update-exclusion t
+                                :detail 2)
+                 '(2.4509745 1.1973304))))
+
+(5am:test abracadabra-abrabrac
+  (5am:is (equal (ppm::test-ppm '((a b r a c a d a b r a)
+                                  (a b r a b r a c))
+                                :mixtures t :update-exclusion t
+                                :detail 2)
+                 '(2.4509745 1.426021))))
+
+(5am:test abracadabra-abratbrac
+  (5am:is (equal (ppm::test-ppm '((a b r a c a d a b r a)
+                                  (a b r a t b r a c))
+                                :mixtures t :update-exclusion t
+                                :detail 2)
+                 '(2.591134 1.8542311))))
+
+(5am:test abracadabra-abrabtrac
+  (5am:is (equal (ppm::test-ppm '((a b r a c a d a b r a)
+                                  (a b r a b t r a c))
+                                :mixtures t :update-exclusion t
+                                :detail 2)
+                 '(2.591134 2.0420008))))
+
+(5am:test abracadabra-abrabrtac
+  (5am:is (equal (ppm::test-ppm '((a b r a c a d a b r a)
+                                  (a b r a b r t a c))
+                                :mixtures t :update-exclusion t
+                                :detail 2)
+                 '(2.591134 1.9217077))))
+
+(5am:test abracadabra-abrabratc
+  (5am:is (equal (ppm::test-ppm '((a b r a c a d a b r a)
+                                  (a b r a b r a t c))
+                                :mixtures t :update-exclusion t
+                                :detail 2)
+                 '(2.591134 1.7659891))))
+
+(5am:test abracadabra-abrabract
+  (5am:is (equal (ppm::test-ppm '((a b r a c a d a b r a)
+                                  (a b r a b r a c t))
+                                :mixtures t :update-exclusion t
+                                :detail 2)
+                 '(2.591134 1.6060573))))
 
 
 ;; Simple Tests
