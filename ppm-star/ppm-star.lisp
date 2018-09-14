@@ -2,7 +2,7 @@
 ;;;; File:       ppm-star.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2018-09-03 14:28:38 marcusp>                           
+;;;; Time-stamp: <2018-09-14 11:26:36 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -790,20 +790,34 @@ of the location, the label is instantiated from the root of the tree."
    transitions existing in the chain. If <novel?> is non-null then the
    current symbol is novel at an excited suffix child of <location> and
    the update excluded count is incremented for <location>."
-  (labels ((increment-count (location update-excluded)
+  (labels ((existing-prefix (location)
+             (let* ((l (location->list m location))
+                    (length (length l))
+                    (front (ppm-front m))
+                    (event-index (index-e front))
+                    (sequence-index (index-s front)))
+               (when (= length (1+ event-index))
+                 (dotimes (i sequence-index nil)
+                   (let ((s (gethash i (ppm-dataset m))))
+                     (when (and s (>= (hash-table-count s) length))
+                       (let* ((s (utils:hash-table->alist s))
+                              (s (sort s #'< :key #'car))
+                              (s (mapcar #'cadr s))
+                              (s (subseq s 0 length)))
+                         (when (equal l s)
+                           (return t)))))))))
+           (increment-count (location update-excluded)
              (if (branch-p location)
                  (let* ((key (location->list m location))
                         (key (unless (root-p location) (subseq key 0 (1- (length key)))))
                         (vnode (when key (gethash key (ppm-virtual-nodes m)))))
                    (when (or (root-p location) (not vnode))
-                     ;; (if update-excluded (print "branch"))
                      (increment-node-record-count (get-record m location) update-excluded)))
-               (let* ((child (location-child location))
-                      (child-record (get-record m child))
-                      (match (location-match location)))
-                 (when (= (label-length match) 1)
-                   ;; (if update-excluded (print "leaf"))
-                   (increment-node-record-count child-record update-excluded)))))
+                 (let* ((child (location-child location))
+                        (child-record (get-record m child))
+                        (match (location-match location)))
+                   (when (= (label-length match) 1)
+                     (increment-node-record-count child-record update-excluded)))))
            (increment-suffix-counts (location vn)
              (if (root-p location)
                  (progn (increment-count location nil) vn)
@@ -811,10 +825,8 @@ of the location, the label is instantiated from the root of the tree."
                    (increment-count location nil)
                    (increment-suffix-counts (get-next-location m location) vn)))))
     (let ((vn (increment-suffix-counts location (make-hash-table :test #'equal))))
-      ;; (format t "~&Increment UX count: ~A" (location->string m location))
-      ;; (print (list novel? (index-e (ppm-front m)) (get-order m location)))
-      ;; (print-dataset m)
-      (increment-count location t)
+      (unless (existing-prefix location)
+        (increment-count location t))
       (setf (ppm-virtual-nodes m) vn))))
 
 (defstruct virtual-node
