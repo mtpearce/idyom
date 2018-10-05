@@ -2,7 +2,7 @@
 ;;;; File:       ppm-star.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2018-09-14 11:26:36 marcusp>                           
+;;;; Time-stamp: <2018-10-05 10:47:43 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -956,7 +956,7 @@ the location <location> and returns <vn>."
         ;; (format t "~%COMPUTE-MIXTURE ~A ~A"  (location->string m location) update-exclusion)
         ;; (format t "~&type-count ~A~%state-count ~A~%weight ~A~%distribution: ~A~%excluded ~A~%escape ~A~%"
         ;;         type-count state-count weight next-distribution
-        ;;       (when excluded (utils:hash-table->alist excluded)) escape)
+        ;;         (when excluded (utils:hash-table->alist excluded)) escape)
         (compute-mixture m next-distribution next-location next-excluded
                          :escape next-escape))))
 
@@ -1071,8 +1071,8 @@ those symbols that have occurred exactly once are counted."
 (defmethod order-minus1-probability ((m ppm) update-exclusion)
   "Returns the order -1 probability corresponding to a uniform distribution
    over the alphabet."
-  ;; (format t "~&ORDER-MINUS1-PROBABILITY~&order -1 p: 1 / ~A + 1 - ~A~%" (alphabet-size m) 
-  ;;       (hash-table-count (transition-counts m (get-root) update-exclusion)))
+  ;; (format t "~&ORDER-MINUS1-PROBABILITY ~A~&order -1 p: 1 / ~A + 1 - ~A~%" update-exclusion (alphabet-size m) 
+  ;;        (hash-table-count (transition-counts m (get-root) update-exclusion)))
   (/ 1.0 
      (float (- (+ 1.0 (alphabet-size m))
                (if (ppm-exclusion m)
