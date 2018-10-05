@@ -2,7 +2,7 @@
 ;;;; File:       generics.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2008-11-03 14:07:53 marcusp>
-;;;; Time-stamp: <2018-08-29 09:41:13 marcusp>
+;;;; Time-stamp: <2018-10-05 11:07:49 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:ppm)
@@ -68,7 +68,7 @@
 (defgeneric split-location (ppm location))
 
 ;; Maintaining counts
-(defgeneric increment-counts (ppm location novel?))
+(defgeneric increment-counts (ppm location))
 (defgeneric get-virtual-node-count (ppm location excluded))
 (defgeneric retrieve-virtual-node (ppm location))
 (defgeneric allocate-virtual-node (ppm location vn))

@@ -2,7 +2,7 @@
 ;;;; File:       ppm-star.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2018-10-05 10:47:43 marcusp>                           
+;;;; Time-stamp: <2018-10-05 11:07:30 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -577,9 +577,8 @@ of the location, the label is instantiated from the root of the tree."
   (let* ((gd (when predict? (multiple-value-list (get-distribution m location))))
          (distribution (car gd))
          (order (cadr gd))
-         (novel? (when construct? (unless (occurs? m location symbol) t)))
          (next-location (ukkstep m nil location symbol construct?)))
-    (when construct? (increment-counts m next-location novel?))
+    (when construct? (increment-counts m next-location))
     (values next-location distribution order)))
 
 
@@ -784,12 +783,10 @@ of the location, the label is instantiated from the root of the tree."
 ;;; Maintaining counts 
 ;;;===========================================================================
 
-(defmethod increment-counts ((m ppm) location novel?)
+(defmethod increment-counts ((m ppm) location)
   "Increments the counts for states on the chain of suffix links
    from <location> after allocating virtual-nodes for any string
-   transitions existing in the chain. If <novel?> is non-null then the
-   current symbol is novel at an excited suffix child of <location> and
-   the update excluded count is incremented for <location>."
+   transitions existing in the chain."
   (labels ((existing-prefix (location)
              (let* ((l (location->list m location))
                     (length (length l))
