@@ -410,7 +410,7 @@
                                   (a b r a c a d a b r a))
                                 :mixtures t :update-exclusion t
                                 :detail 2)
-                 '(2.4509745 1.176743))))
+                 '(2.4509745 1.1457417))))
 
 (5am:test abracadabra-x3
   (5am:is (equal (ppm::test-ppm '((a b r a c a d a b r a)
@@ -418,7 +418,7 @@
                                   (a b r a c a d a b r a))
                                 :mixtures t :update-exclusion t
                                 :detail 2)
-                 '(2.4509745 1.176743 0.9622145))))
+                 '(2.4509745 1.1457417 0.8534344))))
 
 (5am:test abracadabra-bracadabra
   (5am:is (equal (ppm::test-ppm '((a b r a c a d a b r a)
@@ -432,42 +432,42 @@
                                   (a b r a b r a c))
                                 :mixtures t :update-exclusion t
                                 :detail 2)
-                 '(2.4509745 1.426021))))
+                 '(2.4509745 1.4018788))))
 
 (5am:test abracadabra-abratbrac
   (5am:is (equal (ppm::test-ppm '((a b r a c a d a b r a)
                                   (a b r a t b r a c))
                                 :mixtures t :update-exclusion t
                                 :detail 2)
-                 '(2.591134 1.8542311))))
+                 '(2.591134 1.8791169))))
 
 (5am:test abracadabra-abrabtrac
   (5am:is (equal (ppm::test-ppm '((a b r a c a d a b r a)
                                   (a b r a b t r a c))
                                 :mixtures t :update-exclusion t
                                 :detail 2)
-                 '(2.591134 2.0420008))))
+                 '(2.591134 2.0285676))))
 
 (5am:test abracadabra-abrabrtac
   (5am:is (equal (ppm::test-ppm '((a b r a c a d a b r a)
                                   (a b r a b r t a c))
                                 :mixtures t :update-exclusion t
                                 :detail 2)
-                 '(2.591134 1.9217077))))
+                 '(2.591134 1.8929263))))
 
 (5am:test abracadabra-abrabratc
   (5am:is (equal (ppm::test-ppm '((a b r a c a d a b r a)
                                   (a b r a b r a t c))
                                 :mixtures t :update-exclusion t
                                 :detail 2)
-                 '(2.591134 1.7659891))))
+                 '(2.591134 1.7575804))))
 
 (5am:test abracadabra-abrabract
   (5am:is (equal (ppm::test-ppm '((a b r a c a d a b r a)
                                   (a b r a b r a c t))
                                 :mixtures t :update-exclusion t
                                 :detail 2)
-                 '(2.591134 1.6060573))))
+                 '(2.591134 1.5876032))))
 
 
 ;; Simple Tests

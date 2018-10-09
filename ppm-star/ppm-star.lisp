@@ -2,7 +2,7 @@
 ;;;; File:       ppm-star.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2018-10-05 11:07:30 marcusp>                           
+;;;; Time-stamp: <2018-10-05 11:40:58 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -787,23 +787,7 @@ of the location, the label is instantiated from the root of the tree."
   "Increments the counts for states on the chain of suffix links
    from <location> after allocating virtual-nodes for any string
    transitions existing in the chain."
-  (labels ((existing-prefix (location)
-             (let* ((l (location->list m location))
-                    (length (length l))
-                    (front (ppm-front m))
-                    (event-index (index-e front))
-                    (sequence-index (index-s front)))
-               (when (= length (1+ event-index))
-                 (dotimes (i sequence-index nil)
-                   (let ((s (gethash i (ppm-dataset m))))
-                     (when (and s (>= (hash-table-count s) length))
-                       (let* ((s (utils:hash-table->alist s))
-                              (s (sort s #'< :key #'car))
-                              (s (mapcar #'cadr s))
-                              (s (subseq s 0 length)))
-                         (when (equal l s)
-                           (return t)))))))))
-           (increment-count (location update-excluded)
+  (labels ((increment-count (location update-excluded)
              (if (branch-p location)
                  (let* ((key (location->list m location))
                         (key (unless (root-p location) (subseq key 0 (1- (length key)))))
@@ -822,8 +806,7 @@ of the location, the label is instantiated from the root of the tree."
                    (increment-count location nil)
                    (increment-suffix-counts (get-next-location m location) vn)))))
     (let ((vn (increment-suffix-counts location (make-hash-table :test #'equal))))
-      (unless (existing-prefix location)
-        (increment-count location t))
+      (increment-count location t)
       (setf (ppm-virtual-nodes m) vn))))
 
 (defstruct virtual-node
