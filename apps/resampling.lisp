@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2017-05-11 11:29:28 peter>                           
+;;;; Time-stamp: <2018-08-29 12:11:59 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -81,7 +81,6 @@
          (sequence-predictions))
     (dolist (resampling-set resampling-sets sequence-predictions)
       ;; (format t "~&~0,0@TResampling set ~A: ~A~%" resampling-id resampling-set)
-      ;(format t "~&Resampling ~A" resampling-id)
       (when (member resampling-id resampling-indices)
         (let* ((training-set (get-training-set dataset resampling-set))
                (training-set (monodies-to-lists (append pretraining-set training-set)))

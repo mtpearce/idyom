@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2018-06-22 10:15:01 marcusp>
+;;;; Time-stamp: <2018-08-24 11:12:26 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -105,6 +105,9 @@ Borrowed from https://www.pvk.ca/Blog/Lisp/trivial_uniform_shuffling.html"
 ;;;===========================================================================
 ;;; Strings 
 ;;;===========================================================================
+
+(defun list->string (list)
+  (format nil "~{~A~^ ~}" list))
 
 (defun string-append (&rest args)
   "Concatenates its string arguments <args>."

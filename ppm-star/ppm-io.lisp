@@ -2,7 +2,7 @@
 ;;;; File:       ppm-io.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2016-04-20 16:52:15 marcusp>
+;;;; Time-stamp: <2018-08-28 09:52:07 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package :ppm)
@@ -12,26 +12,18 @@
   "Prints the suffix tree of <m> to a postscript file <path>."
   (labels ((get-node-count (node)
              (list (utils:string-append "Count0: "
-                                  (format nil "~D" (get-count m node)))
+                                        (format nil "~D" (get-count m node nil)))
                    (utils:string-append "Count1: "
-                                  (format nil "~D" (get-count m node t)))))
+                                        (format nil "~D" (get-count m node t)))))
            (list-node-children (node)
              ;(when (or (null depth) 
              ;          (and (branch-record-p (get-record m node))
              ;               (<= (branch-record-depth (get-record m node)) 
              ;                   depth)))
                (list-children m node));)
-
-           (list->string (list)
-             (reduce #'(lambda (&optional s1 s2) (utils:string-append s1 s2))
-                     (mapcar #'(lambda (symbol)
-                                 (format nil "~A " (if (symbolp symbol)
-                                                       (symbol-name symbol)
-                                                       symbol)))
-                             list)))
            (label->string (node)
              (let ((label (instantiate-label m (get-label m node))))
-               (cons (list->string label) (get-node-count node)))))
+               (cons (utils:list->string label) (get-node-count node)))))
     (let ((psgraph:*fontsize* 14)
           (psgraph:*second-fontsize* 12)
           (psgraph:*boxradius* 10) 
