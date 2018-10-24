@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2015-03-25 23:09:12 marcusp>                           
+;;;; Time-stamp: <2018-10-18 08:40:15 marcusp>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -132,7 +132,7 @@
                   (bioi *default-bioi*)
                   (middle-c *middle-c*))
   "A top level call to convert a kern file or a directory of kern files
-   <file-or-dir-name> to CHARM readable format. The keyword parameters
+   <file-or-dir-name> to database readable format. The keyword parameters
    allow the user to change the default parameters for the conversion."
   (setq *default-timesig* timesig
         *default-keysig* keysig
@@ -162,7 +162,7 @@
       (list (convert-kern-file file-or-dir))))
 
 (defun convert-kern-file (file-name)
-  "Top level call to convert the kern file <file-name> to CHARM readable
+  "Top level call to convert the kern file <file-name> to database readable
    format using the default parameters."
   (initialise-voice-alist)
   (let* ((kern-data (read-kern-data file-name))
@@ -316,7 +316,7 @@
 
 
 (defun process-kern-data (spine-list)
-  "Converts the recorded kern data into a CHARM readable format." 
+  "Converts the recorded kern data into a database readable format." 
   (if (null *spines*)
       (setf *voices* (utils:generate-integers 1 (length spine-list)))
       (setf *voices* (sort (remove-duplicates *spines* :test #'=)  #'<)))
@@ -369,7 +369,7 @@
       (push representation *unrecognised-representations*)))
 
 (defun process-kern-spine (spine spine-id)
-  "Converts kern spines into CHARM readable format."
+  "Converts kern spines into database readable format."
   (let ((environment-alist
          (list (list 'onset *default-onset*)
                (list 'bioi *default-bioi*)
@@ -387,7 +387,7 @@
     (process-kern-tokens spine '() environment-alist)))
                
 (defun process-kern-tokens (spine converted-spine environment &key tied)
-  "Converts all tokens in <spine> into CHARM readable format in
+  "Converts all tokens in <spine> into database readable format in
    <converted-spine>. The <environment> is an initially empty list which
    is used to store global parameters such as onset time, voice,
    key and so on. <tied> is a boolean parameter which signifies whether
@@ -489,12 +489,14 @@
       (let* ((current-event (car converted-spine))
              (current-onset (cadr (assoc :onset current-event)))
              (current-dur (cadr (assoc :dur current-event)))
+             (current-deltast (cadr (assoc :deltast current-event)))
+             (deltast (cadr (assoc 'deltast environment)))
              (bar-length (calculate-bar-length environment))
              (next-offset (if (not (null current-event))
                               (+ offset current-dur)
                               offset))
              (new-onset (if (not (null current-event))
-                            (- (+ first-onset bar-length) next-offset))))
+                            (- (+ first-onset bar-length) deltast next-offset))))
         (cond ((null converted-spine) '())
               ((= current-onset first-onset)
                (cons (update-alist current-event
@@ -507,7 +509,7 @@
                        (correct-onsets-in-first-bar (cdr converted-spine)
                                                     first-onset
                                                     environment
-                                                    next-offset)))))))
+                                                    (+ next-offset current-deltast))))))))
 
 (defun calculate-bar-length (environment)
   "Calculates the number of time-units in a bar from the values of the
