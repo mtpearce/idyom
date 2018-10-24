@@ -2,7 +2,7 @@
 ;;;; File:       temporal.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2005-11-29 10:41:20 marcusp>
-;;;; Time-stamp: <2016-04-13 13:34:38 marcusp>
+;;;; Time-stamp: <2018-10-19 22:49:26 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
@@ -332,6 +332,8 @@
 			(timebase (md:timebase (last-element events))))
 		    ;; Check these are properly defined
 		    (if (or (undefined-p pulses onset barlength)
+                            (null barlength)
+                            (null pulses)
                             (zerop barlength)
                             (zerop pulses))
                         +undefined+
