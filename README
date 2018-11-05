@@ -30,6 +30,13 @@ See the wiki for further details on installation.
 
 ==News==
 
+v1.6
+* PPM*: update excluded counts are now incremented at the highest-order matching state (reported by Peter Harrison)
+* PPM*: when update exclusion is enabled, if the highest-order matching state is deterministic and there are no lower-order deterministic states, the update excluded count is used, rather than the full count
+* PPM*: virtual states are now allocated correctly when more than one exists on a string transition
+* Viewpoints: basic temporal viewpoints (onset, bioi) are now imported correctly from Kern files when there are rests in the first bar
+* Viewpionts: the metaccent viewpoint is undefined when the time signature is not specified
+
 2018-07-12
 v1.5
 * New top-level option to specify the separator to use in output files (thanks to Peter M. C. Harrison)
