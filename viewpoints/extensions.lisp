@@ -2,7 +2,7 @@
 ;;;; File:       extensions.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2008-10-31 13:08:09 marcusp>
-;;;; Time-stamp: <2018-10-15 15:04:16 marcusp>
+;;;; Time-stamp: <2018-11-19 14:02:46 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints) 
@@ -116,8 +116,7 @@ in <events>."
   ;;                          (md:get-attribute last-event :dur))))
   ;;           (mapcar #'(lambda (a) (+ onset a)) deltast-alphabet)))))
   ;; Based on BIOI alphabet 
-  (let* ((bioi-alphabet (remove nil (viewpoint-alphabet (get-viewpoint 'bioi))))
-         (bioi-alphabet (remove 0 bioi-alphabet)))
+  (let* ((bioi-alphabet (remove nil (viewpoint-alphabet (get-viewpoint 'bioi)))))
     (if (null previous-events) bioi-alphabet
         (let* ((last-event (car (reverse previous-events)))
                (onset (md:get-attribute last-event 'onset)))
