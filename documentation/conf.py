@@ -42,7 +42,7 @@ extensions.extend(['sphinxcontrib.cldomain',
 from os.path import join, dirname, realpath
 cl_systems = [{"name": "idyom",
                "path": join(dirname(realpath(__file__)), "../"),
-               "packages": ["idyom", "viewpoints"]}]
+               "packages": ["idyom", "viewpoints", "features", "generative-models"]}]
                    
                   # , "viewpoints", "resampling", 
                   # "apps", "idyom", "viewpoint-selection", "database", "ppm", 
@@ -94,6 +94,8 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
+
+highlight_language = 'common-lisp'
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
