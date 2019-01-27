@@ -1,0 +1,3 @@
+(defclass model ())
+
+(defgeneric

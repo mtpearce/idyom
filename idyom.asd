@@ -89,6 +89,16 @@
 	     (:file "ppm-star")
 	     (:file "ppm-io")
 	     (:file "ppm-ui")))
+   ;; Prediction using generative models
+   (:module jackdaw
+	    :serial t
+	    :components
+	    ((:file "packages")
+	     (:file "graphs")
+	     (:file "probabilities")
+	     (:file "marginals")
+	     (:file "features")
+	     (:file "generative-models")))
    ;; Prediction using multiple viewpoint systems (MVS)
    (:module mvs
             :serial t 
