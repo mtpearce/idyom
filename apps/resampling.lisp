@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2018-08-29 12:11:59 marcusp>                           
+;;;; Time-stamp: <2019-03-21 17:48:27 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -236,7 +236,10 @@ dataset-id)."
 	  (float (prediction-sets:shannon-entropy distribution) 0.0))
     (setf (gethash (create-key feature 'distribution) event-results) distribution)
     (dolist (p distribution)
-      (setf (gethash (create-key feature (car p)) event-results) (cadr p)))
+      (let ((value (if (string= (symbol-name feature) "ONSET")
+                       (- (car p) (- (md:get-attribute event :onset) (md:get-attribute event :bioi)))
+                       (car p))))
+        (setf (gethash (create-key feature value) event-results) (cadr p))))
     event-results))
 
 (defun combine-event-probabilities (event-results features)
@@ -319,9 +322,9 @@ is a list of composition prediction sets, ordered by composition ID."
 						   dataset-id composition-id
 						   feature))))))
 	    (maphash #'(lambda (k v)
-			 (setf (gethash k results)
-			       (combine-event-probabilities v features)))
-		     results)
+	         	 (setf (gethash k results)
+	         	       (combine-event-probabilities v features)))
+                     results)
 	    (add-results-to-dataframe results data)))
 	(print-data data stream :null-token null-token :separator separator))))
 
