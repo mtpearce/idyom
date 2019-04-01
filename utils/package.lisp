@@ -2,16 +2,16 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                           
-;;;; Time-stamp: <2018-08-10 09:47:01 marcusp>                           
+;;;; Time-stamp: <2019-03-25 16:16:30 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
 
 (defpackage #:utils
   (:use #:cl)
-  (:export "ROUND-TO-NEAREST-DECIMAL-PLACE" "AVERAGE" "GENERATE-INTEGERS"
+  (:export "ROUND-TO-NEAREST-DECIMAL-PLACE" "AVERAGE" "GENERATE-INTEGERS" "SD" "COR"
 	   "POWERSET" "QUOTIENT" "FACTORIAL" "N-PERMUTATIONS" "N-COMBINATIONS"
-	   "RANGE" "CUMSUM" "MD5-SUM-OF-LIST" "SHUFFLE"
+	   "RANGE" "CUMSUM" "MD5-SUM-OF-LIST" "SHUFFLE" 
            "NTH-ROOT" "ANY-DUPLICATED"
            "INSERTION-SORT" "CARTESIAN-PRODUCT" "FLATTEN" "COMBINATIONS"
 	   "FLATTEN-ORDER" "COUNT-FREQUENCIES" "NUMERIC-FREQUENCIES"
