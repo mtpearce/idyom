@@ -481,20 +481,18 @@
       (otherwise converted-spine))))
 
 (defun correct-onsets-in-first-bar (converted-spine first-onset environment
-                                                    &optional (offset 0))
+                                                    &optional shift)
   "Corrects the onsets of events in the first bar in cases where the first
    event in the piece is not the first event in the first bar."
   (if (null (car (cadr (assoc 'timesig environment))))
       converted-spine 
       (let* ((current-event (car converted-spine))
              (current-onset (cadr (assoc :onset current-event)))
-             (current-dur (cadr (assoc :dur current-event)))
+             (time (cadr (assoc 'onset environment)))
              (bar-length (calculate-bar-length environment))
-             (next-offset (if (not (null current-event))
-                              (+ offset current-dur)
-                              offset))
-             (new-onset (if (not (null current-event))
-                            (- (+ first-onset bar-length) next-offset))))
+	     (shift (if (null shift) (- (+ bar-length first-onset) time) shift))
+             (new-onset (unless (null current-event)
+			  (+ current-onset shift))))
         (cond ((null converted-spine) '())
               ((= current-onset first-onset)
                (cons (update-alist current-event
@@ -507,7 +505,7 @@
                        (correct-onsets-in-first-bar (cdr converted-spine)
                                                     first-onset
                                                     environment
-                                                    next-offset)))))))
+                                                    shift)))))))
 
 (defun calculate-bar-length (environment)
   "Calculates the number of time-units in a bar from the values of the
