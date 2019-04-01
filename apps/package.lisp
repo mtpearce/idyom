@@ -2,14 +2,14 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                        
-;;;; Time-stamp: <2014-02-07 23:10:27 marcusp>                           
+;;;; Time-stamp: <2019-04-01 11:39:45 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
 
 (defpackage #:apps
   (:use #:cl #:utils #:md #:mvs)
-  (:export "*ROOT-DIR*" "POPULATE-DATABASE" "DATASET-MODELLING-FILENAME")
+  (:export "*ROOT-DIR*" "DATASET-MODELLING-FILENAME")
   (:documentation "Miscellaneous variables & utils for applications."))
 
 (defpackage #:idyom
@@ -37,5 +37,10 @@
 (defpackage #:generation 
   (:use #:cl #:utils #:md #:viewpoints #:ppm #:mvs #:prediction-sets 
         #:resampling)
-  (:export "DATASET-GENERATION" "GENERATE-CHORALES")
+  (:export "DATASET-GENERATION")
   (:documentation "Generation of melodic compositions."))
+
+(defpackage #:key-finding
+  (:use #:cl)
+  (:export "FIND-KEYS" "FIND-KEY")
+  (:documentation "The Krumhansl-Schmuckler key-finding algorithm."))
