@@ -36,6 +36,11 @@ v1.6
 * PPM*: virtual states are now allocated correctly when more than one exists on a string transition
 * Viewpoints: basic temporal viewpoints (onset, bioi) are now imported correctly from Kern files when there are rests in the first bar
 * Viewpionts: the metaccent viewpoint is undefined when the time signature is not specified
+* Viewpoints: added threaded viewpoints for scale degree and used clearer naming conventions for threaded viewpoints
+* New app: Krumhansl-Schmuckler key-finding (key-finding:find-keys ...)
+* New feature: output information gain as the KL divergence between the predictive distribution before and after a note is processed
+* Utils: added SD and Pearson correlation
+* Midi import: don't increment voice number for empty tracks
 
 2018-07-12
 v1.5
