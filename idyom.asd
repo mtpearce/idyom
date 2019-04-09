@@ -2,7 +2,7 @@
 ;;;; File:       IDyOM.asd
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-05-04 21:29:04 marcusp>
-;;;; Time-stamp: <2019-04-01 11:40:42 marcusp>
+;;;; Time-stamp: <2019-04-04 14:08:31 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -107,7 +107,7 @@
              (:file "main")
              (:file "segmentation")
              (:file "generation")
-             (:file "key-finding"))
+             (:file "key-finding")))
    ;; Test suite
    (:module testing
             :serial t
