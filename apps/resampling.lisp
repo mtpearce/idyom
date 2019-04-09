@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2019-03-21 17:48:27 marcusp>                           
+;;;; Time-stamp: <2019-04-09 16:25:10 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -194,6 +194,81 @@ dataset-id)."
       (let ((d (quote-string (md:get-description dataset-id (1- cid)))))
         (format stream "~&~A~A~A~A~A~%" cid separator d separator (car ic))))))
 
+(defun format-information-content-detail=3
+    (stream resampling-predictions dataset-id &key (separator " ")
+						(null-token "NA"))
+  (if *use-old-format-method*
+      (format-information-content-detail=3-old stream resampling-predictions
+					       dataset-id :separator separator)
+      (let* ((resampling-predictions (reorder-resampling-predictions
+				      resampling-predictions))
+	     (data (make-instance 'dataframe)))
+
+	(dolist (sp resampling-predictions) ; compositions
+	  (let ((composition-id (prediction-sets:prediction-index sp))
+		(results (make-hash-table :test #'equal))
+		(features))
+	    (dolist (fp (prediction-sets:prediction-set sp)) ; target viewpoints
+	      (let ((feature (viewpoints:viewpoint-type
+			      (prediction-sets:prediction-viewpoint fp))))
+		(pushnew feature features)
+		(dolist (ep (prediction-sets:prediction-set fp)) ; events
+		  (let* ((event (prediction-sets:prediction-event ep))
+			 (event-id (md:get-event-index
+				    (md:get-attribute event 'identifier))))
+		    (setf (gethash (list composition-id event-id) results)
+			  (format-event-prediction ep results
+						   dataset-id composition-id
+						   feature))))))
+            (let ((past-results nil))
+              (with-hash-table-iterator (next results)
+                (loop
+                   (multiple-value-bind (more k v)
+                       (next)
+                     (unless more (return nil))
+                     (setf (gethash k results)
+                           (combine-event-probabilities v past-results features))
+                     (setf past-results (gethash k results))
+                     ;;(remhash 'distribution (gethash k results))
+                     ))))
+            (add-results-to-dataframe results data :blacklist '(distribution))))
+        (print-data data stream :null-token null-token :separator separator))))
+
+(defun reorder-resampling-predictions (resampling-predictions)
+  "Reorders <resampling-predictions> so that instead of compositions 
+being nested within features, features are nested within compositions.
+Additionally merges resampling sets and orders by composition. The outcome
+is a list of composition prediction sets, ordered by composition ID."
+  (let* ((reordered
+	  ;; Nest features within compositions
+	  (loop for cv-set in resampling-predictions
+	     collect
+	       (let* ((composition-ids
+		       (mapcar #'(lambda (x) (prediction-sets:prediction-index x))
+			       (prediction-sets:prediction-set (car cv-set))))
+		      (new-composition-sets
+		       (mapcar #'(lambda (id)
+				   (make-instance 'prediction-sets:sequence-prediction
+						  :index id :set nil))
+			       composition-ids)))
+		 (loop for feature-set in cv-set
+		    do (loop
+			  for composition-set in (prediction-sets:prediction-set
+						  feature-set)
+			  for new-composition-set in new-composition-sets
+			  do (push composition-set (prediction-sets:prediction-set
+						    new-composition-set))))
+		 (loop for new-composition-set in new-composition-sets
+		    do (setf (prediction-sets:prediction-set new-composition-set)
+			     (reverse (prediction-sets:prediction-set
+				       new-composition-set))))
+		 new-composition-sets)))
+	 ;; Merge resampling sets
+	 (reordered (apply #'append reordered))
+	 ;; Order by composition
+	 (reordered (sort reordered #'< :key #'prediction-sets:prediction-index)))
+    reordered))
+
 (defun create-key (feature attribute)
   (intern (concatenate 'string (symbol-name feature) "."
 		       (format nil "~A" attribute)) :keyword))
@@ -242,7 +317,7 @@ dataset-id)."
         (setf (gethash (create-key feature value) event-results) (cadr p))))
     event-results))
 
-(defun combine-event-probabilities (event-results features)
+(defun combine-event-probabilities (event-results previous-results features)
   (let* ((probability-keys (mapcar #'(lambda (f) (create-key f 'probability)) features))
 	 (probabilities (mapcar #'(lambda (x) (gethash x event-results)) probability-keys))
 	 (probability (apply #'* probabilities))
@@ -251,83 +326,23 @@ dataset-id)."
 	 (distribution (mapcar #'(lambda (x) (let ((elements (mapcar #'first x))
 						   (probabilities (mapcar #'second x)))
 					       (list elements (apply #'* probabilities))))
-			       (apply #'utils:cartesian-product distributions))))
+			       (apply #'utils:cartesian-product distributions)))
+         (information-gain (when previous-results
+                             (kl-divergence distribution (gethash 'distribution previous-results)))))
+    (setf (gethash 'distribution event-results) distribution)
     (setf (gethash 'probability event-results) probability)
     (setf (gethash 'information.content event-results) (- (log probability 2)))
     (setf (gethash 'entropy event-results) (prediction-sets:shannon-entropy distribution))
+    (setf (gethash 'information.gain event-results) information-gain)
     ;; TODO elements of combined distribution
     (mapc #'(lambda (key) (remhash key event-results)) distribution-keys)
-    event-results))       
+    event-results))
 
-(defun reorder-resampling-predictions (resampling-predictions)
-  "Reorders <resampling-predictions> so that instead of compositions 
-being nested within features, features are nested within compositions.
-Additionally merges resampling sets and orders by composition. The outcome
-is a list of composition prediction sets, ordered by composition ID."
-  (let* ((reordered
-	  ;; Nest features within compositions
-	  (loop for cv-set in resampling-predictions
-	     collect
-	       (let* ((composition-ids
-		       (mapcar #'(lambda (x) (prediction-sets:prediction-index x))
-			       (prediction-sets:prediction-set (car cv-set))))
-		      (new-composition-sets
-		       (mapcar #'(lambda (id)
-				   (make-instance 'prediction-sets:sequence-prediction
-						  :index id :set nil))
-			       composition-ids)))
-		 (loop for feature-set in cv-set
-		    do (loop
-			  for composition-set in (prediction-sets:prediction-set
-						  feature-set)
-			  for new-composition-set in new-composition-sets
-			  do (push composition-set (prediction-sets:prediction-set
-						    new-composition-set))))
-		 (loop for new-composition-set in new-composition-sets
-		    do (setf (prediction-sets:prediction-set new-composition-set)
-			     (reverse (prediction-sets:prediction-set
-				       new-composition-set))))
-		 new-composition-sets)))
-	 ;; Merge resampling sets
-	 (reordered (apply #'append reordered))
-	 ;; Order by composition
-	 (reordered (sort reordered #'< :key #'prediction-sets:prediction-index)))
-    reordered))
-    
-
-(defun format-information-content-detail=3
-    (stream resampling-predictions dataset-id &key (separator " ")
-						(null-token "NA"))
-  (if *use-old-format-method*
-      (format-information-content-detail=3-old stream resampling-predictions
-					       dataset-id :separator separator)
-      (let* ((resampling-predictions (reorder-resampling-predictions
-				      resampling-predictions))
-	     (data (make-instance 'dataframe)))
-
-	(dolist (sp resampling-predictions) ; compositions
-	  (let ((composition-id (prediction-sets:prediction-index sp))
-		(results (make-hash-table :test #'equal))
-		(features))
-	    (dolist (fp (prediction-sets:prediction-set sp)) ; target viewpoints
-	      (let ((feature (viewpoints:viewpoint-type
-			      (prediction-sets:prediction-viewpoint fp))))
-		(pushnew feature features)
-		(dolist (ep (prediction-sets:prediction-set fp)) ; events
-		  (let* ((event (prediction-sets:prediction-event ep))
-			 (event-id (md:get-event-index
-				    (md:get-attribute event 'identifier))))
-		    (setf (gethash (list composition-id event-id) results)
-			  (format-event-prediction ep results
-						   dataset-id composition-id
-						   feature))))))
-	    (maphash #'(lambda (k v)
-	         	 (setf (gethash k results)
-	         	       (combine-event-probabilities v features)))
-                     results)
-	    (add-results-to-dataframe results data)))
-	(print-data data stream :null-token null-token :separator separator))))
-
+(defun kl-divergence (d1 d2)
+  (reduce #'+ (mapcar #'(lambda (x y)
+                          (* (cadr y) (- (log (cadr y) 2) (log (cadr x) 2))))
+                      d1 d2)))
+  
 
 ;;;===========================================================================
 ;;; Constructing the Long term models 
@@ -539,7 +554,7 @@ is ordered by key."))
 	  (format destination "~A~A" token separator)))
       (format destination "~&"))))
   
-(defun add-results-to-dataframe (results dataframe)
+(defun add-results-to-dataframe (results dataframe &key blacklist)
   (flet ((sort-function (x y) (let ((x1 (car x)) (x2 (cadr x))
 				    (y1 (car y)) (y2 (cadr y)))
 				(if (= x1 y1) (< x2 y2) (< x1 y1)))))
@@ -547,4 +562,6 @@ is ordered by key."))
     (let ((sorted-results (utils:hash-table->sorted-alist results #'sort-function)))
       (dolist (event sorted-results)
 	(let* ((event-ht (cdr event)))
+          (dolist (bl blacklist)
+            (remhash bl event-ht))
 	  (add-row event-ht dataframe))))))
