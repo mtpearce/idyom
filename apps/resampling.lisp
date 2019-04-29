@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2019-04-09 16:25:10 marcusp>                           
+;;;; Time-stamp: <2019-04-29 12:40:36 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -374,7 +374,7 @@ anew each time."
                  (let ((training-set
                         (viewpoint-sequences viewpoint training-set))
                        (alphabet (viewpoint-alphabet viewpoint)))
-                   (build-model training-set alphabet))))))
+                   (ppm:build-model training-set alphabet))))))
     (mapcar constructor-fun viewpoints)))
 
 (defun get-model-filename (viewpoint pretraining-ids training-id resampling-id
