@@ -2,7 +2,7 @@
 ;;;; File:       ppm-star.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2018-10-05 11:40:58 marcusp>                           
+;;;; Time-stamp: <2019-04-29 13:14:55 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -518,7 +518,7 @@ of the location, the label is instantiated from the root of the tree."
 ;; Model Construction and Prediction 
 ;;;===========================================================================
 
-(defmethod model-dataset ((m ppm) dataset &key construct? predict? initialise?)
+(defmethod model-dataset ((m ppm) dataset &key construct? predict? initialise? (sentinel? t))
   "Models a dataset <dataset> (a vector of sequence vectors) given
    PPM model <m>. If <construct?> is non-nil the dataset is added to the
    model and if <predict?> is non-nil a distribution over (ppm-alphabet m)
@@ -527,7 +527,7 @@ of the location, the label is instantiated from the root of the tree."
              (if (null dataset) (reverse prediction-sets)
                  (let ((prediction-set
                         (model-sequence m (car dataset) :construct? construct? 
-                                        :predict? predict?))
+                                        :predict? predict? :sentinel? sentinel?))
                        (index-s (index-s (ppm-front m))))
                    (unless (= sequence-index 1) (increment-sequence-front m))
                    (when initialise? (reinitialise-ppm m))
@@ -537,7 +537,7 @@ of the location, the label is instantiated from the root of the tree."
                                   prediction-sets))))))
     (model-d dataset (length dataset) '())))
                    
-(defmethod model-sequence ((m ppm) sequence &key construct? predict?)
+(defmethod model-sequence ((m ppm) sequence &key construct? predict? (sentinel? t))
   "Models a sequence <sequence> (a vector of symbols) given PPM
    model <m>. If <construct?> is non-nil the sequence is added to the
    model and if <predict?> is non-nil a distribution over (ppm-alphabet m)
@@ -547,7 +547,7 @@ of the location, the label is instantiated from the root of the tree."
   (labels ((model-seq (sequence location prediction-set)
              (if (null sequence)
                  (progn
-                   (when construct? (model-sentinel-event m location))
+                   (when (and construct? sentinel?) (model-sentinel-event m location))
                    (reverse prediction-set))
                  (let ((symbol (car sequence)))
                    (multiple-value-bind (next-location event-distribution)
