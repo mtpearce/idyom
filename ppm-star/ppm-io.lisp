@@ -2,25 +2,30 @@
 ;;;; File:       ppm-io.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2018-08-28 09:52:07 marcusp>
+;;;; Time-stamp: <2019-04-29 13:18:34 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package :ppm)
 
-(defmethod write-model-to-postscript ((m ppm) filename)
-                                      ;(depth nil))
+(defmethod write-model-to-postscript ((m ppm) filename &key (counts '(0 1)) (depth nil))
   "Prints the suffix tree of <m> to a postscript file <path>."
   (labels ((get-node-count (node)
-             (list (utils:string-append "Count0: "
-                                        (format nil "~D" (get-count m node nil)))
-                   (utils:string-append "Count1: "
-                                        (format nil "~D" (get-count m node t)))))
+             (let ((node-count '()))
+               (when (member 1 counts :test #'=)
+                 (push (utils:string-append "UX count: "
+                                            (format nil "~D" (get-count m node t)))
+                       node-count))
+                              (when (member 0 counts :test #'=)
+                 (push (utils:string-append "Count: "
+                                            (format nil "~D" (get-count m node nil)))
+                       node-count))
+               node-count))
            (list-node-children (node)
-             ;(when (or (null depth) 
-             ;          (and (branch-record-p (get-record m node))
-             ;               (<= (branch-record-depth (get-record m node)) 
-             ;                   depth)))
-               (list-children m node));)
+             (when (or (null depth) 
+                       (and (branch-record-p (get-record m node))
+                            (<= (branch-record-depth (get-record m node)) 
+                                depth)))
+               (list-children m node)))
            (label->string (node)
              (let ((label (instantiate-label m (get-label m node))))
                (cons (utils:list->string label) (get-node-count node)))))
