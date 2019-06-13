@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2019-04-29 12:40:36 marcusp>                           
+;;;; Time-stamp: <2019-06-13 13:33:43 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -56,10 +56,12 @@
          (mvs::*ltm-mixtures* (getf ltmo :mixtures))
          (mvs::*ltm-update-exclusion* (getf ltmo :update-exclusion))
          (mvs::*ltm-escape* (getf ltmo :escape))
+         (mvs::*ltm-exclusion* (getf ltmo :exclusion))
          (mvs::*stm-order-bound* (getf stmo :order-bound))
          (mvs::*stm-mixtures* (getf stmo :mixtures))
          (mvs::*stm-update-exclusion* (getf stmo :update-exclusion))
          (mvs::*stm-escape* (getf stmo :escape))
+         (mvs::*stm-exclusion* (getf stmo :exclusion))
          ;; data
          (dataset (md:get-music-objects (if (listp dataset-id) dataset-id (list dataset-id))
                                         nil :voices voices :texture texture))
@@ -99,9 +101,10 @@
 (defun check-model-defaults (defaults &key
 			      (order-bound (getf defaults :order-bound))
 			      (mixtures (getf defaults :mixtures))
-			      (update-exclusion (getf defaults :update-exclusion))
+                              (update-exclusion (getf defaults :update-exclusion))
+                              (exclusion (getf defaults :exclusion))
 			      (escape (getf defaults :escape)))  
-  (list :order-bound order-bound :mixtures mixtures :update-exclusion update-exclusion :escape escape))
+  (list :order-bound order-bound :mixtures mixtures :update-exclusion update-exclusion :escape escape :exclusion exclusion))
 
 
 (defun monodies-to-lists (monodies) (mapcar #'monody-to-list monodies))
