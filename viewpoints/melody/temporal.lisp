@@ -2,7 +2,7 @@
 ;;;; File:       temporal.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2005-11-29 10:41:20 marcusp>
-;;;; Time-stamp: <2018-10-19 22:49:26 marcusp>
+;;;; Time-stamp: <2019-06-24 09:48:42 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
@@ -129,7 +129,7 @@
   ;; TODO: function*
   )
 
-;; First In Bar (Is this the first note in the current bar?)
+;; does this note fall on the downbeat of the bar (i.e., posinbar = 0)? 
 (define-viewpoint (fib test (onset))
     ((events md:music-sequence) element) 
   :function (let ((posinbar (posinbar events)))
