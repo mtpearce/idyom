@@ -2,7 +2,7 @@
 ;;;; File:       pmch-utils.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2018-01-11 17:56:42 peter>                          
-;;;; Time-stamp: <2018-03-05 16:11:49 peter>                           
+;;;; Time-stamp: <2019-07-14 22:47:32 peter>                           
 ;;;; =======================================================================
 
 ;;;; Description ==========================================================
@@ -51,13 +51,18 @@
 	 (data
 	  (mapcar
 	   #'(lambda (x)
-	       (let ((desc (md:description x))
+	       (let* ((desc (md:description x))
 		     (seq (mapcar #'(lambda (chord)
 				       (mapcar #'round
 					       (md:get-attribute chord
 								 'h-cpitch)))
-				  (coerce x 'list))))
+				  (coerce x 'list)))
+		     (first-chord (car (coerce x 'list)))
+		     (mode (md:get-attribute first-chord 'mode))
+		     (keysig (md:get-attribute first-chord 'keysig)))
 		 (list (cons :description desc)
+		       (cons :mode mode)
+		       (cons :keysig keysig)
 		       (cons :chords seq))))
 	   data)))
     (with-open-file (stream (pathname path)
