@@ -2,7 +2,7 @@
 ;;;; File:       temporal.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2005-11-29 10:41:20 marcusp>
-;;;; Time-stamp: <2019-06-24 09:48:42 marcusp>
+;;;; Time-stamp: <2019-07-16 16:50:04 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
@@ -122,6 +122,7 @@
   :function (let ((onset (onset events))
                   (barlength (barlength events)))
               (cond ((undefined-p onset barlength) +undefined+)
+                    ((null barlength) +undefined+)
                     ((zerop barlength) +undefined+)
                     ((zerop onset) 0)
                     ((> onset 0) (mod onset barlength))
