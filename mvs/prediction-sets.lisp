@@ -2,7 +2,7 @@
 ;;;; File:       prediction-sets.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-18 18:54:17 marcusp>                           
-;;;; Time-stamp: <2016-04-11 16:04:50 marcusp>                           
+;;;; Time-stamp: <2019-11-25 17:27:38 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -145,7 +145,25 @@
 
 (defun weight (relative-entropy bias)
   "Returns a weight associated with a prediction with <relative-entropy>." 
-  (expt relative-entropy (- bias)))
+  (safe-expt relative-entropy (- bias)))
+
+(defun safe-expt (x y)
+  "Returns (EXPT X Y) or if this results in a floating point overflow,
+the most positive or least negative float, as appropriate."
+  (restart-case
+      (handler-bind ((floating-point-overflow
+                      (lambda (c)
+                        (declare (ignore c))
+                        (invoke-restart 'r1 x y))))
+        (expt x y))
+    (r1 (x y)
+      (if (plusp y)
+          (case (type-of x)
+            (single-float most-positive-single-float)
+            (double-float most-positive-double-float))
+          (case (type-of x)
+            (single-float least-negative-single-float)
+            (double-float least-negative-double-float))))))
 
 (defun weights (relative-entropies bias)
   "Returns weights associated with predictions with <relative-entropies>." 
