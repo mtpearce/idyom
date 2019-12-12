@@ -2,7 +2,7 @@
 ;;;; File:       prediction-sets.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-18 18:54:17 marcusp>                           
-;;;; Time-stamp: <2019-11-25 17:27:38 marcusp>                           
+;;;; Time-stamp: <2019-12-12 10:14:32 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -121,7 +121,10 @@
 (defun codelength (probability)
   "Returns the expected codelength of a symbol predicted with probability
    <probability>."
-  (- (log probability 2)))
+  (let ((p (if (= probability 0)
+               least-positive-single-float
+               probability)))
+    (- (log p 2))))
 
 (declaim (inline maximum-entropy))
 (defun maximum-entropy (alphabet)
