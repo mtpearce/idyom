@@ -2,7 +2,7 @@
 ;;;; File:       generation.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-08-21 18:54:17 marcusp>                           
-;;;; Time-stamp: <2018-08-28 09:51:39 marcusp>                           
+;;;; Time-stamp: <2020-02-05 14:43:54 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -11,28 +11,23 @@
 ;;;;   systems using a variety of methods including random walks and MCMC 
 ;;;;   methods such as Gibbs and Metropolis sampling. 
 ;;;;
-;;;; TODO 
-;;;;
-;;;;   o generate by selecting event with highest probablity at each stage
-;;;;   o try without STM 
-;;;; 
 ;;;; ======================================================================
 
 (cl:in-package #:generation)
 
 (defgeneric sampling-predict-sequence (mvs sequence cpitch))
 (defgeneric complete-prediction (mvs sequence cached-prediction))
-(defgeneric metropolis-sampling (mvs sequence iterations random-state))
-(defgeneric gibbs-sampling (mvs sequence iterations random-state))
+(defgeneric metropolis-sampling (mvs sequence iterations random-state threshold))
+(defgeneric gibbs-sampling (mvs sequence iterations random-state threshold))
 (defgeneric gibbs-sequence-distribution (mvs sequences cpitch))
-(defgeneric random-walk (mvs sequence context-length random-state))
-(defgeneric generate-event (mvs event predictions random-state))
+(defgeneric random-walk (mvs sequence context-length random-state threshold))
+(defgeneric generate-event (mvs event predictions random-state threshold))
 
 ;; ========================================================================
-;; DATASET GENERATION 
+;; Top-level
 ;; ========================================================================
 
-(defun dataset-generation (dataset-id basic-attributes attributes base-id
+(defun dataset-generation (dataset-id base-id basic-attributes attributes
                            &key
                              (models :both+)
                              (method :metropolis)
@@ -41,6 +36,7 @@
                              pretraining-ids
                              description
                              (random-state cl:*random-state*)
+                             (threshold nil)
                              (use-ltms-cache? t)
                              (output-file-path nil))
   (declare (ignorable description output-file-path))
@@ -65,13 +61,12 @@
                              
          (sequence
           (case method
-            (:metropolis (metropolis-sampling mvs (car test-set) iterations random-state))
-            (:gibbs (gibbs-sampling mvs (car test-set) iterations random-state))
-            (:random (random-walk mvs (car test-set) context-length random-state))
-            (otherwise (metropolis-sampling mvs (car test-set) iterations)))))
-    ;(write-prediction-cache-to-file dataset-id attributes)
-    ;(print (viewpoints:viewpoint-sequence (viewpoints:get-viewpoint 'cpitch) sequence))
-    ;(idyom-db:export-data sequence :ps "/tmp")
+            (:metropolis (metropolis-sampling mvs (car test-set) iterations random-state threshold))
+            (:gibbs (gibbs-sampling mvs (car test-set) iterations random-state threshold))
+            (:random (random-walk mvs (car test-set) context-length random-state threshold))
+            (otherwise (metropolis-sampling mvs (car test-set) iterations random-state threshold)))))
+    ;; (write-prediction-cache-to-file dataset-id attributes)
+    ;; (print (viewpoints:viewpoint-sequence (viewpoints:get-viewpoint 'cpitch) sequence))
     (when output-file-path
       (idyom-db:export-data sequence :mid output-file-path))
     sequence))
@@ -93,52 +88,62 @@
     (list (list 'resampling::test (list base-id))
           (list 'resampling::train training-set))))
           
-(defun select-from-distribution (distribution random-state)
-  (let ((r (random 1.0 random-state))
-        (cum-prob 0.0))
-    (when mvs::*debug*
-      (format t "~&R: ~A; Sum: ~A~%"
-              r (reduce #'+ distribution :key #'cadr)))
-    (dolist (ep distribution (values-list (car (last distribution))))
-      ;; FIXME: Distributions do not sum to 1, therefore this can
-      ;; possibly return nil. As a hack we'll always return the final
-      ;; element, but this is distorting the statistics.
-      (when mvs::*debug* (format t "~&EP: ~A; CP: ~A~%" ep cum-prob))
-      (destructuring-bind (attribute-value probability) ep
-        (incf cum-prob probability)
-        (when (>= cum-prob r)
-          (return (values attribute-value probability)))))))
-;;         (ranges (distribution->ranges distribution)))
-;;     (dotimes (i (length distribution))
-;;       (format t "~&~A ~A ~A ~A ~A~%" 
-;;               (car (nth i distribution))
-;;               (nth 1 (nth i distribution))
-;;               (nth 1 (nth i ranges))
-;;               (nth 2 (nth i ranges))
-;;               (- (nth 2 (nth i ranges)) (nth 1 (nth i ranges)))))
-;;     (print r) 
-;;     (car (find-if #'(lambda (x)
-;;                       (let ((low (nth 1 x)) (high (nth 2 x)))
-;;                         (and (> r low) (<= r high))))
-;;                   ranges))))
+(defun sample (distribution random-state threshold)
+  (if (eq threshold :max)
+      (sample-max distribution)
+      (let* ((d distribution)
+             (d (if threshold (remove-if #'(lambda (x) (< (cadr x) threshold)) d) d))
+             (d (prediction-sets:normalise-distribution d))
+             (d (if (null d) (list (list (sample-max distribution) 1.0)) d))
+             (r (random 1.0 random-state))
+             (cum-prob 0.0))
+        (when mvs::*debug* (format t "~&R: ~A; Sum: ~A~%" r (reduce #'+ d :key #'cadr)))
+        (dolist (ep d (values-list (car (last d))))
+          (when mvs::*debug* (format t "~&EP: ~A; CP: ~A~%" ep cum-prob))
+          (destructuring-bind (attribute-value probability) ep
+            (incf cum-prob probability)
+            (when (>= cum-prob r)
+              (return (values attribute-value probability))))))))
 
-(defun select-max-from-distribution (distribution) 
+(defun sample-max (distribution) 
   (caar (sort (copy-list distribution) #'> :key #'cadr)))
-
-(defun distribution->ranges (distribution)
-  (let ((new-distribution '())
-        (sum 0))
-    (dolist (s distribution (reverse new-distribution))
-      (let* ((symbol (car s))
-             (probability (cadr s))
-             (new-sum (+ sum probability)))
-        (push (list symbol sum new-sum) new-distribution)
-        (setf sum new-sum)))))
 
 (defun random-index (sequence)
   (let* ((context-length 0) ;(get-context-length sequence)) 
          (effective-length (- (length sequence) context-length)))
     (+ (random effective-length) context-length)))
+
+
+
+;; ========================================================================
+;; SEQUENCE PREDICTION
+;; ======================================================================== 
+
+(defmethod sampling-predict-sequence ((m mvs) sequence cpitch)
+  (mvs:operate-on-models m #'ppm:reinitialise-ppm :models 'mvs::stm)
+  (let* ((cpitch-sequence (viewpoint-sequence cpitch sequence))
+         (cached-prediction (cached-prediction cpitch-sequence))
+         (prediction (complete-prediction m sequence cached-prediction)))
+    (when mvs::*debug*
+      (format t "~&Original length: ~A; Cached length: ~A; Final length: ~A~%" 
+              (length cpitch-sequence) (length cached-prediction) 
+              (length prediction)))
+    (cache-predictions prediction)
+    prediction))
+
+(defmethod complete-prediction ((m mvs) sequence cached-prediction)
+  (let* ((from-index (length cached-prediction))
+         (prediction 
+          (car 
+           (mvs:model-sequence m sequence :construct? nil :predict? t 
+                               :predict-from from-index
+                               :construct-from from-index))))
+    ;;(format t "~&Cache Length: ~A" from)
+    (append cached-prediction (get-sequence prediction))))
+        
+(defun get-sequence (sequence-prediction)
+  (mapcar #'(lambda (x) (list (prediction-element x) (prediction-set x)))
+          (prediction-set sequence-prediction)))
 
 
 ;; ========================================================================
@@ -211,32 +216,6 @@
         (push (make-node :symbol symbol :probability probability)
               (node-children node))))))
 
-(defmethod sampling-predict-sequence ((m mvs) sequence cpitch)
-  (mvs:operate-on-models m #'ppm:reinitialise-ppm :models 'mvs::stm)
-  (let* ((cpitch-sequence (viewpoint-sequence cpitch sequence))
-         (cached-prediction (cached-prediction cpitch-sequence))
-         (prediction (complete-prediction m sequence cached-prediction)))
-    (when mvs::*debug*
-      (format t "~&Original length: ~A; Cached length: ~A; Final length: ~A~%" 
-              (length cpitch-sequence) (length cached-prediction) 
-              (length prediction)))
-    (cache-predictions prediction)
-    prediction))
-
-(defmethod complete-prediction ((m mvs) sequence cached-prediction)
-  (let* ((from-index (length cached-prediction))
-         (prediction 
-          (car 
-           (mvs:model-sequence m sequence :construct? nil :predict? t 
-                               :predict-from from-index
-                               :construct-from from-index))))
-    ;;(format t "~&Cache Length: ~A" from)
-    (append cached-prediction (get-sequence prediction))))
-        
-(defun get-sequence (sequence-prediction)
-  (mapcar #'(lambda (x) (list (prediction-element x) (prediction-set x)))
-          (prediction-set sequence-prediction)))
-
 (defun cache->ps (&optional (filename "cache.ps"))
   (let ((psgraph:*fontsize* 14)
         (psgraph:*second-fontsize* 12)
@@ -258,11 +237,9 @@
 ;; METROPOLIS SAMPLING
 ;; ======================================================================== 
 
-(defmethod metropolis-sampling ((m mvs) sequence iterations random-state)
-  ;(initialise-prediction-cache) 
+(defmethod metropolis-sampling ((m mvs) sequence iterations random-state threshold)
   (let* ((sequence (coerce sequence 'list))
-         (pitch-sequence (mapcar #'(lambda (x) (get-attribute x 'cpitch))
-                                 sequence))
+         (pitch-sequence (mapcar #'(lambda (x) (get-attribute x 'cpitch)) sequence))
          (l (length sequence))
          (cpitch (viewpoints:get-viewpoint 'cpitch))
          (predictions (sampling-predict-sequence m sequence cpitch))
@@ -272,7 +249,7 @@
              (index (- l (mod i l) 1))
              (distribution (metropolis-event-distribution predictions index))
              (new-sequence
-              (metropolis-new-sequence sequence distribution index random-state))
+              (metropolis-new-sequence sequence distribution index random-state threshold))
              (old-cpitch (get-attribute (nth index sequence) 'cpitch))
              (new-cpitch (get-attribute (nth index new-sequence) 'cpitch)))
         (unless (eql old-cpitch new-cpitch)
@@ -305,14 +282,13 @@
 (defun metropolis-event-distribution (predictions index)
   (nth 1 (nth index predictions)))
 
-(defun metropolis-new-sequence (sequence distribution index random-state)
+(defun metropolis-new-sequence (sequence distribution index random-state threshold)
   (let* ((sequence-1 (subseq sequence 0 index))
          (event (nth index sequence))
          (sequence-2 (subseq sequence (1+ index)))
          (new-event (copy-event event))
-         (new-cpitch (select-from-distribution distribution random-state)))
-         ;(new-cpitch (select-max-from-distribution distribution)))
-    ;(format t "~&New cpitch is ~A~%" new-cpitch)
+         (new-cpitch (sample distribution random-state threshold)))
+    (format t "~&New cpitch is ~A~%" new-cpitch)
     (set-attribute new-event 'cpitch new-cpitch)
     (append sequence-1 (list new-event) sequence-2)))
 
@@ -336,7 +312,7 @@
 ;; GIBBS SAMPLING 
 ;; ======================================================================== 
 
-(defmethod gibbs-sampling ((m mvs) sequence iterations random-state)
+(defmethod gibbs-sampling ((m mvs) sequence iterations random-state threshold)
   (let* ((sequence (coerce sequence 'list))
          (pitch-sequence (mapcar #'(lambda (x) (get-attribute x 'cpitch))
                                  sequence))
@@ -349,7 +325,7 @@
              (index (- l (mod i l) 1))
              (new-sequences (gibbs-new-sequences sequence index))
              (distribution (gibbs-sequence-distribution m new-sequences cpitch))
-             (new-sequence (select-from-distribution distribution random-state))
+             (new-sequence (sample distribution random-state threshold))
              (old-cpitch (get-attribute (nth index sequence) 'cpitch))
              (new-cpitch (get-attribute (nth index new-sequence) 'cpitch))
              (old-p (seq-probability (sampling-predict-sequence m sequence cpitch)))
@@ -387,7 +363,7 @@
 ;; RANDOM WALK 
 ;; ======================================================================== 
 
-(defmethod random-walk ((m mvs) sequence context-length random-state)
+(defmethod random-walk ((m mvs) sequence context-length random-state threshold)
   (let* ((sequence (coerce sequence 'list))
          (event-count (length sequence))
          (viewpoint-count (mvs:count-viewpoints m))
@@ -429,7 +405,7 @@
                                                              stm-prediction-sets
                                                              subsequence)))
                   (multiple-value-bind (new-event attribute-predictions)
-                      (generate-event m current-event predictions random-state)
+                      (generate-event m current-event predictions random-state threshold)
                     (setf last-attribute-predictions attribute-predictions)
                     (push new-event new-sequence)))))))
       ;; 4. add new event to models without predicting 
@@ -459,22 +435,20 @@
     ;(mvs:operate-on-models m #'initialise-virtual-nodes)
     (values (reverse new-sequence) last-attribute-predictions)))
 
-(defmethod generate-event ((m mvs) event predictions random-state)
-  (let ((predictions (select-from-distributions predictions random-state)))
+(defmethod generate-event ((m mvs) event predictions random-state threshold)
+  (let ((predictions (select-from-distributions predictions random-state threshold)))
     (dolist (p predictions (values event predictions))
       (setf
        (slot-value event (find-symbol (symbol-name (car p)) (find-package :music-data)))
        (nth 2 p)))))
 
-(defun select-from-distributions (predictions random-state)
+(defun select-from-distributions (predictions random-state threshold)
   (let ((selected-attributes
          (mapcar #'(lambda (x)
                      (multiple-value-bind (attribute-value probability)
-                         ;; (select-max-from-distribution
-                         ;;  (prediction-sets:prediction-set x))))
-                         (select-from-distribution
+                         (sample
                           (prediction-sets:prediction-set x)
-                          random-state)
+                          random-state threshold)
                        (list (viewpoint-type (prediction-sets:prediction-viewpoint x))
                              (prediction-sets:prediction-element x)
                              attribute-value
