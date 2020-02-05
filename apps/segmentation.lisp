@@ -2,7 +2,7 @@
 ;;;; File:       segmentation.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2008-03-13 13:07:12 marcusp>
-;;;; Time-stamp: <2016-04-14 16:53:38 marcusp>
+;;;; Time-stamp: <2020-02-05 16:08:50 marcusp>
 ;;;; ======================================================================
 
 (cl:defpackage #:segmentation
@@ -20,6 +20,20 @@
 (defparameter *no-boundary* 0
   "An object used to represent a point where a boundary doesn't occur.")
 
+;;; Top-level
+
+(defun idyom-segmentation (dataset-id target-viewpoints source-viewpoints
+                           &key (k 1.28) (window-size nil)
+                             (mean #'linearly-weighted-arithmetic-mean))
+  (multiple-value-bind (d1 d2 d3)
+      (idyom:idyom dataset-id target-viewpoints source-viewpoints)
+    (declare (ignore d1 d2))
+    (let ((predicted (mapcar #'(lambda (x) (segmentation:peak-picker x :k k :window-size window-size :mean mean)) d3))
+          (actual (segmentation::ground-truth dataset-id)))
+      (segmentation:test-segmentation (reduce #'append predicted) (reduce #'append actual)))))
+
+  
+;;; Peak picking
 
 (defun peak-picker (boundary-strengths &key (k 1.28) (window-size nil)
                                          (mean #'linearly-weighted-arithmetic-mean))
@@ -89,6 +103,16 @@
         (n (length numbers)))
     (sqrt (* (/ 1 (1- n))
              (reduce #'+ (mapc #'(lambda (x) (expt (- x xbar) 2)) numbers))))))
+
+
+;;;; Ground truth for a given dataset
+
+(defun ground-truth (dataset-id)
+  (let* ((phrase (viewpoints:viewpoint-sequences (viewpoints:get-viewpoint 'phrase) (md:get-music-objects dataset-id nil)))
+         (phrase (mapcar #'(lambda (x) (cons 0 (cdr x))) phrase)))
+    (mapcar #'(lambda (x)
+                (substitute 0 -1 x))
+            phrase)))
 
 
 ;;;; Evaluation
