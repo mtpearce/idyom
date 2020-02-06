@@ -2,7 +2,7 @@
 ;;;; File:       segmentation.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2008-03-13 13:07:12 marcusp>
-;;;; Time-stamp: <2020-02-05 16:08:50 marcusp>
+;;;; Time-stamp: <2020-02-06 15:35:02 marcusp>
 ;;;; ======================================================================
 
 (cl:defpackage #:segmentation
@@ -10,7 +10,8 @@
   (:export #:*boundary* #:*no-boundary* #:peak-picker
            #:make-segmentation-results #:print-segmentation-results
            #:precision #:recall #:f1 #:fallout #:test-segmentation
-           #:notated-segmentation #:notated-segmentations))
+           #:notated-segmentation #:notated-segmentations
+           #:idyom-segmentation))
 
 (cl:in-package #:segmentation) 
 
@@ -26,7 +27,7 @@
                            &key (k 1.28) (window-size nil)
                              (mean #'linearly-weighted-arithmetic-mean))
   (multiple-value-bind (d1 d2 d3)
-      (idyom:idyom dataset-id target-viewpoints source-viewpoints)
+      (idyom:idyom dataset-id target-viewpoints source-viewpoints :models :both+)
     (declare (ignore d1 d2))
     (let ((predicted (mapcar #'(lambda (x) (segmentation:peak-picker x :k k :window-size window-size :mean mean)) d3))
           (actual (segmentation::ground-truth dataset-id)))
@@ -123,7 +124,7 @@
          (r (recall result))
          (f (f1 result)))
     (print-segmentation-results result t)
-    (format t "~&P = ~,2F; R = ~,2F; F1 = ~,2F~%" p r f)))
+    (format t "~&Precision = ~,2F; Recall = ~,2F; F_1 = ~,2F~%" p r f)))
 
 (defun notated-segmentations (sequences)
   (mapcar #'notated-segmentation sequences))
