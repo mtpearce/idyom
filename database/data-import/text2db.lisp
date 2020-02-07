@@ -2,7 +2,7 @@
 ;;;; File:       text2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2007-04-19 11:15:57 marcusp>
-;;;; Time-stamp: <2015-03-25 23:13:35 marcusp>
+;;;; Time-stamp: <2020-02-07 11:37:15 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:text2db) 
@@ -33,7 +33,7 @@
                 ((find #\Space input)
                  (setf split-input 
                        (split-string input (format nil "~C" #\Space))))
-                (t (error "Unrecognised delimiter token.")))
+                (t (error "Unrecognised delimiter token, or perhaps a composition with only one event.")))
           (push (mapcar #'parse-integer (remove "" split-input :test #'string=)) pitch-sequences))))
     (convert-pitch-sequences (nreverse pitch-sequences))))
 
