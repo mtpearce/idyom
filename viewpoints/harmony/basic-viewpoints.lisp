@@ -2,7 +2,7 @@
 ;;;; File:       basic-viewpoints.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-25 19:09:17 marcusp>                           
-;;;; Time-stamp: <2016-06-01 16:27:14 marcusp>                           
+;;;; Time-stamp: <2020-02-06 16:38:26 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
@@ -26,7 +26,7 @@
 ;;     (mapcar #'(lambda (x) (viewpoints:register-basic-type x slice)) types)))
 
 (define-basic-viewpoint h-cpitch ((events md:harmonic-sequence))
-  (mapcar #'md:chromatic-pitch (coerce (car (last events)) 'list)))
+  (mapcar #'md:chromatic-pitch (sort (coerce (car (last events)) 'list) #'<)))
 
 ;;;; Derived viewpoints
 

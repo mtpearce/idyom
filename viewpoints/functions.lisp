@@ -14,7 +14,7 @@
   ;;           (cons symbol types)))))
 
 (defun get-basic-types (event)
-  "Return the basic types matching the event-type."
+  "Returns current value of *basic-types* without referring to EVENT."
   (declare (ignore event))
   *basic-types*)
   ;;(gethash (type-of event) *basic-types*))
