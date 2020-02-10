@@ -2,7 +2,7 @@
 ;;;; File:       generation.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-08-21 18:54:17 marcusp>                           
-;;;; Time-stamp: <2020-02-05 14:43:54 marcusp>                           
+;;;; Time-stamp: <2020-02-10 17:13:48 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -12,6 +12,12 @@
 ;;;;   methods such as Gibbs and Metropolis sampling. 
 ;;;;
 ;;;; ======================================================================
+
+(defpackage #:generation 
+  (:use #:cl #:utils #:md #:viewpoints #:ppm #:mvs #:prediction-sets 
+        #:resampling)
+  (:export #:idyom-generation)
+  (:documentation "Generation of melodic compositions."))
 
 (cl:in-package #:generation)
 
@@ -27,18 +33,18 @@
 ;; Top-level
 ;; ========================================================================
 
-(defun dataset-generation (dataset-id base-id basic-attributes attributes
-                           &key
-                             (models :both+)
-                             (method :metropolis)
-                             (context-length nil)
-                             (iterations 100) 
-                             pretraining-ids
-                             description
-                             (random-state cl:*random-state*)
-                             (threshold nil)
-                             (use-ltms-cache? t)
-                             (output-file-path nil))
+(defun idyom-generation (dataset-id base-id basic-attributes attributes
+                         &key
+                           (models :both+)
+                           (method :metropolis)
+                           (context-length nil)
+                           (iterations 100) 
+                           pretraining-ids
+                           description
+                           (random-state cl:*random-state*)
+                           (threshold nil)
+                           (use-ltms-cache? t)
+                           (output-file-path nil))
   (declare (ignorable description output-file-path))
   (mvs:set-models models)
   (initialise-prediction-cache dataset-id attributes)
@@ -68,7 +74,7 @@
     ;; (write-prediction-cache-to-file dataset-id attributes)
     ;; (print (viewpoints:viewpoint-sequence (viewpoints:get-viewpoint 'cpitch) sequence))
     (when output-file-path
-      (idyom-db:export-data sequence :mid output-file-path))
+      (md:export-data sequence :mid output-file-path))
     sequence))
 
 (defun get-pretraining-set (dataset-ids)
@@ -288,7 +294,7 @@
          (sequence-2 (subseq sequence (1+ index)))
          (new-event (copy-event event))
          (new-cpitch (sample distribution random-state threshold)))
-    (format t "~&New cpitch is ~A~%" new-cpitch)
+    ;; (format t "~&New cpitch is ~A~%" new-cpitch)
     (set-attribute new-event 'cpitch new-cpitch)
     (append sequence-1 (list new-event) sequence-2)))
 

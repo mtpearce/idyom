@@ -2,7 +2,7 @@
 ;;;; File:       key-finding.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2019-03-16 14:14:59 marcusp>                           
-;;;; Time-stamp: <2019-04-01 11:46:38 marcusp>                           
+;;;; Time-stamp: <2020-02-10 16:56:56 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -10,6 +10,11 @@
 ;;;; The Krumhansl-Schmuckler key-finding algorithm. 
 ;;;;
 ;;;; ======================================================================
+
+(defpackage #:key-finding
+  (:use #:cl)
+  (:export #:find-keys #:find-key)
+  (:documentation "The Krumhansl-Schmuckler key-finding algorithm."))
 
 (cl:in-package #:key-finding)
 

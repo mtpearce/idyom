@@ -2,7 +2,7 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                        
-;;;; Time-stamp: <2019-04-01 11:39:45 marcusp>                           
+;;;; Time-stamp: <2020-02-10 16:59:02 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -34,13 +34,3 @@
            "DATASET-VIEWPOINT-SELECTION")
   (:documentation "Selection of viewpoints."))
 
-(defpackage #:generation 
-  (:use #:cl #:utils #:md #:viewpoints #:ppm #:mvs #:prediction-sets 
-        #:resampling)
-  (:export "DATASET-GENERATION")
-  (:documentation "Generation of melodic compositions."))
-
-(defpackage #:key-finding
-  (:use #:cl)
-  (:export "FIND-KEYS" "FIND-KEY")
-  (:documentation "The Krumhansl-Schmuckler key-finding algorithm."))
