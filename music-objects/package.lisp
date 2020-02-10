@@ -23,6 +23,9 @@
    "GET-ATTRIBUTE" "SET-ATTRIBUTE" "COUNT-COMPOSITIONS" "GET-DESCRIPTION"
    "COPY-EVENT" "MUSIC-SYMBOL" "*MD-MUSIC-SLOTS*" "*MD-TIME-SLOTS*"
    ;; Representation
-   "*MD-TIMEBASE*")
+   "*MD-TIMEBASE*"
+   ;; MIDI export
+   "EXPORT-DATA"
+   )
   (:documentation "Musical data."))
 
