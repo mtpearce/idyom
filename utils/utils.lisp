@@ -2,10 +2,126 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2018-06-22 10:15:01 marcusp>
+;;;; Time-stamp: <2020-02-12 16:27:57 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
+
+;;;===========================================================================
+;;; User interaction 
+;;;===========================================================================
+
+(defun ask-user-y-n-question (question)
+  "Asks user a yes or no <question> over the command line.
+   Returns t for yes, and nil for no."
+  (format t "~%~A (y/n)~%" question)
+  (let ((res (read)))
+    (cond ((or (string= res "y")
+               (string= res "Y"))
+           t)
+          ((or (string= res "n")
+               (string= res "N"))
+           nil)
+          (t (ask-user-y-n-question question)))))
+
+(defun message (text &key (detail 1) (add-new-line t))
+  "Prints a status message (<text>) to standard-output, 
+   and forces the output to appear immediately.
+   If <add-new-line> is true, then a new line
+   marker is appended to the message.
+
+   <detail-level> decribes the detail level of the
+   message, and can take the value 1, 2, or 3.
+   1: highest-level status information, suitable
+      default setting for non-technical user
+   2: medium-level status information, e.g. RAM usage, 
+      suitable default setting for advanced user
+   3: low-level status information, intended only
+      to be activated for debugging purposes.
+
+   The current message printing detail level is determined
+   by the variable <cl-user::*idyom-message-detail-level*>. Messages
+   are only printed if their <detail-level> is less than or
+   equal to the current value of <cl-user::*idyom-message-detail-level*>.
+
+   Progress bars display at detail levels 1 and 2
+   but not at detail level 3. These progress bars are
+   disrupted if other messages print before the progress
+   bar is finished. Messages within routines with 
+   progress bars therefore must take detail level 3."
+  (if (<= detail cl-user::*idyom-message-detail-level*)
+      (progn
+        (if add-new-line (format t "~%"))
+        (format t text)
+        (force-output))))
+
+(defstruct progress-bar
+  value num-blocks min max display-width)
+
+(defun initialise-progress-bar
+    (max &key (min 0) (initial 0) (display-width 60))
+  "Initialises a progress bar object for the purpose
+   of tracking an iterative operation. The progress bar
+   can subsequently be updated using the <update-progress-bar>
+   function.
+   Whether or not the progress bar is actually displayed
+   is determined by the variable <idyom::*message-detail-level*>.
+   Bars are only displayed when this variable takes the 
+   values 1 or 2 (i.e. not 3). 
+   Progress bars are disrupted if other messages print before 
+   the progress bar is finished. Messages within routines with 
+   progress bars therefore must take detail level 3."
+  (let ((bar (make-progress-bar
+              :value 0 :num-blocks 0
+              :min min :max max
+              :display-width display-width)))
+    (if (member cl-user::*idyom-message-detail-level* '(1 2))
+        (progn 
+          (format t "~%| Progress: ")
+          (dotimes (i (- display-width 13)) (format t "-"))
+          (format t "|~%")
+          (force-output)))
+    (update-progress-bar bar initial)
+    bar))
+
+(defun update-progress-bar (bar value)
+  (let* ((num-blocks (floor (* (progress-bar-display-width
+                                bar)
+                               (/ value (progress-bar-max
+                                         bar)))))
+         (num-blocks-to-add (- num-blocks
+                               (progress-bar-num-blocks
+                                bar))))
+    (setf (progress-bar-num-blocks bar) num-blocks)
+    (if (member cl-user::*idyom-message-detail-level* '(1 2))
+        (progn 
+          (dotimes (i num-blocks-to-add)
+            (write-char #\=))
+          (force-output)))))
+
+(defmacro dolist-pb
+    ((var list &optional result) &body body)
+  "A version of dolist that displays a progress
+   bar tracking the iterative process."
+  `(let* ((num-items (length ,list))
+          (counter 0)
+          (bar (initialise-progress-bar num-items)))
+     (dolist (,var ,list ,result)
+       ,@body
+       (incf counter)
+       (update-progress-bar bar counter))))
+
+(defmacro dotimes-pb
+    ((var count &optional result) &body body)
+  "A version of dotimes that displays a progress
+   bar tracking the iterative process."
+  `(let* ((counter 0)
+          (bar (initialise-progress-bar ,count)))
+     (dotimes (,var ,count ,result)
+       ,@body
+       (incf counter)
+       (update-progress-bar bar counter))))
+
 
 ;;;===========================================================================
 ;;; Numerical 
@@ -16,6 +132,15 @@
    <decimal-places>."
   (let ((factor (expt 10 decimal-places)))
     (/ (fround (* number factor)) factor)))
+
+(defun approx-equal (x y &optional (decimal-places 5))
+  "Returns whether numbers <x> and <y> are approximately equal.
+<decimal-places> determines the degree of equality."
+  (assert (numberp x))
+  (assert (numberp y))
+  (assert (integerp decimal-places))
+  (= (round-to-nearest-decimal-place x decimal-places)
+     (round-to-nearest-decimal-place y decimal-places)))
 
 (defun average (&rest numbers)
   "Returns the average of <numbers>."
@@ -62,6 +187,11 @@
   "Returns the no. of combinations of <n> different items taken <r> at a time."
   (/ (factorial n) (* (factorial r) (factorial (- n r)))))
 
+(defun parse-number (string)
+  "Coerces a string representation of a number to numeric type."
+  (with-input-from-string (input string)
+    (read input)))
+
 (defun range (max &key (min 0) (step 1))
   "Returns a list of numbers from <min> (default=0) to <max> by steps of <step> (default=1)"
    (loop for n from min below max by step
@@ -92,6 +222,26 @@
   "Return a sequence with the last n elements removed."
   (subseq sequence 0 (- (length sequence) n)))
 
+(defun quantiles (numbers num-quantiles)
+  "Takes a sequence of numbers, <numbers>, and computes the locations
+of <num-quantiles> quantiles of equal size. Returns an ordered list of the
+non-trivial thresholds for these quantiles (i.e. excludes the 0th percentile 
+and the 100th percentile). Uses linear interpolation of the 
+empirical distribution function."
+  (assert (every #'numberp numbers))
+  (let* ((sorted (sort (coerce (copy-seq numbers) 'vector) #'<))
+         (n (length sorted)))
+    (loop
+       for k from 1 to (- num-quantiles 1)
+       collect (float (let* ((p (/ k num-quantiles))
+                             (h (* n p)))
+                        (cond ((< p (/ 1 n)) (svref sorted 0))
+                              ((= p 1) (svref sorted (1- n)))
+                              (t (+ (svref sorted (1- (floor h)))
+                                    (* (- h (floor h))
+                                       (- (svref sorted (floor h))
+                                          (svref sorted (1- (floor h)))))))))))))
+
 (defun shuffle (sequence)
   "Shuffles a sequence into a random order. 
 Borrowed from https://www.pvk.ca/Blog/Lisp/trivial_uniform_shuffling.html"
@@ -100,6 +250,27 @@ Borrowed from https://www.pvk.ca/Blog/Lisp/trivial_uniform_shuffling.html"
                                  (cons x (random 1d0)))
                        sequence)
                   #'< :key #'cdr)))
+
+(defun sample (n sequence)
+  "Takes a random sample of size <n> from <sequence> without replacement."
+  (assert (integerp n))
+  (assert (>= n 0))
+  (assert (<= n (length sequence)))
+  (let ((shuffled (shuffle sequence)))
+    (subseq shuffled 0 n)))
+
+(defun assign-to-quantile (number quantiles)
+  "Given a number <number> and a list <quantiles> identifying a set of 
+quantiles as produced by the function QUANTILES, returns the 1-indexed
+quantile into which <number> falls."
+  (assert (numberp number))
+  (assert (listp quantiles))
+  (assert (equal quantiles (sort quantiles #'<)))
+  (let* ((num-quantiles (1+ (length quantiles)))
+         (match (position-if #'(lambda (x) (<= number x)) quantiles)))
+    (if match
+        (1+ match)
+        num-quantiles)))               
 
 
 ;;;===========================================================================
@@ -239,6 +410,11 @@ Borrowed from https://www.pvk.ca/Blog/Lisp/trivial_uniform_shuffling.html"
                           (permutations (remove x list :count 1)))) 
               list)))
 
+(defun remove-nth (n list)
+  "Removes the nth item from a list non-destructively."
+  (remove-if #'(lambda (x) (declare (ignore x)) t)
+             list :start n :end (1+ n)))
+
 (defun remove-by-position (list positions)
   (labels ((rbp (l i r)
              (cond ((null l)
@@ -248,10 +424,62 @@ Borrowed from https://www.pvk.ca/Blog/Lisp/trivial_uniform_shuffling.html"
                    (t (rbp (cdr l) (1+ i) (cons (car l) r))))))
     (rbp list 0 nil)))
 
+(defun all-positions-if (predicate list)
+  "Returns positions of all elements of <list> that satisfy <predicate>."
+  (let ((result nil))
+    (dotimes (i (length list))
+      (if (funcall predicate (nth i list))
+          (push i result)))
+    (nreverse result)))
+
+(defun insert-after (list position item)
+  "Destructively inserts <item> into the index <position> in <list>,
+   shifting all later elements forward by one position."
+  (push item (cdr (nthcdr position list)))
+  list)
+
+(defun all-eql
+    (list &key (predicate #'eql))
+  "Tests whether all elements of a given <list> are 
+   equal according to <predicate> (defaults to EQL).
+   Also returns t if the list is empty."
+  (if (< (length list) 2)
+      t
+      (if (not (funcall predicate
+                        (first list) (second list)))
+          nil
+          (all-eql (cdr list) :predicate predicate))))
+
+
+;;;===========================================================================
+;;; Assoc-lists
+;;;===========================================================================
+
+(defun update-alist (alist &rest new-entries)
+  "Returns a version of <alist> updated with <new-entries> which must be 
+   key-value pairs. If the value is nil then the pair is not added to the 
+   alist unless the key is 'correct-onsets which is the only key in the
+   environment allowed to have null values. Does not modify original list."
+  (flet ((insert-entry (alist force new-entry)                           
+           (cond ((and (null force) (null (cadr new-entry)))              
+                  alist)
+                 ((assoc (car new-entry) alist)
+                  (substitute-if new-entry #'(lambda (key)
+                                               (eql key (car new-entry)))
+                                 alist :key #'car))
+                 (t
+                  (cons new-entry alist)))))
+    (let* ((entry (car new-entries))
+           (force (if (eql (car entry) 'correct-onsets) t nil)))
+      (if (null entry)
+          alist
+          (apply #'update-alist (insert-entry alist force entry)
+                 (cdr new-entries))))))
+
+
 ;;;===========================================================================
 ;;; Nested lists
 ;;;===========================================================================
-
 
 (defun nposition (x xs) 
   "Index of first element equal to or containing x"
@@ -317,6 +545,29 @@ Borrowed from https://www.pvk.ca/Blog/Lisp/trivial_uniform_shuffling.html"
     (let ((sort-key (if (eql by :keys) #'car #'cdr)))
       (sort sorted-entries sort-fn :key sort-key))))
 
+(defun csv->hash-table (path &key value-fun)
+  "Reads csv file from <path> and uses it to create a hash-table which,
+   for each line in the csv file, maps every field but the first field (keys)
+   to the first field (values). Assumes that the csv file has no header.
+   If a function <value-fun> is passed as an argument, then this function will 
+   be applied to all values (not keys) before entry to the hash table."
+  (let* ((lines (cl-csv:read-csv path))
+         (hash-table (make-hash-table :test #'equal)))
+    (dolist (line lines hash-table)
+      (let* ((value (car line))
+             (value (if (null value-fun)
+                        value
+                        (funcall value-fun value)))
+            (keys (cdr line)))
+        (dolist (key keys)
+          (if (not (equal key ""))
+              (progn
+                (if (nth-value 1 (gethash key hash-table))
+                    (error (format nil "Attempted to add duplicate keys (~A) to hash table."
+                                   key)))
+                (setf (gethash key hash-table) value))))))))
+
+
 ;;;===========================================================================
 ;;; File I/O 
 ;;;===========================================================================
@@ -369,6 +620,23 @@ Borrowed from https://www.pvk.ca/Blog/Lisp/trivial_uniform_shuffling.html"
 (defun gzip (filename)
   #-win32 (shell-command "gzip" (list filename)))
 
+;; Taken from http://stackoverflow.com/questions/15796663/lisp-how-to-read-content-from-a-file-and-write-it-in-an
+other-file
+(defun copy-file (from-file to-file)
+  "Copies a file from one location to another."
+  (with-open-file (input-stream from-file
+                                :direction :input
+                                :element-type '(unsigned-byte 8))
+    (with-open-file (output-stream to-file
+                                   :direction :output
+                                   :if-exists :supersede
+                                   :if-does-not-exist :create
+                                   :element-type '(unsigned-byte 8))
+      (let ((buf (make-array 4096 :element-type (stream-element-type input-stream))))
+    (loop for pos = (read-sequence buf input-stream)
+       while (plusp pos)
+       do (write-sequence buf output-stream :end pos))))))
+
 (defun md5-sum-of-list (list)
   "Returns the MD5SUM of the string representation of a list."
   (format nil "~{~X~}" (coerce (sb-md5:md5sum-string (format nil "~{~D,~}" list)) 'list)))
@@ -416,19 +684,66 @@ Borrowed from https://www.pvk.ca/Blog/Lisp/trivial_uniform_shuffling.html"
                          :defaults pathname)
           pathname))))
 
+(defun recursively-list-files (directory-name &key extensions (max-num-directories 100000))
+  "Recursively lists all files present in <directory-name>, optionally filtered to 
+  retain only files with extensions present in the list <extensions>.
+  The number of directories to search is limited by <max-num-directories 100000>,
+  which if exceeded causes an error to be thrown.
+  Example usage: (recursively-list-files \"Users/\" :extensions '(\"krn\" \"jazz\"))"
+  (labels ((directory-p (pathname)
+             (and (not (present-p (pathname-type pathname)))
+                  (not (present-p (pathname-name pathname)))))
+           (present-p (x)
+             (and x (not (eq x :unspecific))))
+           (fun (dirs-to-search files-found number-of-dirs-searched)
+             (if (null dirs-to-search) files-found
+                 (let* ((new-dirs (remove-if-not
+                                   #'directory-p
+                                   (mapcan #'(lambda (dir) (directory (merge-pathnames
+                                                                       dir "*")))
+                                                     dirs-to-search)))
+                        (new-files (mapcan #'uiop:directory-files dirs-to-search))
+                        (num-new-dirs (length new-dirs))
+                        ;; (new-files-and-dirs (mapcan #'(lambda (dir)
+                        ;;                              (directory dir))
+                        ;;                          dirs-to-search))
+                        ;; (new-dirs (remove-if-not #'directory-p new-files-and-dirs))  
+                        ;; (new-files (remove-if #'directory-p new-files-and-dirs))
+                        (new-files (if (null extensions) new-files
+                                       (remove-if-not #'(lambda (path)
+                                                          (member (pathname-type path)
+                                                                  extensions
+                                                                  :test #'string=))
+                                                      new-files))))
+                   (if (> (+ num-new-dirs number-of-dirs-searched)
+                          max-num-directories)
+                       (error
+                        "Search did not terminate before the maximum number of directories were searched."))
+                   (fun new-dirs (nconc new-files files-found) (+ num-new-dirs number-of-dirs-searched))))))
+    (fun (list (ensure-directory directory-name)) nil 0)))
+
+
 ;;;===========================================================================
 ;;; Objects
 ;;;===========================================================================
 
-(defun copy-instance (object)
+(defun copy-instance (object &key (check-atomic t))
+  "Copies an instance <object>. Currently only supports the copying
+of objects where all slots are atomic. If <check-atomic>, then
+the function will check that all slots are atomic, and an error will
+be thrown if any are not atomic; if not, no checks will be carried out,
+and therefore non-atomic slots will still point to the data of the original
+object." 
   (let* ((class (class-of object))
          (copy (allocate-instance class)))
-    (dolist (slot (mapcar #'closer-mop:slot-definition-name (closer-mop:class-slots class)))
+    (dolist (slot (mapcar #'sb-mop:slot-definition-name (sb-mop:class-slots class)))
       (when (slot-boundp object slot)
+        (if (and check-atomic (not (atom (slot-value object slot))))
+            (error "Tried to a copy a non-atomic slot using copy-instance."))
         (setf (slot-value copy slot) (slot-value object slot))))
     copy))
 
-(Defun copy-slot-values (object1 object2)
+(defun copy-slot-values (object1 object2)
   "Copy slot values from object1 to a copy of object2, wherever slot
 names match, returning the copy of object2."
   (let* ((class (class-of object1))
@@ -460,3 +775,356 @@ names match, returning the copy of object2."
              (apply #'string-append command 
                     (mapcar #'(lambda (x) (format nil " ~A" x)) args)))
   ) 
+
+
+;;;===========================================================================
+;;; Dataframes 
+;;;===========================================================================
+
+(defclass dataframe ()
+  ((data :initform (make-hash-table :test #'equal) :accessor data)
+   (num-rows :initform 0 :accessor num-rows))
+  (:documentation "A <dataframe> efficiently accumulates stores text data in a tabular form. Columns are identified by unique IDs, and are stored as lists within a hash table.
+Note that lists are accumulated in reverse order, so that appending to a column
+can be achieved by consing a new value to the beginning of the list."))
+
+(defgeneric get-column (column dataframe)
+  (:documentation "Gets column with ID <column> from <dataframe>."))
+
+(defmethod get-column ((column symbol) (dataframe dataframe))
+  (reverse (gethash column (data dataframe))))
+
+(defgeneric remove-columns-except (columns-to-keep dataframe)
+  (:documentation "Removes columns with IDs not in the list <columns-to-keep> from <dataframe>, and returns the new storage object."))
+
+(defmethod remove-columns-except (columns-to-keep (dataframe dataframe))
+  (loop for key being the hash-keys of (data dataframe)
+     do (if (not (member key columns-to-keep))
+            (remhash key (data dataframe))))
+  dataframe)
+
+(defgeneric add-row (row place)
+  (:documentation "Adds a new row, <row>, to a data storage object, <place>, and returns the new storage object."))
+
+(defmethod add-row ((row hash-table) (place dataframe))
+  (let ((old-keys (loop for key being the hash-keys of (data place) collect key))
+        (new-keys (loop for key being the hash-keys of row collect key)))
+    (if (utils:any-duplicated new-keys)
+        (error "Duplicated keys are not allowed when adding new rows."))
+    (let ((old-unmatched-keys (set-difference old-keys new-keys))
+          (new-matched-keys (intersection old-keys new-keys))
+          (new-unmatched-keys (set-difference new-keys old-keys)))
+      (dolist (key old-unmatched-keys)
+        (push nil (gethash key (data place))))
+      (dolist (key new-matched-keys)
+        (push (gethash key row) (gethash key (data place))))
+      (dolist (key new-unmatched-keys)
+        (setf (gethash key (data place))
+              (cons (gethash key row)
+                    (make-list (num-rows place) :initial-element nil))))
+      (incf (num-rows place))
+      place)))
+
+(defgeneric bind-by-row (dataframe &rest dataframes)
+  (:documentation "Destructively appends <dataframes> by row to <dataframe>."))
+
+(defmethod bind-by-row ((dataframe dataframe) &rest dataframes)
+  (dolist (new-dataframe dataframes dataframe)
+    (let ((old-keys (loop for key being the hash-keys of (data dataframe)
+                       collect key))
+          (new-keys (loop for key being the hash-keys of (data new-dataframe)
+                       collect key))
+          (num-new-rows (num-rows new-dataframe)))
+      (if (utils:any-duplicated new-keys)
+          (error "Duplicated keys are not allowed when adding new rows."))
+      (let ((old-unmatched-keys (set-difference old-keys new-keys))
+            (new-matched-keys (intersection old-keys new-keys))
+            (new-unmatched-keys (set-difference new-keys old-keys)))
+        (dolist (key old-unmatched-keys)
+          (push (make-list num-new-rows :initial-element nil)
+                (gethash key (data dataframe))))
+        (dolist (key new-matched-keys)
+          (setf (gethash key (data dataframe))
+                (nconc (gethash key (data new-dataframe))
+                       (gethash key (data dataframe)))))
+        (dolist (key new-unmatched-keys)
+          (setf (gethash key (data dataframe))
+                (nconc (gethash key new-dataframe)
+                       (make-list (num-rows dataframe) :initial-element nil))))
+        (incf (num-rows dataframe) num-new-rows)))))   
+
+(defgeneric print-data (data stream &key separator order-by-key
+                                      null-token)
+  (:documentation "Prints <data> to <stream>. If <order-by-key>, then the output
+is ordered by key."))
+
+(defmethod print-data ((data dataframe) destination
+                       &key separator order-by-key null-token)
+  (let* ((separator (if separator separator #\tab))
+         (columns (loop
+                     for key being the hash-keys of (data data)
+                     using (hash-value value)
+                     collect (cons (string-downcase (symbol-name key))
+                                   (reverse value))))
+         (columns (if order-by-key
+                      (sort columns #'string< :key #'car)
+                      columns))
+         (columns (coerce columns 'vector))
+         (num-rows (num-rows data))
+         (num-cols (array-dimension columns 0)))
+    (assert (> num-rows 0))
+    (assert (> num-cols 0))
+    (assert (eql (num-rows data) (1- (length (svref columns 0)))))
+    (dotimes (i (1+ (num-rows data)))
+      (dotimes (j num-cols)
+        (let* ((token (pop (svref columns j)))
+               (token (if (and (null token) null-token) null-token token)))
+          (format destination "~A" token)
+          (when (< j (1- num-cols)) (format destination "~A" separator))))
+      (format destination "~&"))))
+
+(defgeneric sort-by-columns (data columns &key descending)
+  (:documentation "Sorts a dataframe <data> by columns. <columns> should be a
+list of column names, in decreasing order of priority. <ascending> is a
+Boolean variable that determines whether the dataframe is sorted in
+ascending order or in descending order."))
+
+(defmethod sort-by-columns ((dataframe dataframe) (columns list) &key descending)
+  (let* ((row-nums (loop for i from 0 to (1- (num-rows dataframe)) collect i))
+         (predicate (if descending #'< #'>)))
+    ;; Coerce columns to vectors
+    (maphash #'(lambda (key column)
+                 (setf (gethash key (data dataframe))
+                       (coerce column 'vector)))
+             (data dataframe))
+    (dolist (column (reverse columns))
+      (setf row-nums (stable-sort row-nums
+                                  predicate
+                                  :key #'(lambda (x)
+                                           (svref (gethash column
+                                                           (data dataframe))
+                                                  x)))))
+    ;; Reorder columns and save as lists
+    (maphash #'(lambda (key column)
+                 (setf (gethash key (data dataframe))
+                       (loop for i in row-nums
+                          collect (svref column i))))
+             (data dataframe))
+    dataframe))
+
+(defgeneric as-list (data))
+(defmethod as-list ((data dataframe))
+  (let* ((columns (loop
+                     for key being the hash-keys of (data data)
+                     using (hash-value value)
+                     collect (cons (string-downcase (symbol-name key))
+                                   (reverse value))))
+         (columns (coerce columns 'vector))
+         (num-rows (num-rows data))
+         (num-cols (array-dimension columns 0)))
+    (assert (> num-rows 0))
+    (assert (> num-cols 0))
+    (assert (eql (num-rows data) (1- (length (svref columns 0)))))
+    (let ((list nil))
+      (dotimes (i (1+ (num-rows data)))
+        (let ((row nil))
+          (dotimes (j num-cols)
+            (let* ((token (pop (svref columns j))))
+              (push token row)))
+          (push (reverse row) list)))
+      (reverse list))))
+
+(defgeneric as-dataframe (obj)
+  (:documentation "Converts <obj> into a dataframe representation."))
+(defmethod as-dataframe ((obj list))
+  (let ((format-error "<obj> must be a list of assoc-lists."))
+    (loop
+       for row in obj
+       with df = (make-instance 'dataframe)
+       do (progn
+            (when (not (listp row)) (error format-error))
+            (loop
+               for cons in row
+               with row  = (make-hash-table)
+               do (progn
+                    (when (not (consp cons)) (error format-error))
+                    (let ((key (car cons))
+                          (value (cdr cons)))
+                      (when (not (null (nth-value 1 (gethash key row))))
+                        (error "Duplicated keys not allowed in <obj>."))
+                      (setf (gethash key row) value)))
+               finally (add-row row df)))
+       finally (return df))))
+
+(defgeneric write-csv (obj path))
+(defmethod write-csv ((obj dataframe) path)
+  (cl-csv:write-csv (as-list obj) :stream path))
+
+
+;;;===========================================================================
+;;; Clustering
+;;;===========================================================================
+
+;; This is an algorithm for optimal 1-dimensional k-means clustering,
+;; from Wang & Song (2011).
+
+;; Two implementations are provided: one that interfaces with R/C++
+;; to use the fast implementation of the original authors (k-means-1d),
+;; and one Lisp implementation that currently runs much slower (k-means-1d-slow).
+;; The next step to speeding up the Lisp implementation might be
+;; to pre-compute sum-sq-dist for all pairs of i and j.
+
+(defun k-means-1d (data k &key (format :means))
+  "<data> should be a sequence of numeric values to be clustered.
+<k> should be the number of clusters. <format> determines the format
+of the output. If <format> is eql to :means, then the function 
+returns the computed means for the k clusters. If <format> is equal
+to :thresholds, then the function returns the k - 1 decision thresholds
+situated between the k clusters.
+Note: if <k> exceeds the number of unique values in <data>, then <k>
+will be set to the number of unique values in <data>."
+  (assert (member format '(:means :thresholds)))
+  (assert (integerp k))
+  (assert (> k 0))
+  (assert (every #'numberp data))
+  (let* ((data (coerce data 'vector))
+         (r-output (interfaces:call-r "
+library(Ckmeans.1d.dp)
+out <- Ckmeans.1d.dp(data, k)$centers"
+                                      (list (cons "data" data)
+                                            (cons "k" k))
+                                      "out"))
+         (list-output (coerce (car r-output) 'list)))
+    (case format
+      (:means list-output)
+      (:thresholds (loop 
+                      for i in list-output
+                      for j in (cdr list-output)
+                      collect (float (/ (+ i j) 2))))
+      (otherwise (error "Unrecognised <format> argument.")))))
+
+(defun k-means-1d-slow (data k)
+  "<data> should be a sequence of numeric values to be clustered.
+<k> should be the number of clusters. Returns the computed means
+for the k clusters."
+  (assert (integerp k))
+  (assert (> k 0))
+  (assert (every #'numberp data))
+  (assert (>= (length data) k))
+  (let* ((data (coerce data 'list))
+         (data (sort (copy-list data) #'<))
+         (data (mapcar #'float data))
+         (data (make-array (length data) :element-type 'single-float
+                           :initial-contents data))
+         (n (length data))
+         (d (make-array (list (1+ n) (1+ k)) :initial-element 0.0
+                        :element-type 'single-float))
+         (b (make-array (list n k) :initial-element 1 :element-type 'integer)))
+    (assert (> (length data) 0))
+    (loop for m from 1 to k ;; m = number of clusters
+       do (loop for i from m to n ;; i = number of data points
+             do (setf (aref d i m)
+                      (progn
+                        ;; (format nil "~%Computing D(~A, ~A)~%" i m)
+                        (if (= m 1)
+                            (let ((res (sum-sq-dist data 1 i)))
+                             ;; (format t "res = ~A~%" res)
+                              res)
+                            (loop
+                               with best-j = nil and best-res = nil
+                               for j from m to i
+                               do (let ((res (+ (aref d (- j 1) (- m 1))
+                                                (sum-sq-dist data j i))))
+                                  ;; (format t "j = ~A, res = ~A~%" j res)
+                                    (when (or (null best-res)
+                                              (< res best-res))
+                                      (setf best-j j)
+                                              (setf best-res res)))
+                               finally
+                                 (return
+                                   (progn 
+                                     (setf (aref b (1- i) (1- m)) best-j)
+                                     ;; (format
+                                     ;;  t
+                                     ;;  "m = ~A, i = ~A, best-res = ~A, best-j = ~A~%"
+                                     ;;  m i best-res best-j)
+                                     best-res))))))))
+    (let* ((thresholds (k-means-1d-backtrack b n k))
+           (means (loop
+                     for lower-threshold in thresholds
+                     for upper-threshold in (append (cdr thresholds)
+                                                    (list (1+ (length data))))
+                     collect (let ((elts (subseq data
+                                                 (1- lower-threshold)
+                                                 (1- upper-threshold))))
+                               ;; (format t "lower-threshold = ~A~%" lower-threshold)
+                               ;; (format t "upper-threshold = ~A~%" upper-threshold)
+                               ;; (format t "elts = ~A~%" elts)
+                               (/ (loop for i across elts sum i)
+                                  (length elts))))))
+      means)))
+
+(defun k-means-1d-backtrack (b n k)
+  (loop
+     with last-in-cluster = n
+     with first-in-cluster = nil
+     for cluster from k downto 1
+     do (progn (push (aref b (1- last-in-cluster) (1- cluster))
+                     first-in-cluster)
+               (setf last-in-cluster (1- (car first-in-cluster))))
+     finally (return first-in-cluster)))
+
+(let ((cache-data nil)
+      (cache-mu-array nil)
+      (cache-dist-array nil))
+  (defun sum-sq-dist (data j i)
+    "This function corresponds to lower-case d in the original paper.
+It iteratively computes sums of the squared distances of a subsequence
+of <data>, 1-indexed by <j> and <i>, from the mean of that subsequence."
+    ;; Note that <i> and <j> are 1-indexing, but internally
+    ;; we use a 0-indexed vector.
+    ;;  (format t "sum-sq-dist: j = ~A, i = ~A~%" j i)
+    (assert (typep data 'vector))
+    (assert (integerp j))
+    (assert (integerp i))
+    (assert (<= j i))
+    (assert (> j 0))
+    (assert (<= i (length data)))
+    (when (not (eq data cache-data))
+      (format t "Resetting hash table.~%")
+      (setf cache-data data
+            cache-mu-array (make-array (list (length data) (length data))
+                                       :element-type 'single-float
+                                       :initial-element 0.0)
+            cache-dist-array (make-array (list (length data) (length data))
+                                         :element-type 'single-float
+                                         :initial-element 0.0)))
+    (multiple-value-bind (mu dist)
+        (let ((i-2 (+ (- i j) 1))
+              (x-i (aref data (1- i))))
+          (declare (fixnum i-2))
+          (assert (floatp x-i))
+          (assert (integerp i-2))
+          (cond ((= i j) (values x-i 0.0))
+                (t (let ((cache-mu (aref cache-mu-array (- j 1) (- i 2)))
+                         (cache-dist (aref cache-dist-array (- j 1) (- i 2))))
+                     (assert (not (or (null cache-mu) (null cache-dist))))
+                     (assert (floatp cache-mu))
+                     (assert (floatp cache-dist))
+                     (values (/ (the float (+ x-i (* (- i-2 1) cache-mu)))
+                                (the fixnum i-2))
+                             (+ (the float cache-dist)
+                                (the float
+                                     (* (/ (the fixnum (- i-2 1))
+                                           (the fixnum i-2))
+                                        (the float
+                                             (expt (the float (- x-i
+                                                                 cache-mu))
+                                                   2))))))))))
+      (setf cache-data data
+            (aref cache-mu-array (1- j) (1- i)) mu
+            (aref cache-dist-array (1- j) (1- i)) dist)
+      (assert (numberp dist))
+      (float dist))))
+
+
