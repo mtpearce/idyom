@@ -41,6 +41,7 @@ v1.6
 * New feature: output information gain as the KL divergence between the predictive distribution before and after a note is processed
 * Utils: added SD and Pearson correlation
 * Midi import: don't increment voice number for empty tracks
+* Apps: new top-level function in the segmentation code: (segmentation:idyom-segmentation ...)
 
 2018-07-12
 v1.5
