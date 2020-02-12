@@ -2,7 +2,7 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                           
-;;;; Time-stamp: <2020-02-12 16:39:17 marcusp>                           
+;;;; Time-stamp: <2020-02-12 16:52:37 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -16,11 +16,14 @@
            "AVERAGE" "GENERATE-INTEGERS"
            "POWERSET" "QUOTIENT" "FACTORIAL" "N-PERMUTATIONS" "N-COMBINATIONS"
            "SAMPLE" "PARSE-NUMBER"
-           "SHUFFLE" "NTH-ROOT" "STRING-APPEND" "SPLIT-STRING" "ANY-DUPLICATED"
+           "RANGE" "CUMSUM" "MD5-SUM-OF-LIST" "SHUFFLE"
+           "NTH-ROOT" "STRING-APPEND" "SPLIT-STRING" "ANY-DUPLICATED"
            "INSERTION-SORT" "CARTESIAN-PRODUCT" "FLATTEN" "COMBINATIONS"
            "FLATTEN-ORDER" "COUNT-FREQUENCIES" "NUMERIC-FREQUENCIES"
            "FIND-DUPLICATES" "ROTATE" "PERMUTATIONS" "REMOVE-BY-POSITION"
-           "COPY-INSTANCE" "INSERT-AFTER" "ALL-EQL" "ALL-POSITIONS-IF"
+           "RANDOM-SELECT"
+           "COPY-INSTANCE" "COPY-SLOT-VALUES" "INITIALISE-UNBOUND-SLOTS"
+           "INSERT-AFTER" "ALL-EQL" "ALL-POSITIONS-IF"
            "REMOVE-NTH" "CSV->HASH-TABLE"
            "LAST-ELEMENT" "PENULTIMATE-ELEMENT" "LAST-N" "BUTLAST-N"
            "QUANTILES" "ASSIGN-TO-QUANTILE"
@@ -28,14 +31,13 @@
            "ALIST->HASH-TABLE" "HASH-TABLE->ALIST" "HASH-TABLE->SORTED-ALIST"
            "READ-OBJECT-FROM-FILE" "FILE-EXISTS" "WRITE-OBJECT-TO-FILE"
            "CD" "PWD" "ENSURE-DIRECTORY" "COPY-FILE" "RECURSIVELY-LIST-FILES"
-           "COLLECT-GARBAGE" "SHELL-COMMAND"
+           "COLLECT-GARBAGE" "SHELL-COMMAND" "SET-TEST-SUITE-DEPENDENCIES"
            "DATAFRAME" "ADD-ROW" "BIND-BY-ROW" "REMOVE-COLUMNS-EXCEPT"
            "GET-COLUMN" "SORT-BY-COLUMNS" "PRINT-DATA"
            "AS-DATAFRAME" "WRITE-CSV"
            "DATA" "NUM-ROWS"
            "K-MEANS-1D" "K-MEANS-1D-SLOW")
   (:documentation "Utility functions of general use."))
-
 
 
 
