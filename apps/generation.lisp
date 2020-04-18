@@ -2,7 +2,7 @@
 ;;;; File:       generation.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-08-21 18:54:17 marcusp>                           
-;;;; Time-stamp: <2020-02-10 17:13:48 marcusp>                           
+;;;; Time-stamp: <2020-04-13 15:39:45 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -23,7 +23,7 @@
 
 (defgeneric sampling-predict-sequence (mvs sequence cpitch))
 (defgeneric complete-prediction (mvs sequence cached-prediction))
-(defgeneric metropolis-sampling (mvs sequence iterations random-state threshold))
+(defgeneric metropolis-sampling (mvs sequence iterations events position threshold random-state))
 (defgeneric gibbs-sampling (mvs sequence iterations random-state threshold))
 (defgeneric gibbs-sequence-distribution (mvs sequences cpitch))
 (defgeneric random-walk (mvs sequence context-length random-state threshold))
@@ -38,7 +38,9 @@
                            (models :both+)
                            (method :metropolis)
                            (context-length nil)
-                           (iterations 100) 
+                           (iterations 100)
+                           (events nil)
+                           (position :backward)
                            pretraining-ids
                            description
                            (random-state cl:*random-state*)
@@ -67,13 +69,13 @@
                              
          (sequence
           (case method
-            (:metropolis (metropolis-sampling mvs (car test-set) iterations random-state threshold))
+            (:metropolis (metropolis-sampling mvs (car test-set) iterations events position threshold random-state))
             (:gibbs (gibbs-sampling mvs (car test-set) iterations random-state threshold))
             (:random (random-walk mvs (car test-set) context-length random-state threshold))
             (otherwise (metropolis-sampling mvs (car test-set) iterations random-state threshold)))))
     ;; (write-prediction-cache-to-file dataset-id attributes)
     ;; (print (viewpoints:viewpoint-sequence (viewpoints:get-viewpoint 'cpitch) sequence))
-    (when output-file-path
+    (when (and output-file-path sequence)
       (md:export-data sequence :mid output-file-path))
     sequence))
 
@@ -114,11 +116,9 @@
 (defun sample-max (distribution) 
   (caar (sort (copy-list distribution) #'> :key #'cadr)))
 
-(defun random-index (sequence)
-  (let* ((context-length 0) ;(get-context-length sequence)) 
-         (effective-length (- (length sequence) context-length)))
-    (+ (random effective-length) context-length)))
-
+(defun random-index (sequence random-state &optional (context-length 0))
+  (let* ((effective-length (- (length sequence) context-length)))
+    (+ (random effective-length random-state) context-length)))
 
 
 ;; ========================================================================
@@ -243,16 +243,45 @@
 ;; METROPOLIS SAMPLING
 ;; ======================================================================== 
 
-(defmethod metropolis-sampling ((m mvs) sequence iterations random-state threshold)
+(defmethod metropolis-sampling ((m mvs) sequence iterations events position threshold random-state)
+  "Using Metropolis-Hastings sampling, sample new pitches for the
+melody <sequence>. The number of iterations can be controlled by
+<iterations> which specifies a number of iterations of sampling (one
+note considered per iteration) or <events> which continues until the
+specified proportion of events has been changed. If both <iterations>
+and <events> are specified, the specified number of iterations are run
+but may be cut short if the specified proportion of events changed is
+reached. The <position> parameter controls how notes are selected for
+sampling: :forward proceeds forwards through the melody from the first
+note to the last; :backward proceeds from the last note to the
+first; :random selects note position randomly on each iteration. The
+diversity of the sampling can be controlled with the <threshold>
+parameter which limits sampling to events with probability above the
+specified threshold (if specified) or only the highest probability
+event if :max is specified. <random-state> allows the user to supply a
+random state, allowing exact replication."
+  ;; 
+  ;; - threshold: 0 - 1, only consider events with probability above the threshold
+  ;; - percentage: 0 - 1, only consider the top X% of events of the distribution
+  ;; - cumulative: 0 - 1, only consider events within the specified cumulative probability
+  ;; - temperature: 0 - ?, 
+  ;; 
   (let* ((sequence (coerce sequence 'list))
          (pitch-sequence (mapcar #'(lambda (x) (get-attribute x 'cpitch)) sequence))
          (l (length sequence))
          (cpitch (viewpoints:get-viewpoint 'cpitch))
          (predictions (sampling-predict-sequence m sequence cpitch))
-         (original-p (seq-probability predictions)))
-    (dotimes (i iterations sequence)
-      (let* (;(index (random-index sequence))
-             (index (- l (mod i l) 1))
+         (original-p (seq-probability predictions))
+         (changed-events nil))
+    (do ((iteration 0 (1+ iteration)))
+        ((or (and events (>= (/ (length changed-events) l) events))
+             (and iterations (>= iteration iterations)))
+         (progn
+           (format t "~&~A events out of ~A changed (~A)."
+                   (length changed-events) l
+                   (utils:round-to-nearest-decimal-place (* 100 (/ (length changed-events) l)) 0))
+           sequence))
+      (let* ((index (case position (:forward (mod iteration l)) (:backward (- l (mod iteration l) 1)) (t (random-index sequence random-state))))
              (distribution (metropolis-event-distribution predictions index))
              (new-sequence
               (metropolis-new-sequence sequence distribution index random-state threshold))
@@ -276,9 +305,10 @@
                  (next-predictions (if select? new-predictions predictions))
                  (next-cpitch (if select? new-cpitch old-cpitch)))
             (when select?
+              (pushnew index changed-events :test #'=)
               (format t 
                "~&Iteration ~A; Index ~A; Orig ~A; Old ~A; New ~A; Select ~A; EP ~A; P ~A; OP ~A."
-               i index (nth index pitch-sequence) old-cpitch new-cpitch 
+               iteration index (nth index pitch-sequence) old-cpitch new-cpitch 
                next-cpitch 
                (if (> new-ep old-ep) "+" "-")
                (if (> new-p old-p) "+" "-") 
