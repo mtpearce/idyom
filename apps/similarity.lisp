@@ -2,29 +2,29 @@
 ;;;; File:       similarity.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2011-08-18 10:28:11 marcusp>
-;;;; Time-stamp: <2016-08-16 14:59:32 marcusp>
+;;;; Time-stamp: <2020-04-20 17:34:59 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
 
 (defpackage #:idyom-similarity
   (:use #:cl #:utils #:md #:mvs)
-  (:export "DATASET-SIMILARITY")
-  (:documentation "Modelling similarity between pieces of music using compression distance."))
+  (:export #:idyom-dissimilarity)
+  (:documentation "Modelling dissimilarity between pieces of music using compression distance."))
 
 (cl:in-package #:idyom-similarity)
 
 ;; top-level function
 
-(defun dataset-similarity (dataset-ids-1 dataset-ids-2 target-viewpoints source-viewpoints 
-                           &key output-path
-                             (overwrite t)
-                             (ltmo mvs::*ltm-params*) (stmo mvs::*stm-params*)
-                             (texture :melody)
-                             (voices nil)
-                             (aggregation-function #'utils:average) ;; use #'+ for NCD
-                             (symmetric t)
-                             (normalised nil))
+(defun idyom-dissimilarity (dataset-ids-1 dataset-ids-2 target-viewpoints source-viewpoints 
+                            &key output-path
+                              (overwrite t)
+                              (ltmo mvs::*ltm-params*) (stmo mvs::*stm-params*)
+                              (texture :melody)
+                              (voices nil)
+                              (aggregation-function #'utils:average) ;; use #'+ for NCD
+                              (symmetric t)
+                              (normalised nil))
   (let* (;; output
          (ltmo (apply #'resampling::check-model-defaults (cons mvs::*ltm-params* ltmo)))
          (stmo (apply #'resampling::check-model-defaults (cons mvs::*stm-params* stmo)))
