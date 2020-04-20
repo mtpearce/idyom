@@ -1,6 +1,6 @@
 # IDyOM: Information Dynamics of Music
 
-Version 1.6
+Version 1.5
 
 Copyright 2001-2020, the IDyOM development team (see CREDITS).
 
