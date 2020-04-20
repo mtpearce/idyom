@@ -32,16 +32,19 @@ See the wiki for further details on installation.
 
 v1.6
 * PPM*: update excluded counts are now incremented at the highest-order matching state (reported by Peter Harrison)
-* PPM*: when update exclusion is enabled, if the highest-order matching state is deterministic and there are no lower-order deterministic states, the update excluded count is used, rather than the full count
+* PPM*: with update exclusion enabled, if the highest-order matching state is deterministic and there are no lower-order deterministic states, the update excluded count is used, rather than the full count
 * PPM*: virtual states are now allocated correctly when more than one exists on a string transition
+* PPM*: new parameter for the top-level idyom function to enable/disable exclusion 
 * Viewpoints: basic temporal viewpoints (onset, bioi) are now imported correctly from Kern files when there are rests in the first bar
-* Viewpionts: the metaccent viewpoint is undefined when the time signature is not specified
+* Viewpionts: the metaccent and posinbar viewpoints are undefined when the time signature is not specified
 * Viewpoints: added threaded viewpoints for scale degree and used clearer naming conventions for threaded viewpoints
-* New app: Krumhansl-Schmuckler key-finding (key-finding:find-keys ...)
-* New feature: output information gain as the KL divergence between the predictive distribution before and after a note is processed
 * Utils: added SD and Pearson correlation
-* Midi import: don't increment voice number for empty tracks
+* Data import: don't increment voice number for empty MIDI tracks
 * Apps: new top-level function in the segmentation code: (segmentation:idyom-segmentation ...)
+* Apps: new app for Krumhansl-Schmuckler key-finding (key-finding:find-keys ...)
+* Apps: new control parameters for generation (generation:idyom-generation ...)
+* Output: output information gain as the KL divergence between the predictive distribution before and after a note is processed
+* Output: when predicting onset, label the distribution with ioi values rather than onset values
 
 2018-07-12
 v1.5
