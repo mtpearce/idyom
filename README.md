@@ -2,7 +2,7 @@
 
 Version 1.5
 
-Copyright 2001-2020, the IDyOM development team (see CREDITS).
+Copyright 2001-2018, the IDyOM development team (see CREDITS).
 
 This program is distributed under the terms of the GNU General Public
 License.  See COPYING for details. 
