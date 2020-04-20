@@ -1,8 +1,8 @@
 # IDyOM: Information Dynamics of Music
 
-Version 1.5
+Version 1.6
 
-Copyright 2001-2018, the IDyOM development team (see CREDITS).
+Copyright 2001-2020, the IDyOM development team (see CREDITS).
 
 This program is distributed under the terms of the GNU General Public
 License.  See COPYING for details. 
@@ -32,6 +32,7 @@ See the wiki for further details on installation.
 ## News
 
 ### v1.6
+
 * PPM*: update excluded counts are now incremented at the highest-order matching state (reported by Peter Harrison)
 * PPM*: with update exclusion enabled, if the highest-order matching state is deterministic and there are no lower-order deterministic states, the update excluded count is used, rather than the full count
 * PPM*: virtual states are now allocated correctly when more than one exists on a string transition
