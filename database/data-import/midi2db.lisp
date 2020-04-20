@@ -2,7 +2,7 @@
 ;;;; File:       midi2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2007-03-21 09:47:26 marcusp>
-;;;; Time-stamp: <2016-08-18 16:55:37 marcusp>
+;;;; Time-stamp: <2019-04-08 14:03:58 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:midi2db) 
@@ -118,7 +118,8 @@
 		   ;; Add to note list
 		   (push (append `(:onset ,onset :pitch ,pitch
 					  :offset ,offset :voice ,tracknum)
-				 props) track-notes)))))
+				 props)
+                         track-notes)))))
 	    ;; Pitch-bend
 	    (midi:pitch-bend-message 
 	     (let* ((time (midi:message-time message)))
@@ -129,11 +130,11 @@
             (midi:sequence/track-name-message)
             (midi:program-change-message)))
 	    ;;(t (format t "Warning: ignoring MIDI message time ~a~%"
-	    ;;(midi:message-time message)))
-	(push (nreverse track-notes) notes)
-	(push (nreverse track-bends) bends))
-      ;; Next track
-      (incf tracknum))))
+            ;;(midi:message-time message)))
+        (push (nreverse track-notes) notes)
+        (push (nreverse track-bends) bends)
+        ;; Next track
+        (when track-notes (incf tracknum))))))
 
 (defun convert-midi-file (midifile)
   (multiple-value-bind (notes bends) (extract-midi-notes midifile)

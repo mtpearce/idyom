@@ -2,7 +2,7 @@
 ;;;; File:       temporal.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2005-11-29 10:41:20 marcusp>
-;;;; Time-stamp: <2016-04-13 13:34:38 marcusp>
+;;;; Time-stamp: <2019-07-16 16:50:04 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
@@ -122,6 +122,7 @@
   :function (let ((onset (onset events))
                   (barlength (barlength events)))
               (cond ((undefined-p onset barlength) +undefined+)
+                    ((null barlength) +undefined+)
                     ((zerop barlength) +undefined+)
                     ((zerop onset) 0)
                     ((> onset 0) (mod onset barlength))
@@ -129,7 +130,7 @@
   ;; TODO: function*
   )
 
-;; First In Bar (Is this the first note in the current bar?)
+;; does this note fall on the downbeat of the bar (i.e., posinbar = 0)? 
 (define-viewpoint (fib test (onset))
     ((events md:music-sequence) element) 
   :function (let ((posinbar (posinbar events)))
@@ -332,6 +333,8 @@
 			(timebase (md:timebase (last-element events))))
 		    ;; Check these are properly defined
 		    (if (or (undefined-p pulses onset barlength)
+                            (null barlength)
+                            (null pulses)
                             (zerop barlength)
                             (zerop pulses))
                         +undefined+

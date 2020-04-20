@@ -2,7 +2,7 @@
 ;;;; File:       params.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-06-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2014-11-22 13:04:09 marcusp>                           
+;;;; Time-stamp: <2019-06-13 13:22:30 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:mvs)
@@ -13,18 +13,20 @@
 (defparameter *ltm-escape* :c) ;:a, :b, :c, :d, :x
 (defparameter *ltm-order-bound* nil)
 (defparameter *ltm-update-exclusion* nil)
+(defparameter *ltm-exclusion* t)
 
 (defparameter *stm-mixtures* t)
 (defparameter *stm-escape* :x) ;:a, :b, :c, :d, :x
 (defparameter *stm-order-bound* nil)
 (defparameter *stm-update-exclusion* t)
+(defparameter *stm-exclusion* t)
 
 ;;; Define a set of parameters for a memory store, e.g. an STM or LTM.
-(defun memory-store-params (order-bound mixtures update-exclusion escape)
-  `(:order-bound ,order-bound :mixtures ,mixtures :update-exclusion ,update-exclusion :escape ,escape))
+(defun memory-store-params (order-bound mixtures update-exclusion escape exclusion)
+  `(:order-bound ,order-bound :mixtures ,mixtures :update-exclusion ,update-exclusion :escape ,escape :exclusion ,exclusion))
 ;;; Default store specs
-(defparameter *ltm-params* (memory-store-params mvs::*ltm-order-bound* mvs::*ltm-mixtures* mvs::*ltm-update-exclusion* mvs::*ltm-escape*))
-(defparameter *stm-params* (memory-store-params mvs::*stm-order-bound* mvs::*stm-mixtures* mvs::*stm-update-exclusion* mvs::*stm-escape*))
+(defparameter *ltm-params* (memory-store-params mvs::*ltm-order-bound* mvs::*ltm-mixtures* mvs::*ltm-update-exclusion* mvs::*ltm-escape* mvs::*ltm-exclusion*))
+(defparameter *stm-params* (memory-store-params mvs::*stm-order-bound* mvs::*stm-mixtures* mvs::*stm-update-exclusion* mvs::*stm-escape* mvs::*stm-exclusion*))
 
 (defparameter *marginalise-using-current-event* 2
   "Specifies the list of basic viewpoints which assume their full

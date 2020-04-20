@@ -2,7 +2,7 @@
 ;;;; File:       multiple-viewpoint-system.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-27 18:54:17 marcusp>                           
-;;;; Time-stamp: <2018-08-29 12:11:49 marcusp>                           
+;;;; Time-stamp: <2019-06-13 13:29:40 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -266,21 +266,25 @@ objects."
                                (ltm-mixtures *ltm-mixtures*)
                                (ltm-update-exclusion *ltm-update-exclusion*)
                                (ltm-escape *ltm-escape*)
+                               (ltm-exclusion *ltm-exclusion*)
                                (stm-order-bound *stm-order-bound*)
                                (stm-mixtures *stm-mixtures*)
                                (stm-update-exclusion *stm-update-exclusion*)
-                               (stm-escape *stm-escape*))
+                               (stm-escape *stm-escape*)
+                               (stm-exclusion *stm-exclusion*))
   (map 'vector #'(lambda (model)
                    (set-ppm-parameters model :order-bound ltm-order-bound
                                        :mixtures ltm-mixtures
                                        :update-exclusion ltm-update-exclusion
-                                       :escape ltm-escape))
+                                       :escape ltm-escape
+                                       :exclusion ltm-exclusion))
        (mvs-ltm m))
   (map 'vector #'(lambda (model)
                    (set-ppm-parameters model :order-bound stm-order-bound
                                        :mixtures stm-mixtures
                                        :update-exclusion stm-update-exclusion
-                                       :escape stm-escape))
+                                       :escape stm-escape
+                                       :exclusion stm-exclusion))
        (mvs-stm m)))
                    
 (defun get-short-term-models (viewpoints)

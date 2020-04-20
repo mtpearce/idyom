@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2018-08-24 11:12:26 marcusp>
+;;;; Time-stamp: <2019-03-25 15:36:05 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -22,6 +22,26 @@
   (if (null numbers) 
       0
       (float (/ (reduce #'+ numbers) (length numbers)))))
+
+(defun sd (&rest numbers)
+  "Returns the standard deviation of <numbers>."
+  (if (null numbers)
+      0
+      (let ((mean (apply #'average numbers)))
+        (sqrt (/ (reduce #'+ (mapcar #'(lambda (x) (expt (- x mean) 2)) numbers))
+                 (- (length numbers) 1))))))
+
+(defun cor (x y)
+  "Computes the Pearson correlation coefficient between <x> and <y>,
+which should be lists of numbers of equal length."
+  (let ((x-mean (apply #'average x))
+        (y-mean (apply #'average y))
+        (x-sd (apply #'sd x))
+        (y-sd (apply #'sd y))
+        (n (length x)))
+    (/ (- (apply #'+ (mapcar #'* x y))
+          (* n x-mean y-mean))
+       (* (- n 1) x-sd y-sd))))
        
 (defun cumsum (&rest numbers)
   "Returns a list of length |<numbers>| - 1 containing cumulative sums."
