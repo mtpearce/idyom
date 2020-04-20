@@ -1,12 +1,13 @@
-IDyOM: Information Dynamics of Music
-Version 1.5
+# IDyOM: Information Dynamics of Music
 
-Copyright 2001-2018, Marcus Pearce (marcus.pearce@qmul.ac.uk)
+Version 1.6
+
+Copyright 2001-2020, the IDyOM development team (see CREDITS).
 
 This program is distributed under the terms of the GNU General Public
-License.  See COPYING for details.
+License.  See COPYING for details. 
 
-==Documentation==
+## Documentation
 
 Documentation on how to install and use the system can be found on the
 IDyOM wiki at Sound Software:
@@ -19,18 +20,18 @@ Statistical Models of Melodic Structure in Music Perception and
 Composition" (2005) included here as 'thesis.pdf'. Please cite this 
 thesis in any publications using this software.
 
-==Requirements==
+## Requirements
 
-SBCL       http://www.sbcl.org/
-Emacs      http://www.gnu.org/software/emacs/
-Quicklisp  http://www.quicklisp.org/
-Sqlite     http://www.sqlite.org/
+* SBCL       http://www.sbcl.org/
+* Emacs      http://www.gnu.org/software/emacs/
+* Quicklisp  http://www.quicklisp.org/
+* Sqlite     http://www.sqlite.org/
 
 See the wiki for further details on installation.
 
-==News==
+## News
 
-v1.6
+### v1.6
 * PPM*: update excluded counts are now incremented at the highest-order matching state (reported by Peter Harrison)
 * PPM*: with update exclusion enabled, if the highest-order matching state is deterministic and there are no lower-order deterministic states, the update excluded count is used, rather than the full count
 * PPM*: virtual states are now allocated correctly when more than one exists on a string transition
@@ -46,8 +47,8 @@ v1.6
 * Output: output information gain as the KL divergence between the predictive distribution before and after a note is processed
 * Output: when predicting onset, label the distribution with ioi values rather than onset values
 
-2018-07-12
-v1.5
+### 2018-07-12: v1.5
+
 * New top-level option to specify the separator to use in output files (thanks to Peter M. C. Harrison)
 * new output formatting code for greater efficiency and accuracy, fixing misidentified columns when predicting onset (thanks to Peter M. C. Harrison)
 * fixed uneven splits in the creation of resampling sets (thanks to Peter M. C. Harrison)
@@ -62,9 +63,10 @@ v1.5
 * midi track numbers are indexed from 1 rather than 0 (for consistency with Kern import)
 * avoid negative deltast in midi import when successive notes overlap in a melody
 * add random-subset argument to IDYOM-DB:COPY-DATASETS to allow copying random subsets of a specified size
+* extended documentation on running IDyOM, especially with respect to viewpoint selection (thanks to Ben Gold)
 
-2016-05-03
-v1.4
+### 2016-05-03: v1.4 
+
 * new feature: new function IDYOM-DB:COPY-DATASETS for copying and merging datasets
 * new feature: new function UTILS:REMOVE-BY-POSITION in utilities
 * new feature: new module for information-theoretic detection of grouping boundaries (see Pearce et al., 2010, Perception, 39, 1367-1391).
@@ -80,8 +82,8 @@ v1.4
 * optimization: generate transition counts more efficiently in the PPM module
 * bug-fix: greater elegance in the viewpoint generation macros
 
-2015-03-25
-v1.3: new features and enhancements include:
+### 2015-03-25: v1.3
+
 * package mtp-admin renamed to idyom-db
 * clearer printing of information during viewpoint selection
 * add min-links to allow specifying a minimum number of constituent viewpoints in a link
@@ -90,14 +92,14 @@ v1.3: new features and enhancements include:
 * fix last-element and penultimate-element for empty sequences
 * add utility functions for permutations and rotation
 
-2014-12-31
-v1.2: small enhancements including:
+### 2014-12-31: v1.2
+
 * remove verbose output during data import
 * linked viewpoint creation is now agnostic to order of constituent viewpoints
 * user may omit trailing forward slash when specifying directories
 
-2014-09-27:
-v1.1: new features include:
+### 2014-09-27: v1.1
+
 * an extended and improved representation of music objects
 * a time protocol for music objects
 * extraction of melodies from polyphonic pieces using skyline algorithm
@@ -108,7 +110,8 @@ v1.1: new features include:
 * some fixes to Lilypond export (thanks to J Forth)
 * installation directories are created if need be (thanks to J Forth)
 
-2014-06-04:
-v1.0: first public release, I am grateful to Jeremy Gow and 
-David Lewis for their contributions to this release, and also to 
-Niels Chr. Hansen and Roger Dean for user feedback.
+### 2014-06-04: v1.0
+
+First public release. I am grateful to Jeremy Gow and David Lewis for
+their contributions to this release, and also to Niels Chr. Hansen and
+Roger Dean for user feedback.
