@@ -2,7 +2,7 @@
 ;;;; File:       resampling-tests.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-05-09 14:00:34 peter>                             
-;;;; Time-stamp: <2018-07-02 13:28:33 marcusp>                           
+;;;; Time-stamp: <2020-04-23 09:49:24 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -79,11 +79,18 @@
 ;; This test relies on the UNIX diff tool, so probably will fail on Windows.
 ;; Future work should disable this test depending on the operating system.
 
+;; MTP (2020-04-23) The new formatting function has been tested
+;; extensively so this test is no longer required. Also, the new
+;; formatting function has been further developed (e.g., by the
+;; addition of information gain and use of IOI rather than onset
+;; values in the distribution for onset predictions) which makes it
+;; incompatible with the old version in expected ways
+
 (5am:def-suite output-formatting :in resampling)
 (5am:in-suite output-formatting)
 
-(5am:test output-format-ex-1
-  (5am:is (idyom-compare-format-methods)))
+;; (5am:test output-format-ex-1
+;;  (5am:is (idyom-compare-format-methods)))
 
 (defparameter *example-dataset-db-id* -999)
 
