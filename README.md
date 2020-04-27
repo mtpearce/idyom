@@ -31,7 +31,7 @@ See the wiki for further details on installation.
 
 ## News
 
-### v1.6
+### 2020-04-27: v1.6
 
 * PPM*: update excluded counts are now incremented at the highest-order matching state (reported by Peter Harrison)
 * PPM*: with update exclusion enabled, if the highest-order matching state is deterministic and there are no lower-order deterministic states, the update excluded count is used, rather than the full count
@@ -43,6 +43,7 @@ See the wiki for further details on installation.
 * Utils: added SD and Pearson correlation
 * Data import: don't increment voice number for empty MIDI tracks
 * Apps: new top-level function in the segmentation code: (segmentation:idyom-segmentation ...)
+* Apps: new similarity modelling function: (similarity:idyom-dissimilarity ...) ;; see (Pearce & Mullensiefen, 2017, https://doi.org/10.1080/09298215.2017.1305419)
 * Apps: new app for Krumhansl-Schmuckler key-finding (key-finding:find-keys ...)
 * Apps: new control parameters for generation (generation:idyom-generation ...)
 * Output: output information gain as the KL divergence between the predictive distribution before and after a note is processed
