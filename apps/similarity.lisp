@@ -2,17 +2,17 @@
 ;;;; File:       similarity.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2011-08-18 10:28:11 marcusp>
-;;;; Time-stamp: <2020-04-20 17:34:59 marcusp>
+;;;; Time-stamp: <2020-04-27 13:00:52 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
 
-(defpackage #:idyom-similarity
+(defpackage #:similarity
   (:use #:cl #:utils #:md #:mvs)
   (:export #:idyom-dissimilarity)
   (:documentation "Modelling dissimilarity between pieces of music using compression distance."))
 
-(cl:in-package #:idyom-similarity)
+(cl:in-package #:similarity)
 
 ;; top-level function
 
