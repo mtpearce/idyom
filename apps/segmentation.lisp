@@ -2,7 +2,7 @@
 ;;;; File:       segmentation.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2008-03-13 13:07:12 marcusp>
-;;;; Time-stamp: <2020-02-12 13:46:04 marcusp>
+;;;; Time-stamp: <2020-04-27 13:13:34 marcusp>
 ;;;; ======================================================================
 
 (cl:defpackage #:segmentation
@@ -24,15 +24,17 @@
 
 (defun idyom-segmentation (dataset-id target-viewpoints source-viewpoints
                            &key
-                             ;; TODO: add IDyOM parameters
+                             ;; TODO: add remaining IDyOM parameters
+                             pretraining-ids
+                             (k 10) 
                              (models :both+)
-                             ;; segmentation paramers
-                             (k 1.28) (window-size nil)
+                             ;; segmentation parameters
+                             (threshold 1.28) (window-size nil)
                              (mean #'linearly-weighted-arithmetic-mean))
   (multiple-value-bind (d1 d2 d3)
-      (idyom:idyom dataset-id target-viewpoints source-viewpoints :models models)
+      (idyom:idyom dataset-id target-viewpoints source-viewpoints :models models :k k :pretraining-ids pretraining-ids)
     (declare (ignore d1 d2))
-    (let* ((predicted (mapcar #'(lambda (x) (segmentation:peak-picker x :k k :window-size window-size :mean mean)) d3))
+    (let* ((predicted (mapcar #'(lambda (x) (segmentation:peak-picker x :k threshold :window-size window-size :mean mean)) d3))
            (actual (ground-truth dataset-id))
            (result (mapcar #'(lambda (p a)
                                (multiple-value-list 
