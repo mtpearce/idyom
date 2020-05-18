@@ -2,7 +2,7 @@
 ;;;; File:       midi.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2020-02-05 07:01:51 marcusp>
-;;;; Time-stamp: <2020-02-09 14:22:07 marcusp>
+;;;; Time-stamp: <2020-05-18 15:52:16 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -36,24 +36,41 @@ or music objects events (music-event)."
 
 (defun mo-events->midi (events file &key (format 1) (program *default-program*))
   "Writes a list of database events <events> to a midi file <file>."
-  (let* ((channel (md:get-attribute (car events) :voice))
+  (let* (;; sequence attributes
+         (channel (md:get-attribute (car events) :voice))
+         (tempo (md:get-attribute (car events) :tempo))
+         (keysig (md:get-attribute (car events) :keysig))
+         (mode (md:get-attribute (car events) :mode))
+         (pulses (md:get-attribute (car events) :pulses))
+         (barlength (md:get-attribute (car events) :barlength))
+         ;; channel
          (channel-msg (make-instance 'midi:program-change-message :time 0 
                                      :status (+ #xc0 channel) 
                                      :program program))
-         (tempo (md:get-attribute (car events) :tempo))
+         ;; tempo
          (tempo-msg (make-instance 'midi:tempo-message :time 0
                                    :status #xff
                                    :tempo (bpm->usecs 
                                            (if tempo tempo *default-tempo*))))
-         (track (mapcan #'mo-event->midi events))
-         (midifile (make-instance 'midi:midifile
-                                  :format format
-                                  :division (* (/ *timebase* 4) *tick-multiplier*)
-                                  :tracks (list 
-                                           (cons tempo-msg
-                                                 (cons channel-msg track))))))
-    (midi:write-midi-file midifile file)
-    midifile))
+         ;; keysig
+         (keysig-msg (make-instance 'midi:key-signature-message :time 0
+                                    :status #xff))
+         ;; timesig
+         (timesig-msg (make-instance 'midi:time-signature-message :time 0
+                                     :status #xff)))
+    (setf (slot-value keysig-msg 'midi::sf) keysig
+          (slot-value keysig-msg 'midi::mi) (if (= mode 9) 1 0)
+          (slot-value timesig-msg 'midi::nn) pulses
+          (slot-value timesig-msg 'midi::dd) (round (- (log (/ barlength (* pulses *timebase*)) 2)))
+          (slot-value timesig-msg 'midi::cc) 0
+          (slot-value timesig-msg 'midi::bb) 8)
+    (let* ((track (mapcan #'mo-event->midi events))
+           (midifile (make-instance 'midi:midifile
+                                    :format format
+                                    :division (* (/ *timebase* 4) *tick-multiplier*)
+                                    :tracks (list (append (list tempo-msg timesig-msg keysig-msg channel-msg) track)))))
+      (midi:write-midi-file midifile file)
+      midifile)))
 
 (defun mo-event->midi (event)
   "Returns midi note on/off messages corresponding to the music object event <event>."
