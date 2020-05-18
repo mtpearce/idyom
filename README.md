@@ -9,10 +9,9 @@ License.  See COPYING for details.
 
 ## Documentation
 
-Documentation on how to install and use the system can be found on the
-IDyOM wiki at Sound Software:
+Documentation on how to install and use IDyOM can be found at:
 
-https://code.soundsoftware.ac.uk/projects/idyom-project/wiki
+http://mtpearce.github.io/idyom/
 
 The design of the system and its underlying principles are documented
 in Marcus Pearce's PhD thesis "The Construction and Evaluation of
