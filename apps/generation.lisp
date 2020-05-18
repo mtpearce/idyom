@@ -2,7 +2,7 @@
 ;;;; File:       generation.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-08-21 18:54:17 marcusp>                           
-;;;; Time-stamp: <2020-04-13 15:39:45 marcusp>                           
+;;;; Time-stamp: <2020-05-18 16:09:28 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -42,12 +42,11 @@
                            (events nil)
                            (position :backward)
                            pretraining-ids
-                           description
                            (random-state cl:*random-state*)
                            (threshold nil)
                            (use-ltms-cache? t)
-                           (output-file-path nil))
-  (declare (ignorable description output-file-path))
+                           (output-filename nil)
+                           (output-path nil))
   (mvs:set-models models)
   (initialise-prediction-cache dataset-id attributes)
   (let* ((dataset (md:get-event-sequences (list dataset-id)))
@@ -75,8 +74,8 @@
             (otherwise (metropolis-sampling mvs (car test-set) iterations random-state threshold)))))
     ;; (write-prediction-cache-to-file dataset-id attributes)
     ;; (print (viewpoints:viewpoint-sequence (viewpoints:get-viewpoint 'cpitch) sequence))
-    (when (and output-file-path sequence)
-      (md:export-data sequence :mid output-file-path))
+    (when (and output-path sequence)
+      (md:export-data sequence :mid output-path output-filename))
     sequence))
 
 (defun get-pretraining-set (dataset-ids)

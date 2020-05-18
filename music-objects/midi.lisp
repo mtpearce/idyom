@@ -2,7 +2,7 @@
 ;;;; File:       midi.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2020-02-05 07:01:51 marcusp>
-;;;; Time-stamp: <2020-05-18 15:52:16 marcusp>
+;;;; Time-stamp: <2020-05-18 16:09:24 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -17,17 +17,16 @@
 
 ;;; Export data
 
-(defgeneric export-data (events type path))
+(defgeneric export-data (events type path &optional filename))
 
-(defmethod export-data ((event-list list) (type (eql :mid)) path)
-  "Export a list of events, which may be database events (mtp-event)
-or music objects events (music-event)."
+(defmethod export-data ((event-list list) (type (eql :mid)) path &optional filename)
+  "Export a list of music objects events (music-event)."
   (let* ((first-event (car event-list))
          (id (md:get-identifier first-event))
          (did (md:get-dataset-index id))
          (cid (md:get-composition-index id))
          (description (idyom-db:get-description did cid))
-         (filename (concatenate 'string path "/" description ".mid")))
+         (filename (if filename filename (concatenate 'string path "/" description ".mid"))))
     (print filename)
     (mo-events->midi event-list filename)))
 
