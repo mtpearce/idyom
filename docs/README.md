@@ -1,4 +1,4 @@
-# IDyOM
+## IDyOM
 
 IDyOM (Information Dynamics of Music) is a system for constructing multiple-viewpoint, variable-order Markov models ([Conklin & Witten, 1995](https://doi.org/10.1080/09298219508570672); [Bunton, 1997](https://doi.org/10.1093/comjnl/40.2_and_3.76)) for predictive modelling of probabilistic structure in symbolic, sequential auditory domains such as music. IDyOM acquires knowledge about a domain through statistical learning and generates conditional probability distributions representing the estimated likelihood of each event in a sequence, plus associated information-theoretic measures, given the preceding context and prior short- and long-term training of the model. Scientific presentations of IDyOM can be found in Pearce (2005, 2018) which may be used as citations for the software.
 
