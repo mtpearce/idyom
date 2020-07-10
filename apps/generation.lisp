@@ -2,7 +2,7 @@
 ;;;; File:       generation.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-08-21 18:54:17 marcusp>                           
-;;;; Time-stamp: <2020-05-18 16:09:28 marcusp>                           
+;;;; Time-stamp: <2020-07-10 10:24:31 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -23,7 +23,7 @@
 
 (defgeneric sampling-predict-sequence (mvs sequence cpitch))
 (defgeneric complete-prediction (mvs sequence cached-prediction))
-(defgeneric metropolis-sampling (mvs sequence iterations events position threshold random-state))
+(defgeneric metropolis-sampling (mvs sequence iterations events position threshold random-state context-length))
 (defgeneric gibbs-sampling (mvs sequence iterations random-state threshold))
 (defgeneric gibbs-sequence-distribution (mvs sequences cpitch))
 (defgeneric random-walk (mvs sequence context-length random-state threshold))
@@ -68,15 +68,15 @@
                              
          (sequence
           (case method
-            (:metropolis (metropolis-sampling mvs (car test-set) iterations events position threshold random-state))
+            (:metropolis (metropolis-sampling mvs (car test-set) iterations events position threshold random-state context-length))
             (:gibbs (gibbs-sampling mvs (car test-set) iterations random-state threshold))
             (:random (random-walk mvs (car test-set) context-length random-state threshold))
             (otherwise (metropolis-sampling mvs (car test-set) iterations random-state threshold)))))
     ;; (write-prediction-cache-to-file dataset-id attributes)
     ;; (print (viewpoints:viewpoint-sequence (viewpoints:get-viewpoint 'cpitch) sequence))
-    (when (and output-path sequence)
-      (md:export-data sequence :mid output-path output-filename))
-    sequence))
+    (if (and output-path sequence)
+        (md:export-data sequence :mid output-path output-filename)
+        sequence)))
 
 (defun get-pretraining-set (dataset-ids)
   (md:get-event-sequences dataset-ids))
@@ -242,7 +242,7 @@
 ;; METROPOLIS SAMPLING
 ;; ======================================================================== 
 
-(defmethod metropolis-sampling ((m mvs) sequence iterations events position threshold random-state)
+(defmethod metropolis-sampling ((m mvs) sequence iterations events position threshold random-state context-length)
   "Using Metropolis-Hastings sampling, sample new pitches for the
 melody <sequence>. The number of iterations can be controlled by
 <iterations> which specifies a number of iterations of sampling (one
@@ -280,39 +280,40 @@ random state, allowing exact replication."
                    (length changed-events) l
                    (utils:round-to-nearest-decimal-place (* 100 (/ (length changed-events) l)) 0))
            sequence))
-      (let* ((index (case position (:forward (mod iteration l)) (:backward (- l (mod iteration l) 1)) (t (random-index sequence random-state))))
-             (distribution (metropolis-event-distribution predictions index))
-             (new-sequence
-              (metropolis-new-sequence sequence distribution index random-state threshold))
-             (old-cpitch (get-attribute (nth index sequence) 'cpitch))
-             (new-cpitch (get-attribute (nth index new-sequence) 'cpitch)))
-        (unless (eql old-cpitch new-cpitch)
-          (when mvs::*debug*
-            (format t "~&Old cpitch: ~A; New cpitch: ~A" 
-                    old-cpitch new-cpitch)
-            (format t "~&new-sequence: ~A; old-sequence: ~A~%" 
-                    (length new-sequence) (length sequence)))
-          (let* ((new-predictions
-                  (sampling-predict-sequence m new-sequence cpitch))
-                 (old-ep (nth 1 (assoc old-cpitch distribution :test #'=)))
-                 (new-ep (nth 1 (assoc new-cpitch distribution :test #'=)))
-                 (old-p (seq-probability predictions))
-                 (new-p (seq-probability new-predictions))
-                 (select?
-                  (metropolis-select-new-sequence? old-p new-p old-ep new-ep))
-                 (next-sequence (if select? new-sequence sequence))
-                 (next-predictions (if select? new-predictions predictions))
-                 (next-cpitch (if select? new-cpitch old-cpitch)))
-            (when select?
-              (pushnew index changed-events :test #'=)
-              (format t 
-               "~&Iteration ~A; Index ~A; Orig ~A; Old ~A; New ~A; Select ~A; EP ~A; P ~A; OP ~A."
-               iteration index (nth index pitch-sequence) old-cpitch new-cpitch 
-               next-cpitch 
-               (if (> new-ep old-ep) "+" "-")
-               (if (> new-p old-p) "+" "-") 
-               (if (> new-p original-p) "+" "-")))
-            (setf sequence next-sequence predictions next-predictions)))))))
+      (let ((index (case position (:forward (mod iteration l)) (:backward (- l (mod iteration l) 1)) (t (random-index sequence random-state)))))
+        (when (or (null context-length) (> index (1- context-length)))
+          (let* ((distribution (metropolis-event-distribution predictions index))
+                 (new-sequence
+                  (metropolis-new-sequence sequence distribution index random-state threshold))
+                 (old-cpitch (get-attribute (nth index sequence) 'cpitch))
+                 (new-cpitch (get-attribute (nth index new-sequence) 'cpitch)))
+            (unless (eql old-cpitch new-cpitch)
+              (when mvs::*debug*
+                (format t "~&Old cpitch: ~A; New cpitch: ~A" 
+                        old-cpitch new-cpitch)
+                (format t "~&new-sequence: ~A; old-sequence: ~A~%" 
+                        (length new-sequence) (length sequence)))
+              (let* ((new-predictions
+                      (sampling-predict-sequence m new-sequence cpitch))
+                     (old-ep (nth 1 (assoc old-cpitch distribution :test #'=)))
+                     (new-ep (nth 1 (assoc new-cpitch distribution :test #'=)))
+                     (old-p (seq-probability predictions))
+                     (new-p (seq-probability new-predictions))
+                     (select?
+                      (metropolis-select-new-sequence? old-p new-p old-ep new-ep))
+                     (next-sequence (if select? new-sequence sequence))
+                     (next-predictions (if select? new-predictions predictions))
+                     (next-cpitch (if select? new-cpitch old-cpitch)))
+                (when select?
+                  (pushnew index changed-events :test #'=)
+                  (format t 
+                          "~&Iteration ~A; Index ~A; Orig ~A; Old ~A; New ~A; Select ~A; EP ~A; P ~A; OP ~A."
+                          iteration index (nth index pitch-sequence) old-cpitch new-cpitch 
+                          next-cpitch 
+                          (if (> new-ep old-ep) "+" "-")
+                          (if (> new-p old-p) "+" "-") 
+                          (if (> new-p original-p) "+" "-")))
+                (setf sequence next-sequence predictions next-predictions)))))))))
 
 (defun metropolis-event-distribution (predictions index)
   (nth 1 (nth index predictions)))
