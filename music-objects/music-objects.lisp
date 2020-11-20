@@ -85,7 +85,12 @@
    (articulation :initarg :articulation :accessor articulation)
    (vertint12 :initarg :vertint12 :accessor vertint12)
    (voice :initarg :voice :accessor voice)))
-  
+
+;;; Initialisers
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defmethod initialize-instance :after ((c music-sequence) &key events)
+  (sequence:adjust-sequence c (length events) :initial-contents events))
 
 ;;; Identifiers 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -442,18 +447,17 @@ the highest pitch sounding at that onset position."
           (when events
             (let* ((interval (onset (end-time (car events))))
                    (comp-id (make-composition-id dataset-id composition-id))
-                   (composition
-                    (make-instance 'music-composition
-                                   :id comp-id
-                                   :description description
-                                   :onset 0
-                                   :duration interval
-                                   :midc midc
-                                   :timebase timebase)))
-              (sequence:adjust-sequence composition (length events)
-                                        :initial-contents (nreverse events))
-              (setf events nil)
-              (push composition compositions)))))
+		   (composition
+		    (make-instance 'music-composition
+				   :id comp-id
+				   :description description
+				   :onset 0
+				   :duration interval
+				   :midc midc
+				   :timebase timebase
+				   :events (nreverse events))))
+              (push composition compositions))
+	    (setf events nil))))
       (sequence:adjust-sequence dataset (length compositions)
                                 :initial-contents (nreverse compositions))
       dataset)))
@@ -481,18 +485,15 @@ the highest pitch sounding at that onset position."
     (when (and db-events timebase)
       (dolist (e db-events)
         (push (db-event->music-event e timebase midc) events))
-      (let* ((interval (onset (end-time (car events))))
-             (composition 
-              (make-instance 'music-composition
-                             :id identifier
-                             :onset 0
-                             :duration interval
-                             :description description
-                             :midc midc
-                             :timebase timebase)))
-        (sequence:adjust-sequence composition (length events)
-                                  :initial-contents (nreverse events))
-        composition))))
+      (let* ((interval (onset (end-time (car events)))))
+	(make-instance 'music-composition
+		       :id identifier
+		       :onset 0
+		       :duration interval
+		       :description description
+		       :midc midc
+		       :timebase timebase
+		       :events (nreverse events))))))
 #.(clsql:restore-sql-reader-syntax-state) 
 
 #.(clsql:locally-enable-sql-reader-syntax)
@@ -549,7 +550,7 @@ the highest pitch sounding at that onset position."
              (new-time-value (* time-value multiplier))
              (fractional (fractional? new-time-value)))
         (when (and fractional fraction-warning)
-          (warn (format nil "WARNING: converting ~F from timebase ~D to timebase ~D resulted in a fractional value (~F) ~%"
+          (warn (format nil "WARNING: converting ~F from timebase ~D to timebase ~D results in fractional value (~F) ~%"
                         time-value old-timebase new-timebase new-time-value)))
         new-time-value)))
 
