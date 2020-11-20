@@ -93,7 +93,7 @@
             ("^\\*I[^ T G C]" voice)                ;process instrument token
             ("^\\*k\\[[a-g]?" keysig)               ;process keysig token
             ("^\\*[a-g A-G ? X]" mode)              ;process mode token
-            ("^\\*M(FREI)?[0-9 ? X Z]" timesig)     ;process timesig token
+            ("^\\*M[0-9 ? X Z]" timesig)            ;process timesig token
             ("^\\*tb" ignore-token))))              ;ignore timebase token
   
 (defvar *voice-alist* '())
