@@ -176,10 +176,10 @@
 (defun print-status ()
   "Print message warning about unrecognised representations or tokens."
   (unless (null *unrecognised-representations*)
-    (format t "~%The following representations were unrecognised: ~S"
+    (warn "~%The following representations were unrecognised: ~S"
             *unrecognised-representations*))
   (unless (null *unrecognised-tokens*)
-    (format t "~%The following tokens were unrecognised: ~S"
+    (warn "~%The following tokens were unrecognised: ~S"
             *unrecognised-tokens*)))
 
 
@@ -535,7 +535,7 @@
                               ((and (= p1 0) (= p2 0))
                                0)
                               (t 
-                               (print "Warning: unexpected phrase token within tied note.")
+                               (warn "Warning: unexpected phrase token within tied note.")
                                -1))))))
                 
 (defun update-environment (environment token type)
