@@ -291,8 +291,9 @@ objects."
   "Returns a vector of freshly initialised ppm short term models
 corresponding to the supplied list of viewpoints and initialised with
 the supplied parameters."
-  (apply #'vector (mapcar #'(lambda (v) (make-ppm (viewpoint-alphabet v)))
-                          viewpoints)))
+  (apply #'vector (mapcar #'(lambda (v) (make-instance 'ppm:ppm :alphabet
+						       (viewpoint-alphabet v)))
+			  viewpoints)))
 
 
 ;;;========================================================================

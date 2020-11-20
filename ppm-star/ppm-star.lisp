@@ -79,29 +79,34 @@
 ;;;===========================================================================
 
 (defclass ppm ()
-  ((leaves    :accessor ppm-leaves   :initarg :leaves   :type hash-table)
-   (branches  :accessor ppm-branches :initarg :branches :type hash-table)
-   (front     :accessor ppm-front    :initarg :front    :type index)
-   (dataset   :reader ppm-dataset    :initarg :dataset  :type hash-table)
+  ((leaves    :accessor ppm-leaves   :initarg :leaves   :type hash-table
+	      :initform nil)
+   (branches  :accessor ppm-branches :initarg :branches :type hash-table
+	      :initform nil)
+   (front     :accessor ppm-front                       :type index)
+   (dataset   :accessor ppm-dataset  :initarg :dataset  :type hash-table
+	      :initform nil)
    ;;parameters used in construction 
-   (leaf-index    :accessor ppm-leaf-index :initarg :leaf-index
-                  :type (integer 0 *))
-   (branch-index  :accessor ppm-branch-index :initarg :branch-index
-                  :type (integer 0 *))
-   (virtual-nodes :accessor ppm-virtual-nodes :initarg :virtual-nodes
-                  :type hash-table)
+   (leaf-index    :accessor ppm-leaf-index :type (integer 0 *))
+   (branch-index  :accessor ppm-branch-index :type (integer 0 *))
+   (virtual-nodes :accessor ppm-virtual-nodes :type hash-table)
    ;;parameters used in prediction 
-   (alphabet :accessor ppm-alphabet :initarg :alphabet :type list)
-   (normalise :accessor ppm-normalise :initarg :normalise :type (or null symbol))
-   (exclusion :accessor ppm-exclusion :initarg :exclusion :type (or null symbol))
+   (alphabet :accessor ppm-alphabet :initarg :alphabet :type list
+	     :initform nil)
+   (normalise :accessor ppm-normalise :initarg :normalise :type (or null symbol)
+	      :initform t)
+   (exclusion :accessor ppm-exclusion :initarg :exclusion :type (or null symbol)
+	      :initform t)
    (update-exclusion :accessor ppm-update-exclusion :initarg :update-exclusion
-                     :type (or null symbol))
-   (mixtures :accessor ppm-mixtures :initarg :mixtures :type (or null symbol))
-   (order-bound :accessor ppm-order-bound :initarg :order-bound
-                :type (or null symbol))
-   (escape :accessor ppm-escape :initarg :escape :type (or null symbol))
-   (k :accessor ppm-k :initarg :k :type float)
-   (d :accessor ppm-d :initarg :d :type integer))
+                     :type (or null symbol) :initform nil)
+   (mixtures :accessor ppm-mixtures :type (or null symbol)
+	     :initarg :mixtures :initform t)
+   (order-bound :accessor ppm-order-bound :type (or null symbol) 
+		:initarg :order-bound :initform nil)
+   (escape :accessor ppm-escape :type (or null symbol)
+	   :initarg :escape :initform :c)
+   (k :accessor ppm-k :type float)
+   (d :accessor ppm-d :type integer))
   (:documentation "A ppm object contains all the parameters required for
    constructing and predicting from a ppm* model."))
 
@@ -432,44 +437,33 @@ of the location, the label is instantiated from the root of the tree."
 ;;; Initialisation 
 ;;;===========================================================================
 
-(defun make-ppm (alphabet &key (exclusion t) (mixtures t) (escape :c) 
-                            (order-bound nil) (update-exclusion nil)
-                            (normalise t)
-                            (dataset nil) (leaves nil) (branches nil))
-  "Returns a PPM* model initialised with the supplied parameters."
-  (multiple-value-bind (k d)
-      (case escape
+(defmethod initialize ((m ppm))
+  "Initialize a PPM instance based on supplied parameters."
+    (multiple-value-bind (k d)
+      (case (ppm-escape m)
         (:a (values 0 1))
         (:b (values -1 1))
         ((or :c :x) (values 0 1))
         (:d (values -1/2 2))
         (otherwise (values 0 1)))
-    (let* ((dataset (if (null dataset) (make-hash-table) dataset))
-           (front (make-index :s (hash-table-count dataset) :e 0))
-           (initial-leaves (if (null leaves) (make-hash-table) leaves))
-           (initial-branches (if (null branches) (make-hash-table) branches))
-           (leaf-index (hash-table-count initial-leaves))
-           (branch-index (hash-table-count initial-branches))
-           (virtual-nodes (make-hash-table :test #'equal))
-           (model (make-instance 'ppm 
-                                 :leaves initial-leaves
-                                 :branches initial-branches
-                                 :front front 
-                                 :dataset dataset 
-                                 :leaf-index leaf-index
-                                 :branch-index branch-index
-                                 :virtual-nodes virtual-nodes
-                                 :alphabet alphabet
-                                 :normalise normalise
-                                 :exclusion exclusion
-                                 :update-exclusion update-exclusion
-                                 :mixtures mixtures
-                                 :order-bound order-bound
-                                 :escape escape
-                                 :d d
-                                 :k k)))
-      (when (and (null leaves) (null branches)) (initialise-nodes model))
-      model)))
+    (let ((leaves-and-branches-null
+	   (and (null (ppm-leaves m))
+		(null (ppm-branches m)))))
+      (when (null (ppm-dataset m)) (setf (ppm-dataset m) (make-hash-table)))
+      (setf (ppm-front m) (make-index :s (hash-table-count (ppm-dataset m)) :e 0))
+      (when (null (ppm-leaves m)) (setf (ppm-leaves m) (make-hash-table)))
+      (when (null (ppm-branches m)) (setf (ppm-branches m) (make-hash-table)))
+      (setf (ppm-leaf-index m) (hash-table-count (ppm-leaves m))
+	    (ppm-branch-index m) (hash-table-count (ppm-branches m))
+	    (ppm-virtual-nodes m) (make-hash-table :test #'equal)
+	    (ppm-d m) d
+	    (ppm-k m) k)
+      (when leaves-and-branches-null (initialise-nodes m)))))
+
+(defmethod initialize-instance :after ((m ppm) &key)
+  "Initialize a PPM instance based on supplied parameters."
+  (initialize m))
+
 
 (defmethod reinitialise-ppm ((m ppm))
   "Reinitialises the parameters of <m> used in model construction."

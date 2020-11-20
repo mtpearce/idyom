@@ -93,7 +93,7 @@
 
 (defun build-model (sequences alphabet)
   "Train a PPM* model on <sequences> composed from the specified <alphabet>."
-  (let ((model (ppm:make-ppm alphabet :escape :c :mixtures t
+  (let ((model (make-instance 'ppm:ppm :alphabet alphabet :escape :c :mixtures t 
                              :update-exclusion nil :order-bound nil)))
     (ppm:model-dataset model sequences :construct? t :predict? nil)
     model))

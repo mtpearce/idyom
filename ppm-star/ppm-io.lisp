@@ -50,7 +50,7 @@
    <filename> exists the model is read from the designated file otherwise
    it is constructed from the database and written to <filename>." 
   (unless (utils:file-exists filename)
-    (let ((model (make-ppm alphabet)))
+    (let ((model (make-instance 'ppm :alphabet alphabet)))
       (model-dataset model dataset :construct? t :predict? nil)
       (write-model-to-file model filename)
       (format t "~&Written PPM* model to ~A.~%" filename)))
@@ -66,9 +66,10 @@
          (branches (utils:alist->hash-table (nth 1 (assoc 'branches model))))
          (dataset (alist->dataset (nth 1 (assoc 'dataset model))))
          (alphabet (nth 1 (assoc 'alphabet model))))
-    (make-ppm alphabet :leaves leaves :branches branches :dataset dataset
-              :order-bound order-bound :mixtures mixtures :escape escape
-              :update-exclusion update-exclusion)))
+    (make-instance 'ppm :alphabet alphabet :leaves leaves
+		   :branches branches :dataset dataset
+		   :order-bound order-bound :mixtures mixtures :escape escape
+		   :update-exclusion update-exclusion)))
               
 
 (defmethod write-model-to-file ((m ppm) filename)
