@@ -1,17 +1,18 @@
 # IDyOM: Information Dynamics of Music
 
-Version 1.6
+Version 1.5
 
-Copyright 2001-2020, the IDyOM development team (see CREDITS).
+Copyright 2001-2018, the IDyOM development team (see CREDITS).
 
 This program is distributed under the terms of the GNU General Public
 License.  See COPYING for details. 
 
 ## Documentation
 
-Documentation on how to install and use IDyOM can be found at:
+Documentation on how to install and use the system can be found on the
+IDyOM wiki at Sound Software:
 
-http://mtpearce.github.io/idyom/
+https://code.soundsoftware.ac.uk/projects/idyom-project/wiki
 
 The design of the system and its underlying principles are documented
 in Marcus Pearce's PhD thesis "The Construction and Evaluation of
@@ -29,24 +30,6 @@ thesis in any publications using this software.
 See the wiki for further details on installation.
 
 ## News
-
-### 2020-04-27: v1.6
-
-* PPM*: update excluded counts are now incremented at the highest-order matching state (reported by Peter Harrison)
-* PPM*: with update exclusion enabled, if the highest-order matching state is deterministic and there are no lower-order deterministic states, the update excluded count is used, rather than the full count
-* PPM*: virtual states are now allocated correctly when more than one exists on a string transition
-* PPM*: new parameter for the top-level idyom function to enable/disable exclusion 
-* Viewpoints: basic temporal viewpoints (onset, bioi) are now imported correctly from Kern files when there are rests in the first bar
-* Viewpionts: the metaccent and posinbar viewpoints are undefined when the time signature is not specified
-* Viewpoints: added threaded viewpoints for scale degree and used clearer naming conventions for threaded viewpoints
-* Utils: added SD and Pearson correlation
-* Data import: don't increment voice number for empty MIDI tracks
-* Apps: new top-level function in the segmentation code: (segmentation:idyom-segmentation ...)
-* Apps: new similarity modelling function: (similarity:idyom-dissimilarity ...) ;; see (Pearce & Mullensiefen, 2017, https://doi.org/10.1080/09298215.2017.1305419)
-* Apps: new app for Krumhansl-Schmuckler key-finding (key-finding:find-keys ...)
-* Apps: new control parameters for generation (generation:idyom-generation ...)
-* Output: output information gain as the KL divergence between the predictive distribution before and after a note is processed
-* Output: when predicting onset, label the distribution with ioi values rather than onset values
 
 ### 2018-07-12: v1.5
 

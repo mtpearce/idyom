@@ -2,30 +2,25 @@
 ;;;; File:       ppm-io.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2019-04-29 13:18:34 marcusp>
+;;;; Time-stamp: <2018-08-28 09:52:07 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package :ppm)
 
-(defmethod write-model-to-postscript ((m ppm) filename &key (counts '(0 1)) (depth nil))
+(defmethod write-model-to-postscript ((m ppm) filename)
+                                      ;(depth nil))
   "Prints the suffix tree of <m> to a postscript file <path>."
   (labels ((get-node-count (node)
-             (let ((node-count '()))
-               (when (member 1 counts :test #'=)
-                 (push (utils:string-append "UX count: "
-                                            (format nil "~D" (get-count m node t)))
-                       node-count))
-                              (when (member 0 counts :test #'=)
-                 (push (utils:string-append "Count: "
-                                            (format nil "~D" (get-count m node nil)))
-                       node-count))
-               node-count))
+             (list (utils:string-append "Count0: "
+                                        (format nil "~D" (get-count m node nil)))
+                   (utils:string-append "Count1: "
+                                        (format nil "~D" (get-count m node t)))))
            (list-node-children (node)
-             (when (or (null depth) 
-                       (and (branch-record-p (get-record m node))
-                            (<= (branch-record-depth (get-record m node)) 
-                                depth)))
-               (list-children m node)))
+             ;(when (or (null depth) 
+             ;          (and (branch-record-p (get-record m node))
+             ;               (<= (branch-record-depth (get-record m node)) 
+             ;                   depth)))
+               (list-children m node));)
            (label->string (node)
              (let ((label (instantiate-label m (get-label m node))))
                (cons (utils:list->string label) (get-node-count node)))))
@@ -48,9 +43,9 @@
                            (mixtures t) (escape :c) (update-exclusion nil))
   "Returns a PPM model initialised with the supplied parameters. If
    <filename> exists the model is read from the designated file otherwise
-   it is constructed from the database and written to <filename>." 
+   it is constructed from the database and written to <filename>."
   (unless (utils:file-exists filename)
-    (let ((model (make-ppm alphabet)))
+    (let ((model (make-instance 'ppm :alphabet alphabet)))
       (model-dataset model dataset :construct? t :predict? nil)
       (write-model-to-file model filename)
       (format t "~&Written PPM* model to ~A.~%" filename)))
@@ -66,9 +61,10 @@
          (branches (utils:alist->hash-table (nth 1 (assoc 'branches model))))
          (dataset (alist->dataset (nth 1 (assoc 'dataset model))))
          (alphabet (nth 1 (assoc 'alphabet model))))
-    (make-ppm alphabet :leaves leaves :branches branches :dataset dataset
-              :order-bound order-bound :mixtures mixtures :escape escape
-              :update-exclusion update-exclusion)))
+    (make-instance 'ppm :alphabet alphabet :leaves leaves
+		   :branches branches :dataset dataset
+		   :order-bound order-bound :mixtures mixtures :escape escape
+		   :update-exclusion update-exclusion)))
               
 
 (defmethod write-model-to-file ((m ppm) filename)

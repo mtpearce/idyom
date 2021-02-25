@@ -2,7 +2,7 @@
 ;;;; File:       extensions.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2008-10-31 13:08:09 marcusp>
-;;;; Time-stamp: <2018-11-19 14:02:46 marcusp>
+;;;; Time-stamp: <2016-04-13 15:43:42 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints) 
@@ -27,23 +27,26 @@
 (defun set-onset-alphabet (context)
   (setf (viewpoint-alphabet (get-viewpoint 'onset)) (onset-alphabet context)))
 
+(defmethod unique-elements ((v viewpoint) dataset)
+  (let ((alphabet '()))
+    (dolist (composition dataset alphabet)
+      (let ((viewpoint-sequence (viewpoint-sequence v composition)))
+	(dolist (viewpoint-element viewpoint-sequence)
+	  (unless (or (undefined-p viewpoint-element)
+		      (member viewpoint-element alphabet :test #'equal))
+	    (push viewpoint-element alphabet)))))))
+
 (defmethod set-alphabet-from-dataset ((v viewpoint) dataset)
   "Initialises the alphabet of viewpoint <v> in <dataset>."
-  (let ((alphabet '()))
-    (dolist (composition dataset)
-      (let ((viewpoint-sequence (viewpoint-sequence v composition)))
-        (dolist (viewpoint-element viewpoint-sequence)
-          (unless (or (undefined-p viewpoint-element)
-                      (member viewpoint-element alphabet :test #'equal))
-            (push viewpoint-element alphabet)))))
-    (let ((sorted-alphabet
-           (sort alphabet #'(lambda (x y)
-                              (cond ((and (numberp x) (numberp y))
-                                     (< x y))
-                                    ((and (listp x) (listp y))
-                                     (< (car x) (car y)))
-                                    (t nil))))))
-      (setf (viewpoint-alphabet v) sorted-alphabet))))
+  (let* ((alphabet (unique-elements v dataset))
+	 (sorted-alphabet
+	  (sort alphabet #'(lambda (x y)
+			    (cond ((and (numberp x) (numberp y))
+				   (< x y))
+				  ((and (listp x) (listp y))
+				   (< (car x) (car y)))
+				  (t nil))))))
+    (setf (viewpoint-alphabet v) sorted-alphabet)))
 
 (defmethod set-alphabet-from-context ((v viewpoint) events unconstrained)
   "Sets the alphabet of derived viewpoint <v> based on the set of
@@ -80,8 +83,10 @@ in <events>."
           (unless (or (undefined-p ve) (member ve derived-alphabet :test #'equal))
             (push ve derived-alphabet))))
       ;;(format t "~&type = ~A; alphabet = ~A~%" (viewpoint-type v) derived-alphabet) ; 
-      (setf (viewpoint-alphabet v) (nreverse derived-alphabet)))))
-          
+      (setf (viewpoint-alphabet v) (sort
+				    (nreverse derived-alphabet)
+				    #'<)))))
+
 
 (defmethod alphabet->events ((v viewpoint) (events md:music-composition))
   (alphabet->events v (coerce events 'list)))
@@ -116,7 +121,7 @@ in <events>."
   ;;                          (md:get-attribute last-event :dur))))
   ;;           (mapcar #'(lambda (a) (+ onset a)) deltast-alphabet)))))
   ;; Based on BIOI alphabet 
-  (let* ((bioi-alphabet (remove nil (viewpoint-alphabet (get-viewpoint 'bioi)))))
+  (let ((bioi-alphabet (remove nil (viewpoint-alphabet (get-viewpoint 'bioi)))))
     (if (null previous-events) bioi-alphabet
         (let* ((last-event (car (reverse previous-events)))
                (onset (md:get-attribute last-event 'onset)))

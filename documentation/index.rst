@@ -1,0 +1,28 @@
+.. IDyOM documentation master file, created by
+   sphinx-quickstart on Thu Sep 28 19:57:12 2017.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
+
+Welcome to Jackdaw's documentation
+==================================
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+
+   introduction
+   installation
+   example-models
+   models
+   features
+   generative-models
+   idyom-integration
+
+   api_reference
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`

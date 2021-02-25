@@ -2,15 +2,15 @@
 ;;;; File:       generics.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2008-11-03 14:07:53 marcusp>
-;;;; Time-stamp: <2019-04-29 13:04:01 marcusp>
+;;;; Time-stamp: <2018-10-05 11:07:49 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:ppm)
 
 ;; top-level functions
-(defgeneric model-dataset (model dataset &key construct? predict? sentinel?
+(defgeneric model-dataset (model dataset &key construct? predict? 
                            &allow-other-keys))
-(defgeneric model-sequence (model sequence &key construct? predict? sentinel?
+(defgeneric model-sequence (model sequence &key construct? predict?
                             &allow-other-keys))
 (defgeneric ppm-model-event (model event &key construct? predict? 
                                &allow-other-keys))
@@ -96,4 +96,4 @@
 ;; Model i/o 
 (defgeneric write-model-to-file (ppm filename))
 (defgeneric dataset->alist (ppm))
-(defgeneric write-model-to-postscript (ppm filename &key counts depth))
+(defgeneric write-model-to-postscript (ppm filename))

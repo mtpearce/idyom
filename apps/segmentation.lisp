@@ -2,7 +2,7 @@
 ;;;; File:       segmentation.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2008-03-13 13:07:12 marcusp>
-;;;; Time-stamp: <2020-04-27 13:13:34 marcusp>
+;;;; Time-stamp: <2016-04-14 16:53:38 marcusp>
 ;;;; ======================================================================
 
 (cl:defpackage #:segmentation
@@ -10,7 +10,7 @@
   (:export #:*boundary* #:*no-boundary* #:peak-picker
            #:make-segmentation-results #:print-segmentation-results
            #:precision #:recall #:f1 #:fallout #:test-segmentation
-           #:idyom-segmentation))
+           #:notated-segmentation #:notated-segmentations))
 
 (cl:in-package #:segmentation) 
 
@@ -20,42 +20,10 @@
 (defparameter *no-boundary* 0
   "An object used to represent a point where a boundary doesn't occur.")
 
-;;;; Top-level
-
-(defun idyom-segmentation (dataset-id target-viewpoints source-viewpoints
-                           &key
-                             ;; TODO: add remaining IDyOM parameters
-                             pretraining-ids
-                             (k 10) 
-                             (models :both+)
-                             ;; segmentation parameters
-                             (threshold 1.28) (window-size nil)
-                             (mean #'linearly-weighted-arithmetic-mean))
-  (multiple-value-bind (d1 d2 d3)
-      (idyom:idyom dataset-id target-viewpoints source-viewpoints :models models :k k :pretraining-ids pretraining-ids)
-    (declare (ignore d1 d2))
-    (let* ((predicted (mapcar #'(lambda (x) (segmentation:peak-picker x :k threshold :window-size window-size :mean mean)) d3))
-           (actual (ground-truth dataset-id))
-           (result (mapcar #'(lambda (p a)
-                               (multiple-value-list 
-                                (test-segmentation p a nil)))
-                           predicted actual))
-           (mean-p (apply #'utils:average (mapcar #'first result)))
-           (mean-r (apply #'utils:average (mapcar #'second result)))
-           (mean-f (apply #'utils:average (mapcar #'third result))))
-      (segmentation:test-segmentation (reduce #'append predicted) (reduce #'append actual))
-      (format t "~&Mean Precision = ~,2F; Mean Recall = ~,2F; Mean F_1 = ~,2F~%" mean-p mean-r mean-f))))
-
-  
-;;;; Peak picking
 
 (defun peak-picker (boundary-strengths &key (k 1.28) (window-size nil)
                                          (mean #'linearly-weighted-arithmetic-mean))
-  "Given a list of boundary strength values (i.e., information
-content) for each note in a piece, returns a list of binary values (0
-or 1) corresponding to each note, where 1 = first note of a phrase, 0
-otherwise. The first note is considered an implicit phrase boundary."
-  (let* ((result (list *no-boundary* *boundary*))
+  (let* ((result (list *no-boundary* *no-boundary*))
          (length (length boundary-strengths))
          (m 0))
     (do* ((bs boundary-strengths (cdr bs)) 
@@ -63,10 +31,10 @@ otherwise. The first note is considered an implicit phrase boundary."
           (bsn-1 (first bs) (first bs))
           (bsn (second bs) (second bs))
           (bsn+1 (third bs) (third bs))
-          (bs- (list bsn-1) (append bs- (list bsn-1)))) 
+          (bs- (list bsn-1) (cons bsn-1 bs-)))
          ((< n 3) (nreverse (cons *no-boundary* result)))
-      ;; (format t "~&n = ~A; bsn-1 = ~A; bsn = ~A; bsn+1 = ~A; bs- = ~A~%"
-      ;;         n bsn-1 bsn bsn+1 bs-)
+      ;;(format t "~&n = ~A; bsn-1 = ~A; bsn = ~A; bsn+1 = ~A; bs- = ~A~%"
+      ;;        n bsn-1 bsn bsn+1 bs-)
       (incf m)
       (when (> m 1) ; first two notes are not boundary candidates
         (let ((window (typecase window-size
@@ -74,7 +42,7 @@ otherwise. The first note is considered an implicit phrase boundary."
                         (t bs-))))
           (if (and (>= bsn bsn+1)
                    (> bsn bsn-1)
-                   (> bsn (+ (* k (apply #'utils:sd window))
+                   (> bsn (+ (* k (standard-deviation window))
                              (funcall mean window))))
               (push *boundary* result)
               (push *no-boundary* result)))))))
@@ -83,6 +51,9 @@ otherwise. The first note is considered an implicit phrase boundary."
   (if (<= (length list) n)
       list
       (subseq list 0 n)))
+
+(defun arithmetic-mean (numbers)
+  (/ (apply #'+ numbers) (length numbers)))
 
 (defun weighted-arithmetic-mean (numbers weights)
   (/ (apply #'+ (mapcar #'* numbers weights))
@@ -94,61 +65,62 @@ otherwise. The first note is considered an implicit phrase boundary."
          (k 1 (1+ k)))
         ((zerop n))
       (push k weights))
-    (weighted-arithmetic-mean numbers (reverse weights))))
+    ;(print (list numbers weights))
+    (weighted-arithmetic-mean numbers weights)))
 
 (defun exponentially-weighted-arithmetic-mean (numbers &key (alpha 0.5))
   (let ((weights nil))
     (do ((n (length numbers) (1- n)))
         ((zerop n))
       (push (expt (- 1 alpha) (1- n)) weights))
-    (weighted-arithmetic-mean numbers (reverse weights))))
+    ;(print (list numbers weights))
+    (weighted-arithmetic-mean numbers weights)))
 
 (defun logarithmically-weighted-arithmetic-mean (numbers &key (alpha 0.5))
   (let ((weights nil))
     (do ((n (1+ (length numbers)) (1- n)))
         ((= 1 n))
       (push (abs (log (- 1 alpha) n)) weights))
-    (weighted-arithmetic-mean numbers (reverse weights))))
+    ;(print (list numbers weights))
+    (weighted-arithmetic-mean numbers weights)))
 
-
-;;;; Ground truth for a given dataset
-
-(defun ground-truth (dataset-id)
-  "Returns the ground truth segmentation for <dataset-id>, if it
-exists, using the 'phrase attribute, coded as follows: 1 = first note
-of a phrase; 0 otherwise. The first note of a piece is considered
-an implicit phrase boundary (1)."
-  (viewpoints:viewpoint-sequences (viewpoints:get-viewpoint 'fiph) (md:get-music-objects dataset-id nil)))
+(defun standard-deviation (numbers)
+  (let ((xbar (arithmetic-mean numbers))
+        (n (length numbers)))
+    (sqrt (* (/ 1 (1- n))
+             (reduce #'+ (mapc #'(lambda (x) (expt (- x xbar) 2)) numbers))))))
 
 
 ;;;; Evaluation
 
-(defun test-segmentation (predicted actual &optional (print t))
-  "Test a segmentation <predicted> against the actual ground truth
-segmentation <actual> and, optionally, print the results, depending on
-the value of <print>."
+(defun test-segmentation (predicted actual)
   (let* ((result (make-segmentation-results predicted actual))
          (p (precision result))
          (r (recall result))
          (f (f1 result)))
-    (when print
-      (print-segmentation-results result t)
-      (format t "~&Precision = ~,2F; Recall = ~,2F; F_1 = ~,2F~%" p r f))
-    (values p r f)))
+    (print-segmentation-results result t)
+    (format t "~&P = ~,2F; R = ~,2F; F1 = ~,2F~%" p r f)))
+
+(defun notated-segmentations (sequences)
+  (mapcar #'notated-segmentation sequences))
+
+(defun notated-segmentation (sequence)
+  (viewpoints:viewpoint-sequence (viewpoints:get-viewpoint 'liph) sequence))
+
+;;; structure to store/print results
 
 (defstruct (segmentation-results (:constructor %make-segmentation-results)
                                  (:print-object print-segmentation-results))
-  ;;; a structure to store/print results
   (tp 0)
   (tn 0) 
   (fp 0)
   (fn 0))
 
-(defun make-segmentation-results (predicted actual)
-  (%make-segmentation-results :tp (true-positives predicted actual)
-                              :tn (true-negatives predicted actual)
-                              :fp (false-positives predicted actual)
-                              :fn (false-negatives predicted actual)))
+(defun make-segmentation-results (generated actual)
+  (%make-segmentation-results :tp (true-positives generated actual)
+                              :tn (true-negatives generated actual)
+                              :fp (false-positives generated actual)
+                              :fn (false-negatives generated actual)))
 
 (defun print-segmentation-results (object stream)
   (let* ((row-labels (list "True" "False"))
@@ -234,15 +206,13 @@ the value of <print>."
   "Precision = tp / (tp + fp)."
   (let ((tp (segmentation-results-tp results))
         (fp (segmentation-results-fp results)))
-    (if (and (zerop tp) (zerop fp)) 0 
-        (float (/ tp (+ tp fp))))))
+    (float (/ tp (+ tp fp)))))
 
 (defun recall (results) 
   "Recall = tp / (tp + fn)."
   (let ((tp (segmentation-results-tp results))
         (fn (segmentation-results-fn results)))
-    (if (and (zerop tp) (zerop fn)) 0 
-        (float (/ tp (+ tp fn))))))
+    (float (/ tp (+ tp fn)))))
 
 (defun fallout (results) 
   "Fallout = fp / (fp + tn)."
@@ -255,33 +225,33 @@ the value of <print>."
   (let ((p (precision results))
         (r (recall results))
         (a^2 (expt alpha 2)))
-    (if (or (= p 0) (= r 0)) 0
-        (float (/ (* (1+ a^2) p r) (+ (* a^2 p) r))))))
+    (float (/ (* (1+ a^2) p r) (+ (* a^2 p) r)))))
 
-(defun true-positives (predicted actual) 
-  (flet ((true-positive (predicted actual)
-           (if (and (= actual 1) (and predicted (= predicted 1)))
+(defun true-positives (generated actual) 
+  (flet ((true-positive (generated actual) 
+           (if (and generated (= generated actual 1))
                1 
                0)))
-    (apply #'+ (mapcar #'true-positive predicted actual))))
+    (apply #'+ (mapcar #'true-positive generated actual))))
 
-(defun true-negatives (predicted actual)
-  (flet ((true-negative (predicted actual)
-           (if (and (= actual 0) (and predicted (= predicted 0)))
+(defun true-negatives (generated actual)
+  (flet ((true-negative (generated actual) 
+           (if (or (and (null generated) (= actual 0)) 
+                   (and generated (= generated actual 0)))
                1 
                0)))
-    (apply #'+ (mapcar #'true-negative predicted actual))))
+    (apply #'+ (mapcar #'true-negative generated actual))))
 
-(defun false-positives (predicted actual) 
-  (flet ((false-positive (predicted actual) 
-           (if (and (= actual 0) (not (= predicted 0)))
+(defun false-positives (generated actual) 
+  (flet ((false-positive (generated actual) 
+           (if (and generated (= generated 1) (= actual 0))
                1 
                0)))
-    (apply #'+ (mapcar #'false-positive predicted actual))))
+    (apply #'+ (mapcar #'false-positive generated actual))))
 
-(defun false-negatives (predicted actual) 
-  (flet ((false-negative (predicted actual) 
-           (if (and (= actual 1) (not (= predicted 1)))
+(defun false-negatives (generated actual) 
+  (flet ((false-negative (generated actual) 
+           (if (and (or (null generated) (= generated 0)) (= actual 1))
                1 
                0)))
-    (apply #'+ (mapcar #'false-negative predicted actual))))
+    (apply #'+ (mapcar #'false-negative generated actual))))

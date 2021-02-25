@@ -1,0 +1,733 @@
+;; Ecological example with delta pitch
+
+(let* ((dataset (md:get-music-objects '(2) nil))
+		(cpitch (viewpoints:get-viewpoint 'cpitch))
+		(alphabet (viewpoints:set-alphabet-from-dataset cpitch dataset))
+		(df (f:phi 'df '(f) ()
+			   (lambda (f) 
+			     (lambda () 
+			       (loop for next in alphabet collect
+				    (- next f))))))
+		(f (f:phi 'f '(f) '(df)
+			  (lambda (f)
+			    (lambda (df)
+			      (list (+ f df))))
+			  :initialisation (lambda () alphabet)
+			  :observation #'md:chromatic-pitch))
+		(gm (gm:make f df))
+		(cpint (viewpoints:get-viewpoint 'cpint))
+		(training-data (viewpoints:viewpoint-sequences cpint dataset))
+		(ppm (ppm:build-model training-data nil)))
+	   (viewpoints:set-alphabet-from-dataset cpint dataset)
+	   (ppm:set-alphabet ppm (viewpoints:viewpoint-alphabet cpint))
+	   (let ((predictions (ppm:model-sequence ppm '(1 1 1 1) :predict? t)))
+	     (format t "PPM prob: ~A~%" 
+		     (apply #'* (mapcar (lambda (p) (cadr (assoc (car p) (cadr p)))) 
+					predictions))))
+	   (gm:set-ppm-features gm 'df)
+	   (gm:set-observables gm 'f)
+	   (gm:initialise-ppm-models gm)
+	   (gm:model-dataset gm dataset :construct? t)
+	   (setf (f:obs-f f) #'identity)
+	   (format t "GM prob: ~A~%" (gm:model-sequence gm '(50 51 52 53 54))))
+
+(let* ((dataset '((0 0 2 4)))
+       (alphabet '(0 2 4))
+       (df (f:phi 'df '(f) ()
+		  (lambda (f) 
+		    (lambda () 
+		      (loop for next in alphabet collect
+			   (- next f))))))
+       (f (f:phi 'f '(f) '(df)
+		 (lambda (f)
+		   (lambda (df)
+		     (list (+ f df))))
+		 :initialisation (lambda () alphabet)
+		 :observation #'identity))
+       (gm (gm:make f df))
+       (delta (viewpoints:get-viewpoint 'delta-testing))
+       (training-data (print (viewpoints:viewpoint-sequences delta dataset)))
+       (ppm (ppm:build-model training-data nil)))
+  (viewpoints:set-alphabet-from-dataset delta dataset)
+  (ppm:set-alphabet ppm (viewpoints:viewpoint-alphabet delta))
+  (gm:set-ppm-features gm 'df)
+  (gm:set-observables gm 'f)
+  (gm:initialise-ppm-models gm)
+  (gm:model-dataset gm dataset :construct? t)
+  (let* ((seq '(0 0 0 0))
+	 (predictions (ppm:model-sequence ppm '(0 0 0) :predict? t))
+	 (probabilities (mapcar (lambda (p) (cadr (assoc (car p) (cadr p)))) 
+				predictions)))
+    (multiple-value-bind (states evidence)
+	(gm:model-sequence gm seq)	  
+      (format t "PPM probabilities ~A~%" probabilities)
+      (format t "PPM prob: ~A~%" (apply #'* probabilities))
+      (format t "GM prob: ~A~%" (* 3 evidence)))))
+
+
+;;; Passing test:
+
+(flet ((music-events (s)
+	 (mapcar (lambda (e)
+		   (make-instance 'md:music-event :cpitch e
+				  :onset 0 
+				  :id (make-instance 'md:event-identifier 
+						     :event-index 0
+						     :composition-index 0)))
+		 s)))
+  (let* ((dataset '((0 0 2 4)
+		    (0 2 1 2)))
+	 (music-events (mapcar #'music-events dataset))
+	 (dfv (viewpoints:get-viewpoint 'df))
+	 (mvs:*debug* t)
+	 (mvs::*models* :ltm)
+	 (training-data (viewpoints:viewpoint-sequences dfv music-events))
+	 (delta-alphabet
+	  (viewpoints:set-alphabet-from-dataset dfv music-events))
+	 (f-alphabet (remove-duplicates (apply #'append dataset)))
+	 (df (f:phi 'df '(f) ()
+ 		    (lambda (f) 
+		      (lambda () 
+			(loop for next in f-alphabet collect
+			     (- next f))))))
+	 (f (f:phi 'f '(f) '(df)
+		   (lambda (f)
+		     (lambda (df)
+		       (list (+ f df))))
+		   :initialisation (lambda () f-alphabet)
+		   :observation #'identity))
+	 (gm (gm:make f df))
+	 (ppm (print (ppm:build-model training-data nil)))
+	 (basic (viewpoints:get-basic-viewpoints '(cpitch) music-events))
+	 (mvs (mvs:make-mvs basic
+			    (list dfv) 
+			    (list ppm))))
+    (ppm:set-alphabet ppm delta-alphabet)
+    (gm:set-ppm-features gm 'df)
+    (gm:set-observables gm 'f)
+    (gm:initialise-ppm-models gm)
+    (gm:model-dataset gm dataset :construct? t)
+    (let* ((seq '(0 0 0 0))
+	   (music-events (music-events seq))
+	   (predictions (mvs:model-sequence mvs music-events :predict? t))
+	   (probabilities (mapcar #'cadr 
+				  (prediction-sets:event-predictions (car predictions)))))
+      (multiple-value-bind (states evidence)
+	  (gm:model-sequence gm seq)	  
+	(format t "PPM probabilities ~A~%" probabilities)
+	(format t "PPM prob: ~A~%" (apply #'* probabilities))
+	(format t "GM prob: ~A~%" evidence)))))
+
+
+(flet ((music-events (s)
+	 (mapcar (lambda (e)
+		   (make-instance 'md:music-event :cpitch e
+				  :onset 0 
+				  :id (make-instance 'md:event-identifier 
+						     :event-index 0
+						     :composition-index 0)))
+		 s))
+       (describe-ppm (m)
+	 (format t "front: ~A~%leaf-index ~A~%branch-index ~A~%" 
+		 (ppm:ppm-front m) (ppm:ppm-leaf-index m)
+		 (ppm::ppm-branch-index m))
+	 (flet ((enumerate-hash (h)
+		  (dolist (k (hash-keys h))
+		    (print (gethash k h)))))
+	   (enumerate-hash (ppm::ppm-leaves m))
+	   (enumerate-hash (ppm::ppm-branches m))
+	   (dolist (b (hash-keys (ppm::ppm-dataset m)))
+	     (enumerate-hash (gethash b (ppm::ppm-dataset m))))))
+       (ppm-params (m)
+	 (format t "ab: ~A~%ue ~A~%mixt ~A~%ob ~A~%e ~A~%k ~A~%d ~A~%"
+		 (ppm::ppm-alphabet m)
+		 (ppm::ppm-update-exclusion m)
+		 (ppm::ppm-mixtures m)
+		 (ppm::ppm-order-bound m)
+		 (ppm::ppm-escape m)
+		 (ppm::ppm-k m)
+		 (ppm::ppm-d m))))
+  (let* ((dataset '((0 0 2 4)
+		    (0 2 1 2)
+			     (2 1 0 3 4 1)))
+	 (music-events (mapcar #'music-events dataset))
+	 (dfv (viewpoints:get-viewpoint 'df))
+	 (mvs:*debug* t)
+	 (mvs::*models* :ltm)
+	 (training-data (viewpoints:viewpoint-sequences dfv music-events))
+	 (delta-alphabet
+	  (viewpoints:set-alphabet-from-dataset dfv music-events))
+	 (f-alphabet (remove-duplicates (apply #'append dataset)))
+	 (df (f:phi 'df '(f) ()
+		    (lambda (f) 
+		      (lambda () 
+			(loop for next in f-alphabet collect
+			     (- next f))))))
+	 (f (f:phi 'f '(f) '(df)
+		   (lambda (f)
+		     (lambda (df)
+		       (list (+ f df))))
+		   :initialisation (lambda () f-alphabet)
+		   :observation #'identity))
+	 (gm (gm:make f df))
+	 (ppm (print (ppm:build-model training-data nil)))
+	 (basic (viewpoints:get-basic-viewpoints '(cpitch) music-events))
+	 (mvs (mvs:make-mvs basic
+			    (list dfv) 
+			    (list ppm))))
+	     ;;(ppm:set-alphabet ppm delta-alphabet)
+    (gm:set-ppm-features gm 'df)
+    (gm:set-observables gm 'f)
+    (gm:initialise-ppm-models gm)
+    (gm:model-dataset gm dataset :construct? t)
+    ;;(describe-ppm (elt (gm:ppm-models gm) 1))
+    ;;(describe-ppm (elt (mvs:mvs-ltm mvs) 0))
+    (ppm-params (elt (gm:ppm-models gm) 1))
+    (ppm-params (elt (mvs:mvs-ltm mvs) 0))
+    (let* ((seq '(0 1 2 4))
+	   (music-events (music-events seq))
+	   (predictions (mvs:model-sequence mvs music-events :predict? t))
+	   (probabilities (mapcar #'cadr 
+				  (prediction-sets:event-predictions (car predictions)))))
+      (multiple-value-bind (states evidence)
+	  (gm:model-sequence gm seq :predict? t)
+	(length states)
+	(format t "PPM probabilities ~A~%" probabilities)
+	(format t "PPM prob: ~A~%" (apply #'* probabilities))
+	(format t "GM prob: ~A~%" evidence)))))
+
+;;; Comparing speed
+
+(let* ((dataset (md:get-event-sequences '(2)))
+       (dfv (viewpoints:get-viewpoint 'cpint))
+       (basic (viewpoints:get-basic-viewpoints '(cpitch) dataset))
+       (mvs::*models* :ltm)
+       (training-data (viewpoints:viewpoint-sequences dfv dataset))
+       (delta-alphabet
+	(viewpoints:set-alphabet-from-dataset dfv dataset))
+       (basic-alphabet (viewpoints:viewpoint-alphabet (car basic))))
+  (f:featurelet
+      ((df (normal (f) ()
+		   (loop for next in basic-alphabet collect (- next previous-f))))
+       (f (recursive () (df)
+		     (list (+ previous-f df))
+		     nil nil
+		     basic-alphabet)))
+    (let* ((graph (gm:make-feature-graph f df))
+	   (ppm (ppm:build-model training-data nil))
+	   (mvs (mvs:make-mvs basic
+			      (list dfv) 
+			      (list ppm))))
+      (ppm:set-alphabet ppm delta-alphabet)
+      (f:add-model df #'models:make-ppm)
+      (f:make-observable f #'md:chromatic-pitch)
+      (print "Training generative model")
+      (time (gm:model-dataset graph dataset :construct? t))
+      (print "Beginning simulations on test set.")
+      (print "Multiple viewpoint system.")
+      (time (dolist (s (md:get-event-sequences '(2)))
+	      (mvs:model-sequence mvs (coerce s 'list) :predict? t)))
+      (print "Generative model.")
+      (time (dolist (s (md:get-event-sequences '(2)))
+	      (gm:model-sequence graph (coerce s 'list) :predict? t))))))
+    
+;;; Comparing results (differences appear to be in the order of ten to the
+;;; -25 -- -50, ten to the minus 4 or 5 percent difference).
+
+(let* ((dataset (md:get-event-sequences '(2)))
+       (dfv (viewpoints:get-viewpoint 'cpint))
+       (basic (viewpoints:get-basic-viewpoints '(cpitch) dataset))
+       (mvs::*models* :ltm)
+       (training-data (viewpoints:viewpoint-sequences dfv dataset))
+       (delta-alphabet
+	(viewpoints:set-alphabet-from-dataset dfv dataset))
+       (basic-alphabet (viewpoints:viewpoint-alphabet (car basic))))
+  (f:featurelet
+      ((df (normal (f) ()
+		   (loop for next in basic-alphabet collect (- next previous-f))))
+       (f (recursive () (df)
+		     (list (+ previous-f df))
+		     nil nil
+		     basic-alphabet)))
+    (let* ((graph (gm:make-feature-graph f df))
+	   (ppm (ppm:build-model training-data nil))
+	   (mvs (mvs:make-mvs basic
+			      (list dfv) 
+			      (list ppm))))
+      (ppm:set-alphabet ppm delta-alphabet)
+      (f:add-model df #'models:make-ppm)
+      (f:make-observable f #'md:chromatic-pitch)
+      (time (gm:model-dataset graph dataset :construct? t))
+      (print "Beginning sim")
+      (dolist (s (md:get-event-sequences '(2)))
+	(let* ((predictions (mvs:model-sequence mvs (coerce s 'list) :predict? t))
+	       (probabilities (mapcar #'cadr 
+				      (prediction-sets:event-predictions
+				       (car predictions)))))
+	  (multiple-value-bind (states locations evidence)
+	      (gm:model-sequence graph (coerce s 'list) :predict? t)
+	    (length states) (identity locations)
+	    (let* ((mvs-evidence (apply #'* probabilities))
+		   (diff (- (probabilities:out evidence) mvs-evidence)))
+	      (format t "Diff: ~A. Proportion: ~A~%" diff
+		      (unless (equal mvs-evidence 0.0)
+			(/ diff mvs-evidence))))))))))
+
+;; Are these differences caused by how the sequence probability is calculated from the
+;; raw output of the PPM models?
+;; Old implementation: transform to basic predictions, normalize, combine viewpoint predictionso
+
+(defun test-model-train-test (training testing features hide-for-testing)
+  (let ((gm (apply #'gm:make-feature-graph features))
+	    (observation-functions (mapcar (lambda (f) (f::observation-function f))
+				   hide-for-testing)))
+    (format t "Training model~%")
+    (gm:model-dataset gm training :construct? t)
+    (format t "Beginning sim~%")
+    (format t "Hiding: ~A.~%"
+	    (mapcar #'f:identifier hide-for-testing))
+    (apply #' f:hide hide-for-testing)
+    (gm:flush-cache gm)
+    (dolist (s testing)
+      (print (md:get-composition-index (md:get-identifier s)))
+      (posterior-distribution s gm observation-functions))))
+
+(defun test-model (dataset features hide-for-testing &optional (n-test 50))
+  (let ((training-set (subseq dataset n-test))
+	(test-set (subseq dataset 0 n-test))
+	(gm (apply #'gm:make-feature-graph features))
+	    (observation-functions (mapcar (lambda (f) (f::observation-function f))
+				   hide-for-testing)))
+    (format t "Features: ~A~%"
+	    (mapcar #'f:identifier features))
+    (format t "Training model~%")
+    (gm:model-dataset gm training-set :construct? t)
+    (format t "Beginning sim~%")
+    (format t "Hiding: ~A.~%"
+	    (mapcar #'f:identifier hide-for-testing))
+    (apply #' f:hide hide-for-testing)
+    (gm:flush-cache gm)
+    (dolist (s test-set)
+      (print (md:get-composition-index (md:get-identifier s)))
+      (posterior-distribution s gm observation-functions))))
+
+(defun sort-states (states &optional (predicate #'>))
+  (sort states predicate
+	:key (lambda (s)
+	       (multiple-value-bind (mid elements probability) (values-list s)
+		 (declare (ignorable mid elements)) probability))))
+
+(defun print-states (graph events)
+  (multiple-value-bind (states locations evidence)
+      (gm:model-sequence graph events :predict? t 
+					   
+(defun posterior-distribution (events graph &optional observation-functions)
+  (multiple-value-bind (states locations evidence)
+      (gm:model-sequence graph events :predict? t :output t
+			 :custom-marginals '((phase-0 period metre) (ioi)))
+    (identity locations)
+    (let ((e (car (last (coerce events 'list)))))
+      (format t "Label: ~A~%" (mapcar (lambda (f) (funcall f e))
+				      observation-functions)))
+    (format t "Evidence: ~A~%" evidence)
+    (dolist (state (sort states #'> :key #'third))
+      (let ((param (mapcar (lambda (f) (gethash f (cadr state))) '(period meter phase-0)))
+	    (probability (third state)))
+	(format t "P~A = ~A~%" param
+		(probabilities:out (probabilities:div probability evidence)))))))
+
+(defun print-results (events graph &rest display-features)
+    (multiple-value-bind (evidence states)
+      (gm:model-sequence graph events :predict? t)
+      (dolist (state (sort-states states))
+	(multiple-value-bind (model-id elements probability)
+	    (values-list state)
+	  (declare (ignorable model-id))
+	  (let* ((depth (min (length events) (gm:depths graph)))
+		 (indices (gm:active-indices graph depth))
+		 (model-indices (loop for i in indices
+				   if (f:modeled? (svref (gm:features graph) i)) collect i))
+		 (representational-indices
+		  (loop for i in indices
+		     if (f:representational? (svref (gm:features graph) i)) collect i))
+		 (marginal-indices
+		  (union representational-indices
+			 (union (gm:horizontal-dependency-set depth graph)
+				model-indices)))
+		 (positions (mapcar (lambda (f)
+				      (position (position (f:identifier f)
+							  (gm:features graph)
+							  :key #'f:identifier)
+						marginal-indices))
+				    display-features))
+		 (elements (mapcar (lambda (p) (elt elements p)) positions)))
+	  (format t "P~A = ~A~%" (coerce elements 'list)
+		  (probabilities:out (probabilities:div probability evidence))))))))
+
+(defun key-model (dataset)
+  (let* ((octave 12)
+	 (modes '(0 9))
+	 (octave-range 8)
+	 (scale-degrees (loop for sd below octave collect sd))
+	 (keysigs (loop for ks below octave collect (- ks 5)))
+	 (pitches (viewpoints:unique-elements
+		   (viewpoints:get-viewpoint 'cpitch) dataset))
+	 ;;(pitches (loop for p below (* octave-range octave) collect p))
+	 (mode (f:make 'mode () () (f:generative modes)))
+	 (keysig (f:make () () (f:generative keysigs)))
+	 (tonic (f:make 'tonic '() '(keysig mode)
+			(lambda () 
+			  (lambda (keysig mode) 
+			    (list (if (> keysig 0)
+				      (mod (+ (* keysig 7) mode) octave)
+				      (mod (+ (* (- keysig) 5) mode) octave)))))))
+	 (scale-degree (f:make 'scale-degree '() '(mode)
+			       (lambda ()
+				 (lambda (mode)
+				   (mapcar (lambda (sd)
+					     (cons sd mode))
+					   scale-degrees)))))
+	 (pitch (f:make 'pitch '() '(tonic scale-degree)
+			(lambda ()
+			  (lambda (tonic scale-degree)
+			    (let ((scale-degree (car scale-degree)))
+			      (loop for pitch in pitches
+				 if (eq scale-degree
+					(mod (- pitch tonic)
+					     octave))
+				 collect pitch))))
+		       :observation #'md:chromatic-pitch)))
+    (values (list keysig mode tonic pitch scale-degree)
+	    '(scale-degree)
+	    '(keysig mode pitch)
+	    '(pitch))))
+
+(defun key-model (dataset)
+  (let* ((octave 12)
+	 (modes '(0 9))
+	 (scale-degrees (loop for sd below octave collect sd))
+	 (keysigs (loop for ks below octave collect (- ks 5)))
+	 (pitches (viewpoints::unique-elements
+		   (viewpoints:get-viewpoint 'cpitch) dataset)))
+    (f:featurelet
+	((mode (recursive () () (list mode)
+			   () () modes))
+	 (keysig (recursive () () (list keysig)
+			     () () keysigs))
+	 (tonic (normal () (keysig mode)
+			 (list (if (> keysig 0)
+				   (mod (+ (* keysig 7) mode) octave)
+				   (mod (+ (* (- keysig) 5) mode) octave)))))
+	 (scale-degree (normal () (mode)
+			       (mapcar (lambda (sd) (cons sd mode)) scale-degrees)))
+	 (pitch (normal () (tonic scale-degree)
+			(loop for pitch in pitches
+			    if (eq (car scale-degree)
+				   (mod (- pitch tonic)
+					octave))
+			    collect pitch))))
+      (f:make-observable keysig #'md:key-signature)
+      (f:make-observable mode #'md:mode)
+      (f:make-observable pitch #'md:chromatic-pitch)
+      (values mode keysig tonic scale-degree pitch))))
+
+(defun meter-model (dataset &key (timebase 96) (resolution 16)
+			      (onset-observation #'md:onset)
+			      (meter-observation (lambda (e)
+						   (list (md:barlength e)
+							 (md:pulses e))))
+			      (phase-0-observation (lambda (e)
+						     (declare (ignorable e)) 0)))
+  "If events at granularity smaller than timebase / resolution occur in dataset,
+small period-dependent artifacts may be introduced."
+  (let* ((multiplier (/ timebase resolution))
+	 (md:*md-timebase* timebase)
+	 (meter-viewpoint (viewpoints:get-viewpoint '(barlength pulses)))
+	 (meters (viewpoints::unique-elements meter-viewpoint dataset)))
+    (labels ((phases (barlength)
+	       (loop for phase below (/ barlength multiplier)
+		  collect (* phase multiplier))))
+      (f:featurelet event
+	  ((phase-0 (recursive () () (list previous-phase-0)
+			       () (period) (phases period)
+			       (funcall phase-0-observation event)))
+	   (numerator (normal () (meter) (list (cadr meter))))
+	   (period (normal () (meter) (list (car meter))))
+	   (meter (recursive () () (list previous-meter)
+			     () () meters
+			     (funcall meter-observation event)))
+	   (phase (normal () (meter phase-0) (phases (car meter))
+			  (let ((onset (funcall onset-observation event))
+				(barlength (car meter)))
+			    (mod (+ onset phase-0) barlength)))))
+	(f:add-model meter #'models:make-zeroth-order-once)
+	(f:add-model phase #'models:make-ppm :model-args (list meter))
+	(values phase-0 phase meter numerator period)))))
+
+(defun meter-labels (dataset
+		     &key (meter-observation (lambda (e)
+					       (list (md:barlength e)
+						     (md:pulses e)))))
+  (let* ((meter-viewpoint (viewpoints:get-viewpoint '(barlength pulses)))
+	 (meters (viewpoints::unique-elements meter-viewpoint dataset)))
+  (f:featurelet event
+      ((phase-0 (normal () () (list 0)
+			0))
+       (meter (normal () () meters
+		      (funcall meter-observation event)))
+       (numerator (normal () (meter) (list (cadr meter))))
+       (period (normal () (meter) (list (car meter)))))
+    (values phase-0 meter numerator period))))
+
+(defun metre-bardist-model (dataset
+			    &key (timebase 96) (resolution 16)
+			      (metre-observation (lambda (e)
+						   (list (md:barlength e)
+							 (md:pulses e))))
+			      (phase-0-observation (lambda (e)
+						     (declare (ignorable e)) 0)))
+  "Prior distribution is over METER X PHASE-0. Phase-0 represents the phase to 
+which timepoint zero corresponds."
+  (assert (<= resolution timebase))
+  (let* ((multiplier (/ timebase resolution))
+	 (metre-viewpoint (viewpoints:get-viewpoint '(barlength pulses)))
+	 (iois (remove-if (lambda (x) (eq 0 x))
+			  (viewpoints::unique-elements (viewpoints:get-viewpoint 'bioi)
+						       dataset)))
+	 (prior-constructor (lambda () (models::make-old-phase-metre-prior)))
+	 (metres (viewpoints::unique-elements metre-viewpoint dataset)))
+    (labels ((get-phase-bardist (previous-phase ioi)
+	       (multiple-value-bind (bardist phase)
+		   (+ previous-phase ioi)
+		 (list phase bardist)))
+	     (generate-phase-bardists (previous-phase &optional (iois iois))
+	       (loop for ioi in iois collect
+		    (dolist (ioi iois)
+		      (get-phase-bardist previous-phase ioi)))))
+      (f:featurelet event
+	  ((phase-metre
+	    (recursive () () (list previous-phase-metre)
+		       (let ((phase-metres))
+			 (dolist (metre metres)
+			   (dotimes (pos (/ (car metre) multiplier))
+			     (push (list phase-0 metre) phase-metres))))
+		       previous-phase-metre
+		       (let ((phase (funcall phase-observation event))
+			     (metre (funcall metre-observation event)))
+			 (list phase metre))))
+	   (phase-0
+	    (normal () (phase-metre) (list (car phase-metre))))
+	   (numerator
+	    (normal () (phase-metre) (list (cadr phase-metre))))
+	   (barlength
+	    (normal () (phase-metre) (list (car phase-metre))))
+	   (phase-bardist
+	    (recursive () (phase-0 barlength numerator)
+		       (generate-phase-bardists (car previous-phase-bardist))
+		       (generate-phase-bardists phase-0 (cons 0 iois))
+		       (let ((interval (funcall bioi-observation event)))
+			 (get-phase-bardist (car previous-phase-bardist) interval))
+		       (let ((interval (funcall bioi-observation event)))
+			 (get-phase-bardist (+ phase-0 interval) interval)))))
+	(f:add-model phase-metre prior-constructor)
+	(f:add-model phase #'models:make-ppm :model-args (list metre))
+	(values phase-metre phase-0 numerator barlength phase-bardist)))))
+
+(defun ioi-metre-model (dataset
+			&key (ioi-observation #'md:onset)
+			  (metre-observation #'md:pulses)
+			  (period-observation #'md:barlength))
+  "Most \"parsimonious\" model. Probability of first onset is implicitly one. Since
+observed feature IOI is not present in first event, a NIL symbol should be added
+during testing. Disadvantage is that the number of phase interpretations quickly 
+increases."
+  (let* ((metre-viewpoint (viewpoints:get-viewpoint 'pulses))
+	 (iois (remove-if (lambda (x) (eq 0 x))
+			  (viewpoints::unique-elements (viewpoints:get-viewpoint 'bioi)
+						       dataset)))
+	 (periods '(2 3))
+	 (phases (apply #'lcm periods))
+	 (metres (viewpoints::unique-elements metre-viewpoint dataset)))
+    (f:featurelet 
+	((period (recursive () () (list previous-period)
+			    () () periods))
+	 (metre (recursive () () (list previous-metre)
+			   () () metres))
+	 (phase (normal () (metre)
+			phases))
+	 (ioi (normal (phase) (phase period)
+		      (loop for ioi in iois
+			 if (eq (mod (+ previous-phase
+					(* (/ ioi period) phases))
+				     period)
+				phase)
+			 collect ioi))))
+      (f:make-observable period period-observation)
+      (f:make-observable metre metre-observation)
+      (f:make-observable ioi ioi-observation)
+      (f:add-model metre #'models:make-zeroth-order-once)
+      (f:add-model phase #'models:make-ppm :model-args (list metre))
+      (f:make-representational ioi)
+      (values period metre phase ioi))))
+
+(defun ioi-metre-model-fancy (dataset &key
+					(ioi-observation #'md:bioi)
+					(metre-observation #'md:pulses)
+					(period-observation #'md:barlength))
+  "Most \"parsimonious\" model. Probability of first onset is implicitly one. Since
+observed feature IOI is not present in first event, a NIL symbol should be added
+during testing. Disadvantage is that the number of phase interpretations quickly 
+increases."
+  (let* ((metre-viewpoint (viewpoints:get-viewpoint 'pulses))
+	 (period-viewpoint (viewpoints:get-viewpoint 'barlength))
+	 (periods (print (viewpoints::unique-elements period-viewpoint dataset)))
+	 (phases (print (apply #'lcm periods)))
+	 (metres (viewpoints::unique-elements metre-viewpoint dataset))
+	 (pickup-observation
+	  (lambda (e) (if (and (eq (md:description e) 'has-pickup)
+			       (< (md:onset e) (md:barlength e)))
+			  t nil))))
+    (f:featurelet 
+	((period (recursive () () (list previous-period)
+			    () () periods))
+	 (metre (recursive () () (list previous-metre)
+			   () () metres))
+	 (pickup? (recursive () () (if previous-pickup?
+				       '(t nil)
+				       '(nil))
+			     () () '(t nil)))
+	 (phase (recursive () (metre pickup?)
+			   (if pickup?
+			       (loop for phase below phases
+				  if (> phase previous-phase)
+				  collect phase)
+			       (loop for phase below phases collect phase))
+			   () (metre pickup?) '(0)
+			   ;; Observation
+			   (if pickup?
+	 (ioi (normal (pickup? phase) (pickup? phase period)
+		      (if previous-pickup?
+			  (if pickup?
+			      (list (* (/ (- phase previous-phase) phases) period))
+			      (when (eq phase 0)
+				(loop for ioi in iois
+				   if (<= (+ previous-phase
+					     (* (/ ioi period) phases))
+					  phases)
+				   collect ioi)))
+			  (loop for ioi in iois
+			     if (eq (mod (+ previous-phase (* (/ ioi period) phases))
+					 period)
+				    phase)
+			     collect ioi))))
+	 (onset (recursive (pickup?) (ioi) (list (+ ioi previous-onset))
+			   () (ioi) (list ioi)))
+	 (phase-0 (normal (pickup?) (onset phase period)
+			  (list (mod (- phase (mod onset period)) period)))))
+      (f:make-observable metre metre-observation)
+      (f:make-observable ioi ioi-observation)
+      (f:make-observable period period-observation)
+      (f:make-observable pickup? pickup-observation)
+      (f:make-observable onset #'md:onset)
+      (f:add-model metre #'models:make-zeroth-order-once)
+      ;;(f:add-model period #'models:make-zeroth-order-once)
+      (f:add-model phase #'models:make-ppm :model-args (list metre pickup?))
+      (f:make-representational ioi)
+      (values period metre pickup? phase-0 phase ioi onset))))
+
+(defun time-pitch-model (dataset &key (timebase 96) (resolution 16)
+			      (onset-observation #'md:onset)
+			      (metre-observation (lambda (e)
+						   (list (md:barlength e)
+							 (md:pulses e))))
+			      (phase-0-observation (lambda (e)
+						     (declare (ignorable e)) 0)))
+  (multiple-value-bind (phase-0 phase meter onset)
+      (meter-model dataset)
+    (multiple-value-bind (keysig mode tonic pitch scale-degree)
+	(key-model dataset)
+      (f:featurelet ((scale-degree-phase () (scale-degree phase)
+					 (list (list scale-degree phase))))
+	(values phase-0 phase meter onset keysig mode tonic pitch scale-degree
+		scale-degree-phase)))))
+
+(defun delta-pitch-key-model (dataset)
+  (let* ((octave 12)
+	 (modes '(0 9))
+	 (scale-degrees (loop for sd below octave collect sd)))
+    (f:featurelet
+	((mode (recursive () () (list previous-mode)
+			  () () modes))
+	 (scale-degree (normal () (mode) scale-degrees))
+	 (interval (normal (scale-degree) (scale-degree)
+			   (loop for interval in intervals
+			      if (eq (mod (+ previous-scale-degree interval)
+					  octave)
+				     scale-degree)
+			      collect interval))))
+      (f:add-model mode)
+      (values mode scale-degree interval))))
+
+
+(defun test-output (&optional (d1 t) (d2 t))
+  (let ((basic-alphabet '(0 1 2)))
+    (f:featurelet
+	((df (normal (f) ()
+		     (loop for next in basic-alphabet collect (- next previous-f))))
+	 (f (recursive () (df)
+		       (list (+ previous-f df))
+		       nil nil
+		       basic-alphabet)))
+      (let* ((graph (gm:make-feature-graph f df))
+	     (output (gm::make-marginal-writer graph '((f) (df)) (list d1 d2))))
+	(f:make-observable f #'identity)
+	(gm::model-sequence graph '(0 1 0 2) :output output)))))  
+
+;; for above model
+;; tonic given mode pitch and scale-degree
+
+
+;; Function for resampling and evaluating the posterior likelihood of various features
+;; How to obtain marginal distributions online? (after generating possible-states, but
+;; before generating plausible states)
+
+(defun test-meter-model (train test)
+  (let ((train (md:get-event-sequences (list train)))
+	(test (md:get-event-sequences (list test))))
+    (multiple-value-bind (phase-0 phase meter numerator period)
+	(meter-model (append train test))
+      (with-open-file (full-output "/home/bastiaan/simulation-results/new-full.csv" :direction :output :if-exists :supersede :if-does-not-exist :create)
+	(let* ((graph (gm:make-feature-graph phase-0 phase meter numerator period))
+	       (writer (gm::make-full-writer graph full-output)))
+	  (gm:model-dataset graph train :construct? t)
+	  (f:hide phase-0 meter)
+	  (gm:flush-cache graph)
+	  (gm:model-dataset graph test :predict? t :writers (list writer)))))
+    (multiple-value-bind (phase-0 meter numerator period)
+	(meter-labels (append train test))
+      (with-open-file (destination "/home/bastiaan/simulation-results/labels.csv" :direction :output :if-exists :supersede :if-does-not-exist :create)
+	(let* ((graph (gm:make-feature-graph phase-0 meter numerator period))
+	       (writer (gm::make-plausible-writer graph destination)))
+	  (gm:model-dataset graph (loop for s in test collect (subseq s 0 1)) :predict? t :writers (list writer)))))))
+  nil)
+
+
+(defun test-fancy-model (train test)
+  (let ((train (md:get-event-sequences (list train)))
+	(test (md:get-event-sequences (list test))))
+    (multiple-value-bind (phase-0 phase meter numerator period)
+	(meter-model (append train test))
+      (with-open-file (full-output "/home/bastiaan/simulation-results/new-full.csv" :direction :output :if-exists :supersede :if-does-not-exist :create)
+	(let* ((graph (gm:make-feature-graph phase-0 phase meter numerator period))
+	       (writer (gm::make-full-writer graph full-output)))
+	  (gm:model-dataset graph train :construct? t)
+	  (f:hide phase-0 meter)
+	  (gm:flush-cache graph)
+	  (gm:model-dataset graph test :predict? t :writers (list writer)))))
+    (multiple-value-bind (phase-0 meter numerator period)
+	(meter-labels (append train test))
+      (with-open-file (destination "/home/bastiaan/simulation-results/labels.csv" :direction :output :if-exists :supersede :if-does-not-exist :create)
+	(let* ((graph (gm:make-feature-graph phase-0 meter numerator period))
+	       (writer (gm::make-plausible-writer graph destination)))
+	  (gm:model-dataset graph (loop for s in test collect (subseq s 0 1)) :predict? t :writers (list writer)))))))
+  nil)

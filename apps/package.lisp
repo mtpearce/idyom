@@ -2,14 +2,14 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                        
-;;;; Time-stamp: <2020-02-10 16:59:02 marcusp>                           
+;;;; Time-stamp: <2014-02-07 23:10:27 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
 
 (defpackage #:apps
   (:use #:cl #:utils #:md #:mvs)
-  (:export "*ROOT-DIR*" "DATASET-MODELLING-FILENAME")
+  (:export "*ROOT-DIR*" "POPULATE-DATABASE" "DATASET-MODELLING-FILENAME")
   (:documentation "Miscellaneous variables & utils for applications."))
 
 (defpackage #:idyom
@@ -34,3 +34,8 @@
            "DATASET-VIEWPOINT-SELECTION")
   (:documentation "Selection of viewpoints."))
 
+(defpackage #:generation 
+  (:use #:cl #:utils #:md #:viewpoints #:ppm #:mvs #:prediction-sets 
+        #:resampling)
+  (:export "DATASET-GENERATION" "GENERATE-CHORALES")
+  (:documentation "Generation of melodic compositions."))

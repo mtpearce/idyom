@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2018-10-18 08:40:15 marcusp>                           
+;;;; Time-stamp: <2015-03-25 23:09:12 marcusp>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -93,7 +93,7 @@
             ("^\\*I[^ T G C]" voice)                ;process instrument token
             ("^\\*k\\[[a-g]?" keysig)               ;process keysig token
             ("^\\*[a-g A-G ? X]" mode)              ;process mode token
-            ("^\\*M(FREI)?[0-9 ? X Z]" timesig)     ;process timesig token
+            ("^\\*M[0-9 ? X Z]" timesig)            ;process timesig token
             ("^\\*tb" ignore-token))))              ;ignore timebase token
   
 (defvar *voice-alist* '())
@@ -132,7 +132,7 @@
                   (bioi *default-bioi*)
                   (middle-c *middle-c*))
   "A top level call to convert a kern file or a directory of kern files
-   <file-or-dir-name> to database readable format. The keyword parameters
+   <file-or-dir-name> to CHARM readable format. The keyword parameters
    allow the user to change the default parameters for the conversion."
   (setq *default-timesig* timesig
         *default-keysig* keysig
@@ -162,7 +162,7 @@
       (list (convert-kern-file file-or-dir))))
 
 (defun convert-kern-file (file-name)
-  "Top level call to convert the kern file <file-name> to database readable
+  "Top level call to convert the kern file <file-name> to CHARM readable
    format using the default parameters."
   (initialise-voice-alist)
   (let* ((kern-data (read-kern-data file-name))
@@ -176,10 +176,10 @@
 (defun print-status ()
   "Print message warning about unrecognised representations or tokens."
   (unless (null *unrecognised-representations*)
-    (format t "~%The following representations were unrecognised: ~S"
+    (warn "~%The following representations were unrecognised: ~S"
             *unrecognised-representations*))
   (unless (null *unrecognised-tokens*)
-    (format t "~%The following tokens were unrecognised: ~S"
+    (warn "~%The following tokens were unrecognised: ~S"
             *unrecognised-tokens*)))
 
 
@@ -316,7 +316,7 @@
 
 
 (defun process-kern-data (spine-list)
-  "Converts the recorded kern data into a database readable format." 
+  "Converts the recorded kern data into a CHARM readable format." 
   (if (null *spines*)
       (setf *voices* (utils:generate-integers 1 (length spine-list)))
       (setf *voices* (sort (remove-duplicates *spines* :test #'=)  #'<)))
@@ -369,7 +369,7 @@
       (push representation *unrecognised-representations*)))
 
 (defun process-kern-spine (spine spine-id)
-  "Converts kern spines into database readable format."
+  "Converts kern spines into CHARM readable format."
   (let ((environment-alist
          (list (list 'onset *default-onset*)
                (list 'bioi *default-bioi*)
@@ -387,7 +387,7 @@
     (process-kern-tokens spine '() environment-alist)))
                
 (defun process-kern-tokens (spine converted-spine environment &key tied)
-  "Converts all tokens in <spine> into database readable format in
+  "Converts all tokens in <spine> into CHARM readable format in
    <converted-spine>. The <environment> is an initially empty list which
    is used to store global parameters such as onset time, voice,
    key and so on. <tied> is a boolean parameter which signifies whether
@@ -481,22 +481,19 @@
       (otherwise converted-spine))))
 
 (defun correct-onsets-in-first-bar (converted-spine first-onset environment
-                                                    &optional (offset 0))
+                                                    &optional shift)
   "Corrects the onsets of events in the first bar in cases where the first
    event in the piece is not the first event in the first bar."
   (if (null (car (cadr (assoc 'timesig environment))))
       converted-spine 
       (let* ((current-event (car converted-spine))
              (current-onset (cadr (assoc :onset current-event)))
-             (current-dur (cadr (assoc :dur current-event)))
-             (current-deltast (cadr (assoc :deltast current-event)))
-             (deltast (cadr (assoc 'deltast environment)))
+             (time (cadr (assoc 'onset environment)))
              (bar-length (calculate-bar-length environment))
-             (next-offset (if (not (null current-event))
-                              (+ offset current-dur)
-                              offset))
-             (new-onset (if (not (null current-event))
-                            (- (+ first-onset bar-length) deltast next-offset))))
+	     (shift (if (null shift) (- bar-length time) shift))
+             (new-onset (unless (null current-event)
+			  (+ current-onset shift))))
+	;;(format t "~A ~A ~A~%" current-onset bar-length new-onset)
         (cond ((null converted-spine) '())
               ((= current-onset first-onset)
                (cons (update-alist current-event
@@ -509,7 +506,7 @@
                        (correct-onsets-in-first-bar (cdr converted-spine)
                                                     first-onset
                                                     environment
-                                                    (+ next-offset current-deltast))))))))
+                                                    shift)))))))
 
 (defun calculate-bar-length (environment)
   "Calculates the number of time-units in a bar from the values of the
@@ -535,7 +532,7 @@
                               ((and (= p1 0) (= p2 0))
                                0)
                               (t 
-                               (print "Warning: unexpected phrase token within tied note.")
+                               (warn "Warning: unexpected phrase token within tied note.")
                                -1))))))
                 
 (defun update-environment (environment token type)

@@ -8,5 +8,5 @@
            "WRITE-MODEL-TO-POSTSCRIPT" "WRITE-MODEL-TO-FILE"
            "READ-MODEL-FROM-FILE" "GET-MODEL"
            ;; From ppm-ui.lisp
-           "PPM-PREDICT" "BUILD-MODEL" "NGRAM-FREQUENCIES")
+           "GET-PPM-ALPHABET" "NGRAM-FREQUENCIES" "BUILD-MODEL")
   (:documentation "Prediction by Partial Match modelling including methods for model initialisation, construction and prediction."))

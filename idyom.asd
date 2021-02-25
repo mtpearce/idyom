@@ -2,7 +2,7 @@
 ;;;; File:       IDyOM.asd
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-05-04 21:29:04 marcusp>
-;;;; Time-stamp: <2020-04-27 12:58:18 marcusp>
+;;;; Time-stamp: <2018-08-03 15:54:16 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -16,7 +16,7 @@
   :author "Marcus Pearce"
   :licence "GPL (see COPYING file for details)"
   :description "Information Dynamics of Music (see README for details)"
-  :depends-on (clsql cl-ppcre fiveam midi closer-mop psgraph sb-md5)
+  :depends-on (clsql cl-ppcre fiveam midi closer-mop psgraph sb-md5 unix-options fare-csv)
   :serial t
   :components
   (;; General utilities  
@@ -55,8 +55,7 @@
 	    ((:file "package")
 	     (:file "extended-sequence")
 	     (:file "time")
-             (:file "music-objects")
-             (:file "midi")))
+             (:file "music-objects")))
    ;; Viewpoints
    (:module viewpoints
 	    :serial t
@@ -88,6 +87,21 @@
 	     (:file "ppm-star")
 	     (:file "ppm-io")
 	     (:file "ppm-ui")))
+   ;; Prediction using generative models
+   ;(:module jackdaw
+;	    :serial t
+;	    :components
+;	    ((:file "packages")
+;	     (:file "jackdaw")
+;	     (:file "graphs")
+;	     (:file "probabilities")
+;	     (:file "marginals")
+;	     (:file "features")
+;	     (:file "models")
+;	     (:file "generative-models")
+;	     (:file "music-models")
+;	     (:file "output")
+;	     (:file "idyom")))
    ;; Prediction using multiple viewpoint systems (MVS)
    (:module mvs
             :serial t 
@@ -107,9 +121,7 @@
              (:file "viewpoint-selection")
              (:file "main")
              (:file "segmentation")
-             (:file "similarity")
-             (:file "generation")
-             (:file "key-finding")))
+             (:file "generation")))
    ;; Test suite
    (:module testing
             :serial t

@@ -2,7 +2,7 @@
 ;;;; File:       ppm-star.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2019-04-29 13:14:55 marcusp>                           
+;;;; Time-stamp: <2018-10-05 11:40:58 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -25,7 +25,7 @@
 
 (cl:in-package #:ppm)
 
-(defvar *sentinel* '$ "The unique end of sequence symbol.")
+(defvar *sentinel* :$ "The unique end of sequence symbol.")
 (defun sentinel-p (s) (eql s *sentinel*))
 
 (defun eequal (obj1 obj2)
@@ -79,29 +79,34 @@
 ;;;===========================================================================
 
 (defclass ppm ()
-  ((leaves    :accessor ppm-leaves   :initarg :leaves   :type hash-table)
-   (branches  :accessor ppm-branches :initarg :branches :type hash-table)
-   (front     :accessor ppm-front    :initarg :front    :type index)
-   (dataset   :reader ppm-dataset    :initarg :dataset  :type hash-table)
+  ((leaves    :accessor ppm-leaves   :initarg :leaves   :type hash-table
+	      :initform nil)
+   (branches  :accessor ppm-branches :initarg :branches :type hash-table
+	      :initform nil)
+   (front     :accessor ppm-front                       :type index)
+   (dataset   :accessor ppm-dataset  :initarg :dataset  :type hash-table
+	      :initform nil)
    ;;parameters used in construction 
-   (leaf-index    :accessor ppm-leaf-index :initarg :leaf-index
-                  :type (integer 0 *))
-   (branch-index  :accessor ppm-branch-index :initarg :branch-index
-                  :type (integer 0 *))
-   (virtual-nodes :accessor ppm-virtual-nodes :initarg :virtual-nodes
-                  :type hash-table)
+   (leaf-index    :accessor ppm-leaf-index :type (integer 0 *))
+   (branch-index  :accessor ppm-branch-index :type (integer 0 *))
+   (virtual-nodes :accessor ppm-virtual-nodes :type hash-table)
    ;;parameters used in prediction 
-   (alphabet :accessor ppm-alphabet :initarg :alphabet :type list)
-   (normalise :accessor ppm-normalise :initarg :normalise :type (or null symbol))
-   (exclusion :accessor ppm-exclusion :initarg :exclusion :type (or null symbol))
+   (alphabet :accessor ppm-alphabet :initarg :alphabet :type list
+	     :initform nil)
+   (normalise :accessor ppm-normalise :initarg :normalise :type (or null symbol)
+	      :initform t)
+   (exclusion :accessor ppm-exclusion :initarg :exclusion :type (or null symbol)
+	      :initform t)
    (update-exclusion :accessor ppm-update-exclusion :initarg :update-exclusion
-                     :type (or null symbol))
-   (mixtures :accessor ppm-mixtures :initarg :mixtures :type (or null symbol))
-   (order-bound :accessor ppm-order-bound :initarg :order-bound
-                :type (or null symbol))
-   (escape :accessor ppm-escape :initarg :escape :type (or null symbol))
-   (k :accessor ppm-k :initarg :k :type float)
-   (d :accessor ppm-d :initarg :d :type integer))
+                     :type (or null symbol) :initform nil)
+   (mixtures :accessor ppm-mixtures :type (or null symbol)
+	     :initarg :mixtures :initform t)
+   (order-bound :accessor ppm-order-bound :type (or null symbol) 
+		:initarg :order-bound :initform nil)
+   (escape :accessor ppm-escape :type (or null symbol)
+	   :initarg :escape :initform :c)
+   (k :accessor ppm-k :type float)
+   (d :accessor ppm-d :type integer))
   (:documentation "A ppm object contains all the parameters required for
    constructing and predicting from a ppm* model."))
 
@@ -432,44 +437,33 @@ of the location, the label is instantiated from the root of the tree."
 ;;; Initialisation 
 ;;;===========================================================================
 
-(defun make-ppm (alphabet &key (exclusion t) (mixtures t) (escape :c) 
-                            (order-bound nil) (update-exclusion nil)
-                            (normalise t)
-                            (dataset nil) (leaves nil) (branches nil))
-  "Returns a PPM* model initialised with the supplied parameters."
-  (multiple-value-bind (k d)
-      (case escape
+(defmethod initialize ((m ppm))
+  "Initialize a PPM instance based on supplied parameters."
+    (multiple-value-bind (k d)
+      (case (ppm-escape m)
         (:a (values 0 1))
         (:b (values -1 1))
         ((or :c :x) (values 0 1))
         (:d (values -1/2 2))
         (otherwise (values 0 1)))
-    (let* ((dataset (if (null dataset) (make-hash-table) dataset))
-           (front (make-index :s (hash-table-count dataset) :e 0))
-           (initial-leaves (if (null leaves) (make-hash-table) leaves))
-           (initial-branches (if (null branches) (make-hash-table) branches))
-           (leaf-index (hash-table-count initial-leaves))
-           (branch-index (hash-table-count initial-branches))
-           (virtual-nodes (make-hash-table :test #'equal))
-           (model (make-instance 'ppm 
-                                 :leaves initial-leaves
-                                 :branches initial-branches
-                                 :front front 
-                                 :dataset dataset 
-                                 :leaf-index leaf-index
-                                 :branch-index branch-index
-                                 :virtual-nodes virtual-nodes
-                                 :alphabet alphabet
-                                 :normalise normalise
-                                 :exclusion exclusion
-                                 :update-exclusion update-exclusion
-                                 :mixtures mixtures
-                                 :order-bound order-bound
-                                 :escape escape
-                                 :d d
-                                 :k k)))
-      (when (and (null leaves) (null branches)) (initialise-nodes model))
-      model)))
+    (let ((leaves-and-branches-null
+	   (and (null (ppm-leaves m))
+		(null (ppm-branches m)))))
+      (when (null (ppm-dataset m)) (setf (ppm-dataset m) (make-hash-table)))
+      (setf (ppm-front m) (make-index :s (hash-table-count (ppm-dataset m)) :e 0))
+      (when (null (ppm-leaves m)) (setf (ppm-leaves m) (make-hash-table)))
+      (when (null (ppm-branches m)) (setf (ppm-branches m) (make-hash-table)))
+      (setf (ppm-leaf-index m) (hash-table-count (ppm-leaves m))
+	    (ppm-branch-index m) (hash-table-count (ppm-branches m))
+	    (ppm-virtual-nodes m) (make-hash-table :test #'equal)
+	    (ppm-d m) d
+	    (ppm-k m) k)
+      (when leaves-and-branches-null (initialise-nodes m)))))
+
+(defmethod initialize-instance :after ((m ppm) &key)
+  "Initialize a PPM instance based on supplied parameters."
+  (initialize m))
+
 
 (defmethod reinitialise-ppm ((m ppm))
   "Reinitialises the parameters of <m> used in model construction."
@@ -518,7 +512,7 @@ of the location, the label is instantiated from the root of the tree."
 ;; Model Construction and Prediction 
 ;;;===========================================================================
 
-(defmethod model-dataset ((m ppm) dataset &key construct? predict? initialise? (sentinel? t))
+(defmethod model-dataset ((m ppm) dataset &key construct? predict? initialise?)
   "Models a dataset <dataset> (a vector of sequence vectors) given
    PPM model <m>. If <construct?> is non-nil the dataset is added to the
    model and if <predict?> is non-nil a distribution over (ppm-alphabet m)
@@ -527,7 +521,7 @@ of the location, the label is instantiated from the root of the tree."
              (if (null dataset) (reverse prediction-sets)
                  (let ((prediction-set
                         (model-sequence m (car dataset) :construct? construct? 
-                                        :predict? predict? :sentinel? sentinel?))
+                                        :predict? predict?))
                        (index-s (index-s (ppm-front m))))
                    (unless (= sequence-index 1) (increment-sequence-front m))
                    (when initialise? (reinitialise-ppm m))
@@ -537,7 +531,7 @@ of the location, the label is instantiated from the root of the tree."
                                   prediction-sets))))))
     (model-d dataset (length dataset) '())))
                    
-(defmethod model-sequence ((m ppm) sequence &key construct? predict? (sentinel? t))
+(defmethod model-sequence ((m ppm) sequence &key construct? predict?)
   "Models a sequence <sequence> (a vector of symbols) given PPM
    model <m>. If <construct?> is non-nil the sequence is added to the
    model and if <predict?> is non-nil a distribution over (ppm-alphabet m)
@@ -547,7 +541,7 @@ of the location, the label is instantiated from the root of the tree."
   (labels ((model-seq (sequence location prediction-set)
              (if (null sequence)
                  (progn
-                   (when (and construct? sentinel?) (model-sentinel-event m location))
+                   (when construct? (model-sentinel-event m location))
                    (reverse prediction-set))
                  (let ((symbol (car sequence)))
                    (multiple-value-bind (next-location event-distribution)
@@ -578,7 +572,9 @@ of the location, the label is instantiated from the root of the tree."
          (distribution (car gd))
          (order (cadr gd))
          (next-location (ukkstep m nil location symbol construct?)))
-    (when construct? (increment-counts m next-location))
+    (when construct?
+      ;;(warn "modeling ~a" symbol)
+      (increment-counts m next-location))
     (values next-location distribution order)))
 
 
@@ -589,7 +585,7 @@ of the location, the label is instantiated from the root of the tree."
 (defmethod ukkstep ((m ppm) node location symbol construct?)
   "Updates the suffix link of node and inserts the relevant suffixes of
    the current prefix of the current sequence in the dataset into <m>."
-  (cond ((occurs? m location symbol)
+    (cond ((occurs? m location symbol)
          (when construct? (update-slink m node location :occurs? t))
          (canonise m location (make-label :left (ppm-front m) :length 1)))
         ((root-p location)
@@ -862,15 +858,15 @@ the location <location> and returns <vn>."
   "Returns the shortest deterministic state on the chain of suffix links
    from <location> or else <location> itself when (ppm-order-bound <m>)
    is null or the first state whose order is <= (ppm-order-bound <m>) if
-   if it is an integer." 
+   if it is an integer."
   (labels ((order-bounded-state (location)
              (if (root-p location) location
                  (if (<= (get-order m location) (ppm-order-bound m))
                      location
                      (order-bounded-state (get-next-location m location)))))
            (shortest-deterministic-state (location selected)
-              (if (branch-p location) selected
-                  (shortest-deterministic-state (get-next-location m location) location))))
+	     (if (branch-p location) selected
+		 (shortest-deterministic-state (get-next-location m location) location))))
     (if (null (ppm-order-bound m))
         (let ((sds (shortest-deterministic-state location nil)))
           (if (or (null sds) (eq sds location))
