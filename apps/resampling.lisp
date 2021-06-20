@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2021-06-20 12:42:24 marcusp>                           
+;;;; Time-stamp: <2021-06-21 00:04:33 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -110,11 +110,11 @@
 (defun monodies-to-lists (monodies) (mapcar #'monody-to-list monodies))
 (defun monody-to-list (monody) (coerce monody 'list))
 
-(defun output-information-content (resampling-predictions dataset-id &optional (detail 3))
+(defun output-information (resampling-predictions dataset-id &optional (detail 3) (information-measure :information-content))
   "Processes the output of IDYOM-RESAMPLE. <detail> is an integer
 specifying the desired level of detail."
   (let* ((data (resampling-predictions->dataframe resampling-predictions dataset-id))
-         (event-ics (get-column-by-composition 'information.content data))
+         (event-ics (get-column-by-composition information-measure data))
          (melody-ics (mapcar #'(lambda (x) (apply #'utils:average x)) event-ics))
          (overall-ics (apply #'utils:average melody-ics)))
     (case detail 
@@ -147,7 +147,7 @@ specifying the desired level of detail."
 					    dataset-id
 					    &key (separator " "))
   (multiple-value-bind (overall-mean composition-means)
-      (resampling:output-information-content resampling-predictions dataset-id 2)
+      (resampling:output-information resampling-predictions dataset-id 2)
     (format stream "~&melody.id~Amelody.name~Amean.information.content~%"
 	    separator separator)
     (do* ((ic composition-means (cdr ic))
@@ -163,7 +163,8 @@ specifying the desired level of detail."
       (format-information-content-detail=3-old stream resampling-predictions
 					       dataset-id :separator separator)
       (let ((df (resampling-predictions->dataframe resampling-predictions dataset-id)))
-        (print-data df stream :null-token null-token :separator separator))))
+        (print-data df stream :null-token null-token :separator separator)
+        df)))
   
 (defun resampling-predictions->dataframe (resampling-predictions dataset-id)
   (let* ((resampling-predictions (reorder-resampling-predictions
@@ -197,7 +198,7 @@ specifying the desired level of detail."
                  (setf past-results (gethash k results))
                  ;;(remhash 'distribution (gethash k results))
                  ))))
-        (add-results-to-dataframe results data :blacklist '(distribution))))
+        (add-results-to-dataframe results data :blacklist '(:distribution))))
     data))
 
 (defun reorder-resampling-predictions (resampling-predictions)
@@ -251,10 +252,10 @@ is a list of composition prediction sets, ordered by composition ID."
 	 (timebase (md:timebase event)))
     ;; Store event information
     (unless existing-results
-      (setf (gethash 'dataset.id event-results) dataset-id)
-      (setf (gethash 'melody.id event-results) (1+ composition-id))
-      (setf (gethash 'note.id event-results) (1+ event-id))
-      (setf (gethash 'melody.name event-results) (quote-string (md:get-description
+      (setf (gethash :dataset.id event-results) dataset-id)
+      (setf (gethash :melody.id event-results) (1+ composition-id))
+      (setf (gethash :note.id event-results) (1+ event-id))
+      (setf (gethash :melody.name event-results) (quote-string (md:get-description
 								dataset-id
 								composition-id)))
       ;; TODO - this needs to be specific to each type of music-object
@@ -270,12 +271,12 @@ is a list of composition prediction sets, ordered by composition ID."
     (when weights
       (dolist (w weights) ; weights
 	(setf (gethash (create-key feature (car w)) event-results) (cadr w))))
-    (setf (gethash (create-key feature 'probability) event-results) probability)
-    (setf (gethash (create-key feature 'information.content) event-results)
+    (setf (gethash (create-key feature :probability) event-results) probability)
+    (setf (gethash (create-key feature :information.content) event-results)
 	  (- (log probability 2)))
-    (setf (gethash (create-key feature 'entropy) event-results)
+    (setf (gethash (create-key feature :entropy) event-results)
 	  (float (prediction-sets:shannon-entropy distribution) 0.0))
-    (setf (gethash (create-key feature 'distribution) event-results) distribution)
+    (setf (gethash (create-key feature :distribution) event-results) distribution)
     (dolist (p distribution)
       (let ((value (if (string= (symbol-name feature) "ONSET")
                        (- (car p) (- (md:get-attribute event :onset) (md:get-attribute event :bioi)))
@@ -294,12 +295,12 @@ is a list of composition prediction sets, ordered by composition ID."
 					       (list elements (apply #'* probabilities))))
 			       (apply #'utils:cartesian-product distributions)))
          (information-gain (when previous-results
-                             (kl-divergence distribution (gethash 'distribution previous-results)))))
-    (setf (gethash 'distribution event-results) distribution)
-    (setf (gethash 'probability event-results) probability)
-    (setf (gethash 'information.content event-results) (- (log probability 2)))
-    (setf (gethash 'entropy event-results) (prediction-sets:shannon-entropy distribution))
-    (setf (gethash 'information.gain event-results) information-gain)
+                             (kl-divergence distribution (gethash :distribution previous-results)))))
+    (setf (gethash :distribution event-results) distribution)
+    (setf (gethash :probability event-results) probability)
+    (setf (gethash :information.content event-results) (- (log probability 2)))
+    (setf (gethash :entropy event-results) (prediction-sets:shannon-entropy distribution))
+    (setf (gethash :information.gain event-results) information-gain)
     ;; TODO elements of combined distribution
     (mapc #'(lambda (key) (remhash key event-results)) distribution-keys)
     event-results))
@@ -531,7 +532,7 @@ consing a new value to the beginning of the list."))
   (:documentation "Returns the data for <column> in <dataframe> as a list of lists, one for each composition."))
 
 (defmethod get-column-by-composition (column (df dataframe))
-  (let ((composition-ids (get-column 'melody.id df))
+  (let ((composition-ids (get-column :melody.id df))
         (data (get-column column df))
         (result)
         (cid-result))
