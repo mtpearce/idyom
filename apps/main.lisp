@@ -2,7 +2,7 @@
 ;;;; File:       main.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2010-11-01 15:19:57 marcusp>
-;;;; Time-stamp: <2018-07-16 12:58:32 marcusp>
+;;;; Time-stamp: <2021-06-20 10:53:04 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:idyom)
@@ -124,7 +124,7 @@
                                              :use-ltms-cache? use-ltms-cache?)))
             (when output-path
               (resampling:format-information-content predictions filepath dataset-id detail :separator separator))
-            (resampling:output-information-content predictions detail))))))
+            (resampling:output-information-content predictions dataset-id detail))))))
 
 (defun find-selection-basis (targets basis)
   "Determine which viewpoints are to be used in selection process"

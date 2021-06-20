@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2019-06-13 13:33:43 marcusp>                           
+;;;; Time-stamp: <2021-06-20 12:42:24 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -110,66 +110,25 @@
 (defun monodies-to-lists (monodies) (mapcar #'monody-to-list monodies))
 (defun monody-to-list (monody) (coerce monody 'list))
 
-(defun output-information-content (resampling-predictions &optional (detail 3))
+(defun output-information-content (resampling-predictions dataset-id &optional (detail 3))
   "Processes the output of IDYOM-RESAMPLE. <detail> is an integer
 specifying the desired level of detail."
-  (let* ((event-ics (information-content-profiles resampling-predictions))
+  (let* ((data (resampling-predictions->dataframe resampling-predictions dataset-id))
+         (event-ics (get-column-by-composition 'information.content data))
          (melody-ics (mapcar #'(lambda (x) (apply #'utils:average x)) event-ics))
          (overall-ics (apply #'utils:average melody-ics)))
     (case detail 
       (1 overall-ics)
       (2 (values overall-ics melody-ics))
       (3 (values overall-ics melody-ics event-ics)))))
-    
-(defun information-content-profiles (dataset-predictions) 
-  "Processes the output of IDYOM-RESAMPLE, multiplying
-probabilities for different attributes and returning a list of lists
-the information content for each event in each melody (sorted by
-dataset-id)."
-  (let ((results (make-hash-table)) (keys))
-    ;; FOR EACH: resampling set prediction 
-    (dolist (rsp dataset-predictions)
-      ;; FOR EACH: feature prediction 
-      (dolist (fp rsp)
-        (let ((feature 
-               (viewpoints:viewpoint-type 
-                (prediction-sets:prediction-viewpoint fp))))
-          ;; FOR EACH: song prediction 
-          (dolist (sp (prediction-sets:prediction-set fp))
-            (let ((song-id (prediction-sets:prediction-index sp))
-                  (fsp nil))
-              (pushnew song-id keys)
-              ;; FOR EACH: event 
-              (dolist (ep (prediction-sets:prediction-set sp))
-                (let ((probability (probability ep)))
-                  ;; (format t "~&~A ~A ~A~%" song-id (prediction-sets::prediction-element ep) (prediction-sets:prediction-set ep))
-                  (push probability fsp)))
-              (let ((fr (gethash feature results)))
-                (setf (gethash feature results)
-                      (cons (list song-id (nreverse fsp)) fr))))))))
-    (let ((information-contents))
-      ;; For each song
-      ;; (print keys)
-      (dolist (key (sort keys #'<))
-        (let* (;; get the probabilities for each feature 
-               (sp (mapcar #'(lambda (x) 
-                               (cadr (assoc key (cadr x))))
-                           (utils:hash-table->alist results)))
-               ;; (foo (progn (print (list key sp)) nil))
-               ;; multiply them together 
-               (spm (apply #'mapcar #'* sp))
-               ;; compute the information content 
-               (sic (mapcar #'(lambda (x) (- (log x 2))) spm)))
-          (push sic information-contents)))
-      (nreverse information-contents))))
-
-(defun probability (event-prediction) 
-  (cadr (prediction-sets:event-prediction event-prediction)))
 
 
 ;;;===========================================================================
 ;;; Formatted output of information content etc.
 ;;;===========================================================================
+
+(defun probability (event-prediction) 
+  (cadr (prediction-sets:event-prediction event-prediction)))
 
 (defun quote-string (string)
   (format nil "~s" string))
@@ -188,7 +147,7 @@ dataset-id)."
 					    dataset-id
 					    &key (separator " "))
   (multiple-value-bind (overall-mean composition-means)
-      (resampling:output-information-content resampling-predictions 2)
+      (resampling:output-information-content resampling-predictions dataset-id 2)
     (format stream "~&melody.id~Amelody.name~Amean.information.content~%"
 	    separator separator)
     (do* ((ic composition-means (cdr ic))
@@ -203,39 +162,43 @@ dataset-id)."
   (if *use-old-format-method*
       (format-information-content-detail=3-old stream resampling-predictions
 					       dataset-id :separator separator)
-      (let* ((resampling-predictions (reorder-resampling-predictions
-				      resampling-predictions))
-	     (data (make-instance 'dataframe)))
-
-	(dolist (sp resampling-predictions) ; compositions
-	  (let ((composition-id (prediction-sets:prediction-index sp))
-		(results (make-hash-table :test #'equal))
-		(features))
-	    (dolist (fp (prediction-sets:prediction-set sp)) ; target viewpoints
-	      (let ((feature (viewpoints:viewpoint-type
-			      (prediction-sets:prediction-viewpoint fp))))
-		(pushnew feature features)
-		(dolist (ep (prediction-sets:prediction-set fp)) ; events
-		  (let* ((event (prediction-sets:prediction-event ep))
-			 (event-id (md:get-event-index
-				    (md:get-attribute event 'identifier))))
-		    (setf (gethash (list composition-id event-id) results)
-			  (format-event-prediction ep results
-						   dataset-id composition-id
-						   feature))))))
-            (let ((past-results nil))
-              (with-hash-table-iterator (next results)
-                (loop
-                   (multiple-value-bind (more k v)
-                       (next)
-                     (unless more (return nil))
-                     (setf (gethash k results)
-                           (combine-event-probabilities v past-results features))
-                     (setf past-results (gethash k results))
-                     ;;(remhash 'distribution (gethash k results))
-                     ))))
-            (add-results-to-dataframe results data :blacklist '(distribution))))
-        (print-data data stream :null-token null-token :separator separator))))
+      (let ((df (resampling-predictions->dataframe resampling-predictions dataset-id)))
+        (print-data df stream :null-token null-token :separator separator))))
+  
+(defun resampling-predictions->dataframe (resampling-predictions dataset-id)
+  (let* ((resampling-predictions (reorder-resampling-predictions
+                                  resampling-predictions))
+         (data (make-instance 'dataframe)))
+    
+    (dolist (sp resampling-predictions) ; compositions
+      (let ((composition-id (prediction-sets:prediction-index sp))
+            (results (make-hash-table :test #'equal))
+            (features))
+        (dolist (fp (prediction-sets:prediction-set sp)) ; target viewpoints
+          (let ((feature (viewpoints:viewpoint-type
+                          (prediction-sets:prediction-viewpoint fp))))
+            (pushnew feature features)
+            (dolist (ep (prediction-sets:prediction-set fp)) ; events
+              (let* ((event (prediction-sets:prediction-event ep))
+                     (event-id (md:get-event-index
+                                (md:get-attribute event 'identifier))))
+                (setf (gethash (list composition-id event-id) results)
+                      (format-event-prediction ep results
+                                               dataset-id composition-id
+                                               feature))))))
+        (let ((past-results nil))
+          (with-hash-table-iterator (next results)
+            (loop
+               (multiple-value-bind (more k v)
+                   (next)
+                 (unless more (return nil))
+                 (setf (gethash k results)
+                       (combine-event-probabilities v past-results features))
+                 (setf past-results (gethash k results))
+                 ;;(remhash 'distribution (gethash k results))
+                 ))))
+        (add-results-to-dataframe results data :blacklist '(distribution))))
+    data))
 
 (defun reorder-resampling-predictions (resampling-predictions)
   "Reorders <resampling-predictions> so that instead of compositions 
@@ -503,9 +466,13 @@ for <viewpoint> in <dataset-id>."
 (defclass dataframe ()
   ((data :initform (make-hash-table :test #'equal) :accessor data)
    (num-rows :initform 0 :accessor num-rows))
-  (:documentation "A <dataframe> efficiently accumulates stores text data in a tabular form. Columns are identified by unique IDs, and are stored as lists within a hash table.
-Note that lists are accumulated in reverse order, so that appending to a column
-can be achieved by consing a new value to the beginning of the list."))
+  (:documentation "A <dataframe> efficiently accumulates and stores text
+data in a tabular form. Columns are identified by unique IDs, and are
+stored as lists within a hash table.  Note that lists are accumulated
+in reverse order, so that appending to a column can be achieved by
+consing a new value to the beginning of the list."))
+
+;; adding data
 
 (defgeneric add-row (row place)
   (:documentation "Adds a new row, <row>, to a data storage object, <place>."))
@@ -528,8 +495,60 @@ can be achieved by consing a new value to the beginning of the list."))
 		    (make-list (num-rows place) :initial-element nil))))
       (incf (num-rows place)))))
 
-(defgeneric print-data (data stream &key separator order-by-key
-				      null-token)
+(defun add-results-to-dataframe (results dataframe &key blacklist)
+  (flet ((sort-function (x y) (let ((x1 (car x)) (x2 (cadr x))
+				    (y1 (car y)) (y2 (cadr y)))
+				(if (= x1 y1) (< x2 y2) (< x1 y1)))))
+    
+    (let ((sorted-results (utils:hash-table->sorted-alist results #'sort-function)))
+      (dolist (event sorted-results)
+	(let* ((event-ht (cdr event)))
+          (dolist (bl blacklist)
+            (remhash bl event-ht))
+	  (add-row event-ht dataframe))))))
+
+
+;; accessing data
+
+(defgeneric get-column-names (dataframe)
+  (:documentation "Return a list of column names in <dataframe>"))
+
+(defmethod get-column-names ((df dataframe))
+  (loop for key being the hash-keys of (data df) collect key))
+
+(defgeneric get-column (column dataframe)
+  (:documentation "Return the data for <column> in <dataframe>."))
+
+(defmethod get-column (c (df dataframe)) (gethash c (data df)))
+
+(defgeneric get-columns (columns dataframe)
+  (:documentation "Returns the data for <columns> in <dataframe>"))
+
+(defmethod get-columns (columns (df dataframe))
+  (mapcar #'(lambda (column) (get-column column df)) columns))
+
+(defgeneric get-column-by-composition (column dataframe)
+  (:documentation "Returns the data for <column> in <dataframe> as a list of lists, one for each composition."))
+
+(defmethod get-column-by-composition (column (df dataframe))
+  (let ((composition-ids (get-column 'melody.id df))
+        (data (get-column column df))
+        (result)
+        (cid-result))
+    (do ((cid composition-ids (cdr cid))
+         (cid-1 nil (car cid))
+         (values data (cdr values)))
+        ((or (null cid) (null values)) (push cid-result result))
+      ;; (print (list (car cid) cid-1 (car values)))
+      (if (and cid-1 (= (car cid) cid-1))
+          (push (car values) cid-result)
+          (progn
+            (when cid-result (push cid-result result))
+            (setf cid-result (list (car values))))))))
+
+;; printing data 
+
+(defgeneric print-data (data stream &key separator order-by-key null-token)
   (:documentation "Prints <data> to <stream>. If <order-by-key>, then the output
 is ordered by key."))
 
@@ -557,14 +576,4 @@ is ordered by key."))
 	  (format destination "~A~A" token separator)))
       (format destination "~&"))))
   
-(defun add-results-to-dataframe (results dataframe &key blacklist)
-  (flet ((sort-function (x y) (let ((x1 (car x)) (x2 (cadr x))
-				    (y1 (car y)) (y2 (cadr y)))
-				(if (= x1 y1) (< x2 y2) (< x1 y1)))))
-    
-    (let ((sorted-results (utils:hash-table->sorted-alist results #'sort-function)))
-      (dolist (event sorted-results)
-	(let* ((event-ht (cdr event)))
-          (dolist (bl blacklist)
-            (remhash bl event-ht))
-	  (add-row event-ht dataframe))))))
+
