@@ -2,7 +2,7 @@
 ;;;; File:       viewpoint-selection.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-10-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2018-06-22 13:32:44 marcusp>                           
+;;;; Time-stamp: <2021-06-24 14:13:36 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoint-selection)
@@ -52,7 +52,7 @@
                                                                           :models models :ltmo ltmo :stmo stmo)))
                              (filepath (when output-path (ensure-directories-exist
                                                           (merge-pathnames filename (utils:ensure-directory output-path)))))
-                             (ic (resampling:output-information-content output 1)))
+                             (ic (resampling:output-information output 1)))
                         (print filepath)
                         (format t "~&Mean information content for ~a~&is ~a" source-viewpoints ic)
                         (when (and filepath (not (and (probe-file filepath) (not overwrite))))
