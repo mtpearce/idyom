@@ -2,12 +2,11 @@
 ;;;; File:       midi.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2020-02-05 07:01:51 marcusp>
-;;;; Time-stamp: <2020-07-10 09:33:42 marcusp>
+;;;; Time-stamp: <2021-07-01 10:24:06 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
 
-(defvar *timebase* 96)
 (defvar *midc* 60) 
 
 (defvar *tick-multiplier* 1)

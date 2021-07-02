@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2018-07-02 15:42:17 marcusp>
+;;;; Time-stamp: <2021-07-01 10:24:23 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -30,7 +30,7 @@
 (defvar *time-slots* '(onset dur deltast barlength bioi))
 (defvar *md-time-slots* (mapcar #'music-symbol *time-slots*))
 
-(defparameter *md-timebase* 96 "Target timebase for music objects")
+(defparameter *timebase* 96 "Target timebase for music objects")
 
 
 ;;; Classes for music objects
@@ -538,11 +538,11 @@ the highest pitch sounding at that onset position."
 
 ;; converting time resolutions
 
-(defun convert-time-value (time-value old-timebase &optional (new-timebase *md-timebase*) (fraction-warning nil))
+(defun convert-time-value (time-value old-timebase &optional (new-timebase *timebase*) (fraction-warning nil))
   "Convert <time-value> from <old-timebase> to <new-timebase> where
-    the latter defaults to the value of *MD-TIMEBASE*. For example,
+    the latter defaults to the value of *TIMEBASE*. For example,
     convert a time value from a native representation of time into a
-    representation where a bar has a value of *md-timebase*."
+    representation where a bar has a value of *timebase*."
   (if (or (null time-value) (null old-timebase))
       nil
       (let* ((multiplier (/ new-timebase old-timebase))
