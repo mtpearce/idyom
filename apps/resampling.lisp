@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2021-06-21 00:04:33 marcusp>                           
+;;;; Time-stamp: <2021-07-05 12:40:31 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -106,22 +106,37 @@
 			      (escape (getf defaults :escape)))  
   (list :order-bound order-bound :mixtures mixtures :update-exclusion update-exclusion :escape escape :exclusion exclusion))
 
-
-(defun monodies-to-lists (monodies) (mapcar #'monody-to-list monodies))
-(defun monody-to-list (monody) (coerce monody 'list))
-
-(defun output-information (resampling-predictions dataset-id &optional (detail 3) (information-measure :information-content))
+(defun output-information (resampling-predictions dataset-id &optional (detail 3) (information-measure :information.content))
   "Processes the output of IDYOM-RESAMPLE. <detail> is an integer
-specifying the desired level of detail."
-  (let* ((data (resampling-predictions->dataframe resampling-predictions dataset-id))
-         (event-ics (get-column-by-composition information-measure data))
-         (melody-ics (mapcar #'(lambda (x) (apply #'utils:average x)) event-ics))
-         (overall-ics (apply #'utils:average melody-ics)))
-    (case detail 
-      (1 overall-ics)
-      (2 (values overall-ics melody-ics))
-      (3 (values overall-ics melody-ics event-ics)))))
-
+specifying the desired level of detail (1 = dataset average; 2 =
+composition average; 3 = for all events in all
+compositions. <information-measure> specifies whether to return
+information content (:information.content), entropy (:entropy) or
+both ('(:information-content :entropy))."
+  (let ((data (resampling-predictions->dataframe resampling-predictions dataset-id))
+        (event-ics) (composition-ics) (dataset-ics) (event-entropies) (composition-entropies) (dataset-entropies))
+    (when (or (eq information-measure :information.content) (and (listp information-measure) (member :information.content information-measure)))
+      (setf event-ics (get-column-by-composition :information.content data))
+      (setf composition-ics (mapcar #'(lambda (x) (apply #'utils:average x)) event-ics))
+      (setf dataset-ics (apply #'utils:average composition-ics)))
+    (when (or (eq information-measure :entropy) (and (listp information-measure) (member :entropy information-measure)))
+      (setf event-entropies (get-column-by-composition :entropy data))
+      (setf composition-entropies (mapcar #'(lambda (x) (apply #'utils:average x)) event-entropies))
+      (setf dataset-entropies (apply #'utils:average composition-entropies)))
+    (if (and dataset-ics dataset-entropies)
+        (case detail
+          (1 (values dataset-ics dataset-entropies))
+          (2 (values dataset-ics dataset-entropies composition-ics composition-entropies))
+          (3 (values dataset-ics dataset-entropies composition-ics composition-entropies event-ics event-entropies)))
+        (if dataset-ics
+            (case detail
+              (1 dataset-ics)
+              (2 (values dataset-ics composition-ics))
+              (3 (values dataset-ics composition-ics event-ics)))
+            (case detail
+              (1 dataset-entropies)
+              (2 (values dataset-entropies composition-entropies))
+              (3 (values dataset-entropies composition-entropies event-entropies)))))))
 
 ;;;===========================================================================
 ;;; Formatted output of information content etc.
@@ -146,13 +161,13 @@ specifying the desired level of detail."
 (defun format-information-content-detail=2 (stream resampling-predictions
 					    dataset-id
 					    &key (separator " "))
-  (multiple-value-bind (overall-mean composition-means)
+  (multiple-value-bind (dataset-mean composition-means)
       (resampling:output-information resampling-predictions dataset-id 2)
     (format stream "~&melody.id~Amelody.name~Amean.information.content~%"
 	    separator separator)
     (do* ((ic composition-means (cdr ic))
           (cid 1 (1+ cid)))
-         ((null ic) overall-mean)
+         ((null ic) dataset-mean)
       (let ((d (quote-string (md:get-description dataset-id (1- cid)))))
         (format stream "~&~A~A~A~A~A~%" cid separator d separator (car ic))))))
 
