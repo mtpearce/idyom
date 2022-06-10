@@ -2,7 +2,7 @@
 ;;;; File:       segmentation.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2008-03-13 13:07:12 marcusp>
-;;;; Time-stamp: <2020-04-27 13:13:34 marcusp>
+;;;; Time-stamp: <2021-07-12 10:55:19 marcusp>
 ;;;; ======================================================================
 
 (cl:defpackage #:segmentation
@@ -20,6 +20,8 @@
 (defparameter *no-boundary* 0
   "An object used to represent a point where a boundary doesn't occur.")
 
+(defun boundary-p (x) (eq x *boundary*))
+
 ;;;; Top-level
 
 (defun idyom-segmentation (dataset-id target-viewpoints source-viewpoints
@@ -30,21 +32,31 @@
                              (models :both+)
                              ;; segmentation parameters
                              (threshold 1.28) (window-size nil)
-                             (mean #'linearly-weighted-arithmetic-mean))
-  (multiple-value-bind (d1 d2 d3)
-      (idyom:idyom dataset-id target-viewpoints source-viewpoints :models models :k k :pretraining-ids pretraining-ids)
-    (declare (ignore d1 d2))
-    (let* ((predicted (mapcar #'(lambda (x) (segmentation:peak-picker x :k threshold :window-size window-size :mean mean)) d3))
+                             (combination-function #'(lambda (ic e) (declare (ignore e)) (if (boundary-p ic) *boundary* *no-boundary*)))
+                             (mean #'linearly-weighted-arithmetic-mean)
+                             ;; output parameters
+                             (print t))
+  (multiple-value-bind (ic1 e1 ic2 e2 ic3 e3)
+      (idyom:idyom dataset-id target-viewpoints source-viewpoints :models models :k k :pretraining-ids pretraining-ids :information-measure '(:information.content :entropy))
+    (declare (ignore ic1 e1 ic2 e2))
+    (let* ((predicted (mapcar #'(lambda (ic e)
+                                  (let ((icp (segmentation:peak-picker (mapcar #'+ ic (cons 0 (butlast e))) :k threshold :window-size window-size :mean mean))
+                                        (ep (segmentation:peak-picker (cons 0 (butlast e)) :k threshold :window-size window-size :mean mean)))
+                                    (mapcar combination-function icp ep)))
+                              ic3 e3))
            (actual (ground-truth dataset-id))
-           (result (mapcar #'(lambda (p a)
-                               (multiple-value-list 
-                                (test-segmentation p a nil)))
-                           predicted actual))
-           (mean-p (apply #'utils:average (mapcar #'first result)))
-           (mean-r (apply #'utils:average (mapcar #'second result)))
-           (mean-f (apply #'utils:average (mapcar #'third result))))
-      (segmentation:test-segmentation (reduce #'append predicted) (reduce #'append actual))
-      (format t "~&Mean Precision = ~,2F; Mean Recall = ~,2F; Mean F_1 = ~,2F~%" mean-p mean-r mean-f))))
+           (mean-result (mapcar #'(lambda (p a)
+                                    (multiple-value-list 
+                                     (test-segmentation p a nil)))
+                                predicted actual))
+           (mean-p (apply #'utils:average (mapcar #'first mean-result)))
+           (mean-r (apply #'utils:average (mapcar #'second mean-result)))
+           (mean-f (apply #'utils:average (mapcar #'third mean-result))))
+      (multiple-value-bind (p r f)
+          (segmentation:test-segmentation (reduce #'append predicted) (reduce #'append actual) print)
+        (when print
+          (format t "~&Mean Precision = ~,2F; Mean Recall = ~,2F; Mean F_1 = ~,2F~%" mean-p mean-r mean-f))
+        (list p r f mean-p mean-r mean-f)))))
 
   
 ;;;; Peak picking
