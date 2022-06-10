@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2021-07-05 12:40:31 marcusp>                           
+;;;; Time-stamp: <2022-06-10 16:46:53 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -105,6 +105,9 @@
                               (exclusion (getf defaults :exclusion))
 			      (escape (getf defaults :escape)))  
   (list :order-bound order-bound :mixtures mixtures :update-exclusion update-exclusion :escape escape :exclusion exclusion))
+
+(defun monodies-to-lists (monodies) (mapcar #'monody-to-list monodies))
+(defun monody-to-list (monody) (coerce monody 'list))
 
 (defun output-information (resampling-predictions dataset-id &optional (detail 3) (information-measure :information.content))
   "Processes the output of IDYOM-RESAMPLE. <detail> is an integer
@@ -277,7 +280,7 @@ is a list of composition prediction sets, ordered by composition ID."
       ;; (music-event, music-slice etc.)
       (dolist (attribute (viewpoints:get-basic-types event))
 	(let ((value (md:get-attribute event attribute)))
-	  (when (member attribute '(:dur :bioi :deltast :onset) :test #'eq)
+	  (when (and value (member attribute '(:dur :bioi :deltast :onset) :test #'eq))
 	    (setf value (* value (/ timebase 96))))
 	  (setf (gethash attribute event-results) value))))
     ;; Store feature prediction
