@@ -2,7 +2,7 @@
 ;;;; File:       IDyOM.asd
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-05-04 21:29:04 marcusp>
-;;;; Time-stamp: <2020-04-27 12:58:18 marcusp>
+;;;; Time-stamp: <2022-06-14 09:03:09 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -76,6 +76,11 @@
                        (:file "phrase")
 		       (:file "threaded")
 		       (:file "implication-realisation")))
+             (:module harmony :serial t
+                      :components
+                      ((:file "basic-viewpoints")
+                       (:file "gct")
+                       (:file "derived")))
              ;; useful extensions for modelling 
              ;; (not strictly part of the representation scheme)
 	     (:file "extensions")))
