@@ -2,13 +2,13 @@
 ;;;; File:       gct.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-25 19:09:17 marcusp>                           
-;;;; Time-stamp: <2022-06-14 08:45:55 marcusp>                           
+;;;; Time-stamp: <2022-06-15 15:34:59 marcusp>                           
 ;;;; ======================================================================
 
 ;;; An implementation of the General Chord Type (GCT) algorithm
 ;;; (Cambouropoulos et al., 2014, Proceedings of ICMC-SMC)
 ;;;
-;;; TODO: update according to Cambouropoulos 
+;;; TODO: update according to Giannos & Cambouropoulos (2021, 8th International Conference on Digital Libraries for Musicology)
 
 (cl:in-package #:viewpoints)
 
