@@ -2,7 +2,7 @@
 ;;;; File:       multiple-viewpoint-system.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-27 18:54:17 marcusp>                           
-;;;; Time-stamp: <2019-06-13 13:29:40 marcusp>                           
+;;;; Time-stamp: <2022-06-15 16:49:45 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -137,34 +137,6 @@ sole argument on all the long- and short-term models in mvs <m>."
             (stm-args (mapcar #'(lambda (x) (nth model-index x)) stm-args)))
         (unless (eql models 'stm) (apply operation (cons ltm ltm-args)))
         (unless (eql models 'ltm) (apply operation (cons stm stm-args)))))))
-
-;;; needed in apps/generation.lisp (TODO rewrite that to use new
-;;; SET-MODEL-ALPHABETS)
-(defgeneric old-set-model-alphabets (mvs event-array events unconstrained))
-(defmethod old-set-model-alphabets ((m mvs) event-array events unconstrained)
-  "Sets the alphabets of all non-basic viewpoints and models in
-multiple viewpoint system <m> such that they are capable of predicting
-all of the elements of the basic viewpoints in their
-typesets. <unconstrainted> is a list of basic viewpoints being
-predicted which assume their full alphabets, otherwise the basic
-alphabets are singletons determined on the basis of the values of the
-final event in <events>. If <unconstrained> is passed a value of T,
-all basic viewpoints are considered to be unconstrained."
-  (dotimes (model-index (count-viewpoints m))
-  ;;(format t "~&Viewpoint: ~A; Alphabet length: ~A~%" 
-  ;;        (viewpoint-type (aref (mvs-viewpoints m) model-index))
-  ;;        (length (viewpoint-alphabet (aref (mvs-viewpoints m) model-index))))
-    (let* ((event (aref event-array model-index))
-           (viewpoint (aref (mvs-viewpoints m) model-index))
-           (ltm (aref (mvs-ltm m) model-index))
-           (stm (aref (mvs-stm m) model-index)))
-      (unless (or (viewpoints:basic-p viewpoint) (undefined-p event))
-        (viewpoints:set-alphabet-from-context viewpoint events unconstrained))
-      ;;(format t "~&Viewpoint: ~A; Event: ~A; Alphabet length: ~A~%" 
-      ;;        (viewpoint-type viewpoint) event 
-      ;;        (length (viewpoint-alphabet viewpoint)))
-      (set-alphabet ltm (viewpoint-alphabet viewpoint))
-      (set-alphabet stm (viewpoint-alphabet viewpoint)))))
 
 (defmethod set-model-alphabets ((m mvs) event events viewpoint ltm stm 
                                 unconstrained)
