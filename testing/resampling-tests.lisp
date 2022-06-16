@@ -2,7 +2,7 @@
 ;;;; File:       resampling-tests.lisp
 ;;;; Author:     Peter Harrison <p.m.c.harrison@qmul.ac.uk>
 ;;;; Created:    <2017-05-09 14:00:34 peter>                             
-;;;; Time-stamp: <2020-04-23 09:49:24 marcusp>                           
+;;;; Time-stamp: <2022-06-16 15:27:32 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -226,8 +226,7 @@ are the same, returns T, otherwise NIL."
 			    (quote-string (md:get-description
 					   dataset-id
 					   composition-id)))
-		      ;; TODO - this needs to be specific to each type of music-object (music-event, music-slice etc.)
-		      (dolist (attribute (viewpoints:get-basic-types event))
+		      (dolist (attribute (viewpoints:get-basic-attributes event))
 			(let ((value (md:get-attribute event attribute)))
 			  (when (member attribute '(:dur :bioi :deltast :onset) :test #'eq)
 			    (setf value (* value (/ timebase 96))))

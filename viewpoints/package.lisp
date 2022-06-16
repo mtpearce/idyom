@@ -1,6 +1,6 @@
 (cl:defpackage #:viewpoints 
   (:use #:common-lisp #:utils)
-  (:export #:+undefined+ #:undefined-p #:get-basic-types #:register-basic-type
+  (:export #:+undefined+ #:undefined-p #:get-basic-attributes #:register-basic-attribute
            #:initialise-basic-viewpoints
            #:get-viewpoint #:get-viewpoints  
            #:viewpoint-element #:viewpoint-sequence  #:viewpoint-sequences 

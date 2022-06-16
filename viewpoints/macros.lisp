@@ -27,14 +27,14 @@
                     (declare (ignorable events element))
                     ,f*)))))))
 
-(defmacro define-basic-viewpoint (name ((events class)) function)
+(defmacro define-basic-viewpoint (name ((events sequence-class event-class)) function)
   `(progn 
-     (register-basic-type ',name '(elt ,events 0))
+     (register-basic-attribute ',name (make-instance ',event-class))
      (define-viewpoint (,name basic (,name))
-         ((,events ,class) element)
+         ((,events ,sequence-class) element)
        :function ,function
        :function* (list element))))
-
+  
 (defmacro define-threaded-viewpoint (name base-viewpoint test-viewpoint class)
   (let* ((base-viewpoint `(get-viewpoint ',base-viewpoint))
          (test-viewpoint `(get-viewpoint ',test-viewpoint))

@@ -1,25 +1,25 @@
 (cl:in-package #:viewpoints)
 
+;; NB: An attribute is a symbol representing a primitive viewpoint,
+;; whereas a viewpoint is the viewpoint objects itself (see
+;; classes.lisp). 
+
 (defconstant +undefined+ '@ "The undefined symbol.")
 
-;; (defvar *basic-types* nil)
-(defvar *basic-types* (make-hash-table))
+(defvar *basic-attributes* (make-hash-table) "A record of the basic attributes for each kind of music object (e.g., events, slices).")
 
-(defun register-basic-type (type event) 
-  ;; (declare (ignore event))
-  ;; (pushnew (intern (symbol-name type) :keyword) *basic-types*))
-  (print (list type event))
-  (let ((types (gethash (type-of event) *basic-types*))
-        (symbol (intern (symbol-name type) :keyword)))
-    (unless (member symbol types)
-      (setf (gethash  (type-of event) *basic-types*)
-            (cons symbol types)))))
+(defun register-basic-attribute (attribute event)
+  "Register an attribute (symbol) for a particular kind of music event
+from music-objects (e.g., md:music-event or md:music-slice)."
+  (let ((attributes (gethash (type-of event) *basic-attributes*))
+        (symbol (intern (symbol-name attribute) :keyword)))
+    (unless (member symbol attributes)
+      (setf (gethash  (type-of event) *basic-attributes*)
+            (cons symbol attributes)))))
 
-(defun get-basic-types (event)
-  "Returns current value of *basic-types* without referring to EVENT."
-  ;; (declare (ignore event))
-  ;; *basic-types*)
-  (gethash (type-of event) *basic-types*))
+(defun get-basic-attributes (event)
+  "Returns the registered basic attributes corresponding to the music object <event>."
+  (gethash (type-of event) *basic-attributes*))
 
 (defun undefined-p (&rest viewpoint-elements)
   "Returns true if any of the supplied viewpoint elements are eql to
@@ -49,7 +49,8 @@ symbol if they are lists else nil."
                (links (stable-sort links #'(lambda (x y) (string< (viewpoint-name x) (viewpoint-name y))))))
           (make-instance 'linked :links links :typeset typeset)))))
 
-(defun attribute-equal (a1 a2) 
+(defun attribute-equal (a1 a2)
+  "Equality predicate for attributes."
   (cond ((and (symbolp a1) (symbolp a2))
          (string= (symbol-name a1) (symbol-name a2)))
         ((and (consp a1) (consp a2))
@@ -87,6 +88,7 @@ symbol if they are lists else nil."
 	  (list-test)))
 	  
 (defun viewpoint-symbol (vp)
+  "Returns a symbol corresponding to the supplied viewpoint <vp>."
   (car (multiple-value-list (find-symbol (symbol-name vp)
 					 (find-package 'viewpoints)))))
 

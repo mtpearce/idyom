@@ -2,7 +2,7 @@
 ;;;; File:       prediction-sets.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-18 18:54:17 marcusp>                           
-;;;; Time-stamp: <2019-12-12 10:14:32 marcusp>                           
+;;;; Time-stamp: <2022-06-15 16:26:52 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -227,7 +227,7 @@ the most positive or least negative float, as appropriate."
          (orders (mapcar #'prediction-order event-predictions))
          (element (prediction-element (car event-predictions)))
          (viewpoint (prediction-viewpoint (car event-predictions))))
-    ;;(print (list event-predictions distributions empty-prediction-sets))
+    ;; (print (list event-predictions distributions empty-prediction-sets))
     (multiple-value-bind (set weights)
         (funcall f distributions bias)
       (let ((orders 

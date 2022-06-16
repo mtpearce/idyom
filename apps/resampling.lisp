@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2022-06-14 09:14:45 marcusp>                           
+;;;; Time-stamp: <2022-06-16 15:46:46 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -198,6 +198,7 @@ both ('(:information-content :entropy))."
                           (prediction-sets:prediction-viewpoint fp))))
             (pushnew feature features)
             (dolist (ep (prediction-sets:prediction-set fp)) ; events
+              ;; (print ep)
               (let* ((event (prediction-sets:prediction-event ep))
                      (event-id (md:get-event-index
                                 (md:get-attribute event 'identifier))))
@@ -276,9 +277,7 @@ is a list of composition prediction sets, ordered by composition ID."
       (setf (gethash :melody.name event-results) (quote-string (md:get-description
 								dataset-id
 								composition-id)))
-      ;; TODO - this needs to be specific to each type of music-object
-      ;; (music-event, music-slice etc.)
-      (dolist (attribute (viewpoints:get-basic-types event))
+      (dolist (attribute (viewpoints:get-basic-attributes event))
 	(let ((value (md:get-attribute event attribute)))
 	  (when (and value (member attribute '(:dur :bioi :deltast :onset) :test #'eq))
 	    (setf value (* value (/ timebase 96))))
