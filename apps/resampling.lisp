@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2022-06-16 15:46:46 marcusp>                           
+;;;; Time-stamp: <2022-06-17 11:03:03 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -198,10 +198,9 @@ both ('(:information-content :entropy))."
                           (prediction-sets:prediction-viewpoint fp))))
             (pushnew feature features)
             (dolist (ep (prediction-sets:prediction-set fp)) ; events
-              ;; (print ep)
               (let* ((event (prediction-sets:prediction-event ep))
                      (event-id (md:get-event-index
-                                (md:get-attribute event 'identifier))))
+                                (md:get-identifier event))))
                 (setf (gethash (list composition-id event-id) results)
                       (format-event-prediction ep results
                                                dataset-id composition-id
@@ -261,7 +260,7 @@ is a list of composition prediction sets, ordered by composition ID."
 
 (defun format-event-prediction (ep results dataset-id composition-id feature)
   (let* ((event (prediction-sets:prediction-event ep))
-	 (event-id (md:get-event-index (md:get-attribute event 'identifier)))
+	 (event-id (md:get-event-index (md:get-identifier event)))
 	 (probability (float (probability ep) 0.0))
 	 (distribution (prediction-sets:prediction-set ep))
 	 (orders (prediction-sets:prediction-order ep))
