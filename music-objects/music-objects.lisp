@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2022-06-17 09:46:08 marcusp>
+;;;; Time-stamp: <2022-06-17 11:01:10 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -204,7 +204,7 @@
       (call-next-method)))
 
 (defgeneric set-attribute (event attribute value)
-  :documentation "Sets the value for slot <attribute> in event object <e>.")
+  (:documentation "Sets the value for slot <attribute> in event object <e>."))
 
 (defmethod set-attribute ((e music-element) attribute value)
   (setf (slot-value e (music-symbol attribute)) value))
@@ -291,11 +291,12 @@ or of a composition (if both DATASET-ID and COMPOSITION-ID are provided)."
    "Extract a sequence of harmonic slices from a composition according
 to the VOICE argument, which should be a list of integers. This uses
 full expansion (cf. Conklin, 2002)."
-   (let* ((hs (make-instance 'harmonic-sequence
+   (let* ((id (copy-identifier (get-identifier composition)))
+          (hs (make-instance 'harmonic-sequence
                              :onset 0
                              :duration (duration composition)
                              :midc (midc composition)
-                             :id (copy-identifier (get-identifier composition))
+                             :id id
                              :description (description composition)
                              :timebase (timebase composition)))
           (sorted-composition (sort composition #'< :key #'md:onset))
@@ -304,6 +305,7 @@ full expansion (cf. Conklin, 2002)."
                           event-list 
                           (remove-if #'(lambda (x) (not (member x voices))) event-list :key #'md:voice)))
           (onsets (remove-duplicates (mapcar #'onset event-list)))
+
           (l (length onsets))
           (previous-onset nil)
           (previous-dur nil)
@@ -343,7 +345,7 @@ full expansion (cf. Conklin, 2002)."
                                     :keysig (key-signature (car matching-events))
                                     :mode (mode (car matching-events))
                                     :midc (midc composition)
-                                    :id (copy-identifier (get-identifier composition))
+                                    :id (make-event-id (get-dataset-index id) (get-composition-index id) i)
                                     :description (description composition)
                                     :timebase (timebase composition))))
          (setf previous-onset onset)
@@ -405,7 +407,7 @@ the first event in the piece is extracted."
             (push event events)))
         ;; else use skyline algorithm to extract monody
         (setf events (skyline composition :voices voices)))
-    (sequence:adjust-sequence 
+    (sequence:adjust-sequence
      monody (length events)
      :initial-contents (sort events #'< :key #'onset))
     monody))
