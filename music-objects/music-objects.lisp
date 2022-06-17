@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2021-07-01 10:24:23 marcusp>
+;;;; Time-stamp: <2022-06-17 09:46:08 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -16,10 +16,10 @@
         [ornament] [comma] [articulation][vertint12]))
 #.(clsql:restore-sql-reader-syntax-state)
 
-; the order must match *event-attributes*
+;; the order must match *event-attributes*
 (defvar *music-slots* '(onset dur deltast cpitch mpitch accidental 
-            keysig mode barlength pulses phrase tempo dyn voice bioi 
-            ornament comma articulation vertint12))
+                        keysig mode barlength pulses phrase tempo dyn voice bioi 
+                        ornament comma articulation vertint12))
 
 (defun music-symbol (x)
   (find-symbol (string-upcase (symbol-name x))
@@ -39,8 +39,10 @@
 (defclass music-object ()
   ((identifier :initarg :id :accessor get-identifier :type identifier)
    (description :initarg :description :accessor description)
-   (timebase :initarg :timebase :accessor timebase)
-   (midc :initarg :midc :accessor midc)))
+   (timebase :initarg :timebase :accessor timebase
+             :documentation "Number of time units in a semibreve")
+   (midc :initarg :midc :accessor midc
+         :documentation "MIDI note number corresponding to middle C")))
 
 (defclass music-dataset (list-slot-sequence music-object) ())
 
@@ -52,15 +54,20 @@
 (defclass harmonic-sequence (music-sequence) ())                        ; a sequence of harmonic slices
 
 (defclass key-signature ()
-  ((keysig :initarg :keysig :accessor key-signature)
-   (mode :initarg :mode :accessor mode)))
+  ((keysig :initarg :keysig :accessor key-signature
+           :documentation "Number of sharps (+ve) or flats (-ve) in key signature")
+   (mode :initarg :mode :accessor mode
+         :documentation "Mode: 0 = major, 9 = minor, etc.")))
 
 (defclass time-signature ()
-  ((barlength :initarg :barlength :accessor barlength)
-   (pulses :initarg :pulses :accessor pulses)))
+  ((barlength :initarg :barlength :accessor barlength
+              :documentation "Number of basic time units (ticks) in bar")
+   (pulses :initarg :pulses :accessor pulses
+           :documentation "Number of basic pulses/tactus units in bar")))
 
 (defclass tempo ()
-  ((tempo :initarg :tempo :accessor tempo)))
+  ((tempo :initarg :tempo :accessor tempo
+          :documentation "Tempo in beats per minute")))
   
 (defclass music-environment (key-signature time-signature tempo) ())
 
@@ -76,15 +83,37 @@
 (defclass music-slice (list-slot-sequence music-element) ())  ; set of music objects overlapping in time, ordered by voice
 
 (defclass music-event (music-element)
-  ((cpitch :initarg :cpitch :accessor chromatic-pitch)
-   (mpitch :initarg :mpitch :accessor morphetic-pitch)
-   (accidental :initarg :accidental :accessor accidental)
-   (dyn :initarg :dyn :accessor dynamics)
-   (ornament :initarg :ornament :accessor ornament)
-   (comma :initarg :comma :accessor comma)
-   (articulation :initarg :articulation :accessor articulation)
-   (vertint12 :initarg :vertint12 :accessor vertint12)
-   (voice :initarg :voice :accessor voice)))
+  ((bioi
+    :initarg :bioi :accessor bioi
+    :documentation "Basic interonset interval between last note and its predecessor")
+   (deltast
+    :initarg :deltast :accessor deltast :documentation
+    "Length of immediately preceding rest")
+   (cpitch
+    :initarg :cpitch :accessor chromatic-pitch
+    :documentation "MIDI pitch number")
+   (mpitch
+    :initarg :mpitch :accessor morphetic-pitch
+    :documentation "Meredith's morphetic pitch == diatonic pitch.")
+   (accidental
+    :initarg :accidental :accessor accidental
+    :documentation "Inflection of named note: 0 = natural, 1 = single sharp, 2 = double sharp, -1 = single flat , etc.")
+   (dyn
+    :initarg :dyn :accessor dynamics
+    :documentation "ppppp = -11; pppp = -9; ppp = -7; pp = -5; p = -3; mp = -1; mf = 1; f = 3; ff = 5; fff = 7; ffff = 9; fffff = 11")
+   (ornament
+    :initarg :ornament :accessor ornament
+    :documentation "0 = no ornament; 1 = accacciatura; 2 = mordent; 3 = trill")
+   (comma
+    :initarg :comma :accessor comma
+    :documentation "0 = no comma; 1 = comma (breath mark)")
+   (articulation
+    :initarg :articulation :accessor articulation
+    :documentation "0 = no articulation mark; 1 = staccato; 2 = staccatissimo; 3 = sforzando; 4 = marcato")
+   (voice
+    :initarg :voice :accessor voice
+    :documentation "Voice number in a score (Voice 1 assumed to be the monody)")
+   (vertint12 :initarg :vertint12 :accessor vertint12)))
 
 ;;; Initialisers
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -163,12 +192,20 @@
 ;;; Accessing properties of music objects
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defgeneric get-attribute (event attribute))
+(defgeneric get-attribute (event attribute)
+  (:documentation "Returns a copy of the value for slot <attribute> in event object <e>."))
+
 (defmethod get-attribute ((e music-element) attribute)
-  "Returns the value for slot <attribute> in event object <e>."
   (slot-value e (music-symbol attribute)))
 
-(defgeneric set-attribute (event attribute value))
+(defmethod get-attribute ((ms music-slice) attribute)
+  (if (string= (symbol-name attribute) "H-CPITCH")
+      (mapcar #'chromatic-pitch (coerce ms 'list))
+      (call-next-method)))
+
+(defgeneric set-attribute (event attribute value)
+  :documentation "Sets the value for slot <attribute> in event object <e>.")
+
 (defmethod set-attribute ((e music-element) attribute value)
   (setf (slot-value e (music-symbol attribute)) value))
 
@@ -190,10 +227,13 @@
     ms-copy))
 
 (defun count-compositions (dataset-id)
+  "Gets the number of compositions in dataset indexed by DATASET-ID"
   ;;(length (get-dataset (lookup-dataset dataset-id))))
   (car (clsql:query (format nil "SELECT count(composition_id) FROM mtp_composition WHERE (dataset_id = ~A);" dataset-id) :flatp t)))
 
 (defun get-description (dataset-id &optional composition-id)
+  "Gets the description of a dataset (if just DATASET-ID is provided)
+or of a composition (if both DATASET-ID and COMPOSITION-ID are provided)."
   (if (null composition-id)
       ;; (description (get-dataset (lookup-dataset dataset-id)))
       ;; (description (get-composition (lookup-composition dataset-id composition-id)))))
