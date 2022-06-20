@@ -2,7 +2,7 @@
 ;;;; File:       IDyOM.asd
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-05-04 21:29:04 marcusp>
-;;;; Time-stamp: <2022-06-20 11:31:59 marcusp>
+;;;; Time-stamp: <2022-06-20 11:51:33 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -122,5 +122,6 @@
             :components
             ((:file "package")
              (:file "main")
+             (:file "utils-tests")
              (:file "ppm-tests")
              (:file "resampling-tests")))))
