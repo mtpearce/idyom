@@ -2,7 +2,7 @@
 ;;;; File:       IDyOM.asd
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-05-04 21:29:04 marcusp>
-;;;; Time-stamp: <2022-06-14 13:47:25 marcusp>
+;;;; Time-stamp: <2022-06-20 11:31:59 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -16,7 +16,7 @@
   :author "Marcus Pearce"
   :licence "GPL (see COPYING file for details)"
   :description "Information Dynamics of Music (see README for details)"
-  :depends-on (clsql cl-ppcre fiveam midi closer-mop psgraph sb-md5)
+  :depends-on (clsql cl-ppcre fiveam midi closer-mop psgraph sb-md5 cl-csv)
   :serial t
   :components
   (;; General utilities  
@@ -25,6 +25,7 @@
             :components 
             ((:file "package")
              (:file "utils")
+             (:file "dataframe")
              (:file "python")))
    ;; Database for storage and retrieval of music
    (:module database

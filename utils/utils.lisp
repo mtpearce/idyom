@@ -2,10 +2,126 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2019-03-25 15:36:05 marcusp>
+;;;; Time-stamp: <2022-06-20 10:39:28 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
+
+;;;===========================================================================
+;;; User interaction 
+;;;===========================================================================
+
+(defun ask-user-y-n-question (question)
+  "Asks user a yes or no <question> over the command line.
+   Returns t for yes, and nil for no."
+  (format t "~%~A (y/n)~%" question)
+  (let ((res (read)))
+    (cond ((or (string= res "y")
+	       (string= res "Y"))
+	   t)
+	  ((or (string= res "n")
+	       (string= res "N"))
+	   nil)
+	  (t (ask-user-y-n-question question)))))
+
+(defun message (text &key (detail 1) (add-new-line t))
+  "Prints a status message (<text>) to standard-output, 
+   and forces the output to appear immediately.
+   If <add-new-line> is true, then a new line
+   marker is appended to the message.
+
+   <detail-level> decribes the detail level of the
+   message, and can take the value 1, 2, or 3.
+   1: highest-level status information, suitable
+      default setting for non-technical user
+   2: medium-level status information, e.g. RAM usage, 
+      suitable default setting for advanced user
+   3: low-level status information, intended only
+      to be activated for debugging purposes.
+
+   The current message printing detail level is determined
+   by the variable <cl-user::*idyom-message-detail-level*>. Messages
+   are only printed if their <detail-level> is less than or
+   equal to the current value of <cl-user::*idyom-message-detail-level*>.
+
+   Progress bars display at detail levels 1 and 2
+   but not at detail level 3. These progress bars are
+   disrupted if other messages print before the progress
+   bar is finished. Messages within routines with 
+   progress bars therefore must take detail level 3."
+  (if (<= detail cl-user::*idyom-message-detail-level*)
+      (progn
+	(if add-new-line (format t "~%"))
+	(format t text)
+	(force-output))))
+
+(defstruct progress-bar
+  value num-blocks min max display-width)
+
+(defun initialise-progress-bar
+    (max &key (min 0) (initial 0) (display-width 60))
+  "Initialises a progress bar object for the purpose
+   of tracking an iterative operation. The progress bar
+   can subsequently be updated using the <update-progress-bar>
+   function.
+   Whether or not the progress bar is actually displayed
+   is determined by the variable <idyom::*message-detail-level*>.
+   Bars are only displayed when this variable takes the 
+   values 1 or 2 (i.e. not 3). 
+   Progress bars are disrupted if other messages print before 
+   the progress bar is finished. Messages within routines with 
+   progress bars therefore must take detail level 3."
+  (let ((bar (make-progress-bar
+	      :value 0 :num-blocks 0
+	      :min min :max max
+	      :display-width display-width)))
+    (if (member cl-user::*idyom-message-detail-level* '(1 2))
+	(progn 
+	  (format t "~%| Progress: ")
+	  (dotimes (i (- display-width 13)) (format t "-"))
+	  (format t "|~%")
+	  (force-output)))
+    (update-progress-bar bar initial)
+    bar))
+
+(defun update-progress-bar (bar value)
+  (let* ((num-blocks (floor (* (progress-bar-display-width
+				bar)
+			       (/ value (progress-bar-max
+					 bar)))))
+	 (num-blocks-to-add (- num-blocks
+			       (progress-bar-num-blocks
+				bar))))
+    (setf (progress-bar-num-blocks bar) num-blocks)
+    (if (member cl-user::*idyom-message-detail-level* '(1 2))
+	(progn 
+	  (dotimes (i num-blocks-to-add)
+	    (write-char #\=))
+	  (force-output)))))
+
+(defmacro dolist-pb
+    ((var list &optional result) &body body)
+  "A version of dolist that displays a progress
+   bar tracking the iterative process."
+  `(let* ((num-items (length ,list))
+	  (counter 0)
+	  (bar (initialise-progress-bar num-items)))
+     (dolist (,var ,list ,result)
+       ,@body
+       (incf counter)
+       (update-progress-bar bar counter))))
+
+(defmacro dotimes-pb
+    ((var count &optional result) &body body)
+  "A version of dotimes that displays a progress
+   bar tracking the iterative process."
+  `(let* ((counter 0)
+	  (bar (initialise-progress-bar ,count)))
+     (dotimes (,var ,count ,result)
+       ,@body
+       (incf counter)
+       (update-progress-bar bar counter))))
+
 
 ;;;===========================================================================
 ;;; Numerical 
@@ -16,6 +132,15 @@
    <decimal-places>."
   (let ((factor (expt 10 decimal-places)))
     (/ (fround (* number factor)) factor)))
+
+(defun approx-equal (x y &optional (decimal-places 5))
+  "Returns whether numbers <x> and <y> are approximately equal.
+<decimal-places> determines the degree of equality."
+  (assert (numberp x))
+  (assert (numberp y))
+  (assert (integerp decimal-places))
+  (= (round-to-nearest-decimal-place x decimal-places)
+     (round-to-nearest-decimal-place y decimal-places)))
 
 (defun average (&rest numbers)
   "Returns the average of <numbers>."
@@ -87,7 +212,43 @@ which should be lists of numbers of equal length."
    (loop for n from min below max by step
       collect n))
 
+(defun parse-number (string)
+  "Coerces a string representation of a number to numeric type."
+  (with-input-from-string (input string)
+    (read input)))
 
+(defun quantiles (numbers num-quantiles)
+  "Takes a sequence of numbers, <numbers>, and computes the locations
+of <num-quantiles> quantiles of equal size. Returns an ordered list of the
+non-trivial thresholds for these quantiles (i.e. excludes the 0th percentile 
+and the 100th percentile). Uses linear interpolation of the 
+empirical distribution function."
+  (assert (every #'numberp numbers))
+  (let* ((sorted (sort (coerce (copy-seq numbers) 'vector) #'<))
+	 (n (length sorted)))
+    (loop
+       for k from 1 to (- num-quantiles 1)
+       collect (float (let* ((p (/ k num-quantiles))
+			     (h (* n p)))
+			(cond ((< p (/ 1 n)) (svref sorted 0))
+			      ((= p 1) (svref sorted (1- n)))
+			      (t (+ (svref sorted (1- (floor h)))
+				    (* (- h (floor h))
+				       (- (svref sorted (floor h))
+					  (svref sorted (1- (floor h)))))))))))))
+
+(defun assign-to-quantile (number quantiles)
+  "Given a number <number> and a list <quantiles> identifying a set of 
+quantiles as produced by the function QUANTILES, returns the 1-indexed
+quantile into which <number> falls."
+  (assert (numberp number))
+  (assert (listp quantiles))
+  (assert (equal quantiles (sort quantiles #'<)))
+  (let* ((num-quantiles (1+ (length quantiles)))
+	 (match (position-if #'(lambda (x) (<= number x)) quantiles)))
+    (if match
+	(1+ match)
+	num-quantiles)))	       
 
 
 ;;;===========================================================================
@@ -120,6 +281,14 @@ Borrowed from https://www.pvk.ca/Blog/Lisp/trivial_uniform_shuffling.html"
                                  (cons x (random 1d0)))
                        sequence)
                   #'< :key #'cdr)))
+
+(defun sample (n sequence)
+  "Takes a random sample of size <n> from <sequence> without replacement."
+  (assert (integerp n))
+  (assert (>= n 0))
+  (assert (<= n (length sequence)))
+  (let ((shuffled (shuffle sequence)))
+    (subseq shuffled 0 n)))
 
 
 ;;;===========================================================================
@@ -266,6 +435,11 @@ Borrowed from https://www.pvk.ca/Blog/Lisp/trivial_uniform_shuffling.html"
                           (permutations (remove x list :count 1)))) 
               list)))
 
+(defun remove-nth (n list)
+  "Removes the nth item from a list non-destructively."
+  (remove-if #'(lambda (x) (declare (ignore x)) t)
+	     list :start n :end (1+ n)))
+
 (defun remove-by-position (list positions)
   (labels ((rbp (l i r)
              (cond ((null l)
@@ -274,6 +448,57 @@ Borrowed from https://www.pvk.ca/Blog/Lisp/trivial_uniform_shuffling.html"
                     (rbp (cdr l) (1+ i) r))
                    (t (rbp (cdr l) (1+ i) (cons (car l) r))))))
     (rbp list 0 nil)))
+
+(defun all-positions-if (predicate list)
+  "Returns positions of all elements of <list> that satisfy <predicate>."
+  (let ((result nil))
+    (dotimes (i (length list))
+      (if (funcall predicate (nth i list))
+          (push i result)))
+    (nreverse result)))
+
+(defun insert-after (list position item)
+  "Destructively inserts <item> into the index <position> in <list>,
+   shifting all later elements forward by one position."
+  (push item (cdr (nthcdr position list)))
+  list)
+
+(defun all-eql
+    (list &key (predicate #'eql))
+  "Tests whether all elements of a given <list> are 
+   equal according to <predicate> (defaults to EQL).
+   Also returns t if the list is empty."
+  (if (< (length list) 2)
+      t
+      (if (not (funcall predicate
+			(first list) (second list)))
+	  nil
+	  (all-eql (cdr list) :predicate predicate))))
+
+;;;===========================================================================
+;;; Assoc-lists
+;;;===========================================================================
+
+(defun update-alist (alist &rest new-entries)
+  "Returns a version of <alist> updated with <new-entries> which must be 
+   key-value pairs. If the value is nil then the pair is not added to the 
+   alist unless the key is 'correct-onsets which is the only key in the
+   environment allowed to have null values. Does not modify original list."
+  (flet ((insert-entry (alist force new-entry)                           
+           (cond ((and (null force) (null (cadr new-entry)))              
+                  alist)
+                 ((assoc (car new-entry) alist)
+                  (substitute-if new-entry #'(lambda (key)
+                                               (eql key (car new-entry)))
+                                 alist :key #'car))
+                 (t
+                  (cons new-entry alist)))))
+    (let* ((entry (car new-entries))
+           (force (if (eql (car entry) 'correct-onsets) t nil)))
+      (if (null entry)
+          alist
+          (apply #'update-alist (insert-entry alist force entry)
+                 (cdr new-entries))))))
 
 ;;;===========================================================================
 ;;; Nested lists
@@ -344,6 +569,29 @@ Borrowed from https://www.pvk.ca/Blog/Lisp/trivial_uniform_shuffling.html"
     (let ((sort-key (if (eql by :keys) #'car #'cdr)))
       (sort sorted-entries sort-fn :key sort-key))))
 
+(defun csv->hash-table (path &key value-fun)
+  "Reads csv file from <path> and uses it to create a hash-table which,
+   for each line in the csv file, maps every field but the first field (keys)
+   to the first field (values). Assumes that the csv file has no header.
+   If a function <value-fun> is passed as an argument, then this function will 
+   be applied to all values (not keys) before entry to the hash table."
+  (let* ((lines (cl-csv:read-csv path))
+	 (hash-table (make-hash-table :test #'equal)))
+    (dolist (line lines hash-table)
+      (let* ((value (car line))
+	     (value (if (null value-fun)
+			value
+			(funcall value-fun value)))
+	    (keys (cdr line)))
+	(dolist (key keys)
+	  (if (not (equal key ""))
+	      (progn
+		(if (nth-value 1 (gethash key hash-table))
+		    (error (format nil "Attempted to add duplicate keys (~A) to hash table."
+				   key)))
+		(setf (gethash key hash-table) value))))))))
+
+
 ;;;===========================================================================
 ;;; File I/O 
 ;;;===========================================================================
@@ -400,6 +648,22 @@ Borrowed from https://www.pvk.ca/Blog/Lisp/trivial_uniform_shuffling.html"
   "Returns the MD5SUM of the string representation of a list."
   (format nil "~{~X~}" (coerce (sb-md5:md5sum-string (format nil "~{~D,~}" list)) 'list)))
 
+;; Taken from http://stackoverflow.com/questions/15796663/lisp-how-to-read-content-from-a-file-and-write-it-in-another-file
+(defun copy-file (from-file to-file)
+  "Copies a file from one location to another."
+  (with-open-file (input-stream from-file
+				:direction :input
+				:element-type '(unsigned-byte 8))
+    (with-open-file (output-stream to-file
+				   :direction :output
+				   :if-exists :supersede
+				   :if-does-not-exist :create
+				   :element-type '(unsigned-byte 8))
+      (let ((buf (make-array 4096 :element-type (stream-element-type input-stream))))
+    (loop for pos = (read-sequence buf input-stream)
+       while (plusp pos)
+       do (write-sequence buf output-stream :end pos))))))
+
 
 ;;;===========================================================================
 ;;; Pathnames
@@ -443,15 +707,62 @@ Borrowed from https://www.pvk.ca/Blog/Lisp/trivial_uniform_shuffling.html"
                          :defaults pathname)
           pathname))))
 
+(defun recursively-list-files (directory-name &key extensions (max-num-directories 100000))
+  "Recursively lists all files present in <directory-name>, optionally filtered to 
+  retain only files with extensions present in the list <extensions>.
+  The number of directories to search is limited by <max-num-directories 100000>,
+  which if exceeded causes an error to be thrown.
+  Example usage: (recursively-list-files \"Users/\" :extensions '(\"krn\" \"jazz\"))"
+  (labels ((directory-p (pathname)
+             (and (not (present-p (pathname-type pathname)))
+                  (not (present-p (pathname-name pathname)))))
+           (present-p (x)
+             (and x (not (eq x :unspecific))))
+	   (fun (dirs-to-search files-found number-of-dirs-searched)
+	     (if (null dirs-to-search) files-found
+		 (let* ((new-dirs (remove-if-not
+				   #'directory-p
+				   (mapcan #'(lambda (dir) (directory (merge-pathnames
+								       dir "*")))
+						     dirs-to-search)))
+			(new-files (mapcan #'uiop:directory-files dirs-to-search))
+			(num-new-dirs (length new-dirs))
+			;; (new-files-and-dirs (mapcan #'(lambda (dir)
+			;; 				(directory dir))
+			;; 			    dirs-to-search))
+			;; (new-dirs (remove-if-not #'directory-p new-files-and-dirs))	
+			;; (new-files (remove-if #'directory-p new-files-and-dirs))
+			(new-files (if (null extensions) new-files
+				       (remove-if-not #'(lambda (path)
+							  (member (pathname-type path)
+								  extensions
+								  :test #'string=))
+						      new-files))))
+		   (if (> (+ num-new-dirs number-of-dirs-searched)
+			  max-num-directories)
+		       (error
+			"Search did not terminate before the maximum number of directories were searched."))
+		   (fun new-dirs (nconc new-files files-found) (+ num-new-dirs number-of-dirs-searched))))))
+    (fun (list (ensure-directory directory-name)) nil 0)))
+
+
 ;;;===========================================================================
 ;;; Objects
 ;;;===========================================================================
 
-(defun copy-instance (object)
+(defun copy-instance (object &key (check-atomic nil))
+  "Copies an instance <object>. Currently only supports the copying
+of objects where all slots are atomic. If <check-atomic>, then
+the function will check that all slots are atomic, and an error will
+be thrown if any are not atomic; if not, no checks will be carried out,
+and therefore non-atomic slots will still point to the data of the original
+object." 
   (let* ((class (class-of object))
          (copy (allocate-instance class)))
     (dolist (slot (mapcar #'closer-mop:slot-definition-name (closer-mop:class-slots class)))
       (when (slot-boundp object slot)
+        (when (and check-atomic (not (atom (slot-value object slot))))
+          (error "Tried to a copy a non-atomic slot using copy-instance."))
         (setf (slot-value copy slot) (slot-value object slot))))
     copy))
 

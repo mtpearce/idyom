@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2022-06-17 11:03:03 marcusp>                           
+;;;; Time-stamp: <2022-06-20 11:19:13 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -141,6 +141,25 @@ both ('(:information-content :entropy))."
               (2 (values dataset-entropies composition-entropies))
               (3 (values dataset-entropies composition-entropies event-entropies)))))))
 
+(defun get-column-by-composition (column df)
+     "Returns the data for <column> in dataframe <df> as a list of
+lists, one for each composition."
+  (let ((composition-ids (utils:get-column :melody.id df))
+        (data (utils:get-column column df))
+        (result)
+        (cid-result))
+    (do ((cid composition-ids (cdr cid))
+         (cid-1 nil (car cid))
+         (values data (cdr values)))
+        ((or (null cid) (null values)) (push cid-result result))
+      ;; (print (list (car cid) cid-1 (car values)))
+      (if (and cid-1 (= (car cid) cid-1))
+          (push (car values) cid-result)
+          (progn
+            (when cid-result (push cid-result result))
+            (setf cid-result (list (car values))))))))
+
+
 ;;;===========================================================================
 ;;; Formatted output of information content etc.
 ;;;===========================================================================
@@ -181,13 +200,13 @@ both ('(:information-content :entropy))."
       (format-information-content-detail=3-old stream resampling-predictions
 					       dataset-id :separator separator)
       (let ((df (resampling-predictions->dataframe resampling-predictions dataset-id)))
-        (print-data df stream :null-token null-token :separator separator)
+        (utils:print-data df stream :null-token null-token :separator separator)
         df)))
   
 (defun resampling-predictions->dataframe (resampling-predictions dataset-id)
   (let* ((resampling-predictions (reorder-resampling-predictions
                                   resampling-predictions))
-         (data (make-instance 'dataframe)))
+         (data (make-instance 'utils:dataframe)))
     
     (dolist (sp resampling-predictions) ; compositions
       (let ((composition-id (prediction-sets:prediction-index sp))
@@ -218,6 +237,18 @@ both ('(:information-content :entropy))."
                  ))))
         (add-results-to-dataframe results data :blacklist '(:distribution))))
     data))
+
+(defun add-results-to-dataframe (results dataframe &key blacklist)
+  (flet ((sort-function (x y) (let ((x1 (car x)) (x2 (cadr x))
+				    (y1 (car y)) (y2 (cadr y)))
+				(if (= x1 y1) (< x2 y2) (< x1 y1)))))
+    
+    (let ((sorted-results (utils:hash-table->sorted-alist results #'sort-function)))
+      (dolist (event sorted-results)
+	(let* ((event-ht (cdr event)))
+          (dolist (bl blacklist)
+            (remhash bl event-ht))
+	  (utils:add-row event-ht dataframe))))))
 
 (defun reorder-resampling-predictions (resampling-predictions)
   "Reorders <resampling-predictions> so that instead of compositions 
@@ -476,121 +507,8 @@ for <viewpoint> in <dataset-id>."
 		 (list (list 'test test-set)
 		       (list 'train train-set))))))
 
-;;;===========================================================================
-;;; Defining a dataframe class
-;;;===========================================================================
-
-(defclass dataframe ()
-  ((data :initform (make-hash-table :test #'equal) :accessor data)
-   (num-rows :initform 0 :accessor num-rows))
-  (:documentation "A <dataframe> efficiently accumulates and stores text
-data in a tabular form. Columns are identified by unique IDs, and are
-stored as lists within a hash table.  Note that lists are accumulated
-in reverse order, so that appending to a column can be achieved by
-consing a new value to the beginning of the list."))
-
-;; adding data
-
-(defgeneric add-row (row place)
-  (:documentation "Adds a new row, <row>, to a data storage object, <place>."))
-
-(defmethod add-row ((row hash-table) (place dataframe))
-  (let ((old-keys (loop for key being the hash-keys of (data place) collect key))
-	(new-keys (loop for key being the hash-keys of row collect key)))
-    (if (utils:any-duplicated new-keys)
-	(error "Duplicated keys are not allowed when adding new rows."))
-    (let ((old-unmatched-keys (set-difference old-keys new-keys))
-	  (new-matched-keys (intersection old-keys new-keys))
-	  (new-unmatched-keys (set-difference new-keys old-keys)))
-      (dolist (key old-unmatched-keys)
-	(push nil (gethash key (data place))))
-      (dolist (key new-matched-keys)
-	(push (gethash key row) (gethash key (data place))))
-      (dolist (key new-unmatched-keys)
-	(setf (gethash key (data place))
-	      (cons (gethash key row)
-		    (make-list (num-rows place) :initial-element nil))))
-      (incf (num-rows place)))))
-
-(defun add-results-to-dataframe (results dataframe &key blacklist)
-  (flet ((sort-function (x y) (let ((x1 (car x)) (x2 (cadr x))
-				    (y1 (car y)) (y2 (cadr y)))
-				(if (= x1 y1) (< x2 y2) (< x1 y1)))))
-    
-    (let ((sorted-results (utils:hash-table->sorted-alist results #'sort-function)))
-      (dolist (event sorted-results)
-	(let* ((event-ht (cdr event)))
-          (dolist (bl blacklist)
-            (remhash bl event-ht))
-	  (add-row event-ht dataframe))))))
 
 
-;; accessing data
 
-(defgeneric get-column-names (dataframe)
-  (:documentation "Return a list of column names in <dataframe>"))
-
-(defmethod get-column-names ((df dataframe))
-  (loop for key being the hash-keys of (data df) collect key))
-
-(defgeneric get-column (column dataframe)
-  (:documentation "Return the data for <column> in <dataframe>."))
-
-(defmethod get-column (c (df dataframe)) (gethash c (data df)))
-
-(defgeneric get-columns (columns dataframe)
-  (:documentation "Returns the data for <columns> in <dataframe>"))
-
-(defmethod get-columns (columns (df dataframe))
-  (mapcar #'(lambda (column) (get-column column df)) columns))
-
-(defgeneric get-column-by-composition (column dataframe)
-  (:documentation "Returns the data for <column> in <dataframe> as a list of lists, one for each composition."))
-
-(defmethod get-column-by-composition (column (df dataframe))
-  (let ((composition-ids (get-column :melody.id df))
-        (data (get-column column df))
-        (result)
-        (cid-result))
-    (do ((cid composition-ids (cdr cid))
-         (cid-1 nil (car cid))
-         (values data (cdr values)))
-        ((or (null cid) (null values)) (push cid-result result))
-      ;; (print (list (car cid) cid-1 (car values)))
-      (if (and cid-1 (= (car cid) cid-1))
-          (push (car values) cid-result)
-          (progn
-            (when cid-result (push cid-result result))
-            (setf cid-result (list (car values))))))))
-
-;; printing data 
-
-(defgeneric print-data (data stream &key separator order-by-key null-token)
-  (:documentation "Prints <data> to <stream>. If <order-by-key>, then the output
-is ordered by key."))
-
-(defmethod print-data ((data dataframe) destination
-		       &key separator order-by-key null-token)
-  (let* ((separator (if separator separator " "))
-	 (columns (loop
-		     for key being the hash-keys of (data data)
-		     using (hash-value value)
-		     collect (cons (string-downcase (symbol-name key))
-				   (reverse value))))
-	 (columns (if order-by-key
-		      (sort columns #'string< :key #'car)
-		      columns))
-	 (columns (coerce columns 'vector))
-	 (num-rows (num-rows data))
-	 (num-cols (array-dimension columns 0)))
-    (assert (> num-rows 0))
-    (assert (> num-cols 0))
-    (assert (eql (num-rows data) (1- (length (svref columns 0)))))
-    (dotimes (i (1+ (num-rows data)))
-      (dotimes (j num-cols)
-	(let* ((token (pop (svref columns j)))
-	       (token (if (and (null token) null-token) null-token token))) 
-	  (format destination "~A~A" token separator)))
-      (format destination "~&"))))
   
 
