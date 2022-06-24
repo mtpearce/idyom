@@ -11,9 +11,10 @@
 ;;
 ;; Packages with test suites:
 ;;
-;; * resampling
-;; --> create-resampling-sets
-;; --> output-formatting
+;; * utils
+;;
+;; * viewpoints
+;; 
 ;; * ppm
 ;; --> ppm*-blending
 ;; --> ppm-blending-order-bound
@@ -21,6 +22,10 @@
 ;; --> ppm*-mixtures
 ;; --> ppm-mixtures-order-bound
 ;; --> ppm-mixtures-update-exclusion
+;; 
+;; * resampling
+;; --> create-resampling-sets
+;; --> output-formatting
 
 (cl:in-package #:testing)
 
