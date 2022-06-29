@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2022-06-17 11:01:10 marcusp>
+;;;; Time-stamp: <2022-06-29 19:09:49 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -44,14 +44,16 @@
    (midc :initarg :midc :accessor midc
          :documentation "MIDI note number corresponding to middle C")))
 
-(defclass music-dataset (list-slot-sequence music-object) ())
+(defclass music-slot-sequence (list-slot-sequence) ()) 
+
+(defclass music-dataset (music-slot-sequence music-object) ())
 
 (defclass music-temporal-object (music-object anchored-time-interval) ())
 
-(defclass music-sequence (list-slot-sequence music-temporal-object) ()) ; a sequence of music objects ordered in time 
-(defclass music-composition (music-sequence) ())                        ; a composition is an unconstrained sequence of music objects
-(defclass melodic-sequence (music-sequence) ())                         ; a sequence of non-overlapping notes
-(defclass harmonic-sequence (music-sequence) ())                        ; a sequence of harmonic slices
+(defclass music-sequence (music-slot-sequence music-temporal-object) ()) ; a sequence of music objects ordered in time 
+(defclass music-composition (music-sequence) ())                         ; a composition is an unconstrained sequence of music objects
+(defclass melodic-sequence (music-sequence) ())                          ; a sequence of non-overlapping notes
+(defclass harmonic-sequence (music-sequence) ())                         ; a sequence of harmonic slices
 
 (defclass key-signature ()
   ((keysig :initarg :keysig :accessor key-signature
@@ -80,7 +82,7 @@
 
 (defclass music-element (music-temporal-event music-environment music-phrase) ())
 
-(defclass music-slice (list-slot-sequence music-element) ())  ; set of music objects overlapping in time, ordered by voice
+(defclass music-slice (music-slot-sequence music-element) ())  ; set of music objects overlapping in time, ordered by voice
 
 (defclass music-event (music-element)
   ((bioi
@@ -118,7 +120,7 @@
 ;;; Initialisers
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defmethod initialize-instance :after ((c music-sequence) &key events)
+(defmethod initialize-instance :after ((c music-slot-sequence) &key events)
   (sequence:adjust-sequence c (length events) :initial-contents events))
 
 ;;; Identifiers 
@@ -292,13 +294,6 @@ or of a composition (if both DATASET-ID and COMPOSITION-ID are provided)."
 to the VOICE argument, which should be a list of integers. This uses
 full expansion (cf. Conklin, 2002)."
    (let* ((id (copy-identifier (get-identifier composition)))
-          (hs (make-instance 'harmonic-sequence
-                             :onset 0
-                             :duration (duration composition)
-                             :midc (midc composition)
-                             :id id
-                             :description (description composition)
-                             :timebase (timebase composition)))
           (sorted-composition (sort composition #'< :key #'md:onset))
           (event-list (coerce sorted-composition 'list))
           (event-list (if (null voices) 
@@ -347,19 +342,20 @@ full expansion (cf. Conklin, 2002)."
                                     :midc (midc composition)
                                     :id (make-event-id (get-dataset-index id) (get-composition-index id) i)
                                     :description (description composition)
-                                    :timebase (timebase composition))))
+                                    :timebase (timebase composition)
+                                    :events (sort matching-events #'< :key #'voice))))
          (setf previous-onset onset)
          (setf previous-dur dur)
-         (sequence:adjust-sequence 
-          slice (length matching-events)
-          :initial-contents (sort matching-events #'< :key #'voice))
          (push slice slices)))
      ;; return the new harmonic sequence
-     (sequence:adjust-sequence 
-      hs (length slices)
-      :initial-contents (sort slices #'< :key #'onset))
-     hs))
-
+     (make-instance 'harmonic-sequence
+                    :onset 0
+                    :duration (duration composition)
+                    :midc (midc composition)
+                    :id id
+                    :description (description composition)
+                    :timebase (timebase composition)
+                    :events (sort slices #'< :key #'onset))))
 
 ;; melodic sequences
 
@@ -389,14 +385,7 @@ full expansion (cf. Conklin, 2002)."
   "Extract a melody from a composition according to the VOICE
 argument, which should be an integer. If VOICE is null the voice of
 the first event in the piece is extracted."
-  (let ((monody (make-instance 'melodic-sequence
-                               :onset 0
-                               :duration (duration composition)
-                               :midc (midc composition)
-                               :id (copy-identifier (get-identifier composition))
-                               :description (description composition)
-                               :timebase (timebase composition)))
-        (events nil)
+  (let ((events nil)
         (voice (if (listp voices) (car voices) voices)))
     (if (and (or (null voices) (integerp voices) (= (length voices) 1)) (ensure-monody composition :voices voices))
         ;; return the specified voice
@@ -407,10 +396,14 @@ the first event in the piece is extracted."
             (push event events)))
         ;; else use skyline algorithm to extract monody
         (setf events (skyline composition :voices voices)))
-    (sequence:adjust-sequence
-     monody (length events)
-     :initial-contents (sort events #'< :key #'onset))
-    monody))
+    (make-instance 'melodic-sequence
+                   :onset 0
+                   :duration (duration composition)
+                   :midc (midc composition)
+                   :id (copy-identifier (get-identifier composition))
+                   :description (description composition)
+                   :timebase (timebase composition)
+                   :events (sort events #'< :key #'onset))))
 
 (defun ensure-monody (composition &key voices) 
   (let* ((sorted-composition (sort composition #'< :key #'md:onset))
@@ -465,11 +458,6 @@ the highest pitch sounding at that onset position."
                                          :order-by '(([composition-id] :asc)
                                                      ([event-id] :asc))
                                          :where where-clause))))
-	 (dataset (make-instance 'music-dataset
-				 :id identifier
-				 :description (second db-dataset) 
-				 :timebase (third db-dataset) 
-				 :midc midc))
          (compositions nil)
          (events nil))
     (when db-dataset
@@ -500,9 +488,12 @@ the highest pitch sounding at that onset position."
 				   :events (nreverse events))))
               (push composition compositions))
 	    (setf events nil))))
-      (sequence:adjust-sequence dataset (length compositions)
-                                :initial-contents (nreverse compositions))
-      dataset)))
+      (make-instance 'music-dataset
+                     :id identifier
+                     :description (second db-dataset) 
+                     :timebase (third db-dataset) 
+                     :midc midc
+                     :events (nreverse compositions)))))
 #.(clsql:restore-sql-reader-syntax-state)
 
 #.(clsql:locally-enable-sql-reader-syntax)
