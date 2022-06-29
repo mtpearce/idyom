@@ -2,7 +2,7 @@
 ;;;; File:       IDyOM.asd
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-05-04 21:29:04 marcusp>
-;;;; Time-stamp: <2022-06-20 11:51:33 marcusp>
+;;;; Time-stamp: <2022-06-24 14:45:33 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -80,6 +80,7 @@
              (:module harmony :serial t
                       :components
                       ((:file "basic-viewpoints")
+                       (:file "gct2014")
                        (:file "gct")
                        (:file "derived")))
              ;; useful extensions for modelling 
@@ -123,5 +124,6 @@
             ((:file "package")
              (:file "main")
              (:file "utils-tests")
+             (:file "viewpoints-tests")
              (:file "ppm-tests")
              (:file "resampling-tests")))))
