@@ -2,7 +2,7 @@
 ;;;; File:       derived.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-25 19:09:17 marcusp>                           
-;;;; Time-stamp: <2022-06-29 18:30:50 marcusp>                           
+;;;; Time-stamp: <2022-06-29 23:33:44 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
@@ -94,16 +94,16 @@
            (choose-ties (candidates)
              (let ((result nil)
                    (l (length (car candidates))))
-               (do* ((i 0 (1+ i))
+               (do* ((i l (1- i))
                      (c candidates (mapcar #'(lambda (x) (subseq x 0 i)) c)))
-                    ((or result (= i (- l 2))) result)
+                    ((or result (= i 1)) result)
                  (let* ((scores (mapcar #'get-score c))
                         (min (apply #'min scores))
                         (min-count (count min scores :test #'=)))
                    (when (= min-count 1)
-                     (setf result (elt pc-set (position min pc-set :test #'=))))))
+                     (setf result (elt candidates (position min scores :test #'=))))))
                (if (null result)
-                   (car (sort pc-set #'< :key #'car))
+                   (car (sort candidates #'< :key #'car))
                    result))))
     (let ((candidate pc-set)
           (top-score nil)

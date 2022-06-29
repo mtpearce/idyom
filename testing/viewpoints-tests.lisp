@@ -2,7 +2,7 @@
 ;;;; File:       utils-tests.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2022-06-23 13:17:12 peter>                         
-;;;; Time-stamp: <2022-06-29 18:25:12 marcusp>                           
+;;;; Time-stamp: <2022-06-29 23:35:02 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -126,7 +126,9 @@
 (5am:test pc-chord-d        (5am:is (equalp (pc-chord      (make-harmonic-sequence '((54 62 69 74)))) '(6 (2 9)))))
 (5am:test pi-chord-type-d   (5am:is (equalp (pi-chord-type (make-harmonic-sequence '((54 62 69))))    '(0 8 15))))
 
-(5am:test harmony-nf (5am:is (equalp (normal-form '(0 7 9)) '(7 9 0))))
+(5am:test harmony-nf-1 (5am:is (equalp (normal-form '(0 7 9)) '(7 9 0))))
+(5am:test harmony-nf-2 (5am:is (equalp (normal-form '(2 7 9)) '(7 9 2))))
+(5am:test harmony-nf-3 (5am:is (equalp (normal-form '(2 6 7 11)) '(6 7 11 2))))
 
 
 ;; Harrison (2019, pp. 126-127)

@@ -2,7 +2,7 @@
 ;;;; File:       parncutt1988.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2022-06-29 13:09:17 marcusp>                           
-;;;; Time-stamp: <2022-06-29 17:53:38 marcusp>                           
+;;;; Time-stamp: <2022-06-29 19:25:37 marcusp>                           
 ;;;; ======================================================================
 
 ;;; An implementation of the key-finding algorithm of Parncutt (1988).
