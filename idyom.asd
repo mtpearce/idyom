@@ -2,7 +2,7 @@
 ;;;; File:       IDyOM.asd
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-05-04 21:29:04 marcusp>
-;;;; Time-stamp: <2022-06-24 14:45:33 marcusp>
+;;;; Time-stamp: <2022-06-29 19:10:33 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -82,6 +82,7 @@
                       ((:file "basic-viewpoints")
                        (:file "gct2014")
                        (:file "gct")
+                       (:file "parncutt88")
                        (:file "derived")))
              ;; useful extensions for modelling 
              ;; (not strictly part of the representation scheme)
