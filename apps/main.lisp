@@ -2,7 +2,7 @@
 ;;;; File:       main.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2010-11-01 15:19:57 marcusp>
-;;;; Time-stamp: <2021-07-05 12:28:00 marcusp>
+;;;; Time-stamp: <2022-07-04 09:54:18 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:idyom)
@@ -69,7 +69,7 @@
                 (detail 3)
                 (output-path nil)
                 (overwrite nil)
-		(separator " ")
+		(separator " ") (null-token "NA")
                 (information-measure :information.content) ;; or :entropy
                 ;; Caching
                 (use-resampling-set-cache? t)
@@ -82,12 +82,13 @@
    dataset using k-fold cross validation (AKA resampling).  The
    parameters <use-resampling-set-cache?> and <use-ltms-cache?> enable
    or disable respectively the caching of resampling-sets and LTMs."
+  (assert (member texture '(:melody :harmony)))
   (let ((ltmo (apply #'resampling::check-model-defaults (cons mvs::*ltm-params* ltmo)))
         (stmo (apply #'resampling::check-model-defaults (cons mvs::*stm-params* stmo))))
     ;;; Optionally select source viewpoints if requested
     (when (eq source-viewpoints :select)
-      (format t "~&Selecting viewpoints for the ~A model on dataset ~A predicting viewpoints ~A.~%" 
-              models dataset-id target-viewpoints)
+      (utils:message (format nil "~&Selecting viewpoints for the ~A model on dataset ~A predicting viewpoints ~A.~%" 
+                             models dataset-id target-viewpoints))
       (let* (;; Generate candidate viewpoint systems
              (sel-basis (find-selection-basis target-viewpoints basis))
              (viewpoint-systems (generate-viewpoint-systems sel-basis max-links min-links vp-white vp-black))

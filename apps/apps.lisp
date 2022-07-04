@@ -2,7 +2,7 @@
 ;;;; File:       apps.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2005-11-27 16:27:35 marcusp>
-;;;; Time-stamp: <2016-05-25 12:13:04 marcusp>
+;;;; Time-stamp: <2022-07-04 09:27:54 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:apps) 
@@ -44,7 +44,7 @@
            (string (format nil "~(~{~A~^-~}~)" 
                            (list (if (consp dataset-id) (format-list dataset-id "_") dataset-id)
                                  (format-list basic-attributes "_")
-                                 (format-list attributes "_")
+                                 (if (eql attributes :select) "select" (format-list attributes "_"))
                                  (format-list pretraining-ids "_")
                                  (format-list resampling-indices "_")
                                  texture (format-list voices "_")
