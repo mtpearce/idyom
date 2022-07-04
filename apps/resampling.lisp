@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2022-07-04 10:21:09 marcusp>                           
+;;;; Time-stamp: <2022-07-04 10:53:06 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -35,6 +35,7 @@
                          (stmo mvs::*stm-params*)
                          (voices nil)
                          (texture :melody)
+                         training-set-size
                          (use-resampling-set-cache? t)
                          (use-ltms-cache? t))
   "IDyOM top level: returns the mean information content for
@@ -46,7 +47,12 @@
    short-term model is used and otherwise both models are used and
    their predictions combined. The parameters
    <use-resampling-set-cache?> and <use-ltms-cache?> enable or disable
-   respectively the caching of resampling-sets and LTMs."
+   respectively the caching of resampling-sets and LTMs. If
+   <training-set-size> is not nil, it should be a positive integer
+   corresponding to the number of compositions that each resampling
+   training set should be downsampled to.  Note that pretraining
+   datasets outside the resampling procedure are not downsampled."
+  (when (= detail 1) (error "Detail level 1 not yet implemented."))
   (let* (;; Check model memory parameters
          (ltmo (apply #'check-model-defaults (cons mvs::*ltm-params* ltmo)))
          (stmo (apply #'check-model-defaults (cons mvs::*stm-params* stmo)))
@@ -63,7 +69,7 @@
          (mvs::*stm-escape* (getf stmo :escape))
          (mvs::*stm-exclusion* (getf stmo :exclusion))
          ;; data
-         (dataset-id (if (listp dataset-id) dataset-id (list dataset-id))
+         (dataset-id (if (listp dataset-id) dataset-id (list dataset-id)))
          (dataset (md:get-music-objects dataset-id nil :voices voices :texture texture))
          (pretraining-set (md:get-music-objects pretraining-ids nil :voices voices :texture texture))
          ;; viewpoints
@@ -73,7 +79,8 @@
          ;; resampling sets
          (k (if (eq k :full) (length dataset) k))
          (resampling-sets (get-resampling-sets dataset-id :k k
-                                               :use-cache? use-resampling-set-cache?))
+                                               :use-cache? use-resampling-set-cache?
+                                               :training-set-size training-set-size))
          (resampling-id 0)
          ;; If no resampling sets specified, then use all sets
          (resampling-indices (if (null resampling-indices)
@@ -171,7 +178,7 @@ lists, one for each composition."
   (format nil "~s" string))
 
 (defun format-information-content (resampling-predictions file dataset-id detail
-				   &key (separator " ") (null-token "NA")
+				   &key (separator " ") (null-token "NA"))
   (with-open-file (o file :direction :output :if-exists :supersede)
     (case detail 
       (1 (format t "~&Not implemented.~%"))

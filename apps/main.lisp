@@ -2,7 +2,7 @@
 ;;;; File:       main.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2010-11-01 15:19:57 marcusp>
-;;;; Time-stamp: <2022-07-04 09:54:18 marcusp>
+;;;; Time-stamp: <2022-07-04 10:53:41 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:idyom)
@@ -65,6 +65,7 @@
                 ;; Number of voices and texture (e.g., :melody :harmony)
                 (voices nil)
                 (texture :melody)
+                training-set-size
                 ;; Output
                 (detail 3)
                 (output-path nil)
@@ -122,10 +123,12 @@
                                              :k k :resampling-indices resampling-indices
                                              :models models :ltmo ltmo :stmo stmo
                                              :voices voices :texture texture
+                                             :training-set-size training-set-size
                                              :use-resampling-set-cache? use-resampling-set-cache?
                                              :use-ltms-cache? use-ltms-cache?)))
             (when output-path
-              (resampling:format-information-content predictions filepath dataset-id detail :separator separator))
+              (resampling:format-information-content predictions filepath dataset-id detail
+                                                     :separator separator :null-token null-token))
             (resampling:output-information predictions dataset-id detail information-measure))))))
 
 (defun find-selection-basis (targets basis)
