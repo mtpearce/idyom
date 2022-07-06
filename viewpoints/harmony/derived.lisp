@@ -2,7 +2,7 @@
 ;;;; File:       derived.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-25 19:09:17 marcusp>                           
-;;;; Time-stamp: <2022-07-06 11:47:51 marcusp>                           
+;;;; Time-stamp: <2022-07-06 13:58:42 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
@@ -88,7 +88,8 @@
               (mapcar #'(lambda (x) (mod (- x bass) 12)) nf)))
 
 (defun normal-form (pc-set)
-  "Find the normal form of a pc-set provided in ascending order (Rahn, 1980; Forte, 1973)."
+  "Find the normal form (most compact ordering) of a pc-set provided
+in ascending order (Rahn, 1980; Forte, 1973)."
   (labels ((get-score (pc-set)
              (mod (- (car (last pc-set)) (car pc-set)) 12))
            (choose-ties (candidates)
@@ -201,6 +202,38 @@
               (if (undefined-p tonic)
                   +undefined+
                   (mod (- root tonic) 12))))
+
+
+;;; ============================================================================
+;;; Sequential identity functions
+
+(define-viewpoint (pi-chord-identity derived (h-cpitch))
+    ((events md:harmonic-sequence) element)
+  :function (multiple-value-bind (e1 e2)
+                (values-list (last events 2))
+              (if (or (null e1) (null e2)) +undefined+
+                  (let ((pi-chord-1 (pi-chord (list e1)))
+                        (pi-chord-2 (pi-chord (list e2))))
+                    (if (equalp pi-chord-1 pi-chord-2) t nil)))))
+
+(define-viewpoint (pc-chord-identity derived (h-cpitch))
+    ((events md:harmonic-sequence) element)
+  :function (multiple-value-bind (e1 e2)
+                (values-list (last events 2))
+              (if (or (null e1) (null e2)) +undefined+
+                  (let ((pc-chord-1 (pc-chord (list e1)))
+                        (pc-chord-2 (pc-chord (list e2))))
+                    (if (equalp pc-chord-1 pc-chord-2) t nil)))))
+
+(define-viewpoint (pc-set-identity derived (h-cpitch))
+    ((events md:harmonic-sequence) element)
+  :function (multiple-value-bind (e1 e2)
+                (values-list (last events 2))
+              (if (or (null e1) (null e2)) +undefined+
+                  (let ((pc-set-1 (pc-set (list e1)))
+                        (pc-set-2 (pc-set (list e2))))
+                    (if (equalp pc-set-1 pc-set-2) t nil)))))
+
 
 
 ;;; ============================================================================
