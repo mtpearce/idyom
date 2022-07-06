@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2022-06-22 20:20:24 marcusp>
+;;;; Time-stamp: <2022-07-06 10:46:59 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -250,10 +250,6 @@ quantile into which <number> falls."
 	(1+ match)
 	num-quantiles)))	       
 
-(defun subtract-mod-n (x y n)
-  (if (<= y x)
-      (- x y)
-      (- (+ n x) y)))
 
 ;;;===========================================================================
 ;;; Sequences

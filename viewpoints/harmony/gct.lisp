@@ -2,7 +2,7 @@
 ;;;; File:       gct2021.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2022-06-20 19:09:17 marcusp>                           
-;;;; Time-stamp: <2022-06-24 14:17:29 marcusp>                           
+;;;; Time-stamp: <2022-07-06 12:06:54 marcusp>                           
 ;;;; ======================================================================
 
 ;;; An implementation of the updated General Chord Type (GCT)
@@ -37,7 +37,7 @@
 (defun state->gct (state)
   (let* ((pc-set (car state))
          (root (car pc-set))
-         (chord-type (mapcar #'(lambda (x) (utils:subtract-mod-n x root 12)) pc-set))
+         (chord-type (mapcar #'(lambda (x) (mod12- x root)) pc-set))
          (prev 0)
          (chord-type (mapcar #'(lambda (x) (prog1 (if (< x prev) (+ x 12) x) (setf prev x))) chord-type)))
     (list root chord-type)))
@@ -64,7 +64,7 @@
     (gethash min-score scores)))
 
 (defun get-new-score (new-pitch-class pitch-classes consonance-vector)
-  (let* ((intervals (mapcar #'(lambda (x) (utils:subtract-mod-n new-pitch-class x 12)) pitch-classes))
+  (let* ((intervals (mapcar #'(lambda (x) (mod12- new-pitch-class x)) pitch-classes))
          (scores (mapcar #'(lambda (x) (elt consonance-vector x)) intervals))
          (score (reduce #'+ scores)))
     score))

@@ -2,7 +2,7 @@
 ;;;; File:       viewpoints-tests.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2022-06-23 13:17:12 peter>                         
-;;;; Time-stamp: <2022-06-29 23:37:28 marcusp>                           
+;;;; Time-stamp: <2022-07-06 12:58:36 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -16,10 +16,14 @@
 (5am:in-suite viewpoints)
 
 
-;;; Harmony: GCT algorithm (from Giannos & Cambouropoulos, 2021, Table 1). 
-
 (5am:def-suite harmony :in viewpoints)
 (5am:in-suite harmony)
+
+
+;;; Harmony: GCT algorithm (from Giannos & Cambouropoulos, 2021, Table 1). 
+
+(5am:def-suite gct2021 :in harmony)
+(5am:in-suite gct2021)
 
 ;; triads
 (5am:test gct-major      (5am:is (equalp (general-chord-type '(60 64 67) *tonal-consonance-vector*) '(0 (0 4 7)))))
@@ -45,7 +49,39 @@
 (5am:test gct-minor9th    (5am:is (equalp (general-chord-type '(60 63 67 70 74) *tonal-consonance-vector*) '(0 (0 3 7 10 14)))))
 
 
+;;; Harmony: GCT 2014 algorithm (tests from Giannos & Cambouropoulos, 2021, Table 1). 
+
+(5am:def-suite gct2014 :in harmony)
+(5am:in-suite gct2014)
+
+;; triads
+(5am:test gct2014-major      (5am:is (equalp (general-chord-type-2014 '(60 64 67) *major-scale-degrees* *common-practice-consonance-vector*) '(0 (0 4 7)))))
+(5am:test gct2014-minor      (5am:is (equalp (general-chord-type-2014 '(60 63 67) *major-scale-degrees* *common-practice-consonance-vector*) '(0 (0 3 7)))))
+(5am:test gct2014-diminished (5am:is (equalp (general-chord-type-2014 '(60 63 66) *major-scale-degrees* *common-practice-consonance-vector*) '(0 (0 3 6)))))
+(5am:test gct2014-augmented  (5am:is (equalp (general-chord-type-2014 '(60 64 68) *major-scale-degrees* *common-practice-consonance-vector*) '(0 (0 4 8))))) ;; (4 (0 4 8))
+(5am:test gct2014-sus2       (5am:is (equalp (general-chord-type-2014 '(60 62 67) *major-scale-degrees* *common-practice-consonance-vector*) '(7 (0 5 7))))) ;; 
+(5am:test gct2014-sus4       (5am:is (equalp (general-chord-type-2014 '(60 65 67) *major-scale-degrees* *common-practice-consonance-vector*) '(0 (0 5 7))))) 
+;; tetrads 
+(5am:test gct2014-major7th          (5am:is (equalp (general-chord-type-2014 '(60 64 67 71) *major-scale-degrees* *common-practice-consonance-vector*) '(0 (0 4 7 11)))))  ;; (4 (0 3 7 8))
+(5am:test gct2014-minor7th          (5am:is (equalp (general-chord-type-2014 '(60 63 67 70) *major-scale-degrees* *common-practice-consonance-vector*) '(0 (0 3 7 10)))))
+(5am:test gct2014-dominant7th       (5am:is (equalp (general-chord-type-2014 '(60 64 67 70) *major-scale-degrees* *common-practice-consonance-vector*) '(0 (0 4 7 10)))))
+(5am:test gct2014-dominant7thsus4   (5am:is (equalp (general-chord-type-2014 '(60 65 67 70) *major-scale-degrees* *common-practice-consonance-vector*) '(0 (0 5 7 10)))))
+(5am:test gct2014-diminished7th     (5am:is (equalp (general-chord-type-2014 '(60 63 66 69) *major-scale-degrees* *common-practice-consonance-vector*) '(0 (0 3 6 9)))))  ;; (9 (0 3 6 9))
+(5am:test gct2014-halfdiminished7th (5am:is (equalp (general-chord-type-2014 '(60 63 66 70) *major-scale-degrees* *common-practice-consonance-vector*) '(3 (0 3 7 9)))))  ;;
+(5am:test gct2014-minormajor7th     (5am:is (equalp (general-chord-type-2014 '(60 63 67 71) *major-scale-degrees* *common-practice-consonance-vector*) '(0 (0 3 7 11)))))
+(5am:test gct2014-augmented7th      (5am:is (equalp (general-chord-type-2014 '(60 64 68 70) *major-scale-degrees* *common-practice-consonance-vector*) '(0 (0 4 8 10))))) ;; (4 (0 4 8 18))
+(5am:test gct2014-major6th          (5am:is (equalp (general-chord-type-2014 '(60 64 67 69) *major-scale-degrees* *common-practice-consonance-vector*) '(0 (0 4 7 9))))) 
+(5am:test gct2014-minor6th          (5am:is (equalp (general-chord-type-2014 '(60 63 67 69) *major-scale-degrees* *common-practice-consonance-vector*) '(0 (0 3 7 9)))))
+;; pentads 
+(5am:test gct2014-dominant9th (5am:is (equalp (general-chord-type-2014 '(60 64 67 70 74) *major-scale-degrees* *common-practice-consonance-vector*) '(0 (0 4 7 10 14)))))
+(5am:test gct2014-major9th    (5am:is (equalp (general-chord-type-2014 '(60 64 67 71 74) *major-scale-degrees* *common-practice-consonance-vector*) '(0 (0 4 7 11 14))))) ;; (4 (0 3 7 8 10))
+(5am:test gct2014-minor9th    (5am:is (equalp (general-chord-type-2014 '(60 63 67 70 74) *major-scale-degrees* *common-practice-consonance-vector*) '(0 (0 3 7 10 14)))))
+
+
 ;;; Harmony: Parncutt (1988)
+
+(5am:def-suite parn88 :in harmony)
+(5am:in-suite parn88)
 
 (5am:test parn88-encode-pc-set-1 (5am:is (equalp (encode-pc-set '(0 4 7)) '(1 0 0 0 1 0 0 1 0 0 0 0))))
 (5am:test parn88-encode-pc-set-2 (5am:is (equalp (encode-pc-set '(0)) '(1 0 0 0 0 0 0 0 0 0 0 0))))
@@ -86,7 +122,10 @@
 (5am:test parn88-minor9th    (5am:is (equalp (car (parn88 '(60 63 67 70 74))) 0)))
 
 
-;;; Harmony: viewpoints
+;;; Harmony: viewpoints (Harrison, 2019)
+
+(5am:def-suite harrison2019 :in harmony)
+(5am:in-suite harrison2019)
 
 (defun make-event (pitch)
   (make-instance 'md:music-event :cpitch pitch))

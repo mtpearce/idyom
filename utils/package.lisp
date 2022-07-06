@@ -2,7 +2,7 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                           
-;;;; Time-stamp: <2022-06-22 20:21:01 marcusp>                           
+;;;; Time-stamp: <2022-07-06 10:47:08 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -15,7 +15,7 @@
            "ROUND-TO-NEAREST-DECIMAL-PLACE" "APPROX-EQUAL"
            "AVERAGE" "GENERATE-INTEGERS" "SD" "COR"
 	   "POWERSET" "QUOTIENT" "FACTORIAL" "N-PERMUTATIONS" "N-COMBINATIONS"
-           "SAMPLE" "PARSE-NUMBER" "SUBTRACT-MOD-N"
+           "SAMPLE" "PARSE-NUMBER" 
            "SHUFFLE" "NTH-ROOT" "STRING-APPEND" "SPLIT-STRING" "ANY-DUPLICATED"
 	   "RANGE" "CUMSUM" "MD5-SUM-OF-LIST" "SHUFFLE" 
            "NTH-ROOT" "ANY-DUPLICATED"

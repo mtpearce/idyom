@@ -2,7 +2,7 @@
 ;;;; File:       derived.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-25 19:09:17 marcusp>                           
-;;;; Time-stamp: <2022-06-29 23:33:44 marcusp>                           
+;;;; Time-stamp: <2022-07-06 11:47:51 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
@@ -249,13 +249,13 @@
 
 ;; (define-viewpoint (gct-2014 derived (h-cpitch))
 ;;     ((events md:harmonic-sequence) element)
-;;   :function (let* ((pitch-class-set (h-cpitch-class-set events))
+;;   :function (let* ((pitches (h-cpitch events))
 ;;                    (mode (mode events))
 ;;                    (tonic (referent events))
 ;;                    (pitch-scale-hierarchy 
 ;;                     (list tonic (if (= mode 9)
-;;                                     ;; (0 2 3 5 7 8 10)   ;; natural minor (2 1 2 2 1 2 2)
-;;                                     '(0 2 3 5 7 8 11)     ;; harmonic minor (2 1 2 2 1 3 1)
-;;                                     '(0 2 4 5 7 9 11)))))  ;; major
-;;               (general-chord-type-2014 pitch-class-set pitch-scale-hierarchy *common-practice-consonance-vector*)))
+;;                                     ;; (0 2 3 5 7 8 10)               ;; natural minor (2 1 2 2 1 2 2)
+;;                                     *harmonic-minor-scale-degrees*    ;; harmonic minor (2 1 2 2 1 3 1)
+;;                                     *major-scale-degrees*))))         ;; major
+;;               (general-chord-type-2014 pitches pitch-scale-hierarchy *common-practice-consonance-vector*)))
 
