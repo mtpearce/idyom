@@ -1,11 +1,13 @@
 (cl:in-package #:viewpoints) 
 
-(defgeneric viewpoint-sequences (viewpoint sequences)
-  (:documentation "Returns a list of viewpoint sequences."))
+(defgeneric viewpoint-sequences (viewpoint sequences &key keep-undefined)
+  (:documentation "Returns a list of viewpoint sequences. If <keep-undefined>
+is t, then undefined elements are not removed from these sequences."))
 
-(defgeneric viewpoint-sequence (viewpoint sequence)
+(defgeneric viewpoint-sequence (viewpoint sequence &key keep-undefined)
   (:documentation "Returns a list of viewpoint elements associated
-with each suffix of SEQUENCE."))
+with each suffix of SEQUENCE. If <keep-undefined>
++is t, then undefined elements are not removed from these sequences."))
 
 (defgeneric viewpoint-element (viewpoint sequence)
   (:documentation "Returns the viewpoint element associated with SEQUENCE 

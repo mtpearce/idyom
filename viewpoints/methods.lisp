@@ -2,20 +2,21 @@
 
 ;;; viewpoint-sequence
 
-(defmethod viewpoint-sequences ((v viewpoint) sequences)
-  (mapcar #'(lambda (s) (viewpoint-sequence v s)) sequences))
+(defmethod viewpoint-sequences ((v viewpoint) sequences &key keep-undefined)
+  (mapcar #'(lambda (s) (viewpoint-sequence v s :keep-undefined keep-undefined))
+          sequences))
 
-(defmethod viewpoint-sequence ((v viewpoint) (m md:music-composition))
-  (viewpoint-sequence v (coerce m 'list)))
+(defmethod viewpoint-sequence ((v viewpoint) (m md:music-composition) &key keep-undefined)
+  (viewpoint-sequence v (coerce m 'list) :keep-undefined keep-undefined))
 
-(defmethod viewpoint-sequence ((v viewpoint) (m md:music-sequence))
-   (viewpoint-sequence v (coerce m 'list)))
+(defmethod viewpoint-sequence ((v viewpoint) (m md:music-sequence) &key keep-undefined)
+   (viewpoint-sequence v (coerce m 'list) :keep-undefined keep-undefined))
   
-(defmethod viewpoint-sequence ((v viewpoint) (event-list list))
+(defmethod viewpoint-sequence ((v viewpoint) (event-list list) &key keep-undefined)
   (labels ((events->viewpoint (events sequence)
              (if (null events) sequence
                  (let ((element (viewpoint-element v events)))
-                   (if (undefined-p element)
+                   (if (and (undefined-p element) (not keep-undefined))
                        (events->viewpoint (butlast events) sequence)
                        (events->viewpoint (butlast events)
                                           (cons element sequence)))))))
