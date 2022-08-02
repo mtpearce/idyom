@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2022-07-04 10:53:06 marcusp>                           
+;;;; Time-stamp: <2022-07-08 17:13:08 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -52,7 +52,6 @@
    corresponding to the number of compositions that each resampling
    training set should be downsampled to.  Note that pretraining
    datasets outside the resampling procedure are not downsampled."
-  (when (= detail 1) (error "Detail level 1 not yet implemented."))
   (let* (;; Check model memory parameters
          (ltmo (apply #'check-model-defaults (cons mvs::*ltm-params* ltmo)))
          (stmo (apply #'check-model-defaults (cons mvs::*stm-params* stmo)))
