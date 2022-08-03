@@ -3,7 +3,7 @@
   (:nicknames md)
   (:export 
    ;; Music objects & their properties
-   "MUSIC-DATASET" "MUSIC-COMPOSITION" "MUSIC-EVENT" "MUSIC-SLICE"
+   "MUSIC-OBJECT" "MUSIC-DATASET" "MUSIC-COMPOSITION" "MUSIC-EVENT" "MUSIC-SLICE"
    "MUSIC-SEQUENCE" "MELODIC-SEQUENCE" "HARMONIC-SEQUENCE"
    "ONSET" "CHROMATIC-PITCH" "DURATION" "KEY-SIGNATURE" "MODE"
    "TEMPO" "PULSES" "BARLENGTH" "DELTAST" "BIOI" "PHRASE"
@@ -18,14 +18,14 @@
    ;; Getting music objects from DB
    "GET-DATASET" "GET-COMPOSITION" "GET-EVENT"
    "GET-MUSIC-OBJECTS" "GET-EVENT-SEQUENCE" "GET-EVENT-SEQUENCES"
-   "GET-GRID-SEQUENCE" "GET-GRID-SEQUENCES"
+   "GET-HARMONIC-SEQUENCE" "GET-HARMONIC-SEQUENCES"
    ;; Accessing properties of music objects
    "GET-ATTRIBUTE" "SET-ATTRIBUTE" "COUNT-COMPOSITIONS" "GET-DESCRIPTION"
    "COPY-EVENT" "MUSIC-SYMBOL" "*MD-MUSIC-SLOTS*" "*MD-TIME-SLOTS*"
    ;; Representation
    "*TIMEBASE*"
    ;; MIDI export
-   "EXPORT-DATA"
+   "EXPORT-MIDI" "PREVIEW"
    )
-  (:documentation "Musical data."))
+  (:documentation "Representations of music objects."))
 

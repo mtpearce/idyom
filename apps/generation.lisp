@@ -2,7 +2,7 @@
 ;;;; File:       generation.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-08-21 18:54:17 marcusp>                           
-;;;; Time-stamp: <2020-07-10 10:24:31 marcusp>                           
+;;;; Time-stamp: <2022-08-03 14:19:19 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -75,7 +75,7 @@
     ;; (write-prediction-cache-to-file dataset-id attributes)
     ;; (print (viewpoints:viewpoint-sequence (viewpoints:get-viewpoint 'cpitch) sequence))
     (if (and output-path sequence)
-        (md:export-data sequence :mid output-path output-filename)
+        (md:export-midi sequence output-path output-filename)
         sequence)))
 
 (defun get-pretraining-set (dataset-ids)
