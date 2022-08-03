@@ -2,7 +2,7 @@
 ;;;; File:       music-data.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2021-06-14 15:14:50 marcusp>                           
+;;;; Time-stamp: <2022-08-03 15:52:27 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -270,11 +270,14 @@ no. in which the event occurs." ))
   (with-open-file (s filename :direction :input)
     (insert-dataset (utils:read-object-from-file filename) id)))
 
-(defmethod export-data ((d mtp-dataset) (type (eql :lisp)) filename)
-  (with-open-file (s filename :direction :output :if-exists :supersede
-                     :if-does-not-exist :create)
-    (write (dataset->lisp d) :stream s))
-  nil)
+(defmethod export-data ((d mtp-dataset) (type (eql :lisp)) &key filename)
+  (let* ((dir-path (pathname dir))
+         (filename (if filename filename (format nil "dataset-~A.lisp" (dataset-id d))))
+         (file-path (merge-pathnames dir-path (pathname filename))))
+    (with-open-file (s file-path :direction :output :if-exists :supersede
+                       :if-does-not-exist :create)
+      (write (dataset->lisp d) :stream s))
+    nil))
 
 (defun copy-datasets (target-id source-ids &optional description exclude random-subset)
   "Copy datasets specified by SOURCE-IDS to a new dataset specified by
@@ -298,6 +301,7 @@ to exclude for each dataset specified in SOURCE-IDS."
   nil)
 
 (defun dataset->lisp (mtp-dataset)
+  "Converts a dataset to a LISP representation."
   (let ((dataset nil))
     (dolist (c (dataset-compositions mtp-dataset))
       (let ((composition (list (composition-description c))))
@@ -334,28 +338,31 @@ to exclude for each dataset specified in SOURCE-IDS."
    Calls <insert-composition> to insert each composition in
    <compositions> into the composition table." 
   (if (null (nthcdr 3 data))
-      (print "Cowardly refusing to import an empty dataset.")
+      (utils:message "Cowardly refusing to import an empty dataset." :detail 1)
       (let* ((id (or id (get-next-free-id)))
              (description (nth 0 data))
              (timebase (nth 1 data))
              (midc (nth 2 data))
              (compositions (nthcdr 3 data))
+             (num-compositions (length compositions))
              (composition-id 0)
              (dataset-object (make-instance 'mtp-dataset
                                             :dataset-id id
                                             :description description
                                             :timebase timebase
                                             :midc midc)))
-        (format t "~%Inserting data into database: dataset ~A." id)
+        (utils:message
+         (format nil "Inserting ~A compositions into database: dataset ~A."
+                 num-compositions id) :detail 1)
         (clsql:with-transaction () 
           (clsql:update-records-from-instance dataset-object)
-          (dolist (c compositions)
+          (utils:dolist-pb (c compositions)
             (insert-composition dataset-object c composition-id)
             (when (cdr c) (incf composition-id)))))))
         
 (defmethod insert-composition ((d mtp-dataset) composition id)
   "Takes a preprocessed composition <composition> and
-   creates a compositon object with composition-id <id> and the same
+   creates a composition object with composition-id <id> and the same
    dataset-id as <dataset> and inserts it into the composition table of
    the default database. Calls <insert-event> to insert each
    event of <composition> into the event table."
