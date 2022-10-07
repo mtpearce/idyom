@@ -2,7 +2,7 @@
 ;;;; File:       midi.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2020-02-05 07:01:51 marcusp>
-;;;; Time-stamp: <2022-08-03 15:04:14 marcusp>
+;;;; Time-stamp: <2022-08-04 12:47:36 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -123,6 +123,8 @@ of monophonic events."))
 					 :encode-keysig encode-keysig
 					 :shift shift))
 			events))
+         (track (sort track #'(lambda (x y) (< (midi:message-time x)
+                                               (midi:message-time y)))))
          (track (cons tempo-msg (cons channel-msg track))))
     ;; ;; Keysig 
     ;; (let* ((keysig (md:get-attribute (car events) :keysig))
