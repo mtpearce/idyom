@@ -2,7 +2,7 @@
 ;;;; File:       database.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2022-08-03 18:31:28 marcusp>                           
+;;;; Time-stamp: <2022-08-04 11:42:28 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -270,7 +270,7 @@ no. in which the event occurs." ))
   (with-open-file (s filename :direction :input)
     (insert-dataset (utils:read-object-from-file filename) id)))
 
-(defmethod export-data ((d mtp-dataset) (type (eql :lisp)) &key filename)
+(defmethod export-data ((d mtp-dataset) (type (eql :lisp)) dir &key filename)
   (let* ((dir-path (pathname dir))
          (filename (if filename filename (format nil "dataset-~A.lisp" (dataset-id d))))
          (file-path (merge-pathnames dir-path (pathname filename))))

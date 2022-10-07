@@ -2,7 +2,7 @@
 ;;;; File:       generics.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2004-10-28 11:56:59 marcusp>
-;;;; Time-stamp: <2022-08-03 15:55:14 marcusp>
+;;;; Time-stamp: <2022-08-03 18:30:19 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:idyom-db)
@@ -23,7 +23,6 @@
   directory. If <play-audio>, an audio preview is played. If
   <display-score>, a pdf score is opened. Returns t if the user
   requests to break out of a loop, nil otherwise."))
-
 
 (defgeneric import-data (type path description id))
 (defgeneric insert-composition (dataset composition id))
