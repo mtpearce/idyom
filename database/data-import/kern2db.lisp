@@ -2,7 +2,7 @@
 ;;;; File:       kern2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-05-03 18:54:17 marcusp>                           
-;;;; Time-stamp: <2022-10-07 10:05:52 marcusp>                           
+;;;; Time-stamp: <2022-10-10 14:17:39 marcusp>                           
 ;;;; =======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -482,35 +482,33 @@
       (otherwise converted-spine))))
 
 (defun correct-onsets-in-first-bar (converted-spine first-onset environment
-                                                    &optional (offset 0))
+                                                    &optional shift)
   "Corrects the onsets of events in the first bar in cases where the first
    event in the piece is not the first event in the first bar."
   (if (null (car (cadr (assoc 'timesig environment))))
       converted-spine 
       (let* ((current-event (car converted-spine))
              (current-onset (cadr (assoc :onset current-event)))
-             (current-dur (cadr (assoc :dur current-event)))
-             (current-deltast (cadr (assoc :deltast current-event)))
-             (deltast (cadr (assoc 'deltast environment)))
+             (time (cadr (assoc 'onset environment))) ;; onset of first full bar
              (bar-length (calculate-bar-length environment))
-             (next-offset (if (not (null current-event))
-                              (+ offset current-dur)
-                              offset))
-             (new-onset (if (not (null current-event))
-                            (- (+ first-onset bar-length) deltast next-offset))))
+	     (shift (if (null shift) (- (+ bar-length first-onset) time) shift)) ;; constant offset
+             (new-onset (unless (null current-event)
+			  (+ current-onset shift)))
+             (new-bioi (if (= (length converted-spine) 1)
+                           new-onset
+                           (cadr (assoc :bioi current-event)))))
         (cond ((null converted-spine) '())
               ((= current-onset first-onset)
                (cons (update-alist current-event
                                    (list :onset new-onset)
                                    (list :bioi new-onset)
-                                   ;(list :deltast new-onset))
-                                   (list :deltast 0))
+                                   (list :deltast new-onset))
                      (cdr converted-spine)))
-              (t (cons (update-alist current-event (list :onset new-onset :bioi new-onset))
+              (t (cons (update-alist current-event (list :onset new-onset) (list :bioi new-bioi))
                        (correct-onsets-in-first-bar (cdr converted-spine)
                                                     first-onset
                                                     environment
-                                                    (+ next-offset current-deltast))))))))
+                                                    shift)))))))
 
 (defun calculate-bar-length (environment)
   "Calculates the number of time-units in a bar from the values of the
