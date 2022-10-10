@@ -2,7 +2,7 @@
 ;;;; File:       ppm-ui.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2019-04-29 13:07:33 marcusp>                           
+;;;; Time-stamp: <2022-10-10 10:58:24 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; 
@@ -50,8 +50,9 @@
   each sequence; 3 = IC for each note; 4 = full distributions for each
   event."
   (let* ((alphabet (if alphabet alphabet (get-alphabet sequences)))
-         (model (ppm:make-ppm alphabet :exclusion exclusion :escape escape :mixtures mixtures
-                              :update-exclusion update-exclusion :order-bound order-bound))
+         (model (make-instance 'ppm :alphabet alphabet :exclusion exclusion
+                               :escape escape :mixtures mixtures
+                               :update-exclusion update-exclusion :order-bound order-bound))
          (result (ppm:model-dataset model sequences :construct? t :predict? t :sentinel? sentinel?)))
     (prog1 (get-result result detail)
       (when write (write result :right-margin 110))
@@ -93,8 +94,8 @@
 
 (defun build-model (sequences alphabet)
   "Train a PPM* model on <sequences> composed from the specified <alphabet>."
-  (let ((model (ppm:make-ppm alphabet :escape :c :mixtures t
-                             :update-exclusion nil :order-bound nil)))
+  (let ((model (make-instance 'ppm :alphabet alphabet :escape :c :mixtures t
+                              :update-exclusion nil :order-bound nil)))
     (ppm:model-dataset model sequences :construct? t :predict? nil)
     model))
 

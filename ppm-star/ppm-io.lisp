@@ -2,7 +2,7 @@
 ;;;; File:       ppm-io.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2019-04-29 13:18:34 marcusp>
+;;;; Time-stamp: <2022-10-10 10:50:46 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package :ppm)
@@ -50,7 +50,7 @@
    <filename> exists the model is read from the designated file otherwise
    it is constructed from the database and written to <filename>." 
   (unless (utils:file-exists filename)
-    (let ((model (make-ppm alphabet)))
+    (let ((model (make-instance 'ppm :alphabet alphabet)))
       (model-dataset model dataset :construct? t :predict? nil)
       (write-model-to-file model filename)
       (format t "~&Written PPM* model to ~A.~%" filename)))
@@ -66,7 +66,8 @@
          (branches (utils:alist->hash-table (nth 1 (assoc 'branches model))))
          (dataset (alist->dataset (nth 1 (assoc 'dataset model))))
          (alphabet (nth 1 (assoc 'alphabet model))))
-    (make-ppm alphabet :leaves leaves :branches branches :dataset dataset
+    (make-instance 'ppm :alphabet alphabet :leaves leaves :branches
+    branches :dataset dataset
               :order-bound order-bound :mixtures mixtures :escape escape
               :update-exclusion update-exclusion)))
               

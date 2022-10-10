@@ -2,7 +2,7 @@
 ;;;; File:       multiple-viewpoint-system.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-27 18:54:17 marcusp>                           
-;;;; Time-stamp: <2022-10-07 13:45:26 marcusp>                           
+;;;; Time-stamp: <2022-10-10 10:53:40 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -263,7 +263,9 @@ objects."
   "Returns a vector of freshly initialised ppm short term models
 corresponding to the supplied list of viewpoints and initialised with
 the supplied parameters."
-  (apply #'vector (mapcar #'(lambda (v) (make-ppm (viewpoint-alphabet v)))
+  (apply #'vector (mapcar #'(lambda (v)
+                              (make-instance 'ppm:ppm
+                                             :alphabet (viewpoint-alphabet v)))
                           viewpoints)))
 
 

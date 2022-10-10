@@ -2,7 +2,7 @@
 ;;;; File:       similarity.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2011-08-18 10:28:11 marcusp>
-;;;; Time-stamp: <2020-04-27 13:00:52 marcusp>
+;;;; Time-stamp: <2022-10-10 10:56:13 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -157,7 +157,7 @@
               (let* ((training-set
                       (viewpoints:viewpoint-sequences viewpoint training-set))
                      (alphabet (viewpoints:viewpoint-alphabet viewpoint))
-                     (model (ppm:make-ppm alphabet)))
+                     (model (make-instance 'ppm:ppm :alphabet alphabet)))
                 (ppm:model-dataset model training-set :construct? t :predict? nil)
                 model))
           viewpoints))
