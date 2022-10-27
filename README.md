@@ -30,6 +30,29 @@ See the wiki for further details on installation.
 
 ## News
 
+### xxxx-xx-xx: v1.7
+* MIDI output: write key and time signature information if requested
+* MIDI output: preview (PDF and midi play) for database and music objects (thanks to Peter Harrison) 
+* Midi import: import of midi dynamics is restored
+* Utils: new dataframe package for idyom output (thanks to Peter Harrison)
+* Utils: interactive messaging (thanks to Peter Harrison) 
+* Utils: Cartesian product works with zero arguments (thanks to Bastiaan van der Weij)
+* Kern import: improved warnings when things go awry (thanks to Bastiaan van der Weij)
+* Music objects: use initializer for music-sequence to avoid code duplication (thanks to Bastiaan van der Weij)
+* Viewpoints: improved support for harmony viewpoints
+* Viewpoints: new General Chord Type algorithm for root finding (Giannos & Cambouropoulos, 2021)
+* Viewpoints: new Parncutt (1988) root-finding algorithm (thanks to Peter Harrison) 
+* Viewpoints: new harmony viewpoints (thanks to Peter Harrison)
+* Viewpoints: new function viewpoint-name-string and argument keep-undefined for viewpoint-sequence{,s} (thanks to Peter Harrison)
+* Viewpoints: modify onset alphabets so as not to predict ioi = zero (thanks to Bastiaan van der Weij) 
+* PPM*: replace make-ppm with the more general make-instance (thanks to Bastiaan van der Weij)
+* Idyom: Add training-set-size and null-token top-level args to idyom:idyom (thanks to Peter Harrison)
+* Idyom: fix bug in formatted output when dur/bioi/deltast/onset had null value
+* Idyom: top-level command can now return entropy as well as information content
+* Segmentation: add facility to detect boundaries based on both IC and entropy
+* Generation: new arguments for output filename and initial context
+* Testing: new tests for the Utils and Viewpoints packages (including rhythm and harmony)
+
 ### 2020-04-27: v1.6
 
 * PPM*: update excluded counts are now incremented at the highest-order matching state (reported by Peter Harrison)
