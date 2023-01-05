@@ -2,7 +2,7 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                           
-;;;; Time-stamp: <2022-02-01 13:40:09 marcusp>                           
+;;;; Time-stamp: <2023-01-05 14:35:02 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -13,6 +13,7 @@
 
 (defpackage #:idyom-db
   (:use #:common-lisp #:clsql)
+  (:nicknames db)
   (:export "MTP-EVENT" "MTP-COMPOSITION" "MTP-DATASET"
            "CONNECT-TO-DATABASE" "INITIALISE-DATABASE"
            "IMPORT-DATA" "EXPORT-DATA" "INSERT-DATASET" "DELETE-DATASET" 
