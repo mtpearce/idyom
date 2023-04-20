@@ -2,7 +2,7 @@
 ;;;; File:       main.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2010-11-01 15:19:57 marcusp>
-;;;; Time-stamp: <2022-07-08 17:13:05 marcusp>
+;;;; Time-stamp: <2023-01-09 15:18:37 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:idyom)
@@ -83,7 +83,7 @@
    dataset using k-fold cross validation (AKA resampling).  The
    parameters <use-resampling-set-cache?> and <use-ltms-cache?> enable
    or disable respectively the caching of resampling-sets and LTMs."
-  (when (= detail 1) (error "Detail level 1 not yet implemented."))
+  (when (and output-path (= detail 1)) (error "Detail level 1 not yet implemented."))
   (assert (member texture '(:melody :harmony)))
   (let ((ltmo (apply #'resampling::check-model-defaults (cons mvs::*ltm-params* ltmo)))
         (stmo (apply #'resampling::check-model-defaults (cons mvs::*stm-params* stmo))))
