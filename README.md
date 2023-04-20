@@ -31,18 +31,22 @@ See the wiki for further details on installation.
 ## News
 
 ### xxxx-xx-xx: v1.7
+* Kern import: improved warnings when things go awry (thanks to Bastiaan van der Weij)
+* MIDI import: fix errors in note timing
+* MIDI import: restore import of midi dynamics and tempo
 * MIDI output: write key and time signature information if requested
-* MIDI output: preview (PDF and midi play) for database and music objects (thanks to Peter Harrison) 
-* Midi import: import of midi dynamics is restored
+* MIDI output: preview (PDF and midi play) for database and music objects (thanks to Peter Harrison)
+* Database: db: is a nickname for the package qualifier idyom-db:
+* Database: copy-datasets allows user to specify composition-ids to include as well as exclude 
 * Utils: new dataframe package for idyom output (thanks to Peter Harrison)
 * Utils: interactive messaging (thanks to Peter Harrison) 
 * Utils: Cartesian product works with zero arguments (thanks to Bastiaan van der Weij)
-* Kern import: improved warnings when things go awry (thanks to Bastiaan van der Weij)
+* Utils: remove-by-position allows inverting the supplied positions
 * Music objects: use initializer for music-sequence to avoid code duplication (thanks to Bastiaan van der Weij)
 * Viewpoints: improved support for harmony viewpoints
 * Viewpoints: new General Chord Type algorithm for root finding (Giannos & Cambouropoulos, 2021)
-* Viewpoints: new Parncutt (1988) root-finding algorithm (thanks to Peter Harrison) 
-* Viewpoints: new harmony viewpoints (thanks to Peter Harrison)
+* Viewpoints: new Parncutt (1988) root-finding algorithm (thanks to Peter Harrison)
+* Viewpoints: new harmony viewpoints (following Harrison (2019) and Sears et al. (2018))
 * Viewpoints: new function viewpoint-name-string and argument keep-undefined for viewpoint-sequence{,s} (thanks to Peter Harrison)
 * Viewpoints: modify onset alphabets so as not to predict ioi = zero (thanks to Bastiaan van der Weij) 
 * PPM*: replace make-ppm with the more general make-instance (thanks to Bastiaan van der Weij)
