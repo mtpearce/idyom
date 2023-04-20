@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2022-07-08 17:13:08 marcusp>                           
+;;;; Time-stamp: <2023-03-22 14:30:26 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -70,39 +70,48 @@
          ;; data
          (dataset-id (if (listp dataset-id) dataset-id (list dataset-id)))
          (dataset (md:get-music-objects dataset-id nil :voices voices :texture texture))
-         (pretraining-set (md:get-music-objects pretraining-ids nil :voices voices :texture texture))
+         (pretraining-set (when pretraining-ids (md:get-music-objects pretraining-ids nil :voices voices :texture texture)))
          ;; viewpoints
          (sources (get-viewpoints source-viewpoints))
          (targets
-          (viewpoints:get-basic-viewpoints target-viewpoints (append dataset pretraining-set)))
-         ;; resampling sets
-         (k (if (eq k :full) (length dataset) k))
-         (resampling-sets (get-resampling-sets dataset-id :k k
-                                               :use-cache? use-resampling-set-cache?
-                                               :training-set-size training-set-size))
-         (resampling-id 0)
-         ;; If no resampling sets specified, then use all sets
-         (resampling-indices (if (null resampling-indices)
-                                 (utils:generate-integers 0 (1- k))
-                                 resampling-indices))
+           (viewpoints:get-basic-viewpoints target-viewpoints (append dataset pretraining-set)))
          ;; the result
          (sequence-predictions))
-    (dolist (resampling-set resampling-sets sequence-predictions)
-      ;; (format t "~&~0,0@TResampling set ~A: ~A~%" resampling-id resampling-set)
-      (when (member resampling-id resampling-indices)
-        (let* ((training-set (get-training-set dataset resampling-set))
-               (training-set (monodies-to-lists (append pretraining-set training-set)))
-               (test-set (monodies-to-lists (get-test-set dataset resampling-set)))
-               (ltms (get-long-term-models sources training-set
-                                           pretraining-ids dataset-id
-                                           resampling-id k 
-                                           voices texture
-                                           use-ltms-cache?))
-               (mvs (make-mvs targets sources ltms))
+    (if (eq models :stm)
+        ;; STM
+        (let* ((test-set (monodies-to-lists dataset))
+               (mvs (make-mvs targets sources nil :models models))
                (predictions
-                (mvs:model-dataset mvs test-set :construct? t :predict? t)))
-          (push predictions sequence-predictions)))
-      (incf resampling-id))))
+                 (mvs:model-dataset mvs test-set :construct? t :predict? t)))
+          (push predictions sequence-predictions))
+        ;; LTM, LTM+, BOTH, BOTH+
+        (let* (;; resampling sets
+               (k (if (eq k :full) (length dataset) k))
+               (resampling-sets
+                 (get-resampling-sets dataset-id :k k
+                                                 :use-cache? use-resampling-set-cache?
+                                                 :training-set-size training-set-size))
+               (resampling-id 0)
+               ;; If no resampling sets specified, then use all sets
+               (resampling-indices (if (null resampling-indices)
+                                       (utils:generate-integers 0 (1- k))
+                                       resampling-indices)))
+          (dolist (resampling-set resampling-sets sequence-predictions)
+            ;; (format t "~&~0,0@TResampling set ~A: ~A~%" resampling-id resampling-set)
+            (when (member resampling-id resampling-indices)
+              (let* ((training-set (get-training-set dataset resampling-set))
+                     (training-set (monodies-to-lists (append pretraining-set training-set)))
+                     (test-set (monodies-to-lists (get-test-set dataset resampling-set)))
+                     (ltms (get-long-term-models sources training-set
+                                                 pretraining-ids dataset-id
+                                                 resampling-id k 
+                                                 voices texture
+                                                 use-ltms-cache?))
+                     (mvs (make-mvs targets sources ltms :models models))
+                     (predictions
+                       (mvs:model-dataset mvs test-set :construct? t :predict? t)))
+                (push predictions sequence-predictions)))
+            (incf resampling-id))))))
 
 (defun check-model-defaults (defaults &key
 			      (order-bound (getf defaults :order-bound))
@@ -296,6 +305,9 @@ is a list of composition prediction sets, ordered by composition ID."
 		       (format nil "~A" attribute)) :keyword))
 
 (defun format-event-prediction (ep results dataset-id composition-id feature)
+  ;; (format t "~& format-event-prediction: ~A ~A ~A~%" (md::chromatic-pitches (prediction-sets:prediction-event ep))
+  ;;         (md:get-event-index (md:get-identifier (prediction-sets:prediction-event ep)))
+  ;;         (probability ep))
   (let* ((event (prediction-sets:prediction-event ep))
 	 (event-id (md:get-event-index (md:get-identifier event)))
 	 (probability (float (probability ep) 0.0))

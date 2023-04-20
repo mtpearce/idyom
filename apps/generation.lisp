@@ -2,7 +2,7 @@
 ;;;; File:       generation.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-08-21 18:54:17 marcusp>                           
-;;;; Time-stamp: <2022-08-03 14:19:19 marcusp>                           
+;;;; Time-stamp: <2023-03-22 14:37:41 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -61,7 +61,7 @@
          (ltms (get-long-term-models viewpoints training-set pretraining-ids
                                      dataset-id (format nil "~Agen" base-id)
                                      nil nil nil use-ltms-cache?))
-         (mvs (make-mvs basic-viewpoints viewpoints ltms))
+         (mvs (make-mvs basic-viewpoints viewpoints ltms :models models))
          (context-length (if (and (null context-length) (eql method :random))
                              (get-context-length (car test-set))
                              context-length))
@@ -125,7 +125,7 @@
 ;; ======================================================================== 
 
 (defmethod sampling-predict-sequence ((m mvs) sequence cpitch)
-  (mvs:operate-on-models m #'ppm:reinitialise-ppm :models 'mvs::stm)
+  (mvs:operate-on-models m #'ppm:reinitialise-ppm :models :stm)
   (let* ((cpitch-sequence (viewpoint-sequence cpitch sequence))
          (cached-prediction (cached-prediction cpitch-sequence))
          (prediction (complete-prediction m sequence cached-prediction)))

@@ -2,7 +2,7 @@
 ;;;; File:       extensions.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2008-10-31 13:08:09 marcusp>
-;;;; Time-stamp: <2022-10-07 17:25:18 marcusp>
+;;;; Time-stamp: <2023-04-20 13:45:44 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints) 
@@ -37,13 +37,13 @@
           (unless (or (undefined-p viewpoint-element)
                       (member viewpoint-element alphabet :test #'equal))
             (push viewpoint-element alphabet)))))
-    (let ((sorted-alphabet
-           (sort alphabet #'(lambda (x y)
-                              (cond ((and (numberp x) (numberp y))
-                                     (< x y))
-                                    ((and (listp x) (listp y))
-                                     (< (car x) (car y)))
-                                    (t nil))))))
+    (let ((sorted-alphabet 
+            (sort alphabet #'(lambda (x y)
+                               (cond ((and (numberp x) (numberp y))
+                                      (< x y))
+                                     ((and (listp x) (listp y))
+                                      (< (car x) (car y)))
+                                     (t nil))))))
       (setf (viewpoint-alphabet v) sorted-alphabet))))
 
 (defmethod set-alphabet-from-context ((v viewpoint) events unconstrained)
@@ -73,14 +73,15 @@ in <events>."
            (basic-alphabet 
             (apply #'utils:cartesian-product 
                    (get-alphabets attributes events))))
+      ;; (format t "~&type = ~A; basic-alphabet = ~A; typeset = ~A~%" (viewpoint-type v) basic-alphabet attributes)  
       (dolist (d basic-alphabet)
-        (mapc #'(lambda (element attribute) 
+        (mapc #'(lambda (element attribute)
                   (md:set-attribute e attribute element))
               d attributes)
         (let ((ve (viewpoint-element v (append context (list e)))))
           (unless (or (undefined-p ve) (member ve derived-alphabet :test #'equal))
             (push ve derived-alphabet))))
-      ;;(format t "~&type = ~A; alphabet = ~A~%" (viewpoint-type v) derived-alphabet) ; 
+      ;; (format t "~&type = ~A; alphabet = ~A~%" (viewpoint-type v) derived-alphabet)  
       (setf (viewpoint-alphabet v) (nreverse derived-alphabet)))))
           
 

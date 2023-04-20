@@ -2,7 +2,7 @@
 ;;;; File:       similarity.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2011-08-18 10:28:11 marcusp>
-;;;; Time-stamp: <2022-10-10 10:56:13 marcusp>
+;;;; Time-stamp: <2023-03-22 14:28:59 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -150,7 +150,7 @@
     ;;                                                  (md:get-attribute (car training-composition) 'dataset-id) 
     ;;                                                  (md:get-attribute (car training-composition) 'composition-id)))
     ;;(viewpoints:initialise-basic-viewpoints training-set)
-    (mvs:make-mvs basic-viewpoints derived-viewpoints ltms)))
+    (mvs:make-mvs basic-viewpoints derived-viewpoints ltms :models :ltm)))
 
 (defun get-long-term-models (viewpoints training-set)
   (mapcar #'(lambda (viewpoint)

@@ -2,7 +2,7 @@
 ;;;; File:       multiple-viewpoint-system.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-27 18:54:17 marcusp>                           
-;;;; Time-stamp: <2022-10-10 10:53:40 marcusp>                           
+;;;; Time-stamp: <2023-03-22 14:39:04 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -125,18 +125,20 @@
       (setf (aref event-array i)
             (viewpoint-element (aref viewpoints i) sequence)))))
 
-(defmethod operate-on-models ((m mvs) operation &key (models 'both) 
+(defmethod operate-on-models ((m mvs) operation &key (models :both) 
                               ltm-args stm-args)
   "Calls a function <operation> which accepts a <ppm> object as it
 sole argument on all the long- and short-term models in mvs <m>."
   (let ((viewpoint-count (count-viewpoints m)))
     (dotimes (model-index viewpoint-count)
-      (let ((ltm (aref (mvs-ltm m) model-index))
-            (stm (aref (mvs-stm m) model-index))
-            (ltm-args (mapcar #'(lambda (x) (nth model-index x)) ltm-args))
-            (stm-args (mapcar #'(lambda (x) (nth model-index x)) stm-args)))
-        (unless (eql models 'stm) (apply operation (cons ltm ltm-args)))
-        (unless (eql models 'ltm) (apply operation (cons stm stm-args)))))))
+      (let ((ltm (if (mvs-ltm m) (aref (mvs-ltm m) model-index)))
+            (stm (if (mvs-stm m) (aref (mvs-stm m) model-index))))
+        (unless (or (null ltm) (eq models :stm))
+          (let ((ltm-args (mapcar #'(lambda (x) (nth model-index x)) ltm-args)))
+            (apply operation (cons ltm ltm-args))))
+        (unless (or (null stm) (member models '(:ltm :ltm+) :test #'eq))
+          (let ((stm-args (mapcar #'(lambda (x) (nth model-index x)) stm-args)))
+            (apply operation (cons stm stm-args))))))))
 
 (defmethod set-model-alphabets ((m mvs) event events viewpoint ltm stm 
                                 unconstrained)
@@ -173,8 +175,8 @@ See also VIEWPOINTS:SET-ALPHABET-FROM-CONTEXT."
     ;        (length (viewpoint-alphabet viewpoint)))
     ;(format t "~&~A: ~A" (viewpoint-name viewpoint) 
     ;        (viewpoint-alphabet viewpoint))
-    (set-alphabet ltm (viewpoint-alphabet viewpoint))
-    (set-alphabet stm (viewpoint-alphabet viewpoint))))
+    (when ltm (set-alphabet ltm (viewpoint-alphabet viewpoint)))
+    (when stm (set-alphabet stm (viewpoint-alphabet viewpoint)))))
   
 (defmethod get-basic-viewpoint ((m mvs) derived-viewpoint)
   (find-if #'(lambda (b) (viewpoints:in-typeset-p b derived-viewpoint))   
@@ -201,10 +203,11 @@ See also VIEWPOINTS:SET-ALPHABET-FROM-CONTEXT."
 ;;; Model Initialisation 
 ;;;========================================================================
 
-(defun make-mvs (basic-viewpoints viewpoints ltms)
+(defun make-mvs (basic-viewpoints viewpoints ltms &key models)
   "Returns an mvs object initialised with <viewpoints>, a list of
 viewpoint objects, <ltm> and <stm> each of which is a list of ppm
-objects."
+objects. <models> is the idyom models parameter: {stm, ltm, ltm+,
+both, both+}."
   (flet ((sanity-check-basic-viewpoints ()
            (dolist (bv basic-viewpoints basic-viewpoints)
              (unless (find (type-of bv) viewpoints 
@@ -228,8 +231,10 @@ objects."
                               :basic (sanity-check-basic-viewpoints)
                               :viewpoints (apply #'vector 
                                                  (sanity-check-viewpoints))
-                              :ltm (apply #'vector ltms)
-                              :stm (get-short-term-models viewpoints))))
+                              :ltm (when (and ltms (not (eq models :stm)))
+                                     (apply #'vector ltms))
+                              :stm (when (not (member models '(:ltm :ltm+)))
+                                     (get-short-term-models viewpoints)))))
       (set-mvs-parameters mvs)
       mvs)))
                                    
@@ -287,6 +292,10 @@ multiple-viewpoint system <m>."
                    (operate-on-models m #'reinitialise-ppm :models 'stm)
                      (model-d (cdr dataset) (1- sequence-index)
                               (cons prediction-set prediction-sets))))))
+    ;; (print (list "model-dataset"
+    ;;              (mapcar #'md::chromatic-pitches (car dataset))))
+                 ;;(viewpoints:viewpoint-sequence (viewpoints:get-viewpoint 'h-cpitch)
+                 ;;                                               (car dataset))))
     (dataset-prediction-sets m (model-d dataset (length dataset) '()))))
 
 (defmethod model-sequence ((m mvs) sequence &key construct? predict? 
@@ -308,8 +317,6 @@ appropriate sequence index before this method is called."
              (event-array (get-event-array m events))
              (construct? (if (< event-index construct-from) nil construct?))
              (predict? (if (< event-index predict-from) nil predict?)))
-;;         (set-model-alphabets m event-array events 
-;;                              *marginalise-using-current-event*)
         (multiple-value-bind (ltm-next-locations stm-next-locations
                               ltm-prediction-sets stm-prediction-sets)
             (model-event m event-array events :ltm-locations ltm-locations 
@@ -325,7 +332,7 @@ appropriate sequence index before this method is called."
               (unless (null combined) 
                 (push combined prediction-sets)))))))
     (when construct?
-      (operate-on-models m #'model-sentinel-event :models 'ltm
+      (operate-on-models m #'model-sentinel-event :models :ltm
                          :ltm-args (list (coerce ltm-locations 'list)))
       (operate-on-models m #'initialise-virtual-nodes))
     (sequence-prediction-sets m sequence (reverse prediction-sets))))
@@ -342,51 +349,53 @@ multiple viewpoint system <m>."
     (dotimes (i viewpoint-count)
       (let* ((event (aref event-array i))
              (viewpoint (aref viewpoints i))
-             (ltm (aref (mvs-ltm m) i))
-             (stm (aref (mvs-stm m) i))
-             (ltm-location (aref ltm-locations i))
-             (stm-location (aref stm-locations i)))
+             (ltm (when (mvs-ltm m) (aref (mvs-ltm m) i)))
+             (stm (when (mvs-stm m) (aref (mvs-stm m) i)))
+             (ltm-location (when ltm-locations (aref ltm-locations i)))
+             (stm-location (when stm-locations (aref stm-locations i))))
         (set-model-alphabets m event-array events viewpoint ltm stm 
                              *marginalise-using-current-event*)
         (unless (undefined-p event)
           (when (and *debug* predict?) (format t "~&LTM: ~S" (viewpoints:viewpoint-name viewpoint)))
-          (multiple-value-bind (ltm-next-location ltm-distribution ltm-order)
-              (ppm:ppm-model-event ltm event :location ltm-location 
-                               :construct? (and construct? 
-                                                (or (eq *models* :ltm+)
-                                                    (eq *models* :both+)))
-                               :predict? (and predict? 
-                                              (or (eq *models* :ltm+)
-                                                  (eq *models* :ltm)
-                                                  (eq *models* :both)
-                                                  (eq *models* :both+))))
-            (setf (aref ltm-locations i) ltm-next-location)
-            (when (and *debug* predict?) (format t "~&ltm-distribution = ~&~A~%" ltm-distribution))
-            (push (make-event-prediction :order ltm-order
-                                         :viewpoint viewpoint
+          (when ltm
+            (multiple-value-bind (ltm-next-location ltm-distribution ltm-order)
+                (ppm:ppm-model-event ltm event :location ltm-location 
+                                               :construct? (and construct? 
+                                                                (or (eq *models* :ltm+)
+                                                                    (eq *models* :both+)))
+                                               :predict? (and predict? 
+                                                              (or (eq *models* :ltm+)
+                                                                  (eq *models* :ltm)
+                                                                  (eq *models* :both)
+                                                                  (eq *models* :both+))))
+              (setf (aref ltm-locations i) ltm-next-location)
+              (when (and *debug* predict?) (format t "~&ltm-distribution = ~&~A~%" ltm-distribution))
+              (push (make-event-prediction :order ltm-order
+                                           :viewpoint viewpoint
                                          :event (car (last events))
-                                         :element event
-                                         :set ltm-distribution)
-                  ltm-prediction-sets))
+                                           :element event
+                                           :set ltm-distribution)
+                    ltm-prediction-sets)))
           
           (when (and *debug* predict?) (format t "~&STM: ~S" (viewpoints:viewpoint-name viewpoint)))
-          (multiple-value-bind (stm-next-location stm-distribution stm-order)
-              (ppm:ppm-model-event stm event :location stm-location 
-                               :construct? (or (eq *models* :stm)
-                                               (eq *models* :both) 
-                                               (eq *models* :both+))
-                               :predict? (and predict? 
-                                              (or (eq *models* :stm)
-                                                  (eq *models* :both) 
-                                                  (eq *models* :both+))))
-            (setf (aref stm-locations i) stm-next-location)
-            (when (and *debug* predict?) (format t "~&stm-distribution = ~&~A~%" stm-distribution))
-            (push (make-event-prediction :order stm-order
-                                         :viewpoint viewpoint
-                                         :event (car (last events))
-                                         :element event
-                                         :set stm-distribution)
-                  stm-prediction-sets)))))
+          (when stm
+            (multiple-value-bind (stm-next-location stm-distribution stm-order)
+                (ppm:ppm-model-event stm event :location stm-location 
+                                               :construct? (or (eq *models* :stm)
+                                                               (eq *models* :both) 
+                                                               (eq *models* :both+))
+                                               :predict? (and predict? 
+                                                              (or (eq *models* :stm)
+                                                                  (eq *models* :both) 
+                                                                  (eq *models* :both+))))
+              (setf (aref stm-locations i) stm-next-location)
+              (when (and *debug* predict?) (format t "~&stm-distribution = ~&~A~%" stm-distribution))
+              (push (make-event-prediction :order stm-order
+                                           :viewpoint viewpoint
+                                           :event (car (last events))
+                                           :element event
+                                           :set stm-distribution)
+                    stm-prediction-sets))))))
     (values ltm-locations stm-locations ltm-prediction-sets
             stm-prediction-sets)))
 
