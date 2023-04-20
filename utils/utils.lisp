@@ -2,7 +2,7 @@
 ;;;; File:       utils.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 16:59:20 marcusp>
-;;;; Time-stamp: <2022-07-06 10:46:59 marcusp>
+;;;; Time-stamp: <2023-01-12 11:56:00 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:utils)
@@ -440,11 +440,14 @@ Borrowed from https://www.pvk.ca/Blog/Lisp/trivial_uniform_shuffling.html"
   (remove-if #'(lambda (x) (declare (ignore x)) t)
 	     list :start n :end (1+ n)))
 
-(defun remove-by-position (list positions)
+(defun remove-by-position (list positions &key inverse)
+  "Returns <list> with the indices indicated by <positions> removed if
+<inverse> is nil or kept if <inverse> is t."
   (labels ((rbp (l i r)
              (cond ((null l)
                     (reverse r))
-                   ((member i positions :test #'=)
+                   ((or (and (not inverse) (member i positions :test #'=))
+                        (and inverse (not (member i positions :test #'=))))
                     (rbp (cdr l) (1+ i) r))
                    (t (rbp (cdr l) (1+ i) (cons (car l) r))))))
     (rbp list 0 nil)))
