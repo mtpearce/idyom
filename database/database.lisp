@@ -2,7 +2,7 @@
 ;;;; File:       database.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2022-08-04 11:42:28 marcusp>                           
+;;;; Time-stamp: <2023-03-13 10:09:16 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -279,26 +279,41 @@ no. in which the event occurs." ))
       (write (dataset->lisp d) :stream s))
     nil))
 
-(defun copy-datasets (target-id source-ids &optional description exclude random-subset)
+(defun copy-datasets (target-id source-ids &optional description exclude include random-subset)
   "Copy datasets specified by SOURCE-IDS to a new dataset specified by
 TARGET-ID. Optionally provide a DESCRIPTION for the new dataset (the
 default is the description of the first dataset in
-SOURCE-IDS). EXCLUDE is a list of lists, containing compositions-ids
-to exclude for each dataset specified in SOURCE-IDS."
+SOURCE-IDS). EXCLUDE is a list of lists, containing composition-ids to
+exclude for each dataset specified in SOURCE-IDS. INCLUDE is a list of
+lists containing composition-ids to include for each dataset specified
+in SOURCE-IDS. Inclusion takes precedence over exclusion if both are
+specified."
   (let* ((datasets (mapcar #'get-dataset source-ids))
          (datasets (mapcar #'dataset->lisp datasets))
          (result (subseq (car datasets) 0 3))
+         (result (if description (cons description (cdr result)) result))
          (data nil))
-    (do ((d datasets (cdr d))
-         (e exclude (cdr e)))
-        ((null d))
-      (setf data (append data (utils:remove-by-position (subseq (car d) 3) (car e)))))
-    (when random-subset
-      (setf data (utils:random-select data (round (* random-subset (length data))))))
-    (insert-dataset (append result data) target-id))
-  (when description
-    (clsql:update-records [mtp-dataset] :av-pairs `((description ,description)) :where [= [dataset-id] target-id]))
-  nil)
+    ;; random subset
+    (if random-subset
+        (setf data (utils:random-select data (round (* random-subset (length data)))))
+        (do ((d datasets (cdr d))
+             (i include (cdr i))
+             (e exclude (cdr e)))
+            ((null d))
+          ;; include list 
+          (if include
+              (setf data (utils:remove-by-position
+                          (subseq (car d) 3)
+                          (car i)
+                          :inverse t))
+              ;; exclude list
+              (if exclude
+                  (setf data (utils:remove-by-position
+                              (subseq (car d) 3)
+                              (car e)))
+                  ;; all data
+                  (setf data (subseq (car d) 3))))))
+    (insert-dataset (append result data) target-id)))
 
 (defun dataset->lisp (mtp-dataset)
   "Converts a dataset to a LISP representation."
