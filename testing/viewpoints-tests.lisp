@@ -2,7 +2,7 @@
 ;;;; File:       viewpoints-tests.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2022-06-23 13:17:12 peter>                         
-;;;; Time-stamp: <2022-10-10 10:01:34 marcusp>                           
+;;;; Time-stamp: <2023-01-16 12:19:30 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; Description ==========================================================
@@ -235,7 +235,7 @@ attributes corresponds to the basic attributes in BASIC-ATTRIBUTE-SEQUENCES."
   (make-instance 'md:music-event :cpitch pitch))
 
 (defun make-slice (pitches)
-  (make-instance 'md:music-slice :events (mapcar #'make-event pitches)))
+  (make-instance 'md:music-slice :h-cpitch pitches :events (mapcar #'make-event pitches)))
 
 (defun make-harmonic-sequence (pitches)
   (make-instance 'md:harmonic-sequence

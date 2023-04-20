@@ -2,7 +2,7 @@
 ;;;; File:       derived.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-25 19:09:17 marcusp>                           
-;;;; Time-stamp: <2022-07-06 13:58:42 marcusp>                           
+;;;; Time-stamp: <2023-04-19 15:09:28 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
@@ -25,9 +25,9 @@
 ;;; ============================================================================
 ;;; Harrison (2019, Ch. 2, 4)
 ;;;
-;;; 1. ‘Pitch-class’ representations express octave invariance;
-;;; 2. ‘Chord’ representations identify which pitch class corresponds to the lowest pitch in the chord (the bass note);
-;;; 3. ‘Type’ representations express transposition invariance.
+;;; 1. ‘pi’ representations express absolute pitch height; ‘pc’ representations express octave invariant pitch classes;
+;;; 2. ‘chord’ representations distinguish inversions by identifying the bass note (lowest pitch in the chord); ‘set’ representations do not; 
+;;; 3. ‘type’ representations are transpositionally invariant with chord tones expressed relative to the bass.
 
 ;; -- pitch chord (pi_chord): chromatic pitch in ascending order
 ;; -- pitch chord type (pi_chord_type): pi_chord relative to bass note, providing transpositional equivalence
@@ -43,7 +43,7 @@
               (mapcar #'(lambda (x) (- x bass)) pi-chord)))
 
 ;; -- pitch-class chord (pc_chord): pc_set with bass note (i.e., inversion) specified (24,576 elements)
-;; -- pitch-class chord type (pc_chord_type): pc_chord relative to bass note (2,048 elements)
+;; -- pitch-class chord type (pc_chord_type): pc_chord relative to bass note (mod 12), in ascending order (2,048 elements)
 ;; -- pitch-class chord relative to previous bass (pc_chord_rel_prev_bass): pc_chord relative to previous bass (24,576)
 
 (define-viewpoint (pc-chord derived (h-cpitch))
@@ -137,7 +137,7 @@ in ascending order (Rahn, 1980; Forte, 1973)."
     ((events md:harmonic-sequence) element)
   :function (let ((pc-set (pc-set events))
                   (root (root-pc events)))
-              (sort (mapcar #'(lambda (x) (mod (- x root) 12)) pc-set) #'<)))
+              (sort (copy-seq (mapcar #'(lambda (x) (mod (- x root) 12)) pc-set)) #'<)))
 
 ;; -- bass pitch class (bass_pc): bass pitch class (12 elements)
 ;; -- bass interval (bass_int): bass pitch class interval to previous bass (12 elements) 
@@ -214,7 +214,7 @@ in ascending order (Rahn, 1980; Forte, 1973)."
               (if (or (null e1) (null e2)) +undefined+
                   (let ((pi-chord-1 (pi-chord (list e1)))
                         (pi-chord-2 (pi-chord (list e2))))
-                    (if (equalp pi-chord-1 pi-chord-2) t nil)))))
+                    (equalp pi-chord-1 pi-chord-2) t nil))))
 
 (define-viewpoint (pc-chord-identity derived (h-cpitch))
     ((events md:harmonic-sequence) element)
@@ -223,7 +223,7 @@ in ascending order (Rahn, 1980; Forte, 1973)."
               (if (or (null e1) (null e2)) +undefined+
                   (let ((pc-chord-1 (pc-chord (list e1)))
                         (pc-chord-2 (pc-chord (list e2))))
-                    (if (equalp pc-chord-1 pc-chord-2) t nil)))))
+                    (equalp pc-chord-1 pc-chord-2) t nil))))
 
 (define-viewpoint (pc-set-identity derived (h-cpitch))
     ((events md:harmonic-sequence) element)
@@ -232,7 +232,7 @@ in ascending order (Rahn, 1980; Forte, 1973)."
               (if (or (null e1) (null e2)) +undefined+
                   (let ((pc-set-1 (pc-set (list e1)))
                         (pc-set-2 (pc-set (list e2))))
-                    (if (equalp pc-set-1 pc-set-2) t nil)))))
+                    (equalp pc-set-1 pc-set-2) t nil))))
 
 
 

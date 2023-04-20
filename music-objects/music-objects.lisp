@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2022-08-03 15:01:31 marcusp>
+;;;; Time-stamp: <2023-03-09 14:45:11 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -82,7 +82,8 @@
 
 (defclass music-element (music-temporal-event music-environment music-phrase) ())
 
-(defclass music-slice (music-slot-sequence music-element) ())  ; set of music objects overlapping in time, ordered by voice
+(defclass music-slice (music-slot-sequence music-element) ; set of music objects overlapping in time, ordered by voice
+  ((h-cpitch :initarg :h-cpitch :accessor chromatic-pitches :documentation "List of MIDI pitch numbers..")))
 
 (defclass music-event (music-element)
   ((bioi
@@ -201,7 +202,7 @@
   (slot-value e (music-symbol attribute)))
 
 (defmethod get-attribute ((ms music-slice) attribute)
-  (if (string= (symbol-name attribute) "H-CPITCH")
+  (if (string= (symbol-name attribute) "H-CPITCH-EVENTS")
       (mapcar #'chromatic-pitch (coerce ms 'list))
       (call-next-method)))
 
@@ -212,7 +213,7 @@
   (setf (slot-value e (music-symbol attribute)) value))
 
 (defmethod set-attribute ((ms music-slice) attribute value)
-  (if (string= (symbol-name attribute) "H-CPITCH")
+  (if (string= (symbol-name attribute) "H-CPITCH-EVENTS")
       (let ((i 0))
         (sequence:dosequence (e ms)
           (set-attribute e 'cpitch (nth i value))
@@ -327,6 +328,7 @@ full expansion (cf. Conklin, 2002)."
                                        matching-events))
               ;; sort them by voice
               (matching-events (sort matching-events #'< :key #'voice))
+              (pitches (mapcar #'chromatic-pitch matching-events))
               (dur (apply #'max (mapcar #'duration matching-events)))
               ;; create a slice object containing those events
               (slice (make-instance 'music-slice 
@@ -343,7 +345,8 @@ full expansion (cf. Conklin, 2002)."
                                     :id (make-event-id (get-dataset-index id) (get-composition-index id) i)
                                     :description (description composition)
                                     :timebase (timebase composition)
-                                    :events (sort matching-events #'< :key #'voice))))
+                                    :events matching-events
+                                    :h-cpitch (sort (copy-seq pitches) #'<))))
          (setf previous-onset onset)
          (setf previous-dur dur)
          (push slice slices)))
