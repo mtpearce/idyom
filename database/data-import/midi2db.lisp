@@ -2,7 +2,7 @@
 ;;;; File:       midi2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2007-03-21 09:47:26 marcusp>
-;;;; Time-stamp: <2022-03-08 17:40:57 marcusp>
+;;;; Time-stamp: <2023-01-09 11:44:35 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:midi2db) 
@@ -37,48 +37,33 @@
     (let* ((ppqn (midi:midifile-division midifile))
 	   (dbevents))
       (dotimes (i (length notes) (nreverse dbevents))
-	(let* ((prev-onset) (prev-offset)
-               (ponset 0) (pdur 0) (pdeltast 0) (pbioi 0))
+	(let* ((prev-onset) (prev-offset))
 	  (dolist (note (nth i notes))
 	    (let* (;; Timing
 		   (midi-onset (getf note :onset))
-		   (onset (midi-time->time midi-onset ppqn))
+		   (onset (round (midi-time->time midi-onset ppqn)))
 		   (midi-offset (getf note :offset))
-		   (offset (midi-time->time midi-offset ppqn))
+		   (offset (round (midi-time->time midi-offset ppqn)))
+                   ;; Duration
+		   (dur (- offset onset))
+		   ;; IOI
+		   (bioi (if (or (null prev-onset) (< onset prev-onset)) 0
+                             (- onset prev-onset)))
+		   ;; deltast
+                   (deltast (if (or (null prev-offset) (< onset prev-offset)) 0
+                                (- onset prev-offset)))
 		   ;; Pitch
 		   (midi-pitch (midi-pitch->pitch (getf note :pitch)))
 		   (bend (cdr (assoc midi-onset (nth i bends))))
 		   (cpitch (+ midi-pitch
 			      (if (or (null *apply-pitchbend*) (null bend)) 0
-                                  (pitch-bend->cents bend))))
-		   ;; Duration
-		   (dur (- offset onset))
-		   ;; IOI
-		   (midi-bioi (if (null prev-onset) 0
-				  (- midi-onset prev-onset)))
-		   (bioi (cond ((null prev-onset) 0)
-                               ((zerop midi-bioi) 1)
-                               (t (midi-time->time midi-bioi ppqn))))
-		   ;; deltast
-		   (midi-deltast (cond ((null prev-offset) 0)
-                                       ((< midi-onset prev-offset) 0)
-                                       (t (- midi-onset prev-offset))))
-		   (deltast (midi-time->time midi-deltast ppqn)))
+                                  (pitch-bend->cents bend)))))
               ;; (when (and (not (= midi-pitch cpitch)) (not (= midi-pitch (round cpitch))))
-              ;;  (print (list midi-pitch cpitch (round cpitch))))
-              ;; (format t "~&A: ~A ~A ~A ~A~%" (float onset) (float bioi) (float deltast) (float dur))
-              (setf bioi (round bioi)
-                    onset (+ ponset bioi)
-                    dur (round dur)
-                    deltast (if (< bioi pdur) 0 (- bioi pdur)))
-              ;; (format t "~&B: ~A ~A ~A ~A~%" onset bioi deltast dur)
-	      (push (make-dbevent onset dur deltast bioi cpitch note) dbevents)
-	      (setf ponset onset
-                    pdur dur
-                    pdeltast deltast
-                    pbioi bioi
-                    prev-onset midi-onset
-		    prev-offset midi-offset))))))))
+              ;;    (print (list midi-pitch cpitch (round cpitch))))
+              ;; (format t "~&Timing: ~A ~A ~A ~A~%" onset bioi deltast dur)
+              (push (make-dbevent onset dur deltast bioi cpitch note) dbevents)
+	      (setf prev-onset onset
+		    prev-offset offset))))))))
 
 (defun extract-midi-notes (midifile)
   "Convert <midifile> into i) a property list for each note; ii) an association list of (note onset . pitch bend) pairs."
@@ -117,8 +102,7 @@
 	    ;; Tempo (in microseconds per quarter note)
 	    (midi:tempo-message
 	     (setf (getf props :tempo)
-                   ;; (round (usecs-per-quarter-note->bpm (midi:message-tempo message)))))
-                   (midi:message-tempo message)))
+                   (round (usecs-per-quarter-note->bpm (midi:message-tempo message)))))
 	    ;;
 	    ;; Note messages (refer to specific notes)
 	    ;;
