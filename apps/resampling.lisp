@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2023-04-22 09:14:08 marcusp>                           
+;;;; Time-stamp: <2023-04-27 14:44:10 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -172,7 +172,8 @@ lists, one for each composition."
           (push (car values) cid-result)
           (progn
             (when cid-result (push cid-result result))
-            (setf cid-result (list (car values))))))))
+            (setf cid-result (list (car values))))))
+    (reverse (mapcar #'reverse result))))
 
 
 ;;;===========================================================================
