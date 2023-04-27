@@ -2,7 +2,7 @@
 ;;;; File:       generation.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-08-21 18:54:17 marcusp>                           
-;;;; Time-stamp: <2023-03-22 14:37:41 marcusp>                           
+;;;; Time-stamp: <2023-04-22 09:06:39 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -71,7 +71,7 @@
             (:metropolis (metropolis-sampling mvs (car test-set) iterations events position threshold random-state context-length))
             (:gibbs (gibbs-sampling mvs (car test-set) iterations random-state threshold))
             (:random (random-walk mvs (car test-set) context-length random-state threshold))
-            (otherwise (metropolis-sampling mvs (car test-set) iterations random-state threshold)))))
+            (otherwise (metropolis-sampling mvs (car test-set) iterations events position threshold random-state context-length)))))
     ;; (write-prediction-cache-to-file dataset-id attributes)
     ;; (print (viewpoints:viewpoint-sequence (viewpoints:get-viewpoint 'cpitch) sequence))
     (if (and output-path sequence)
@@ -95,7 +95,7 @@
     (list (list 'resampling::test (list base-id))
           (list 'resampling::train training-set))))
           
-(defun sample (distribution random-state threshold)
+(defun sample-event (distribution random-state threshold)
   (if (eq threshold :max)
       (sample-max distribution)
       (let* ((d distribution)
@@ -323,7 +323,7 @@ random state, allowing exact replication."
          (event (nth index sequence))
          (sequence-2 (subseq sequence (1+ index)))
          (new-event (copy-event event))
-         (new-cpitch (sample distribution random-state threshold)))
+         (new-cpitch (sample-event distribution random-state threshold)))
     ;; (format t "~&New cpitch is ~A~%" new-cpitch)
     (set-attribute new-event 'cpitch new-cpitch)
     (append sequence-1 (list new-event) sequence-2)))
@@ -361,7 +361,7 @@ random state, allowing exact replication."
              (index (- l (mod i l) 1))
              (new-sequences (gibbs-new-sequences sequence index))
              (distribution (gibbs-sequence-distribution m new-sequences cpitch))
-             (new-sequence (sample distribution random-state threshold))
+             (new-sequence (sample-event distribution random-state threshold))
              (old-cpitch (get-attribute (nth index sequence) 'cpitch))
              (new-cpitch (get-attribute (nth index new-sequence) 'cpitch))
              (old-p (seq-probability (sampling-predict-sequence m sequence cpitch)))
@@ -482,7 +482,7 @@ random state, allowing exact replication."
   (let ((selected-attributes
          (mapcar #'(lambda (x)
                      (multiple-value-bind (attribute-value probability)
-                         (sample
+                         (sample-event
                           (prediction-sets:prediction-set x)
                           random-state threshold)
                        (list (viewpoint-type (prediction-sets:prediction-viewpoint x))
