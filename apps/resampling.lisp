@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2023-03-22 14:30:26 marcusp>                           
+;;;; Time-stamp: <2023-04-22 09:14:08 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -124,17 +124,17 @@
 (defun monodies-to-lists (monodies) (mapcar #'monody-to-list monodies))
 (defun monody-to-list (monody) (coerce monody 'list))
 
-(defun output-information (resampling-predictions dataset-id &optional (detail 3) (information-measure :information.content))
+(defun output-information (resampling-predictions dataset-id &optional (detail 3) (information-measure :ic))
   "Processes the output of IDYOM-RESAMPLE. <detail> is an integer
 specifying the desired level of detail (1 = dataset average; 2 =
 composition average; 3 = for all events in all
 compositions. <information-measure> specifies whether to return
-information content (:information.content), entropy (:entropy) or
-both ('(:information-content :entropy))."
+information content (:ic), entropy (:entropy) or
+both ('(:ic :entropy))."
   (let ((data (resampling-predictions->dataframe resampling-predictions dataset-id))
         (event-ics) (composition-ics) (dataset-ics) (event-entropies) (composition-entropies) (dataset-entropies))
-    (when (or (eq information-measure :information.content) (and (listp information-measure) (member :information.content information-measure)))
-      (setf event-ics (get-column-by-composition :information.content data))
+    (when (or (eq information-measure :ic) (and (listp information-measure) (member :ic information-measure)))
+      (setf event-ics (get-column-by-composition :ic data))
       (setf composition-ics (mapcar #'(lambda (x) (apply #'utils:average x)) event-ics))
       (setf dataset-ics (apply #'utils:average composition-ics)))
     (when (or (eq information-measure :entropy) (and (listp information-measure) (member :entropy information-measure)))
@@ -200,7 +200,7 @@ lists, one for each composition."
 					    &key (separator " "))
   (multiple-value-bind (dataset-mean composition-means)
       (resampling:output-information resampling-predictions dataset-id 2)
-    (format stream "~&melody.id~Amelody.name~Amean.information.content~%"
+    (format stream "~&melody.id~Amelody.name~Amean.ic~%"
 	    separator separator)
     (do* ((ic composition-means (cdr ic))
           (cid 1 (1+ cid)))
@@ -337,7 +337,7 @@ is a list of composition prediction sets, ordered by composition ID."
       (dolist (w weights) ; weights
 	(setf (gethash (create-key feature (car w)) event-results) (cadr w))))
     (setf (gethash (create-key feature :probability) event-results) probability)
-    (setf (gethash (create-key feature :information.content) event-results)
+    (setf (gethash (create-key feature :ic) event-results)
 	  (- (log probability 2)))
     (setf (gethash (create-key feature :entropy) event-results)
 	  (float (prediction-sets:shannon-entropy distribution) 0.0))
@@ -363,7 +363,7 @@ is a list of composition prediction sets, ordered by composition ID."
                              (kl-divergence distribution (gethash :distribution previous-results)))))
     (setf (gethash :distribution event-results) distribution)
     (setf (gethash :probability event-results) probability)
-    (setf (gethash :information.content event-results) (- (log probability 2)))
+    (setf (gethash :ic event-results) (- (log probability 2)))
     (setf (gethash :entropy event-results) (prediction-sets:shannon-entropy distribution))
     (setf (gethash :information.gain event-results) information-gain)
     ;; TODO elements of combined distribution

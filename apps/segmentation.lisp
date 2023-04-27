@@ -2,7 +2,7 @@
 ;;;; File:       segmentation.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2008-03-13 13:07:12 marcusp>
-;;;; Time-stamp: <2021-07-12 10:55:19 marcusp>
+;;;; Time-stamp: <2023-04-22 08:58:37 marcusp>
 ;;;; ======================================================================
 
 (cl:defpackage #:segmentation
@@ -37,7 +37,7 @@
                              ;; output parameters
                              (print t))
   (multiple-value-bind (ic1 e1 ic2 e2 ic3 e3)
-      (idyom:idyom dataset-id target-viewpoints source-viewpoints :models models :k k :pretraining-ids pretraining-ids :information-measure '(:information.content :entropy))
+      (idyom:idyom dataset-id target-viewpoints source-viewpoints :models models :k k :pretraining-ids pretraining-ids :information-measure '(:ic :entropy))
     (declare (ignore ic1 e1 ic2 e2))
     (let* ((predicted (mapcar #'(lambda (ic e)
                                   (let ((icp (segmentation:peak-picker (mapcar #'+ ic (cons 0 (butlast e))) :k threshold :window-size window-size :mean mean))

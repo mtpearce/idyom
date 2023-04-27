@@ -2,7 +2,7 @@
 ;;;; File:       main.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2010-11-01 15:19:57 marcusp>
-;;;; Time-stamp: <2023-01-09 15:18:37 marcusp>
+;;;; Time-stamp: <2023-04-22 08:47:17 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:idyom)
@@ -71,7 +71,7 @@
                 (output-path nil)
                 (overwrite nil)
 		(separator " ") (null-token "NA")
-                (information-measure :information.content) ;; or :entropy
+                (information-measure :ic) ;; or :entropy or '(:ic :entropy)
                 ;; Caching
                 (use-resampling-set-cache? t)
                 (use-ltms-cache? t))
