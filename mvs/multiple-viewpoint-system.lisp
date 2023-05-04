@@ -2,7 +2,7 @@
 ;;;; File:       multiple-viewpoint-system.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-27 18:54:17 marcusp>                           
-;;;; Time-stamp: <2023-03-22 14:39:04 marcusp>                           
+;;;; Time-stamp: <2023-05-04 10:40:04 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -289,13 +289,9 @@ multiple-viewpoint system <m>."
                                                        :predict? predict?)))
                    (unless (= sequence-index 1)
                      (operate-on-models m #'increment-sequence-front))
-                   (operate-on-models m #'reinitialise-ppm :models 'stm)
+                   (operate-on-models m #'reinitialise-ppm :models :stm)
                      (model-d (cdr dataset) (1- sequence-index)
                               (cons prediction-set prediction-sets))))))
-    ;; (print (list "model-dataset"
-    ;;              (mapcar #'md::chromatic-pitches (car dataset))))
-                 ;;(viewpoints:viewpoint-sequence (viewpoints:get-viewpoint 'h-cpitch)
-                 ;;                                               (car dataset))))
     (dataset-prediction-sets m (model-d dataset (length dataset) '()))))
 
 (defmethod model-sequence ((m mvs) sequence &key construct? predict? 
