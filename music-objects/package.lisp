@@ -1,6 +1,6 @@
-(cl:defpackage #:music-data
+(cl:defpackage #:music-objects
   (:use #:common-lisp)
-  (:nicknames md)
+  (:nicknames #:mo #:md #:music-data)
   (:export 
    ;; Music objects & their properties
    "MUSIC-OBJECT" "MUSIC-DATASET" "MUSIC-COMPOSITION" "MUSIC-EVENT" "MUSIC-SLICE"
