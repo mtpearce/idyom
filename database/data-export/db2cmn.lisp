@@ -2,7 +2,7 @@
 ;;;; File:       db2cmn.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-08-17 18:54:17 marcusp>                           
-;;;; Time-stamp: <2022-08-03 17:08:32 marcusp>                           
+;;;; Time-stamp: <2023-05-22 14:34:07 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cm) 
@@ -131,34 +131,34 @@ else for minor. Returns a CM/CMN key."
 
 (defmethod export-data ((d idyom-db:mtp-dataset) (type (eql :cmn)) path &key filename)
   (declare (ignore filename))
-  (let ((*timebase* (idyom-db::dataset-timebase d))
-        (*midc*     (idyom-db::dataset-midc d)))
-    (dolist (c (idyom-db::dataset-compositions d))
+  (let ((*timebase* (idyom-db:dataset-timebase d))
+        (*midc*     (idyom-db:dataset-midc d)))
+    (dolist (c (idyom-db:dataset-compositions d))
       (export-data c type path))))
 
 (defmethod export-data ((c idyom-db:mtp-composition) (type (eql :cmn)) path &key filename)
-  (let* ((title (idyom-db::composition-description c))
+  (let* ((title (idyom-db:composition-description c))
          (file (if filename filename (concatenate 'string path "/" title ".cmn")))
-         (*timebase* (idyom-db::composition-timebase c)))
-    (write-composition (idyom-db::composition-events c) type file)))
+         (*timebase* (idyom-db:composition-timebase c)))
+    (write-composition (idyom-db:composition-events c) type file)))
 
 (defmethod export-data ((event-list list) (type (eql :cmn)) path &key filename)
-  (let* ((title (idyom-db::composition-description (car event-list)))
+  (let* ((title (idyom-db:composition-description (car event-list)))
          (file (if filename filename (concatenate 'string path "/" title ".cmn"))))
     (write-composition event-list type file)))
 
 (defmethod export-data ((d idyom-db:mtp-dataset) (type (eql :eps)) path &key filename)
   (declare (ignore filename))
-  (let ((*timebase* (idyom-db::dataset-timebase d))
-        (*midc*     (idyom-db::dataset-midc d)))
-    (dolist (c (idyom-db::dataset-compositions d))
+  (let ((*timebase* (idyom-db:dataset-timebase d))
+        (*midc*     (idyom-db:dataset-midc d)))
+    (dolist (c (idyom-db:dataset-compositions d))
       (export-data c type path))))
 
 (defmethod export-data ((c idyom-db:mtp-composition) (type (eql :eps)) path &key filename)
-  (let* ((title (idyom-db::composition-description c))
+  (let* ((title (idyom-db:composition-description c))
          (file (if filename filename (concatenate 'string path "/" title ".eps")))
-         (*timebase* (idyom-db::composition-timebase c)))
-    (write-composition (idyom-db::composition-events c) type file)))
+         (*timebase* (idyom-db:composition-timebase c)))
+    (write-composition (idyom-db:composition-events c) type file)))
 
 (defmethod export-data ((event-list list) (type (eql :eps)) path &key filename)
   (let* ((title (idyom-db:get-attribute (car event-list) 

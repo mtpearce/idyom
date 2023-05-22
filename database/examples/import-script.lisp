@@ -2,7 +2,7 @@
 ;;;; File:       import-script.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2008-11-03 11:24:51 marcusp>
-;;;; Time-stamp: <2015-03-25 16:31:05 marcusp>
+;;;; Time-stamp: <2023-05-22 14:40:08 marcusp>
 ;;;; ======================================================================
 
 ;; This is the script I use to import data into the database. It is
@@ -163,7 +163,7 @@
 (defun import-bass-arias (id)
   (let* ((base-dir "/home/marcusp/research/projects/vostroost/data/Arias/")
          (data-dir (concatenate 'string base-dir "Bass/"))
-         (filenames (idyom-db::read-object-from-file 
+         (filenames (utils:read-object-from-file 
                      (concatenate 'string base-dir "bass-arias.lisp")))
          (header (list "Bass arias from Bach's cantatas." 96 60)))
     (%import-arias id data-dir filenames header)))
@@ -171,7 +171,7 @@
 (defun import-soprano-arias (id)
   (let* ((base-dir "/home/marcusp/research/projects/vostroost/data/Arias/")
          (data-dir (concatenate 'string base-dir "Soprano/"))
-         (filenames (idyom-db::read-object-from-file 
+         (filenames (utils:read-object-from-file 
                      (concatenate 'string base-dir "soprano-arias.lisp")))
          (header (list "Soprano arias from Bach's cantatas." 96 60)))
     (%import-arias id data-dir filenames header)))
@@ -182,6 +182,6 @@
       (let* ((filename (car f))
              (spine (cadr f))
              (filepath (concatenate 'string data-dir filename))
-             (kern2db::*voices* (list spine)))
+             (kern2db:*spines* (list spine)))
         (push (fourth (kern2db::kern2db filepath f)) data)))
     (idyom-db:insert-dataset (append header (reverse data)) id)))

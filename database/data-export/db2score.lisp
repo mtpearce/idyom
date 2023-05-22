@@ -2,7 +2,7 @@
 ;;;; File:       db2score.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2005-11-25 17:08:20 marcusp>
-;;;; Time-stamp: <2022-08-03 17:24:16 marcusp>
+;;;; Time-stamp: <2023-05-22 14:34:59 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:db2lilypond) 
@@ -13,10 +13,10 @@
 (defmacro define-lilypond-exporter (format backend)
   `(progn 
      (defmethod export-data ((d idyom-db:mtp-dataset) (type (eql ,format)) path &key filename)
-       (dolist (c (idyom-db::dataset-compositions d))
+       (dolist (c (idyom-db:dataset-compositions d))
          (export-data c type path :filename filename)))
      (defmethod export-data ((c idyom-db:mtp-composition) (type (eql ,format)) path &key filename)
-       (let* ((title (idyom-db::composition-description c))
+       (let* ((title (idyom-db:composition-description c))
               (ly-file (concatenate 'string path "/" title ".ly")))
          (export-data c :ly path :filename filename)
          (let ((current-dir (utils:pwd))
@@ -27,7 +27,7 @@
            (utils:cd current-dir)))
        nil)
      (defmethod export-data ((event-list list) (type (eql ,format)) path &key filename)
-       (let* ((title (idyom-db::composition-description (car event-list)))
+       (let* ((title (idyom-db:composition-description (car event-list)))
               (ly-file (concatenate 'string path "/" title ".ly")))
          (export-data event-list :ly path :filename filename)
          (let ((current-dir (utils:pwd))

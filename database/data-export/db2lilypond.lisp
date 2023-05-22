@@ -2,7 +2,7 @@
 ;;;; File:       db2lilypond.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2005-06-07 10:13:24 marcusp>
-;;;; Time-stamp: <2022-08-03 17:14:06 marcusp>
+;;;; Time-stamp: <2023-05-22 14:34:33 marcusp>
 ;;;; ======================================================================
 ;;;; 
 ;;;; TODO 
@@ -29,23 +29,23 @@
 
 (defmethod export-data ((d idyom-db:mtp-dataset) (type (eql :ly)) path &key filename)
   (declare (ignore filename))
-  (let ((*timebase* (idyom-db::dataset-timebase d))
-        (*midc*     (idyom-db::dataset-midc d)))
-    (dolist (c (idyom-db::dataset-compositions d))
+  (let ((*timebase* (idyom-db:dataset-timebase d))
+        (*midc*     (idyom-db:dataset-midc d)))
+    (dolist (c (idyom-db:dataset-compositions d))
       (export-data c type path))))
 
 (defmethod export-data ((c idyom-db:mtp-composition) (type (eql :ly)) path &key filename)
   ;; FIXME: *midc* is never set if export-data is called with a
   ;; composition directly.
-  (let* ((title (idyom-db::composition-description c))
+  (let* ((title (idyom-db:composition-description c))
          (file (if filename filename (concatenate 'string path "/" title ".ly")))
-         (*timebase* (idyom-db::composition-timebase c)))
+         (*timebase* (idyom-db:composition-timebase c)))
     (with-open-file (s file :direction :output :if-exists :supersede 
                        :if-does-not-exist :create)
-      (write-composition s (idyom-db::composition-events c) title))))
+      (write-composition s (idyom-db:composition-events c) title))))
 
 (defmethod export-data ((event-list list) (type (eql :ly)) path &key filename)
-  (let* ((title (idyom-db::composition-description (car event-list)))
+  (let* ((title (idyom-db:composition-description (car event-list)))
          (file (if filename filename (concatenate 'string path "/" title ".ly"))))
     (with-open-file (s file :direction :output :if-exists :supersede 
                        :if-does-not-exist :create)

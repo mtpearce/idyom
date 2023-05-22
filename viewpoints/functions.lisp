@@ -66,19 +66,19 @@ symbol if they are lists else nil."
 
 (defun list-basic ()
   "List of all known basic viewpoints"
-  (list-direct-subclasses 'viewpoints::basic))
+  (list-direct-subclasses 'basic))
 
 (defun list-derived ()
   "List of all known derived viewpoints"
-  (list-direct-subclasses 'viewpoints::derived))
+  (list-direct-subclasses 'derived))
 
 (defun list-threaded ()
   "List of all known threaded viewpoints"
-  (list-direct-subclasses 'viewpoints::threaded))
+  (list-direct-subclasses 'threaded))
 
 (defun list-test ()
   "List of all known test viewpoints"
-  (list-direct-subclasses 'viewpoints::test))
+  (list-direct-subclasses 'test))
 
 (defun list-viewpoints ()
   "List of all known viewpoints"

@@ -2,7 +2,7 @@
 ;;;; File:       scales.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2005-11-29 10:41:20 marcusp>
-;;;; Time-stamp: <2014-09-25 10:59:07 marcusp>
+;;;; Time-stamp: <2023-05-22 14:27:08 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
@@ -40,40 +40,6 @@
                           (viewpoint-alphabet (get-viewpoint 'cpitch)))))
 
 
-;; Western scale degree
-;;
-
-;; Pitch to tonic interval
-(define-viewpoint (tonint derived (cpitch))
-    ((events md:melodic-sequence) element) 
-  :function (- (cpitch events)
-	       (+ (* (octave (list (car events))) *octave*)
-		  (referent events))))
-
-(define-viewpoint (sdeg-west derived (cpitch))
-    ((events md:melodic-sequence) element) 
-  :function (let* ((pitch (cpitch events))
-		   (interval (tonint events))
-		   (scale-intervals (case (mode events)
-				      (0 viewpoints::*major-intervals*)
-				      (9 viewpoints::*minor-intervals*)))
-		   (degree (degree interval scale-intervals)))
-	      (if (null degree)
-		  pitch
-		  (+ degree
-		     (* (- (utils:quotient interval *octave*)
-			   (if (< interval 0) 1 0))
-			7)))))
-		 
-;; Degree number for pitch interval
-(defun degree (interval scale-intervals)
-  (let ((degree nil)
-	(eqint (mod interval *octave*)))
-    (dotimes (n (length scale-intervals) degree)
-      (if (eq eqint (nth n scale-intervals))
-	  (setq degree (+ n 1))))))
-
-
 ;; Pitch scales
 ;;
 ;; A scale is defined as a list of pitch values, including a
@@ -94,7 +60,6 @@
 (defvar *as4* 70)
 (defvar *b4* 71)
 (defvar *a5* 81) 
-
 
 (defvar *major-intervals* '(0 2 4 5 7 9 11))
 (defvar *minor-intervals* '(0 2 3 5 7 8 10))
@@ -121,7 +86,41 @@
 scale."
   (make-scale (nmapcar #'bottom-pitch (getf scale :pitches))
 	      (getf scale :offset)))
-        
+
+
+;; Western scale degree
+;;
+
+;; Pitch to tonic interval
+(define-viewpoint (tonint derived (cpitch))
+    ((events md:melodic-sequence) element) 
+  :function (- (cpitch events)
+	       (+ (* (octave (list (car events))) *octave*)
+		  (referent events))))
+
+(define-viewpoint (sdeg-west derived (cpitch))
+    ((events md:melodic-sequence) element) 
+  :function (let* ((pitch (cpitch events))
+		   (interval (tonint events))
+		   (scale-intervals (case (mode events)
+				      (0 *major-intervals*)
+				      (9 *minor-intervals*)))
+		   (degree (degree interval scale-intervals)))
+	      (if (null degree)
+		  pitch
+		  (+ degree
+		     (* (- (utils:quotient interval *octave*)
+			   (if (< interval 0) 1 0))
+			7)))))
+		 
+;; Degree number for pitch interval
+(defun degree (interval scale-intervals)
+  (let ((degree nil)
+	(eqint (mod interval *octave*)))
+    (dotimes (n (length scale-intervals) degree)
+      (if (eq eqint (nth n scale-intervals))
+	  (setq degree (+ n 1))))))
+
 
 ;; Turkish Makams
 ;;

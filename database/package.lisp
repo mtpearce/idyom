@@ -2,7 +2,7 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                           
-;;;; Time-stamp: <2023-05-22 13:20:14 marcusp>                           
+;;;; Time-stamp: <2023-05-22 14:32:53 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -15,6 +15,8 @@
   (:use #:common-lisp #:clsql)
   (:nicknames db)
   (:export #:mtp-event #:mtp-composition #:mtp-dataset
+           #:dataset-description #:dataset-timebase #:dataset-midc #:dataset-compositions
+           #:composition-description #:composition-timebase #:composition-events
            #:connect-to-database #:initialise-database
            #:import-data #:export-data #:insert-dataset #:delete-dataset 
            #:describe-dataset #:describe-database #:copy-datasets

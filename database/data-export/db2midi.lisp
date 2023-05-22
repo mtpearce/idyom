@@ -2,7 +2,7 @@
 ;;;; File:       db2midi.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2005-06-09 11:01:51 marcusp>
-;;;; Time-stamp: <2023-05-22 12:33:24 marcusp>
+;;;; Time-stamp: <2023-05-22 14:35:46 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:db2midi)
@@ -38,10 +38,10 @@
 (defmethod export-data ((d idyom-db:mtp-dataset) (type (eql :mid)) dir &key filename)
   "Export an entire dataset from the database."
   (declare (ignore filename))
-  (let* ((*timebase* (idyom-db::dataset-timebase d))
-         (*midc*     (idyom-db::dataset-midc d))
+  (let* ((*timebase* (idyom-db:dataset-timebase d))
+         (*midc*     (idyom-db:dataset-midc d))
          (dir-path (utils:ensure-directory dir))
-         (compositions (idyom-db::dataset-compositions d))
+         (compositions (idyom-db:dataset-compositions d))
 	 (num-compositions (length compositions)))
     (ensure-directories-exist dir-path)
     (utils:message (format nil "Exporting dataset (~A composition(s)) to MIDI format."
