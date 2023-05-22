@@ -2,33 +2,31 @@
 ;;;; File:       ppm-ui.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-07-02 18:54:17 marcusp>                           
-;;;; Time-stamp: <2022-10-10 10:58:24 marcusp>                           
+;;;; Time-stamp: <2023-05-22 14:15:47 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; 
 ;;;; DESCRIPTION 
 ;;;;
-;;;; Direct user interface to the PPM* code. Examples for the ngram-frequencies
-;;;; function are shown below.
+;;;; Direct user interface to the PPM* code. 
 ;;;; 
-;;;; CL-USER> (ppm-star::test-model '((l e t l e t t e r t e l e)) '(e l t r) 1)
+;;;; CL-USER> (ppm-predict '((l e t l e t t e r t e l e)) :order-bound 1)
 ;;;; (((R) 1) ((T) 4) ((E) 5) ((L) 3))
 ;;;;
-;;;; CL-USER> (ppm-star::test-model '((a g c g a c g a g)) '(a c g) 2)
+;;;; CL-USER> (ppm-predict '((a g c g a c g a g)) :order-bound 2)
 ;;;; (((C G) 2) ((G A) 2) ((G C) 1) ((A C) 1) ((A G) 2))
 ;;;;
-;;;; CL-USER> (ppm-star::test-model '((a b r a c a d a b r a)) '(a b c d r) 3)
+;;;; CL-USER> (ppm-predict '((a b r a c a d a b r a)) :order-bound 3)
 ;;;; (((D A B) 1) ((C A D) 1) ((R A C) 1) ((B R A) 2) ((A D A) 1) ((A C A) 1)
 ;;;;  ((A B R) 2))
 ;;;;
-;;;; CL-USER> (ppm-star::test-model '((m i s s i s s i p p i)) '(i m p s) 4)
+;;;; CL-USER> (ppm-predict '((m i s s i s s i p p i)) :order-bound 4)
 ;;;; (((S I P P) 1) ((S I S S) 1) ((S S I P) 1) ((S S I S) 1) ((I P P I) 1)
 ;;;;  ((I S S I) 3) ((M I S S) 1))
 ;;;; 
-;;;; CL-USER> (ppm-star::test-model '((a s s a n i s s i m a s s a)
-;;;;                                  (m i s s i s s i p p i))
-;;;;                                '(a s n i m p)
-;;;;                                2)
+;;;; CL-USER> (ppm-predict '((a s s a n i s s i m a s s a)
+;;;;                         (m i s s i s s i p p i))
+;;;;                       :order-bound 2)
 ;;;; (((P I) 1) ((P P) 1) ((M I) 1) ((M A) 1) ((I P) 1) ((I M) 1) ((I S) 3)
 ;;;;  ((N I) 1) ((S I) 3) ((S A) 2) ((S S) 5) ((A N) 1) ((A S) 2))
 
@@ -117,7 +115,7 @@
                            (list-children model node)))))))
       (g-n-f (ppm:get-root) nil))
     (remove-if #'(lambda (x) 
-                   (find ppm-star::*sentinel* (car x)))
+                   (find *sentinel* (car x)))
                results)))
 
 (defun generate-labels (model node prefix)
@@ -127,7 +125,7 @@
       (push (append prefix (subseq label 0 (1+ i))) results))))
 
 (defun label (model node) 
-  (ppm::instantiate-label model (ppm::get-label model node)))
+  (instantiate-label model (get-label model node)))
 
-(defun frequency (model node) (ppm::get-count model node nil))
+(defun frequency (model node) (get-count model node nil))
 
