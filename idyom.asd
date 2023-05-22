@@ -2,7 +2,7 @@
 ;;;; File:       IDyOM.asd
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-05-04 21:29:04 marcusp>
-;;;; Time-stamp: <2022-08-03 15:32:55 marcusp>
+;;;; Time-stamp: <2023-05-22 12:32:03 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -47,6 +47,7 @@
 		      :components 
 		      (;;(:file "db2cmn")
 		       (:file "db2midi")
+                       (:file "preview" :depends-on ("db2midi"))
 		       (:file "db2lilypond")
 		       (:file "db2score" :depends-on ("db2lilypond"))))))
    ;; Representation language for music objects
