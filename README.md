@@ -5,19 +5,21 @@ Version 1.7
 Copyright 2001-2023, the IDyOM development team (see CREDITS).
 
 This program is distributed under the terms of the GNU General Public
-License.  See COPYING for details. 
+License.  See COPYING for details.
+
 
 ## Documentation
 
-Documentation on how to install and use IDyOM can be found at:
+Online documentation is available at: https://github.com/mtpearce/idyom/wiki
 
-http://mtpearce.github.io/idyom/
+Scientific presentations of IDyOM can be found in Pearce (2005, 2018),
+copies of which are provided in the directory docs/ - please use these as citations
+in any publications using this software.
 
-The design of the system and its underlying principles are documented
-in Marcus Pearce's PhD thesis "The Construction and Evaluation of
-Statistical Models of Melodic Structure in Music Perception and
-Composition" (2005) included here as 'thesis.pdf'. Please cite this 
-thesis in any publications using this software.
+Pearce, M. T. (2005). [The Construction and Evaluation of Statistical Models of Melodic Structure in Music Perception and Composition.](https://www.marcus-pearce.com/assets/papers/Pearce2005.pdf) Doctoral Dissertation, Department of Computer Science, City University of London, UK.
+
+Pearce, M. T. (2018). [Statistical learning and probabilistic prediction in music cognition: mechanisms of stylistic enculturation.](https://www.marcus-pearce.com/assets/papers/Pearce2018.pdf) _Annals of the New York Academy of Sciences_, 1423, 378-395. https://doi.org/10.1111/nyas.13654
+
 
 ## Requirements
 
@@ -27,6 +29,7 @@ thesis in any publications using this software.
 * Sqlite     http://www.sqlite.org/
 
 See the online documentation for further details on installation.
+
 
 ## News
 
