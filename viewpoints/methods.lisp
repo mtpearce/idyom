@@ -6,6 +6,9 @@
   (mapcar #'(lambda (s) (viewpoint-sequence v s :keep-undefined keep-undefined))
           sequences))
 
+(defmethod viewpoint-sequences ((s symbol) sequences &key keep-undefined)
+  (viewpoint-sequences (get-viewpoint s) sequences :keep-undefined keep-undefined))
+
 (defmethod viewpoint-sequence ((v viewpoint) (m md:music-composition) &key keep-undefined)
   (viewpoint-sequence v (coerce m 'list) :keep-undefined keep-undefined))
 
@@ -21,6 +24,9 @@
                        (events->viewpoint (butlast events)
                                           (cons element sequence)))))))
     (events->viewpoint event-list '())))
+
+(defmethod viewpoint-sequence ((s symbol) m &key keep-undefined)
+  (viewpoint-sequence (get-viewpoint s) m :keep-undefined keep-undefined))
 
 ;;; viewpoint-element 
 
@@ -157,7 +163,7 @@
 ;;; Strip-until-true and filter
 
 (defmethod strip-until-true ((test-viewpoint test) (events md:music-composition))
-  (strip-until-true test (coerce events 'list)))
+  (strip-until-true test-viewpoint (coerce events 'list)))
 
 (defmethod strip-until-true ((test-viewpoint test) (events md:music-sequence))
   (let ((new-events (strip-until-true test-viewpoint (coerce events 'list)))
