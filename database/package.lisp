@@ -2,7 +2,7 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                           
-;;;; Time-stamp: <2023-05-22 12:31:10 marcusp>                           
+;;;; Time-stamp: <2023-05-22 13:20:14 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
@@ -14,17 +14,17 @@
 (defpackage #:idyom-db
   (:use #:common-lisp #:clsql)
   (:nicknames db)
-  (:export "MTP-EVENT" "MTP-COMPOSITION" "MTP-DATASET"
-           "CONNECT-TO-DATABASE" "INITIALISE-DATABASE"
-           "IMPORT-DATA" "EXPORT-DATA" "INSERT-DATASET" "DELETE-DATASET" 
-           "DESCRIBE-DATASET" "DESCRIBE-DATABASE" "COPY-DATASETS"
-           "DATASET-COMPOSITION" "COMPOSITION-EVENTS" 
-           "GET-ID" "GET-DATASET" "GET-COMPOSITION" "GET-EVENT" 
-           "COPY-EVENT" "GET-DESCRIPTION"
-           "GET-COMPOSITIONS" "GET-EVENT-ATTRIBUTE"
-           "GET-ATTRIBUTE" "SET-ATTRIBUTE" "GET-TIMEBASE" "GET-MIDC" 
-           "GET-NEXT-FREE-ID" "COUNT-COMPOSITIONS" "COUNT-EVENTS" "GET-ALPHABET" 
-           "GET-MAX-EVENT-COUNT" "PREVIEW")
+  (:export #:mtp-event #:mtp-composition #:mtp-dataset
+           #:connect-to-database #:initialise-database
+           #:import-data #:export-data #:insert-dataset #:delete-dataset 
+           #:describe-dataset #:describe-database #:copy-datasets
+           #:dataset-composition #:composition-events 
+           #:get-id #:get-dataset #:get-composition #:get-event 
+           #:copy-event #:get-description
+           #:get-compositions #:get-event-attribute
+           #:get-attribute #:set-attribute #:get-timebase #:get-midc 
+           #:get-next-free-id #:count-compositions #:count-events #:get-alphabet 
+           #:get-max-event-count #:preview)
   (:documentation "Interface to an SQL database of music objects."))
 
 ;;; ======================================================================

@@ -2,35 +2,35 @@
 ;;;; File:       package.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-05 18:54:17 marcusp>                        
-;;;; Time-stamp: <2022-10-26 16:14:50 marcusp>                           
+;;;; Time-stamp: <2023-05-22 13:27:58 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:cl-user)
 
 (defpackage #:apps
   (:use #:cl #:utils #:md #:mvs)
-  (:export "*ROOT-DIR*" "DATASET-MODELLING-FILENAME")
+  (:export #:*root-dir* #:dataset-modelling-filename)
   (:documentation "Miscellaneous variables & utils for applications."))
 
 (defpackage #:idyom
   (:use #:cl)
-  (:export "IDYOM" "CONKLIN90" "CONKWIT95" "PEARCE05")
+  (:export #:idyom #:conklin90 #:conkwit95 #:pearce05)
   (:documentation "Main access to IDyOM functionality."))
 
 (defpackage #:resampling 
   (:use #:cl #:utils #:md #:viewpoints #:ppm #:mvs #:prediction-sets)
-  (:export "IDYOM-RESAMPLE" "OUTPUT-INFORMATION" "FORMAT-INFORMATION-CONTENT"
-           "CACHED-DATASET-PREDICTION" 
-           "BUILD-EP-CACHE" "SELECT-VIEWPOINTS-FOR-GENERATION" 
-           "GET-RESAMPLING-SETS" "GET-TRAINING-SET" "GET-TEST-SET" 
-           "GET-LONG-TERM-MODELS" "MONODIES-TO-LISTS"
-           "TEST-COMBINATIONS")
+  (:export #:idyom-resample #:output-information #:format-information-content
+           #:cached-dataset-prediction 
+           #:build-ep-cache #:select-viewpoints-for-generation 
+           #:get-resampling-sets #:get-training-set #:get-test-set 
+           #:get-long-term-models #:monodies-to-lists
+           #:test-combinations)
   (:documentation "Prediction of datasets using cross-validation."))
 
 (defpackage #:viewpoint-selection
   (:use #:cl #:utils)
-  (:export "RUN-BEST-FIRST" "RUN-HILL-CLIMBER" 
-           "LOAD-VS-CACHE" "STORE-VS-CACHE" "INITIALISE-VS-CACHE"
-           "DATASET-VIEWPOINT-SELECTION")
+  (:export #:run-best-first #:run-hill-climber 
+           #:load-vs-cache #:store-vs-cache #:initialise-vs-cache
+           #:dataset-viewpoint-selection)
   (:documentation "Selection of viewpoints."))
 

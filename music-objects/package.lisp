@@ -1,31 +1,31 @@
 (cl:defpackage #:music-objects
   (:use #:common-lisp)
-  (:nicknames #:mo #:md #:music-data)
+  (:nicknames #:mo #:music-data #:md)
   (:export 
    ;; Music objects & their properties
-   "MUSIC-OBJECT" "MUSIC-DATASET" "MUSIC-COMPOSITION" "MUSIC-EVENT" "MUSIC-SLICE"
-   "MUSIC-SEQUENCE" "MELODIC-SEQUENCE" "HARMONIC-SEQUENCE"
-   "ONSET" "CHROMATIC-PITCH" "DURATION" "KEY-SIGNATURE" "MODE"
-   "TEMPO" "PULSES" "BARLENGTH" "DELTAST" "BIOI" "PHRASE"
-   "MORPHETIC-PITCH" "ACCIDENTAL" "DYNAMICS" "ORNAMENT" "VOICE"
-   "COMMA" "ARTICULATION" "DESCRIPTION" "MIDC" "TIMEBASE" "VERTINT12"
-   ;; Identifiers
-   "DATASET-IDENTIFIER" "COMPOSITION-IDENTIFIER" "EVENT-IDENTIFIER"
-   "GET-DATASET-INDEX" "GET-COMPOSITION-INDEX" "GET-EVENT-INDEX"
-   "MAKE-DATASET-ID" "MAKE-COMPOSITION-ID" "MAKE-EVENT-ID" 
-   "COPY-IDENTIFIER" "GET-IDENTIFIER"
-   "LOOKUP-DATASET" "LOOKUP-COMPOSITION" "LOOKUP-EVENT"
-   ;; Getting music objects from DB
-   "GET-DATASET" "GET-COMPOSITION" "GET-EVENT"
-   "GET-MUSIC-OBJECTS" "GET-EVENT-SEQUENCE" "GET-EVENT-SEQUENCES"
-   "GET-HARMONIC-SEQUENCE" "GET-HARMONIC-SEQUENCES"
-   ;; Accessing properties of music objects
-   "GET-ATTRIBUTE" "SET-ATTRIBUTE" "COUNT-COMPOSITIONS" "GET-DESCRIPTION"
-   "COPY-EVENT" "MUSIC-SYMBOL" "*MD-MUSIC-SLOTS*" "*MD-TIME-SLOTS*"
-   ;; Representation
-   "*TIMEBASE*"
-   ;; MIDI export
-   "EXPORT-MIDI" "PREVIEW"
+   #:music-object #:music-dataset #:music-composition #:music-event #:music-slice
+   #:music-sequence #:melodic-sequence #:harmonic-sequence
+   #:onset #:chromatic-pitch #:duration #:key-signature #:mode
+   #:tempo #:pulses #:barlength #:deltast #:bioi #:phrase
+   #:morphetic-pitch #:accidental #:dynamics #:ornament #:voice
+   #:comma #:articulation #:description #:midc #:timebase #:vertint12
+   ;; identifiers
+   #:dataset-identifier #:composition-identifier #:event-identifier
+   #:get-dataset-index #:get-composition-index #:get-event-index
+   #:make-dataset-id #:make-composition-id #:make-event-id 
+   #:copy-identifier #:get-identifier
+   #:lookup-dataset #:lookup-composition #:lookup-event
+   ;; getting music objects from db
+   #:get-dataset #:get-composition #:get-event
+   #:get-music-objects #:get-event-sequence #:get-event-sequences
+   #:get-harmonic-sequence #:get-harmonic-sequences
+   ;; accessing properties of music objects
+   #:get-attribute #:set-attribute #:count-compositions #:get-description
+   #:copy-event #:music-symbol #:*md-music-slots* #:*md-time-slots*
+   ;; representation
+   #:*timebase*
+   ;; midi export
+   #:export-midi #:preview
    )
   (:documentation "Representations of music objects."))
 
