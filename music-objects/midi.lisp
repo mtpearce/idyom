@@ -2,7 +2,7 @@
 ;;;; File:       midi.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2020-02-05 07:01:51 marcusp>
-;;;; Time-stamp: <2022-08-04 12:47:36 marcusp>
+;;;; Time-stamp: <2023-05-22 12:02:07 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -27,7 +27,7 @@
 
 ;; Paths to the user's timidy, musescore and pdf viewer executables
 (defparameter *timidity-path* "/usr/local/bin/timidity")
-(defparameter *musescore-path* "/Applications/MuseScore 3.app/Contents/MacOS/mscore")
+(defparameter *musescore-path* "/Applications/MuseScore 4.app/Contents/MacOS/mscore")
 (defparameter *pdf-viewer-path* "/Applications/Preview.app/Contents/MacOS/Preview")
 
 
