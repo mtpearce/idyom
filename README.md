@@ -1,8 +1,8 @@
 # IDyOM: Information Dynamics of Music
 
-Version 1.6
+Version 1.7
 
-Copyright 2001-2020, the IDyOM development team (see CREDITS).
+Copyright 2001-2023, the IDyOM development team (see CREDITS).
 
 This program is distributed under the terms of the GNU General Public
 License.  See COPYING for details. 
@@ -26,11 +26,11 @@ thesis in any publications using this software.
 * Quicklisp  http://www.quicklisp.org/
 * Sqlite     http://www.sqlite.org/
 
-See the wiki for further details on installation.
+See the online documentation for further details on installation.
 
 ## News
 
-### xxxx-xx-xx: v1.7
+### 2023-05-22: v1.7
 * Kern import: improved warnings when things go awry (thanks to Bastiaan van der Weij)
 * MIDI import: fix errors in note timing
 * MIDI import: restore import of midi dynamics and tempo
@@ -43,12 +43,15 @@ See the wiki for further details on installation.
 * Utils: Cartesian product works with zero arguments (thanks to Bastiaan van der Weij)
 * Utils: remove-by-position allows inverting the supplied positions
 * Music objects: use initializer for music-sequence to avoid code duplication (thanks to Bastiaan van der Weij)
+* Music objects: new package name music-objects + nickname mo: 
 * Viewpoints: improved support for harmony viewpoints
 * Viewpoints: new General Chord Type algorithm for root finding (Giannos & Cambouropoulos, 2021)
 * Viewpoints: new Parncutt (1988) root-finding algorithm (thanks to Peter Harrison)
 * Viewpoints: new harmony viewpoints (following Harrison (2019) and Sears et al. (2018))
 * Viewpoints: new function viewpoint-name-string and argument keep-undefined for viewpoint-sequence{,s} (thanks to Peter Harrison)
-* Viewpoints: modify onset alphabets so as not to predict ioi = zero (thanks to Bastiaan van der Weij) 
+* Viewpoints: viewpoint-sequence and viewpoint-sequences now accept a symbol designating a viewpoint (or the viewpoint object itself as before)
+* Viewpoints: modify onset alphabets so as not to predict ioi = zero (thanks to Bastiaan van der Weij)
+* Viewpoints: new package nickname vp: 
 * PPM*: replace make-ppm with the more general make-instance (thanks to Bastiaan van der Weij)
 * Idyom: Add training-set-size and null-token top-level args to idyom:idyom (thanks to Peter Harrison)
 * Idyom: fix bug in formatted output when dur/bioi/deltast/onset had null value
