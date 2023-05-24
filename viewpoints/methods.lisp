@@ -9,6 +9,9 @@
 (defmethod viewpoint-sequences ((s symbol) sequences &key keep-undefined)
   (viewpoint-sequences (get-viewpoint s) sequences :keep-undefined keep-undefined))
 
+(defmethod viewpoint-sequences ((l list) sequences &key keep-undefined)
+  (viewpoint-sequences (get-viewpoint l) sequences :keep-undefined keep-undefined))
+
 (defmethod viewpoint-sequence ((v viewpoint) (m md:music-composition) &key keep-undefined)
   (viewpoint-sequence v (coerce m 'list) :keep-undefined keep-undefined))
 
@@ -27,6 +30,10 @@
 
 (defmethod viewpoint-sequence ((s symbol) m &key keep-undefined)
   (viewpoint-sequence (get-viewpoint s) m :keep-undefined keep-undefined))
+
+(defmethod viewpoint-sequence ((l list) m &key keep-undefined)
+  (viewpoint-sequence (get-viewpoint l) m :keep-undefined keep-undefined))
+
 
 ;;; viewpoint-element 
 
