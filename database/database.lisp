@@ -2,7 +2,7 @@
 ;;;; File:       database.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2002-10-09 18:54:17 marcusp>                           
-;;;; Time-stamp: <2023-03-13 10:09:16 marcusp>                           
+;;;; Time-stamp: <2023-05-31 09:49:43 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -293,26 +293,22 @@ specified."
          (result (subseq (car datasets) 0 3))
          (result (if description (cons description (cdr result)) result))
          (data nil))
+    (do ((d datasets (cdr d))
+         (i include (cdr i))
+         (e exclude (cdr e)))
+        ((null d))
+      (let* ((nd (subseq (car d) 3))
+             (nd (if include
+                     ;; include list
+                     (utils:remove-by-position nd (car i) :inverse t)
+                     ;; exclude list
+                     (if exclude (utils:remove-by-position nd (car e))
+                         ;; all data
+                         nd))))
+        (setf data (append data nd))))
     ;; random subset
-    (if random-subset
-        (setf data (utils:random-select data (round (* random-subset (length data)))))
-        (do ((d datasets (cdr d))
-             (i include (cdr i))
-             (e exclude (cdr e)))
-            ((null d))
-          ;; include list 
-          (if include
-              (setf data (utils:remove-by-position
-                          (subseq (car d) 3)
-                          (car i)
-                          :inverse t))
-              ;; exclude list
-              (if exclude
-                  (setf data (utils:remove-by-position
-                              (subseq (car d) 3)
-                              (car e)))
-                  ;; all data
-                  (setf data (subseq (car d) 3))))))
+    (when random-subset
+      (setf data (utils:random-select data (round (* random-subset (length data))))))
     (insert-dataset (append result data) target-id)))
 
 (defun dataset->lisp (mtp-dataset)
