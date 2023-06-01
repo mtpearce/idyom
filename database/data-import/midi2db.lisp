@@ -2,7 +2,7 @@
 ;;;; File:       midi2db.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2007-03-21 09:47:26 marcusp>
-;;;; Time-stamp: <2023-01-09 11:44:35 marcusp>
+;;;; Time-stamp: <2023-06-01 11:31:18 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:midi2db) 
@@ -23,10 +23,10 @@
   (if (pathname-name path)
       (list (cons (pathname-name path)
                   (convert-midi-file (midi:read-midi-file path))))
-      (mapcar #'(lambda (f) 
+      (mapcar #'(lambda (f)
                   ;; (format t "~&Convert-midi-file: ~A~%" f)
-                  (cons (pathname-name f)
-                        (convert-midi-file (midi:read-midi-file f))))
+                  (let ((data (convert-midi-file (midi:read-midi-file f))))
+                    (cons (pathname-name f) data)))
               (directory 
                (concatenate 'string (directory-namestring path)
                             "*" "." *default-midifile-extension*)))))
@@ -74,7 +74,7 @@
 	 (props `(:pulses 4 :barlength ,*timebase* :tempo 120 :phrase 0)))
     ; Iterate over MIDI tracks
     (dolist (track (midi:midifile-tracks midifile)
-	     (values (nreverse notes) (nreverse bends)))
+                   (values (nreverse notes) (nreverse bends)))
       (let ((sorted-track (sort track #'< :key #'midi:message-time))
 	    (track-notes)
 	    (track-bends))
@@ -110,17 +110,25 @@
             (midi:note-on-message
              (let ((velocity (midi:message-velocity message)))
 	       (unless (= velocity 0) 		   
+                 ;; (print-midi-message message)
+                 ;; (print-midi-message (find-matching-note-off message st))
+                 ;; (terpri)
 		 (let* ((onset (midi:message-time message))
 			(pitch (midi:message-key message))
 		        (off (find-matching-note-off message st))
-                        (offset (midi:message-time off)))
+                        (offset (when off (midi:message-time off))))
+                   (when (null offset)
+                     ;; if offset is null, use the same IOI as the previous note
+                     (let ((prev-note (car track-notes)))
+                       (setf offset (+ onset (- (getf prev-note :offset)
+                                                (getf prev-note :onset))))))
 		   ;; Add to note list
 		   (push (append `(:onset ,onset :pitch ,pitch :dyn ,velocity
 					  :offset ,offset :voice ,tracknum)
 				 props)
                          track-notes)))))
 	    ;; Pitch-bend
-	    (midi:pitch-bend-message 
+	    (midi:pitch-bend-message
 	     (let* ((time (midi:message-time message)))
 	       (if (null (assoc time track-bends))
 		   (push (cons time (midi:message-value message)) track-bends))))
@@ -159,14 +167,22 @@
     (/ (car (multiple-value-list (round bend-cents))) 100)))
 
 (defun find-matching-note-off (note-on-message track)
-  (find (midi:message-key note-on-message)
-        track 
-        :start 1 
-        :key #'(lambda (x) (typecase x
-                             ((or note-on-message note-off-message)
-                              (midi:message-key x))
-                             (t -50000)))
-        :test #'=))
+  "Find the next note off event (or note on event with velocity = 0)
+with the same pitch as NOTE-ON-MESSAGE in TRACK to determine the
+duration of the note."
+  (let ((match (find (midi:message-key note-on-message)
+                     track 
+                     :start 1 
+                     :key #'(lambda (x) (typecase x
+                                          ((or note-on-message note-off-message)
+                                           (midi:message-key x))
+                                          (t -50000)))
+                     :test #'=)))
+    ;; find the next note on or off message with the same key (pitch)
+    (if match match
+        ;; if none exists return the next note in the track
+        (when (> (length track) 1)
+          (elt track 1)))))
 
 (defun usecs-per-quarter-note->bpm (usecs-per-quarter-note)
   "Convert tempo in usecs per quarter note to BPM." 
@@ -307,18 +323,22 @@
   (let* ((ppqn (midi:midifile-division midifile)))
     (format t "PPQN: ~A~%" ppqn)
     (dolist (track (midi:midifile-tracks midifile))
-    (dolist (msg track)
-      (typecase msg
-	(midi:time-signature-message (format t "Time sig. ~A / ~A ~%" (midi:message-numerator msg) (midi:message-denominator msg)))
-	(midi:key-signature-message (format t "Key~%"))
-	(midi:tempo-message (format t "Tempo ~A~%" (midi:message-tempo msg)))
-	(midi:sequence/track-name-message (format t "~A Name~%" (midi:message-time msg)))
-	(midi:program-change-message (format t "Program change~%"))
-	(midi:note-on-message (format t "~A Note on, pitch ~A [velocity ~A]~%" (midi:message-time msg) (midi:message-key msg) (midi:message-velocity msg)))
-	(midi:note-off-message (format t "      ~A Note off~%" (midi:message-time msg)))
-	(midi:pitch-bend-message (format t "      ~A Pitch bend ~A~%" (midi:message-time msg) (midi:message-value msg)))
-	(midi:smpte-offset-message (format t "SMPTE message~%"))
-	(t (format t "UNKNOWN MESSAGE~%")))))))
+      (dolist (msg track)
+        (print-midi-message msg)))))
+
+(defun print-midi-message (msg)
+  "Print midi message in human readable format."
+  (typecase msg
+    (midi:time-signature-message (format t "Time sig. ~A / ~A ~%" (midi:message-numerator msg) (midi:message-denominator msg)))
+    (midi:key-signature-message (format t "Key~%"))
+    (midi:tempo-message (format t "Tempo ~A~%" (midi:message-tempo msg)))
+    (midi:sequence/track-name-message (format t "~A Name~%" (midi:message-time msg)))
+    (midi:program-change-message (format t "Program change~%"))
+    (midi:note-on-message (format t "~A Note on, pitch ~A [velocity ~A]~%" (midi:message-time msg) (midi:message-key msg) (midi:message-velocity msg)))
+    (midi:note-off-message (format t "      ~A Note off~%" (midi:message-time msg)))
+    (midi:pitch-bend-message (format t "      ~A Pitch bend ~A~%" (midi:message-time msg) (midi:message-value msg)))
+    (midi:smpte-offset-message (format t "SMPTE message~%"))
+    (t (format t "UNKNOWN MESSAGE~%"))))
 
 (defun midi-to-list (midifile)
   "List messages for the given MIDI file - useful for debugging."
