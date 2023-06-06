@@ -1,8 +1,8 @@
 (cl:in-package #:viewpoints)
 
 ;; NB: An attribute is a symbol representing a primitive viewpoint,
-;; whereas a viewpoint is the viewpoint objects itself (see
-;; classes.lisp). 
+;; whereas a viewpoint is the viewpoint object itself (see
+;; classes.lisp).
 
 (defconstant +undefined+ '@ "The undefined symbol.")
 
@@ -32,11 +32,11 @@ symbol if they are lists else nil."
                         viewpoint-element))))
     (find-if #'undefined-ps viewpoint-elements)))
 
-(defun get-viewpoints (attributes)
+(defun get-viewpoints (attributes &key (sort t))
   "Returns a list of viewpoint objects corresponding to <attributes>."
-  (mapcar #'get-viewpoint attributes))
+  (mapcar #'(lambda (a) (get-viewpoint a :sort sort)) attributes))
 
-(defun get-viewpoint (attribute)
+(defun get-viewpoint (attribute &key (sort t))
   "Returns a viewpoint object for <attribute>."
   (flet ((merge-typesets (links)
            (remove-duplicates 
@@ -46,7 +46,7 @@ symbol if they are lists else nil."
          (find-symbol (symbol-name attribute) (find-package :viewpoints)))
         (let* ((links (mapcar #'get-viewpoint (flatten attribute)))
                (typeset (merge-typesets links))
-               (links (stable-sort links #'(lambda (x y) (string< (viewpoint-name x) (viewpoint-name y))))))
+               (links (if sort (stable-sort links #'(lambda (x y) (string< (viewpoint-name x) (viewpoint-name y)))) links)))
           (make-instance 'linked :links links :typeset typeset)))))
 
 (defun attribute-equal (a1 a2)

@@ -78,16 +78,20 @@
 (defmethod linked-p ((v viewpoint)) (typep v 'linked))
 (defmethod threaded-p ((v viewpoint)) (typep v 'threaded))
 
-(defmethod viewpoint-name ((v viewpoint))
+(defmethod viewpoint-name ((v viewpoint) &key (sort t))
   (let* ((links (viewpoint-links v))
          (types (mapcar #'(lambda (l)
                             (string-downcase (symbol-name (type-of l))))
                         (if (atom links) (list links) links)))
-         (name ""))
-    (dolist (type (stable-sort types #'string<) name)
-      (setf name 
-            (concatenate 'string name (if (string= name "") "" "-") type)))))
+         (types (if sort (stable-sort types #'string<) types)))
+    (format nil "~{~A~^-~}" types)))
 
+(defmethod viewpoint-name ((v list) &key (sort t))
+  (viewpoint-name (get-viewpoint v :sort sort) :sort sort))
+
+(defmethod viewpoint-name ((v symbol) &key (sort t))
+  (viewpoint-name (get-viewpoint v :sort sort) :sort sort))
+  
 (defmethod viewpoint-type ((v viewpoint))
   "Returns the type of a viewpoint <v>."
   (let ((viewpoints (viewpoint-links v)))

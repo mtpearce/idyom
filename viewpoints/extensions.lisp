@@ -2,7 +2,7 @@
 ;;;; File:       extensions.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2008-10-31 13:08:09 marcusp>
-;;;; Time-stamp: <2023-04-20 13:45:44 marcusp>
+;;;; Time-stamp: <2023-06-06 14:37:53 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints) 
@@ -152,15 +152,3 @@ in <events>."
                                e))
                          alphabet))))
       (apply #'get-events (viewpoint-typeset l)))))
-
-(defgeneric viewpoint-name-string (v)
-  (:documentation "Returns a sanitised string identifying the viewpoint <v>.
-Intended for data output purposes."))
-
-(defmethod viewpoint-name-string ((v symbol))
-  (string-downcase (symbol-name v)))
-
-(defmethod viewpoint-name-string ((v list))
-  (string-downcase
-   (format nil "~{~A~^-x-~}"
-          (mapcar #'symbol-name v))))
