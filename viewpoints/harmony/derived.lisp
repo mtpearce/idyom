@@ -2,7 +2,7 @@
 ;;;; File:       derived.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-25 19:09:17 marcusp>                           
-;;;; Time-stamp: <2023-04-19 15:09:28 marcusp>                           
+;;;; Time-stamp: <2023-06-12 11:44:13 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
@@ -180,13 +180,23 @@ in ascending order (Rahn, 1980; Forte, 1973)."
 ;;; ============================================================================
 ;;; Scale degrees
 
+;; scale degree set with bass appearing first, encoding inversion
+(define-viewpoint (sd-chord derived (h-cpitch))
+    ((events md:harmonic-sequence) element)
+    :function (let* ((pi-chord (pi-chord events))
+                     (tonic (referent events))
+                     (sds (remove-duplicates (mapcar #'(lambda (x) (mod (- x tonic) 12)) pi-chord) :test #'= :from-end t)))
+                (cons (car sds) (sort (cdr sds) #'<))))
+
+;; scale degree set in ascending order (inversion invariant)
 (define-viewpoint (sd-set derived (h-cpitch))
     ((events md:harmonic-sequence) element)
   :function (let ((pc-set (pc-set events))
                   (tonic (referent events)))
               (if (undefined-p tonic) +undefined+
                   (sort (mapcar #'(lambda (x) (mod (- x tonic) 12)) pc-set) #'<))))
-  
+
+;; bass scale degree
 (define-viewpoint (bass-sd derived (h-cpitch))
     ((events md:harmonic-sequence) element)
   :function (let ((bass (bass-pc events))
@@ -194,7 +204,8 @@ in ascending order (Rahn, 1980; Forte, 1973)."
               (if (undefined-p tonic)
                   +undefined+
                   (mod (- bass tonic) 12))))
-  
+
+;; root scale degree
 (define-viewpoint (root-sd derived (h-cpitch))
     ((events md:harmonic-sequence) element)
   :function (let ((root (root-pc events))
@@ -241,20 +252,19 @@ in ascending order (Rahn, 1980; Forte, 1973)."
 
 ;; vertical interval class combination (vintcc): interval class from lowest note
 ;; doublings excluded, permutations allowed
+;; 
+;; NB: equivalent to pc-set-rel-bass and pc-chord-type
 (define-viewpoint (vintcc derived (h-cpitch))
     ((events md:harmonic-sequence) element)
-  :function (let* ((chord (h-cpitch events))
-                   (bass (car chord)))
-              (sort (remove-duplicates (mapcar #'(lambda (x) (mod (- x bass) 12)) chord) :test #'=) #'<)))
+  :function (pc-chord-type events))
 
 ;; chromatic scale degree combination (csdc): scale degrees
 ;; doublings excluded, permutations allowed in upper parts
+;; 
+;; NB: equivalent to sd-chord
 (define-viewpoint (csdc derived (h-cpitch))
     ((events md:harmonic-sequence) element)
-  :function (let* ((pi-chord (pi-chord events))
-                   (tonic (referent events))
-                   (sds (remove-duplicates (mapcar #'(lambda (x) (mod (- x tonic) 12)) pi-chord) :test #'=)))
-              (cons (car sds) (sort (cdr sds) #'<))))
+  :function (sd-chord events))
 
 
 ;;; ============================================================================
