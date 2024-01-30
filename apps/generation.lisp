@@ -2,7 +2,7 @@
 ;;;; File:       generation.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-08-21 18:54:17 marcusp>                           
-;;;; Time-stamp: <2023-04-22 09:06:39 marcusp>                           
+;;;; Time-stamp: <2024-01-30 10:11:39 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -14,8 +14,9 @@
 ;;;; ======================================================================
 
 (defpackage #:generation 
-  (:use #:cl #:utils #:md #:viewpoints #:ppm #:mvs #:prediction-sets 
+  (:use #:cl #:utils #:mo #:viewpoints #:ppm #:mvs #:prediction-sets 
         #:resampling)
+  (:nicknames #:gen)
   (:export #:idyom-generation)
   (:documentation "Generation of melodic compositions."))
 
@@ -33,9 +34,10 @@
 ;; Top-level
 ;; ========================================================================
 
-(defun idyom-generation (dataset-id base-id basic-attributes attributes
+(defun idyom-generation (dataset-id base-ids basic-attributes attributes
                          &key
-                           (models :both+)
+                           (number 1)
+                           (models :both)
                            (method :metropolis)
                            (context-length nil)
                            (iterations 100)
@@ -49,40 +51,66 @@
                            (output-path nil))
   (mvs:set-models models)
   (initialise-prediction-cache dataset-id attributes)
-  (let* ((dataset (md:get-event-sequences (list dataset-id)))
+  (let* ((output nil)
+         (dataset (mo:get-event-sequences (list dataset-id)))
          (pretraining-set (get-pretraining-set pretraining-ids))
          (viewpoints (get-viewpoints attributes))
          (basic-viewpoints (get-basic-viewpoints basic-attributes 
                                                  (append dataset pretraining-set)))
-         (resampling-set (generate-resampling-set dataset base-id))
-         (training-set (get-training-set dataset resampling-set))
-         (training-set (append pretraining-set training-set))
-         (test-set (get-test-set dataset resampling-set))
-         (ltms (get-long-term-models viewpoints training-set pretraining-ids
-                                     dataset-id (format nil "~Agen" base-id)
-                                     nil nil nil use-ltms-cache?))
-         (mvs (make-mvs basic-viewpoints viewpoints ltms :models models))
-         (context-length (if (and (null context-length) (eql method :random))
-                             (get-context-length (car test-set))
-                             context-length))
-                             
-         (sequence
-          (case method
-            (:metropolis (metropolis-sampling mvs (car test-set) iterations events position threshold random-state context-length))
-            (:gibbs (gibbs-sampling mvs (car test-set) iterations random-state threshold))
-            (:random (random-walk mvs (car test-set) context-length random-state threshold))
-            (otherwise (metropolis-sampling mvs (car test-set) iterations events position threshold random-state context-length)))))
-    ;; (write-prediction-cache-to-file dataset-id attributes)
-    ;; (print (viewpoints:viewpoint-sequence (viewpoints:get-viewpoint 'cpitch) sequence))
-    (if (and output-path sequence)
-        (md:export-midi sequence output-path output-filename)
-        sequence)))
-
+         (base-ids (cond ((consp base-ids) base-ids)
+                         ((null base-ids)
+                          (progn
+                            #.(clsql:locally-enable-sql-reader-syntax)
+                            (clsql:select [composition-id] :from [mtp-composition]
+                                                           :where [= [dataset-id] dataset-id]
+                                                           :flatp t :distinct t)
+                            #.(clsql:restore-sql-reader-syntax-state)))
+                         (t (listp base-ids)))))
+    (dolist (base-id base-ids)
+      (dotimes (i number)
+        (let* ((resampling-set (generate-resampling-set dataset base-id))
+               (training-set (get-training-set dataset resampling-set))
+               (training-set (append pretraining-set training-set))
+               (test-set (get-test-set dataset resampling-set))
+               (ltms (get-long-term-models viewpoints training-set pretraining-ids
+                                           dataset-id (format nil "~Agen" base-id)
+                                           nil nil nil use-ltms-cache?))
+               (output-filename (if (null output-filename)
+                                    (db:get-description dataset-id base-id)
+                                    output-filename))
+               (output-filename (format nil "~A_~A_gen~A.mid"
+                                        base-id output-filename (1+ i)))
+               (mvs (make-mvs basic-viewpoints viewpoints ltms :models models))
+               (target (car test-set))
+               (context-length (if (and (null context-length) (eql method :random))
+                                   (get-context-length target)
+                                   context-length))
+               (events
+                 (case method
+                   (:metropolis (metropolis-sampling mvs target iterations events position threshold random-state context-length))
+                   (:gibbs (gibbs-sampling mvs target iterations random-state threshold))
+                   (:random (random-walk mvs target context-length random-state threshold))
+                   (otherwise (metropolis-sampling mvs target iterations events position threshold random-state context-length))))
+               (sequence (make-instance (type-of target)
+                                        :onset (mo:onset target)
+                                        :duration (mo:duration target)
+                                        :midc (mo:midc target)
+                                        :id (mo:copy-identifier (mo:get-identifier target))
+                                        :description (mo:description target)
+                                        :timebase (mo:timebase target)
+                                        :events events)))
+          ;; (write-prediction-cache-to-file dataset-id attributes)
+          ;; (print (vp:viewpoint-sequence (vp:get-viewpoint 'cpitch) sequence))
+          (when (and output-path sequence)
+            (mo:export-midi sequence output-path output-filename))
+          (push sequence output))))
+    (reverse output)))
+  
 (defun get-pretraining-set (dataset-ids)
-  (md:get-event-sequences dataset-ids))
+  (mo:get-event-sequences dataset-ids))
 
 (defun get-context-length (sequence)
-  (1+ (position-if #'(lambda (e) (= (md:get-attribute e 'phrase) -1)) sequence)))
+  (1+ (position-if #'(lambda (e) (= (mo:get-attribute e 'phrase) -1)) sequence)))
   
 (defun generate-resampling-set (dataset base-id)
   (let* ((high-id (1- (length dataset)))
@@ -163,7 +191,7 @@
   (string-append (namestring *prediction-cache-directory*)
                  (reduce #'(lambda (&optional (x "") (y ""))
                              (string-append x y))
-                         (viewpoints:get-viewpoints viewpoints)
+                         (vp:get-viewpoints viewpoints)
                          :key #'(lambda (x) (string-append (viewpoint-name x)
                                                            "_")))
                  (format nil "~S" dataset-id)
@@ -268,7 +296,7 @@ random state, allowing exact replication."
   (let* ((sequence (coerce sequence 'list))
          (pitch-sequence (mapcar #'(lambda (x) (get-attribute x 'cpitch)) sequence))
          (l (length sequence))
-         (cpitch (viewpoints:get-viewpoint 'cpitch))
+         (cpitch (vp:get-viewpoint 'cpitch))
          (predictions (sampling-predict-sequence m sequence cpitch))
          (original-p (seq-probability predictions))
          (changed-events nil))
@@ -353,7 +381,7 @@ random state, allowing exact replication."
          (pitch-sequence (mapcar #'(lambda (x) (get-attribute x 'cpitch))
                                  sequence))
          (l (length sequence))
-         (cpitch (viewpoints:get-viewpoint 'cpitch))
+         (cpitch (vp:get-viewpoint 'cpitch))
          (predictions (sampling-predict-sequence m sequence cpitch))
          (original-p (seq-probability predictions)))
     (dotimes (i iterations sequence)
@@ -389,7 +417,7 @@ random state, allowing exact replication."
          (event (nth index sequence))
          (sequence-2 (subseq sequence (1+ index)))
          (new-events
-          (alphabet->events (viewpoints:get-viewpoint 'cpitch)
+          (alphabet->events (vp:get-viewpoint 'cpitch)
                             (append sequence-1 (list event)))))
     (mapcar #'(lambda (e) (append sequence-1 (list e) sequence-2))
             new-events)))
@@ -450,8 +478,8 @@ random state, allowing exact replication."
              ;(previous-events (subseq subsequence 0 event-index))
              (event-array (mvs:get-event-array m subsequence)))
         ;;(mvs::old-set-model-alphabets m event-array subsequence (mvs:mvs-basic m))
-        (print (list event-index (viewpoints:viewpoint-sequence (viewpoints:get-viewpoint 'cpitch) (subseq sequence 0 (1+ event-index)))
-                     (viewpoints:viewpoint-sequence (viewpoints:get-viewpoint 'cpitch) subsequence)))
+        (print (list event-index (vp:viewpoint-sequence (vp:get-viewpoint 'cpitch) (subseq sequence 0 (1+ event-index)))
+                     (vp:viewpoint-sequence (vp:get-viewpoint 'cpitch) subsequence)))
         (when mvs::*debug* 
           (when (>= event-index context-length)
             (format t "~&~2,0@TGenerated Event ~A: ~A~%" event-index event-array)))
