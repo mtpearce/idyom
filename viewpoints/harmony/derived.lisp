@@ -2,7 +2,7 @@
 ;;;; File:       derived.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-25 19:09:17 marcusp>                           
-;;;; Time-stamp: <2023-06-12 11:44:13 marcusp>                           
+;;;; Time-stamp: <2025-11-11 14:10:34 marcusp>                           
 ;;;; ======================================================================
 
 (cl:in-package #:viewpoints)
@@ -71,8 +71,8 @@
                     (list (car pc-chord) (sort (cdr pc-chord) #'<))))))
 
 ;; -- pitch-class set (pc_set): pitch-class sans duplicates, ascending order (4,095 elements)
-;; -- pitch-class set type (pc_set_type): transposition invariant pc_set (351 elements) 
-;; -- pitch-class set relative to bass (pc_set_rel_bass) == pc_chord_type (2,048 elements) 
+;; -- pitch-class set type (pc_set_type): transposition invariant pc_set, relative to lowest pc (inversion invariant) (351 elements) 
+;; -- pitch-class set relative to bass (pc_set_rel_bass) == pc_chord_type, not inversion invariant (2,048 elements) 
 ;; -- pitch-class set relative to previous bass (pc_set_rel_prev_bass): pc_set relative to previous bass (4,095 elements)
 ;; -- pitch-class set relative to root (pc_set_rel_root): pc_set relative to chord root (457 elements) 
 

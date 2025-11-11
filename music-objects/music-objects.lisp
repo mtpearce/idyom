@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2023-03-09 14:45:11 marcusp>
+;;;; Time-stamp: <2025-10-31 16:02:58 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -318,20 +318,22 @@ full expansion (cf. Conklin, 2002)."
                                                        (> (onset (end-time x)) onset)))
                                               event-list))
               ;; change onset and, if necessary, shorten duration to avoid overlap with next onset
-              (matching-events (mapcar #'(lambda (x) 
-                                           (let ((e (md:copy-event x)))
-                                             (md:set-attribute e 'onset onset)
-                                             (if (< i (1- l))
-                                                 (md:set-attribute e 'dur (min (duration x) (- (nth (1+ i) onsets) onset)))
-                                                 (md:set-attribute e 'dur (apply #'max (mapcar #'duration matching-events))))
-                                             e))
-                                       matching-events))
+              (matching-events (when matching-events
+                                 (mapcar #'(lambda (x) 
+                                             (let ((e (md:copy-event x)))
+                                               (md:set-attribute e 'onset onset)
+                                               (if (< i (1- l))
+                                                   (md:set-attribute e 'dur (min (duration x) (- (nth (1+ i) onsets) onset)))
+                                                   (md:set-attribute e 'dur (apply #'max (mapcar #'duration matching-events))))
+                                               e))
+                                         matching-events)))
               ;; sort them by voice
               (matching-events (sort matching-events #'< :key #'voice))
-              (pitches (mapcar #'chromatic-pitch matching-events))
-              (dur (apply #'max (mapcar #'duration matching-events)))
+              (pitches (when matching-events (mapcar #'chromatic-pitch matching-events)))
+              (dur (when matching-events (apply #'max (mapcar #'duration matching-events))))
               ;; create a slice object containing those events
-              (slice (make-instance 'music-slice 
+              (slice (when matching-events
+                       (make-instance 'music-slice 
                                     :onset onset
                                     :bioi bioi
                                     :deltast deltast
@@ -346,10 +348,11 @@ full expansion (cf. Conklin, 2002)."
                                     :description (description composition)
                                     :timebase (timebase composition)
                                     :events matching-events
-                                    :h-cpitch (sort (copy-seq pitches) #'<))))
-         (setf previous-onset onset)
-         (setf previous-dur dur)
-         (push slice slices)))
+                                    :h-cpitch (sort (copy-seq pitches) #'<)))))
+         (when slice
+           (setf previous-onset onset)
+           (setf previous-dur dur)
+           (push slice slices))))
      ;; return the new harmonic sequence
      (make-instance 'harmonic-sequence
                     :onset 0
