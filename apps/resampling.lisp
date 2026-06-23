@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2025-11-11 14:59:25 marcusp>                           
+;;;; Time-stamp: <2026-06-23 16:44:23 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -303,7 +303,10 @@ is a list of composition prediction sets, ordered by composition ID."
 
 (defun create-key (feature attribute)
   (intern (concatenate 'string (symbol-name feature) "."
-		       (format nil "~A" attribute)) :keyword))
+		       (format nil
+                               (if (listp attribute) "~{~A~^_~}" "~A")
+                               attribute))
+          :keyword))
 
 (defun format-event-prediction (ep results dataset-id composition-id feature)
   ;; (format t "~& format-event-prediction: ~A ~A ~A ~A~%" (md::chromatic-pitch (prediction-sets:prediction-event ep))
