@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2026-06-23 16:44:23 marcusp>                           
+;;;; Time-stamp: <2026-07-09 16:49:26 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -331,7 +331,8 @@ is a list of composition prediction sets, ordered by composition ID."
 								dataset-id
 								composition-id)))
       (dolist (attribute (viewpoints:get-basic-attributes event))
-	(let ((value (md:get-attribute event attribute)))
+	(let* ((value (md:get-attribute event attribute))
+               (value (if (listp value) (format nil "~{~A~^_~}" value) value)))
 	  (when (and value (member attribute '(:dur :bioi :deltast :onset) :test #'eq))
 	    (setf value (* value (/ timebase 96))))
 	  (setf (gethash attribute event-results) value))))
