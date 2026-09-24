@@ -2,7 +2,7 @@
 ;;;; File:       music-objects.lisp
 ;;;; Author:     Marcus Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2014-09-07 12:24:19 marcusp>
-;;;; Time-stamp: <2025-10-31 16:02:58 marcusp>
+;;;; Time-stamp: <2026-09-24 14:58:38 marcusp>
 ;;;; ======================================================================
 
 (cl:in-package #:music-data)
@@ -430,7 +430,8 @@ the first event in the piece is extracted."
 the highest pitch sounding at that onset position."
   (let ((hs (composition->harmony composition :voices voices))
         (result nil)
-        (previous-event nil))
+        (previous-event nil)
+        (index 0))
     (sequence:dosequence (slice hs (nreverse result))
       (let ((top (elt (sort slice #'> :key #'md:chromatic-pitch) 0)))
         (unless (null previous-event)
@@ -438,6 +439,12 @@ the highest pitch sounding at that onset position."
             (md:set-attribute top 'bioi (- (onset top) (onset previous-event))))
           (when (before previous-event top)
             (md:set-attribute top 'deltast (- (onset top) (onset (end-time previous-event))))))
+        (md:set-attribute top 'identifier
+                          (make-instance 'event-identifier
+		                         :dataset-index (get-dataset-index (get-identifier top))
+		                         :composition-index (get-composition-index (get-identifier top))
+		                         :event-index index))
+        (incf index)
         ;; (print (list top (chromatic-pitch top) (length slice)))
         (setf previous-event top)
         (push top result)))))
