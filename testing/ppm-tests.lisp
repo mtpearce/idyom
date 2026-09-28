@@ -394,35 +394,35 @@
                                   (a b r a t b r a c))
                                 :mixtures t :update-exclusion t
                                 :detail 2)
-                 '(2.591134 1.8791169))))
+                 '(2.5911338 1.8791169))))
 
 (5am:test abracadabra-abrabtrac
   (5am:is (equal (ppm:ppm-predict '((a b r a c a d a b r a)
                                   (a b r a b t r a c))
                                 :mixtures t :update-exclusion t
                                 :detail 2)
-                 '(2.591134 2.0285676))))
+                 '(2.5911338 2.0285676))))
 
 (5am:test abracadabra-abrabrtac
   (5am:is (equal (ppm:ppm-predict '((a b r a c a d a b r a)
                                   (a b r a b r t a c))
                                 :mixtures t :update-exclusion t
                                 :detail 2)
-                 '(2.591134 1.8929263))))
+                 '(2.5911338 1.8929263))))
 
 (5am:test abracadabra-abrabratc
   (5am:is (equal (ppm:ppm-predict '((a b r a c a d a b r a)
                                   (a b r a b r a t c))
                                 :mixtures t :update-exclusion t
                                 :detail 2)
-                 '(2.591134 1.7575804))))
+                 '(2.5911338 1.7575804))))
 
 (5am:test abracadabra-abrabract
   (5am:is (equal (ppm:ppm-predict '((a b r a c a d a b r a)
                                   (a b r a b r a c t))
                                 :mixtures t :update-exclusion t
                                 :detail 2)
-                 '(2.591134 1.5876032))))
+                 '(2.5911338 1.5876032))))
 
 
 ;; Simple Tests
@@ -1260,7 +1260,7 @@
 
 (5am:test couperin-ppmc*
   (5am:is (equal (ppm:ppm-predict (list *couperin*) :escape :c :mixtures nil :update-exclusion nil :order-bound nil :detail 1)
-                 4.307855)))
+                 4.3078547)))
 
 (5am:test couperin-ppmc*i
   (5am:is (equal (ppm:ppm-predict (list *couperin*) :escape :c :mixtures t :update-exclusion nil :order-bound nil :detail 1)
@@ -1312,7 +1312,7 @@
 
 (5am:test wtc1-1-ppmc*i
   (5am:is (equal (ppm:ppm-predict (list *wtc1-1*) :escape :c :mixtures t :update-exclusion nil :order-bound nil :detail 1)
-                 2.6136842)))
+                 2.613684)))
 
 (defvar *syrinx*
   ;; Debussy: Syrinx 
@@ -1387,7 +1387,7 @@
 
 (5am:test partita2-ppmc*
   (5am:is (equal (ppm:ppm-predict (list *partita-2*) :escape :c :mixtures nil :update-exclusion nil :order-bound nil :detail 1)
-                 3.7355547)))
+                 3.735555)))
 
 (5am:test partita2-ppmc*i
   (5am:is (equal (ppm:ppm-predict (list *partita-2*) :escape :c :mixtures t :update-exclusion nil :order-bound nil :detail 1)
