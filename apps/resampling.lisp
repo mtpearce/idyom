@@ -2,7 +2,7 @@
 ;;;; File:       resampling.lisp
 ;;;; Author:     Marcus  Pearce <marcus.pearce@qmul.ac.uk>
 ;;;; Created:    <2003-04-16 18:54:17 marcusp>                           
-;;;; Time-stamp: <2026-07-09 16:49:26 marcusp>                           
+;;;; Time-stamp: <2026-09-28 10:05:37 marcusp>                           
 ;;;; ======================================================================
 ;;;;
 ;;;; DESCRIPTION 
@@ -304,7 +304,7 @@ is a list of composition prediction sets, ordered by composition ID."
 (defun create-key (feature attribute)
   (intern (concatenate 'string (symbol-name feature) "."
 		       (format nil
-                               (if (listp attribute) "~{~A~^_~}" "~A")
+                               (if (consp attribute) "~{~A~^_~}" "~A")
                                attribute))
           :keyword))
 
@@ -332,7 +332,7 @@ is a list of composition prediction sets, ordered by composition ID."
 								composition-id)))
       (dolist (attribute (viewpoints:get-basic-attributes event))
 	(let* ((value (md:get-attribute event attribute))
-               (value (if (listp value) (format nil "~{~A~^_~}" value) value)))
+               (value (if (consp value) (format nil "~{~A~^_~}" value) value)))
 	  (when (and value (member attribute '(:dur :bioi :deltast :onset) :test #'eq))
 	    (setf value (* value (/ timebase 96))))
 	  (setf (gethash attribute event-results) value))))
