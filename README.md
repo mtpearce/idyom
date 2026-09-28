@@ -1,8 +1,8 @@
 # IDyOM: Information Dynamics of Music
 
-Version 1.7.1
+Version 1.8
 
-Copyright 2001-2024, the IDyOM development team (see CREDITS).
+Copyright 2001-2026, the IDyOM development team (see CREDITS).
 
 This program is distributed under the terms of the GNU General Public
 License.  See COPYING for details.
@@ -12,13 +12,13 @@ License.  See COPYING for details.
 
 Online documentation is available at: https://github.com/mtpearce/idyom/wiki
 
-Scientific presentations of IDyOM can be found in Pearce (2005, 2018),
-copies of which are provided in the directory docs/ - please use these as citations
-in any publications using this software.
+Scientific presentations of IDyOM can be found in Pearce (2005, 2018, 2025). See links below and copies in the directory docs/. Please use these as citations in any publications using this software.
 
 Pearce, M. T. (2005). [The Construction and Evaluation of Statistical Models of Melodic Structure in Music Perception and Composition.](https://www.marcus-pearce.com/assets/papers/Pearce2005.pdf) Doctoral Dissertation, Department of Computer Science, City University of London, UK.
 
 Pearce, M. T. (2018). [Statistical learning and probabilistic prediction in music cognition: mechanisms of stylistic enculturation.](https://www.marcus-pearce.com/assets/papers/Pearce2018.pdf) _Annals of the New York Academy of Sciences_, 1423, 378-395. https://doi.org/10.1111/nyas.13654
+
+Pearce, M. T. (2025). _Learning to listen, listening to learn: Music perception and the psychology of enculturation_. Oxford University Press. https://doi.org/10.1093/oso/9780198848004.001.0001
 
 
 ## Requirements
@@ -32,6 +32,16 @@ See the online documentation for further details on installation.
 
 
 ## News
+
+### 2026-09-21: v1.8
+* Documentation: Updated documentation on the wiki, especially for modelling harmony, similarity, generation and key-finding (thanks to Farshad Jafari)
+* Database: Fixed bug in db:copy-datasets
+* Database: Work arounds for importing badly encoded midi files missing note-offs
+* Generation: Update generation code to operate on a whole dataset
+* Harmony: Add sd-chord viewpoint for harmony modelling
+* Harmony: Handle empty slices in the harmony representation
+* Harmony: Better formatting of chord distributions in harmony modelling output
+* Viewpoints: Ensure that the components of linked viewpoints are sorted for consistent naming
 
 ### 2023-05-22: v1.7
 * Kern import: improved warnings when things go awry (thanks to Bastiaan van der Weij)
