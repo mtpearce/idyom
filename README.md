@@ -18,7 +18,7 @@ Pearce, M. T. (2005). [The Construction and Evaluation of Statistical Models of 
 
 Pearce, M. T. (2018). [Statistical learning and probabilistic prediction in music cognition: mechanisms of stylistic enculturation.](https://www.marcus-pearce.com/assets/papers/Pearce2018.pdf) _Annals of the New York Academy of Sciences_, 1423, 378-395. https://doi.org/10.1111/nyas.13654
 
-Pearce, M. T. (2025). _Learning to listen, listening to learn: Music perception and the psychology of enculturation_. Oxford University Press. https://doi.org/10.1093/oso/9780198848004.001.0001
+Pearce, M. T. (2025). _Learning to listen, listening to learn_. Oxford University Press. https://doi.org/10.1093/oso/9780198848004.001.0001
 
 
 ## Requirements
